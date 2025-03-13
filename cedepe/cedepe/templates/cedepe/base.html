@@ -34,7 +34,7 @@
           {% if user.is_authenticated and user.is_staff %}
           <!-- Botão Dashboard -->
           <li class="nav-item me-2">
-            <a class="btn btn-light" href="{% url 'dashboard' %}">
+            <a class="btn btn-light" href="{% url 'home' %}">
               <i class="bi bi-speedometer2"></i> Dashboard
             </a>
           </li>
@@ -43,7 +43,7 @@
           
           <!-- Botão Gerenciar Bens -->
           <li class="nav-item me-2">
-            <a class="btn btn-light" href="{% url 'gerenciar_bens' %}">
+            <a class="btn btn-light" href="/admin">
               <i class="bi bi-file-earmark-text-fill"></i> Gerenciar Bens
             </a>
           </li>

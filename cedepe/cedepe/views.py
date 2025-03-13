@@ -5,7 +5,7 @@ from django.contrib import messages
 from .forms import LoginForm
 
 def dashboard(request):
-    return render(request, 'gestao_patrimonio/home.html')
+    return render(request, 'cedepe/home.html')
 
 def user_login(request):
     if request.method == "POST":
@@ -21,7 +21,7 @@ def user_login(request):
         messages.error(request, "Usuário ou senha inválidos")
     else:
         form = LoginForm()  # Usa LoginForm
-    return render(request, "gestao_patrimonio/login.html", {"form": form})
+    return render(request, "cedepe/login.html", {"form": form})
 
 def user_logout(request):
     logout(request)
@@ -38,4 +38,4 @@ def register(request):
             return redirect("home")
     else:
         form = UserCreationForm()
-    return render(request, "gestao_patrimonio/register.html", {"form": form})
+    return render(request, "cedepe/register.html", {"form": form})
