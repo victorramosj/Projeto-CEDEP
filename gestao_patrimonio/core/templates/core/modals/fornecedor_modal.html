@@ -1,0 +1,32 @@
+<div class="modal fade" id="fornecedorModal" tabindex="-1" aria-labelledby="fornecedorModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <form id="fornecedorForm">
+        {% csrf_token %}
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="fornecedorModalLabel">Novo Fornecedor</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+          </div>
+          <div class="modal-body">
+            <div class="mb-3">
+              <label for="fornecedor_nome" class="form-label">Nome do Fornecedor</label>
+              <input type="text" class="form-control" id="fornecedor_nome" name="nome" required>
+            </div>
+            <div class="mb-3">
+              <label for="fornecedor_cnpj_cpf" class="form-label">CNPJ/CPF</label>
+              <input type="text" class="form-control" id="fornecedor_cnpj_cpf" name="cnpj_cpf" required>
+            </div>
+            <div class="mb-3">
+              <label for="fornecedor_contato" class="form-label">Contato</label>
+              <input type="text" class="form-control" id="fornecedor_contato" name="contato">
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+            <button type="submit" class="btn btn-primary">Salvar Fornecedor</button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+  
