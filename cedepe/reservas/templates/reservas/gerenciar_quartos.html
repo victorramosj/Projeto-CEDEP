@@ -147,7 +147,7 @@
 
   document.getElementById('confirmDeleteQuarto').addEventListener('click', function() {
     const csrftoken = getCookie('csrftoken');
-    fetch(`/api/quartos/${quartoIdToDelete}/`, {
+    fetch(`/reservas/api/quartos/${quartoIdToDelete}/`, {
       method: 'DELETE',
       headers: {
         'X-CSRFToken': csrftoken,

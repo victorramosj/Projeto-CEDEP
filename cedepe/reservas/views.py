@@ -53,15 +53,34 @@ class ReservaViewSet(viewsets.ModelViewSet):
 
 # reservas/views.py
 from django.shortcuts import render, redirect, get_object_or_404
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from .models import Quarto, Cama, Hospede, Reserva
 from .forms import QuartoForm, CamaForm, HospedeForm, ReservaForm
 
-# Views para gerenciamento (listagem) dos registros
+# Configuração comum de paginação
+ITENS_POR_PAGINA = 10
 
 def gerenciar_quartos(request):
-    quartos = Quarto.objects.all()
     query = request.GET.get('q', '')
     filter_by = request.GET.get('filter_by', 'all')
+    page_number = request.GET.get('page')
+
+    # Filtragem básica
+    quartos_list = Quarto.objects.all()
+    
+    if query:
+        quartos_list = quartos_list.filter(numero__icontains=query)
+    
+    # Paginação
+    paginator = Paginator(quartos_list, ITENS_POR_PAGINA)
+    
+    try:
+        quartos = paginator.page(page_number)
+    except PageNotAnInteger:
+        quartos = paginator.page(1)
+    except EmptyPage:
+        quartos = paginator.page(paginator.num_pages)
+
     context = {
         'quartos': quartos,
         'query': query,
@@ -69,11 +88,31 @@ def gerenciar_quartos(request):
     }
     return render(request, 'reservas/gerenciar_quartos.html', context)
 
-
 def gerenciar_camas(request):
-    camas = Cama.objects.all()
     query = request.GET.get('q', '')
     filter_by = request.GET.get('filter_by', 'all')
+    page_number = request.GET.get('page')
+
+    camas_list = Cama.objects.all()
+    
+    if query:
+        camas_list = camas_list.filter(
+            Q(identificacao__icontains=query) |
+            Q(quarto__numero__icontains=query)
+        )
+    
+    if filter_by != 'all':
+        camas_list = camas_list.filter(status=filter_by)
+    
+    paginator = Paginator(camas_list, ITENS_POR_PAGINA)
+    
+    try:
+        camas = paginator.page(page_number)
+    except PageNotAnInteger:
+        camas = paginator.page(1)
+    except EmptyPage:
+        camas = paginator.page(paginator.num_pages)
+
     context = {
         'camas': camas,
         'query': query,
@@ -81,11 +120,29 @@ def gerenciar_camas(request):
     }
     return render(request, 'reservas/gerenciar_camas.html', context)
 
-
 def gerenciar_hospedes(request):
-    hospedes = Hospede.objects.all()
     query = request.GET.get('q', '')
     filter_by = request.GET.get('filter_by', 'all')
+    page_number = request.GET.get('page')
+
+    hospedes_list = Hospede.objects.all()
+    
+    if query:
+        hospedes_list = hospedes_list.filter(
+            Q(nome__icontains=query) |
+            Q(cpf__icontains=query) |
+            Q(email__icontains=query)
+        )
+    
+    paginator = Paginator(hospedes_list, ITENS_POR_PAGINA)
+    
+    try:
+        hospedes = paginator.page(page_number)
+    except PageNotAnInteger:
+        hospedes = paginator.page(1)
+    except EmptyPage:
+        hospedes = paginator.page(paginator.num_pages)
+
     context = {
         'hospedes': hospedes,
         'query': query,
@@ -93,18 +150,38 @@ def gerenciar_hospedes(request):
     }
     return render(request, 'reservas/gerenciar_hospedes.html', context)
 
-
 def gerenciar_reservas(request):
-    reservas = Reserva.objects.all()
     query = request.GET.get('q', '')
     filter_by = request.GET.get('filter_by', 'all')
+    page_number = request.GET.get('page')
+
+    reservas_list = Reserva.objects.all()
+    
+    if query:
+        reservas_list = reservas_list.filter(
+            Q(hospede__nome__icontains=query) |
+            Q(cama__identificacao__icontains=query) |
+            Q(cama__quarto__numero__icontains=query)
+        )
+    
+    if filter_by != 'all':
+        reservas_list = reservas_list.filter(status=filter_by)
+    
+    paginator = Paginator(reservas_list, ITENS_POR_PAGINA)
+    
+    try:
+        reservas = paginator.page(page_number)
+    except PageNotAnInteger:
+        reservas = paginator.page(1)
+    except EmptyPage:
+        reservas = paginator.page(paginator.num_pages)
+
     context = {
         'reservas': reservas,
         'query': query,
         'filter_by': filter_by,
     }
     return render(request, 'reservas/gerenciar_reservas.html', context)
-
 
 # Views para criação e edição (Formulários)
 

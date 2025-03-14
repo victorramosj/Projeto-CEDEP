@@ -17,24 +17,59 @@
   <!-- Filtro de busca -->
   <form method="GET" class="mb-4">
     <div class="row g-2">
-      <div class="col-md-3">
-        <select name="filter_by" class="form-select">
-          <option value="all" {% if filter_by == "all" %}selected{% endif %}>Todos</option>
-          <option value="hospede" {% if filter_by == "hospede" %}selected{% endif %}>Hóspede</option>
-          <option value="quarto" {% if filter_by == "quarto" %}selected{% endif %}>Quarto</option>
-          <option value="status" {% if filter_by == "status" %}selected{% endif %}>Status</option>
-        </select>
-      </div>
-      <div class="col-md-9">
-        <div class="input-group">
-          <input type="text" name="q" value="{{ query }}" class="form-control" placeholder="Pesquisar...">
-          <button class="btn btn-outline-primary" type="submit">
-            <i class="bi bi-search"></i> Buscar
-          </button>
+        <div class="col-md-3">
+            <select name="filter_by" class="form-select" id="filter-by">
+                <option value="all" {% if filter_by == "all" %}selected{% endif %}>Todos</option>
+                <option value="hospede" {% if filter_by == "hospede" %}selected{% endif %}>Hóspede</option>
+                <option value="quarto" {% if filter_by == "quarto" %}selected{% endif %}>Quarto</option>
+                <option value="status" {% if filter_by == "status" %}selected{% endif %}>Status</option>
+            </select>
         </div>
-      </div>
+        <div class="col-md-9">
+            <div class="input-group">
+                <!-- Campo de texto para Hospede e Quarto -->
+                <input type="text" 
+                       name="q" 
+                       value="{{ query }}" 
+                       class="form-control" 
+                       id="search-input" 
+                       placeholder="Pesquisar..."
+                       {% if filter_by == "status" %}style="display: none;"{% endif %}>
+                
+                <!-- Select para Status -->
+                <select name="q" 
+                        class="form-select" 
+                        id="status-select" 
+                        {% if filter_by != "status" %}style="display: none;"{% endif %}>
+                    <option value="">Selecione um status...</option>
+                    <option value="ATIVA" {% if query == "ATIVA" %}selected{% endif %}>Ativa</option>
+                    <option value="CANCELADA" {% if query == "CANCELADA" %}selected{% endif %}>Cancelada</option>
+                    <option value="FINALIZADA" {% if query == "FINALIZADA" %}selected{% endif %}>Finalizada</option>
+                </select>
+                
+                <button class="btn btn-outline-primary" type="submit">
+                    <i class="bi bi-search"></i> Buscar
+                </button>
+            </div>
+        </div>
     </div>
-  </form>
+</form>
+
+<!-- Script para alternar entre input e select -->
+<script>
+    document.getElementById('filter-by').addEventListener('change', function() {
+        const searchInput = document.getElementById('search-input');
+        const statusSelect = document.getElementById('status-select');
+        
+        if (this.value === 'status') {
+            searchInput.style.display = 'none';
+            statusSelect.style.display = 'block';
+        } else {
+            searchInput.style.display = 'block';
+            statusSelect.style.display = 'none';
+        }
+    });
+</script>
 
   <!-- Tabela de Reservas -->
   <div class="card shadow-sm">
@@ -157,7 +192,7 @@
 
   document.getElementById('confirmDeleteReserva').addEventListener('click', function() {
     const csrftoken = getCookie('csrftoken');
-    fetch(`/api/reservas/${reservaIdToDelete}/`, {
+    fetch(`/reservas/api/reservas/${reservaIdToDelete}/`, {
       method: 'DELETE',
       headers: {
         'X-CSRFToken': csrftoken,

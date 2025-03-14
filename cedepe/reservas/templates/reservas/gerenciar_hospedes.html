@@ -151,7 +151,7 @@
 
   document.getElementById('confirmDeleteHospede').addEventListener('click', function() {
     const csrftoken = getCookie('csrftoken');
-    fetch(`/api/hospedes/${hospedeIdToDelete}/`, {
+    fetch(`/reservas/api/hospedes/${hospedeIdToDelete}/`, {
       method: 'DELETE',
       headers: {
         'X-CSRFToken': csrftoken,

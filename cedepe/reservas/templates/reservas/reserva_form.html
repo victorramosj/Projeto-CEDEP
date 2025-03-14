@@ -11,10 +11,11 @@
                 <div class="card shadow">
                     <div class="card-header bg-success text-white">
                         <h3 class="mb-0">
-                            <i class="bi bi-journal-plus me-2"></i>
-                            {% if object %}Editar Reserva{% else %}Nova Reserva{% endif %}
+                          <i class="bi bi-journal-plus me-2"></i>
+                          {% if reserva %}Editar Reserva{% else %}Nova Reserva{% endif %}
                         </h3>
-                    </div>
+                      </div>
+                      
                     <div class="card-body">
                         {% if form.errors %}
                         <div class="alert alert-danger alert-dismissible fade show" role="alert">
@@ -81,9 +82,9 @@
                                         <label class="form-label" for="id_data_checkin">
                                             <i class="bi bi-calendar-check me-2"></i>Check-in
                                         </label>
-                                        <input type="date" name="data_checkin" id="id_data_checkin" 
-                                            class="form-control {% if form.data_checkin.errors %}is-invalid{% endif %}" 
-                                            value="{{ form.data_checkin.value|default:'' }}">
+                                        <input type="date" name="data_checkin" id="id_data_checkin"
+                                            class="form-control {% if form.data_checkin.errors %}is-invalid{% endif %}"
+                                            value="{{ form.data_checkin.value|date:'Y-m-d'|default:'' }}">
                                         {% for error in form.data_checkin.errors %}
                                             <div class="invalid-feedback">{{ error }}</div>
                                         {% endfor %}
@@ -94,9 +95,9 @@
                                         <label class="form-label" for="id_data_checkout">
                                             <i class="bi bi-calendar-x me-2"></i>Check-out
                                         </label>
-                                        <input type="date" name="data_checkout" id="id_data_checkout" 
-                                            class="form-control {% if form.data_checkout.errors %}is-invalid{% endif %}" 
-                                            value="{{ form.data_checkout.value|default:'' }}">
+                                        <input type="date" name="data_checkout" id="id_data_checkout"
+                                            class="form-control {% if form.data_checkout.errors %}is-invalid{% endif %}"
+                                            value="{{ form.data_checkout.value|date:'Y-m-d'|default:'' }}">
                                         {% for error in form.data_checkout.errors %}
                                             <div class="invalid-feedback">{{ error }}</div>
                                         {% endfor %}

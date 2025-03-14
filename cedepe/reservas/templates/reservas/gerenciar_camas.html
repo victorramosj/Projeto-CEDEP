@@ -151,7 +151,7 @@
 
   document.getElementById('confirmDeleteCama').addEventListener('click', function() {
     const csrftoken = getCookie('csrftoken');
-    fetch(`/api/camas/${camaIdToDelete}/`, {
+    fetch(`/reservas/api/camas/${camaIdToDelete}/`, {
       method: 'DELETE',
       headers: {
         'X-CSRFToken': csrftoken,
