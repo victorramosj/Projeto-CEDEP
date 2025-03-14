@@ -13,8 +13,8 @@ urlpatterns = [
     # Endpoints da API com prefixo /api/
     path('api/', include(router.urls)),
     
-    # Rotas para as páginas HTML personalizadas
-     # Páginas HTML para gerenciamento
+    
+    # Páginas HTML para gerenciamento
     path('quartos/', views.gerenciar_quartos, name='gerenciar_quartos'),
     path('quartos/form/', views.quarto_form, name='quarto_form'),
     path('quartos/form/<int:pk>/', views.quarto_form, name='editar_quarto'),
@@ -30,4 +30,6 @@ urlpatterns = [
     path('reservas/', views.gerenciar_reservas, name='gerenciar_reservas'),
     path('reservas/form/', views.reserva_form, name='reserva_form'),
     path('reservas/form/<int:pk>/', views.reserva_form, name='editar_reserva'),
+    
+    path('dashboard/', views.dashboard, name='dashboard'),
 ]

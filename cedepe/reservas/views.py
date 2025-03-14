@@ -165,6 +165,10 @@ def hospede_form(request, pk=None):
     return render(request, 'reservas/hospede_form.html', context)
 
 
+from django.shortcuts import render, get_object_or_404, redirect
+from .forms import ReservaForm
+from .models import Reserva
+
 def reserva_form(request, pk=None):
     """ Cria ou edita uma Reserva. """
     if pk:
@@ -182,3 +186,46 @@ def reserva_form(request, pk=None):
 
     context = {'form': form, 'reserva': reserva}
     return render(request, 'reservas/reserva_form.html', context)
+
+# reservas/views.py
+from django.shortcuts import render
+from django.db.models import Count, Q
+from .models import Quarto, Cama, Hospede, Reserva
+from datetime import date
+
+def dashboard(request):
+    # Estatísticas básicas
+    total_quartos = Quarto.objects.count()
+    total_camas = Cama.objects.count()
+    total_hospedes = Hospede.objects.count()
+    reservas_ativas = Reserva.objects.filter(status='ATIVA').count()
+    
+    # Status das camas
+    status_camas = Cama.objects.values('status').annotate(total=Count('id'))
+    
+    # Reservas recentes
+    recent_reservations = Reserva.objects.select_related('hospede', 'cama').order_by('-criado_em')[:5]
+    
+    # Reservas por status
+    reservas_status = Reserva.objects.values('status').annotate(total=Count('id'))
+    
+    # Conversão dos dados para gráficos
+    camas_labels = [item['status'] for item in status_camas]
+    camas_data = [item['total'] for item in status_camas]
+    
+    reservas_labels = [item['status'] for item in reservas_status]
+    reservas_data = [item['total'] for item in reservas_status]
+    
+    context = {
+        'total_quartos': total_quartos,
+        'total_camas': total_camas,
+        'total_hospedes': total_hospedes,
+        'reservas_ativas': reservas_ativas,
+        'recent_reservations': recent_reservations,
+        'camas_labels': camas_labels,
+        'camas_data': camas_data,
+        'reservas_labels': reservas_labels,
+        'reservas_data': reservas_data,
+    }
+    
+    return render(request, 'reservas/dashboard.html', context)

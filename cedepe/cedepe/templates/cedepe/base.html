@@ -12,17 +12,82 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
   <!-- CSS customizado -->
   <link rel="stylesheet" href="{% static 'css/style.css' %}">
+  <link rel="icon" type="image/png" href="{% static 'images/CARD DA GRE.png' %}">
+  <!-- Font Awesome CSS -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    /* EXEMPLO DE PALETA BASEADA NO LOGO */
+
+    /* Azul principal do logo */
+    .bg-cedepe {
+      background-color: #10295d !important;
+    }
+
+    /* Exemplo de cores de destaque (usadas no logo) */
+    /* Ajuste ou use somente as que você precisar */
+    .text-cedepe-yellow { color: #f5bf26 !important; } /* Amarelo */
+    .text-cedepe-green  { color: #34a853 !important; } /* Verde */
+    .text-cedepe-red    { color: #ea4335 !important; } /* Vermelho */
+
+    /* Marca do sistema na navbar */
+    .navbar-brand {
+      display: flex;
+      align-items: center;
+      gap: 10px; /* espaço entre imagem e texto */
+    }
+    .brand-text {
+      font-weight: 600;
+      font-size: 1.4rem;
+      letter-spacing: 0.5px;
+      /* Amarelo de destaque */
+      color: #f5bf26 !important;
+      text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.15);
+      margin: 0;
+      padding: 0;
+    }
+
+    /* Ajuste de cor dos itens da navbar em modo "dark" */
+    .navbar-dark .navbar-nav .nav-link {
+      color: #f5bf26; /* amarelo de destaque */
+      transition: color 0.2s ease-in-out;
+    }
+    .navbar-dark .navbar-nav .nav-link:hover {
+      color: #ea4335; /* vermelho ao passar o mouse */
+    }
+
+    /* Botões no navbar (padrão .btn-light) */
+    /* Caso queira usar um estilo customizado, crie .btn-cedepe */
+    .btn-light {
+      color: #10295d; /* texto no tom de azul */
+      background-color: #f5f5f5;
+      border: 1px solid #d9d9d9;
+    }
+    .btn-light:hover {
+      background-color: #e9ecef;
+      color: #10295d;
+    }
+
+    
+  </style>
 </head>
 
 <body>
   <!-- Navbar com fundo claro e botões brancos -->
-  <nav class="navbar navbar-expand-lg navbar-light bg-light">
+  <nav class="navbar navbar-expand-lg navbar-dark ">
     <div class="container">
-      <a class="navbar-brand" href="{% url 'home' %}">Sistema de Hospedagens CEDEPE</a>
+      <a class="navbar-brand" href="{% url 'home' %}">
+        <!-- Logo -->
+        <img src="{% static 'images/CARD DA GRE.png' %}" alt="Logo GRE"
+             style="width: 60px; height: auto;">
+        <!-- Texto da marca -->
+        <span class="brand-text">Hospedagens CEDEPE</span>
+      </a>
+      
       <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNavbar"
         aria-controls="mainNavbar" aria-expanded="false" aria-label="Alternar navegação">
         <span class="navbar-toggler-icon"></span>
       </button>
+      
       <div class="collapse navbar-collapse" id="mainNavbar">
         <ul class="navbar-nav me-auto mb-2 mb-lg-0">
           <!-- Botão Início -->
@@ -31,13 +96,15 @@
               <i class="bi bi-house-door-fill"></i> Início
             </a>
           </li>
+
           {% if user.is_authenticated and user.is_staff %}
           <!-- Botão Dashboard -->
           <li class="nav-item me-2">
-            <a class="btn btn-light" href="{% url 'home' %}">
-              <i class="bi bi-speedometer2"></i> Dashboard
+            <a class="btn btn-light" href="{% url 'dashboard' %}">
+              <i class="fas fa-tachometer-alt fa-spin"></i> Dashboard
             </a>
           </li>
+          
           <!-- Links para gerenciar os recursos de hospedagem -->
           <li class="nav-item me-2">
             <a class="btn btn-light" href="{% url 'gerenciar_quartos' %}">
@@ -46,7 +113,7 @@
           </li>
           <li class="nav-item me-2">
             <a class="btn btn-light" href="{% url 'gerenciar_camas' %}">
-              <i class="bi bi-bed-fill"></i> Camas
+              <i class="fas fa-bed me-2"></i>Camas
             </a>
           </li>
           <li class="nav-item me-2">
@@ -61,6 +128,7 @@
           </li>
           {% endif %}
         </ul>
+        
         <!-- Menu de autenticação -->
         <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
           {% if user.is_authenticated %}
@@ -70,9 +138,9 @@
             </a>
           </li>
           <li class="nav-item">
-            <a class="btn btn-light" href="{% url 'logout' %}">
-              <i class="bi bi-box-arrow-right"></i> Logout
-            </a>
+            <a href="{% url 'logout' %}" class="btn btn-outline-danger ">
+              <i class="bi bi-box-arrow-right me-2"></i> Sair
+          </a>
           </li>
           {% else %}
           <li class="nav-item me-2">
@@ -81,7 +149,7 @@
             </a>
           </li>
           <li class="nav-item">
-            <a class="btn btn-light" href="{% url 'register' %}">
+            <a class="btn btn-light text-cedepe-red" href="{% url 'register' %}">
               <i class="bi bi-person-plus"></i> Register
             </a>
           </li>

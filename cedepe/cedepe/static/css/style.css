@@ -1,3 +1,7 @@
+/* Classe personalizada para cor de fundo CEDEPE */
+.bg-primary {
+    background-color: #10295d !important;
+  }
 .typing-effect::after {
     content: "|"; /* Cursor piscando */
     display: inline-block;
@@ -39,3 +43,24 @@
 .border-start-success { border-left: 4px solid #1cc88a !important; }
 .border-start-info { border-left: 4px solid #36b9cc !important; }
 .border-start-warning { border-left: 4px solid #f6c23e !important; }
+
+.card {
+    border-radius: 0.5rem;
+    transition: transform 0.2s;
+}
+
+.card:hover {
+    transform: translateY(-3px);
+}
+
+.table-hover tbody tr:hover {
+    background-color: #f8f9fa;
+}
+
+.badge {
+    font-size: 0.85em;
+    padding: 0.5em 0.75em;
+}
+
+
+

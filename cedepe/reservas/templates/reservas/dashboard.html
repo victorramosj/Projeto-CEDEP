@@ -1,0 +1,207 @@
+{% extends 'cedepe/base.html' %}
+{% load static %}
+
+{% block title %}Dashboard de Reservas{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4">
+    <!-- Cards de Resumo -->
+    <div class="row g-4 my-2">
+        <!-- Quartos -->
+        <div class="col-12 col-md-3">
+            <div class="card shadow border-start-primary h-100">
+                <div class="card-body">
+                    <h5 class="text-muted mb-2">
+                        <i class="bi bi-door-closed me-2"></i>Quartos
+                    </h5>
+                    <p class="h1 text-primary">{{ total_quartos }}</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Camas -->
+        <div class="col-12 col-md-3">
+            <div class="card shadow border-start-success h-100">
+                <div class="card-body">
+                    <h5 class="text-muted mb-2">
+                        <i class="bi bi-bed me-2"></i>Camas
+                    </h5>
+                    <p class="h1 text-success">{{ total_camas }}</p>
+                    <div class="mt-2">
+                        <span class="badge bg-info me-1">Disponíveis: {{ camas_data.0 }}</span>
+                        <span class="badge bg-warning">Ocupadas: {{ camas_data.1 }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Hóspedes -->
+        <div class="col-12 col-md-3">
+            <div class="card shadow border-start-info h-100">
+                <div class="card-body">
+                    <h5 class="text-muted mb-2">
+                        <i class="bi bi-people me-2"></i>Hóspedes
+                    </h5>
+                    <p class="h1 text-info">{{ total_hospedes }}</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Reservas Ativas -->
+        <div class="col-12 col-md-3">
+            <div class="card shadow border-start-warning h-100">
+                <div class="card-body">
+                    <h5 class="text-muted mb-2">
+                        <i class="bi bi-journal-check me-2"></i>Reservas Ativas
+                    </h5>
+                    <p class="h1 text-warning">{{ reservas_ativas }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Gráficos -->
+    <div class="row g-4 my-2">
+        <!-- Status das Camas -->
+        <div class="col-12 col-lg-6">
+            <div class="card shadow h-100">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="card-title mb-0">
+                        <i class="bi bi-pie-chart me-2"></i>Status das Camas
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="camasChart" style="height: 300px;"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Reservas por Status -->
+        <div class="col-12 col-lg-6">
+            <div class="card shadow h-100">
+                <div class="card-header bg-success text-white">
+                    <h5 class="card-title mb-0">
+                        <i class="bi bi-bar-chart me-2"></i>Reservas por Status
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="reservasChart" style="height: 300px;"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Reservas Recentes -->
+    <div class="row g-4 my-2">
+        <div class="col-12">
+            <div class="card shadow h-100">
+                <div class="card-header bg-info text-white">
+                    <h5 class="card-title mb-0">
+                        <i class="bi bi-clock-history me-2"></i>Reservas Recentes
+                    </h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Hóspede</th>
+                                    <th>Cama</th>
+                                    <th>Check-in</th>
+                                    <th>Check-out</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for reserva in recent_reservations %}
+                                <tr>
+                                    <td>{{ reserva.hospede.nome }}</td>
+                                    <td>{{ reserva.cama.identificacao }}</td>
+                                    <td>{{ reserva.data_checkin|date:"d/m/Y" }}</td>
+                                    <td>{{ reserva.data_checkout|date:"d/m/Y" }}</td>
+                                    <td>
+                                        <span class="badge 
+                                            {% if reserva.status == 'ATIVA' %}bg-success
+                                            {% elif reserva.status == 'CANCELADA' %}bg-danger
+                                            {% else %}bg-secondary{% endif %}">
+                                            {{ reserva.get_status_display }}
+                                        </span>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="5" class="text-center">Nenhuma reserva recente</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    // Cores dos gráficos
+    const colors = {
+        primary: '#4e73df',
+        success: '#1cc88a',
+        info: '#36b9cc',
+        warning: '#f6c23e',
+        danger: '#e74a3b',
+        secondary: '#858796'
+    };
+
+    // Gráfico de Status das Camas
+    new Chart(document.getElementById('camasChart'), {
+        type: 'doughnut',
+        data: {
+            labels: {{ camas_labels|safe }},
+            datasets: [{
+                data: {{ camas_data|safe }},
+                backgroundColor: [colors.success, colors.danger],
+                borderWidth: 2
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { position: 'bottom' },
+                tooltip: { enabled: true }
+            }
+        }
+    });
+
+    // Gráfico de Reservas por Status
+    new Chart(document.getElementById('reservasChart'), {
+        type: 'bar',
+        data: {
+            labels: {{ reservas_labels|safe }},
+            datasets: [{
+                label: 'Quantidade',
+                data: {{ reservas_data|safe }},
+                backgroundColor: [
+                    colors.success,
+                    colors.danger,
+                    colors.secondary
+                ],
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: { beginAtZero: true, grid: { color: '#f8f9fa' } },
+                x: { grid: { display: false } }
+            },
+            plugins: {
+                legend: { display: false }
+            }
+        }
+    });
+</script>
+{% endblock %}
