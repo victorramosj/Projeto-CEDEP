@@ -1,0 +1,126 @@
+{% extends "cedepe/base.html" %}
+{% load static %}
+
+{% block title %}Formulário Reserva{% endblock %}
+
+{% block content %}
+
+    <div class="container mt-5">
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <div class="card shadow">
+                    <div class="card-header bg-primary text-white">
+                        <h3 class="mb-0">
+                            <i class="bi bi-journal-plus me-2"></i>
+                            {% if object %}Editar Reserva{% else %}Nova Reserva{% endif %}
+                        </h3>
+                    </div>
+                    <div class="card-body">
+                        <form method="post">
+                            {% csrf_token %}
+                            
+                            <!-- Hóspede -->
+                            <div class="mb-3">
+                                <label class="form-label" for="id_hospede">
+                                    <i class="bi bi-person me-2"></i>Hóspede
+                                </label>
+                                <select name="hospede" id="id_hospede" 
+                                    class="form-select {% if form.hospede.errors %}is-invalid{% endif %}">
+                                    <option value="">Selecione...</option>
+                                    {% for hospede in form.hospede.field.queryset %}
+                                        <option value="{{ hospede.pk }}" 
+                                            {% if form.hospede.value == hospede.pk %}selected{% endif %}>
+                                            {{ hospede.nome }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                                {% for error in form.hospede.errors %}
+                                    <div class="invalid-feedback">{{ error }}</div>
+                                {% endfor %}
+                            </div>
+
+                            <!-- Cama -->
+                            <div class="mb-3">
+                                <label class="form-label" for="id_cama">
+                                    <i class="bi bi-bed me-2"></i>Cama
+                                </label>
+                                <select name="cama" id="id_cama" 
+                                    class="form-select {% if form.cama.errors %}is-invalid{% endif %}">
+                                    <option value="">Selecione...</option>
+                                    {% for cama in form.cama.field.queryset %}
+                                        <option value="{{ cama.pk }}" 
+                                            {% if form.cama.value == cama.pk %}selected{% endif %}>
+                                            {{ cama.identificacao }} (Quarto {{ cama.quarto.numero }})
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                                {% for error in form.cama.errors %}
+                                    <div class="invalid-feedback">{{ error }}</div>
+                                {% endfor %}
+                            </div>
+
+                            <!-- Datas -->
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label" for="id_data_checkin">
+                                            <i class="bi bi-calendar-check me-2"></i>Check-in
+                                        </label>
+                                        <input type="date" name="data_checkin" id="id_data_checkin" 
+                                            class="form-control {% if form.data_checkin.errors %}is-invalid{% endif %}" 
+                                            value="{{ form.data_checkin.value|default:'' }}">
+                                        {% for error in form.data_checkin.errors %}
+                                            <div class="invalid-feedback">{{ error }}</div>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label" for="id_data_checkout">
+                                            <i class="bi bi-calendar-x me-2"></i>Check-out
+                                        </label>
+                                        <input type="date" name="data_checkout" id="id_data_checkout" 
+                                            class="form-control {% if form.data_checkout.errors %}is-invalid{% endif %}" 
+                                            value="{{ form.data_checkout.value|default:'' }}">
+                                        {% for error in form.data_checkout.errors %}
+                                            <div class="invalid-feedback">{{ error }}</div>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Status -->
+                            <div class="mb-3">
+                                <label class="form-label" for="id_status">
+                                    <i class="bi bi-list-check me-2"></i>Status
+                                </label>
+                                <select name="status" id="id_status" 
+                                    class="form-select {% if form.status.errors %}is-invalid{% endif %}">
+                                    {% for value, label in form.fields.status.choices %}
+                                        <option value="{{ value }}" 
+                                            {% if form.status.value == value %}selected{% endif %}>
+                                            {{ label }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                                {% for error in form.status.errors %}
+                                    <div class="invalid-feedback">{{ error }}</div>
+                                {% endfor %}
+                            </div>
+
+                            <div class="d-grid gap-2 d-md-flex justify-content-end">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="bi bi-save me-2"></i>Salvar
+                                </button>
+                                <a href="{% url 'gerenciar_reservas' %}" class="btn btn-secondary">
+                                    <i class="bi bi-x-circle me-2"></i>Cancelar
+                                </a>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+   
+{% endblock %}

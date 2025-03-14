@@ -1,13 +1,11 @@
-
 from django.contrib import admin
 from cedepe import views  # Importe as views do app principal
-
 from django.urls import path, include
 from django.contrib.auth import views as auth_views
 
 urlpatterns = [
     path('admin/', admin.site.urls, name='admin'),
-    #path('reservas/', include('reservas.urls')),  
+    path('reservas/', include('reservas.urls')),  # Inclui as URLs do app reservas
     path('', views.dashboard, name='home'),  # View principal
     # Rotas de autenticação
     path('login/', views.user_login, name='login'),

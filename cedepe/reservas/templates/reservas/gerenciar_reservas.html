@@ -1,0 +1,198 @@
+{% extends "cedepe/base.html" %}
+{% load static %}
+
+{% block title %}Gerenciar Reservas{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>Gerenciar Reservas</h1>
+    <div>
+      <a href="{% url 'reserva_form' %}" class="btn btn-success btn-sm me-2">
+        <i class="bi bi-plus-circle"></i> Nova Reserva
+      </a>
+    </div>
+  </div>
+
+  <!-- Filtro de busca -->
+  <form method="GET" class="mb-4">
+    <div class="row g-2">
+      <div class="col-md-3">
+        <select name="filter_by" class="form-select">
+          <option value="all" {% if filter_by == "all" %}selected{% endif %}>Todos</option>
+          <option value="hospede" {% if filter_by == "hospede" %}selected{% endif %}>Hóspede</option>
+          <option value="quarto" {% if filter_by == "quarto" %}selected{% endif %}>Quarto</option>
+          <option value="status" {% if filter_by == "status" %}selected{% endif %}>Status</option>
+        </select>
+      </div>
+      <div class="col-md-9">
+        <div class="input-group">
+          <input type="text" name="q" value="{{ query }}" class="form-control" placeholder="Pesquisar...">
+          <button class="btn btn-outline-primary" type="submit">
+            <i class="bi bi-search"></i> Buscar
+          </button>
+        </div>
+      </div>
+    </div>
+  </form>
+
+  <!-- Tabela de Reservas -->
+  <div class="card shadow-sm">
+    <div class="card-body">
+      <div class="table-responsive">
+        <table class="table table-hover table-bordered">
+          <thead class="table-light">
+            <tr>
+              <th>ID</th>
+              <th>Hóspede</th>
+              <th>Quarto</th>
+              <th>Cama</th>
+              <th>Check-in</th>
+              <th>Check-out</th>
+              <th>Status</th>
+              <th>Ações</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for reserva in reservas %}
+            <tr>
+              <td>{{ reserva.id }}</td>
+              <td>{{ reserva.hospede.nome }}</td>
+              <td>{{ reserva.cama.quarto.numero }}</td>
+              <td>{{ reserva.cama.identificacao }}</td>
+              <td>{{ reserva.data_checkin|date:"d/m/Y" }}</td>
+              <td>{{ reserva.data_checkout|date:"d/m/Y" }}</td>
+              <td>
+                <span class="badge {% if reserva.status == 'ATIVA' %}bg-success{% elif reserva.status == 'CANCELADA' %}bg-warning{% else %}bg-secondary{% endif %}">
+                  {{ reserva.get_status_display }}
+                </span>
+              </td>
+              <td>
+                <a href="{% url 'editar_reserva' reserva.id %}" class="btn btn-sm btn-primary">
+                  <i class="bi bi-pencil-square"></i> Editar
+                </a>
+                <a href="#" class="btn btn-sm btn-danger" onclick="deleteReserva({{ reserva.id }}); return false;">
+                  <i class="bi bi-trash"></i> Excluir
+                </a>
+              </td>
+            </tr>
+            {% empty %}
+            <tr>
+              <td colspan="8" class="text-center">Nenhuma reserva cadastrada.</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Paginação -->
+      <nav>
+        <ul class="pagination justify-content-center">
+          {% if reservas.has_previous %}
+          <li class="page-item">
+            <a class="page-link" href="?page={{ reservas.previous_page_number }}{% if query %}&q={{ query }}{% endif %}{% if filter_by %}&filter_by={{ filter_by }}{% endif %}">Anterior</a>
+          </li>
+          {% else %}
+          <li class="page-item disabled">
+            <span class="page-link">Anterior</span>
+          </li>
+          {% endif %}
+
+          {% for num in reservas.paginator.page_range %}
+            {% if reservas.number == num %}
+            <li class="page-item active">
+              <span class="page-link">{{ num }}</span>
+            </li>
+            {% elif num > reservas.number|add:'-3' and num < reservas.number|add:'3' %}
+            <li class="page-item">
+              <a class="page-link" href="?page={{ num }}{% if query %}&q={{ query }}{% endif %}{% if filter_by %}&filter_by={{ filter_by }}{% endif %}">{{ num }}</a>
+            </li>
+            {% endif %}
+          {% endfor %}
+
+          {% if reservas.has_next %}
+          <li class="page-item">
+            <a class="page-link" href="?page={{ reservas.next_page_number }}{% if query %}&q={{ query }}{% endif %}{% if filter_by %}&filter_by={{ filter_by }}{% endif %}">Próximo</a>
+          </li>
+          {% else %}
+          <li class="page-item disabled">
+            <span class="page-link">Próximo</span>
+          </li>
+          {% endif %}
+        </ul>
+      </nav>
+    </div>
+  </div>
+</div>
+
+<!-- Modal para confirmação de exclusão de reserva -->
+<div class="modal fade" id="deleteReservaModal" tabindex="-1" aria-labelledby="deleteReservaModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="deleteReservaModalLabel">Confirmar Exclusão</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+      </div>
+      <div class="modal-body">
+        Tem certeza que deseja excluir esta reserva?
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button type="button" class="btn btn-danger" id="confirmDeleteReserva">Excluir</button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  let reservaIdToDelete = null;
+  
+  function deleteReserva(reservaId) {
+    reservaIdToDelete = reservaId;
+    var deleteModal = new bootstrap.Modal(document.getElementById('deleteReservaModal'));
+    deleteModal.show();
+  }
+
+  document.getElementById('confirmDeleteReserva').addEventListener('click', function() {
+    const csrftoken = getCookie('csrftoken');
+    fetch(`/api/reservas/${reservaIdToDelete}/`, {
+      method: 'DELETE',
+      headers: {
+        'X-CSRFToken': csrftoken,
+        'Content-Type': 'application/json'
+      }
+    })
+    .then(response => {
+      if (response.status === 204) {
+        alert('Reserva excluída com sucesso.');
+        location.reload();
+      } else {
+        return response.json().then(data => {
+          alert(data.message || 'Erro ao excluir a reserva.');
+        });
+      }
+    })
+    .catch(error => {
+      console.error('Erro:', error);
+      alert('Erro ao excluir a reserva.');
+    });
+  });
+
+  function getCookie(name) {
+      let cookieValue = null;
+      if (document.cookie && document.cookie !== '') {
+          const cookies = document.cookie.split(';');
+          for (let i = 0; i < cookies.length; i++) {
+              const cookie = cookies[i].trim();
+              if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                  cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                  break;
+              }
+          }
+      }
+      return cookieValue;
+  }
+</script>
+{% endblock %}

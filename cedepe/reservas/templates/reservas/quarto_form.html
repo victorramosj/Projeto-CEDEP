@@ -1,0 +1,62 @@
+{% extends "cedepe/base.html" %}
+{% load static %}
+
+{% block title %}Formulário quarto{% endblock %}
+
+{% block content %}
+
+    <div class="container mt-5">
+        <div class="row justify-content-center">
+            <div class="col-md-6">
+                <div class="card shadow">
+                    <div class="card-header bg-primary text-white">
+                        <h3 class="mb-0">
+                            <i class="bi bi-door-closed me-2"></i>
+                            {% if object %}Editar Quarto{% else %}Novo Quarto{% endif %}
+                        </h3>
+                    </div>
+                    <div class="card-body">
+                        <form method="post">
+                            {% csrf_token %}
+                            
+                            <!-- Número -->
+                            <div class="mb-3">
+                                <label class="form-label" for="id_numero">
+                                    <i class="bi bi-123 me-2"></i>Número
+                                </label>
+                                <input type="number" name="numero" id="id_numero" 
+                                    class="form-control {% if form.numero.errors %}is-invalid{% endif %}" 
+                                    value="{{ form.numero.value|default:'' }}">
+                                {% for error in form.numero.errors %}
+                                    <div class="invalid-feedback">{{ error }}</div>
+                                {% endfor %}
+                            </div>
+
+                            <!-- Descrição -->
+                            <div class="mb-3">
+                                <label class="form-label" for="id_descricao">
+                                    <i class="bi bi-text-paragraph me-2"></i>Descrição
+                                </label>
+                                <textarea name="descricao" id="id_descricao" 
+                                    class="form-control {% if form.descricao.errors %}is-invalid{% endif %}" 
+                                    rows="3">{{ form.descricao.value|default:'' }}</textarea>
+                                {% for error in form.descricao.errors %}
+                                    <div class="invalid-feedback">{{ error }}</div>
+                                {% endfor %}
+                            </div>
+
+                            <div class="d-grid gap-2 d-md-flex justify-content-end">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="bi bi-save me-2"></i>Salvar
+                                </button>
+                                <a href="{% url 'gerenciar_quartos' %}" class="btn btn-secondary">
+                                    <i class="bi bi-x-circle me-2"></i>Cancelar
+                                </a>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endblock %}

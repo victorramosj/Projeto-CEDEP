@@ -1,0 +1,88 @@
+{% extends "cedepe/base.html" %}
+{% load static %}
+
+{% block title %}Formulário Cama{% endblock %}
+
+{% block content %}
+
+    <div class="container mt-5">
+        <div class="row justify-content-center">
+            <div class="col-md-6">
+                <div class="card shadow">
+                    <div class="card-header bg-primary text-white">
+                        <h3 class="mb-0">
+                            <i class="bi bi-bed me-2"></i>
+                            {% if object %}Editar Cama{% else %}Nova Cama{% endif %}
+                        </h3>
+                    </div>
+                    <div class="card-body">
+                        <form method="post">
+                            {% csrf_token %}
+                            
+                            <!-- Quarto -->
+                            <div class="mb-3">
+                                <label class="form-label" for="id_quarto">
+                                    <i class="bi bi-door-closed me-2"></i>Quarto
+                                </label>
+                                <select name="quarto" id="id_quarto" 
+                                    class="form-select {% if form.quarto.errors %}is-invalid{% endif %}">
+                                    <option value="">Selecione...</option>
+                                    {% for quarto in form.quarto.field.queryset %}
+                                        <option value="{{ quarto.pk }}" 
+                                            {% if form.quarto.value == quarto.pk %}selected{% endif %}>
+                                            {{ quarto.numero }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                                {% for error in form.quarto.errors %}
+                                    <div class="invalid-feedback">{{ error }}</div>
+                                {% endfor %}
+                            </div>
+
+                            <!-- Identificação -->
+                            <div class="mb-3">
+                                <label class="form-label" for="id_identificacao">
+                                    <i class="bi bi-tag me-2"></i>Identificação
+                                </label>
+                                <input type="text" name="identificacao" id="id_identificacao" 
+                                    class="form-control {% if form.identificacao.errors %}is-invalid{% endif %}" 
+                                    value="{{ form.identificacao.value|default:'' }}">
+                                {% for error in form.identificacao.errors %}
+                                    <div class="invalid-feedback">{{ error }}</div>
+                                {% endfor %}
+                            </div>
+
+                            <!-- Status -->
+                            <div class="mb-3">
+                                <label class="form-label" for="id_status">
+                                    <i class="bi bi-list-check me-2"></i>Status
+                                </label>
+                                <select name="status" id="id_status" 
+                                    class="form-select {% if form.status.errors %}is-invalid{% endif %}">
+                                    {% for value, label in form.fields.status.choices %}
+                                        <option value="{{ value }}" 
+                                            {% if form.status.value == value %}selected{% endif %}>
+                                            {{ label }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                                {% for error in form.status.errors %}
+                                    <div class="invalid-feedback">{{ error }}</div>
+                                {% endfor %}
+                            </div>
+
+                            <div class="d-grid gap-2 d-md-flex justify-content-end">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="bi bi-save me-2"></i>Salvar
+                                </button>
+                                <a href="{% url 'gerenciar_camas' %}" class="btn btn-secondary">
+                                    <i class="bi bi-x-circle me-2"></i>Cancelar
+                                </a>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endblock %}

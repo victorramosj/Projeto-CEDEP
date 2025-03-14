@@ -1,0 +1,192 @@
+{% extends "cedepe/base.html" %}
+{% load static %}
+
+{% block title %}Gerenciar Hóspedes{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>Gerenciar Hóspedes</h1>
+    <div>
+      <a href="{% url 'hospede_form' %}" class="btn btn-success btn-sm me-2">
+        <i class="bi bi-plus-circle"></i> Adicionar Novo Hóspede
+      </a>
+    </div>
+  </div>
+
+  <!-- Filtro de busca -->
+  <form method="GET" class="mb-4">
+    <div class="row g-2">
+      <div class="col-md-3">
+        <select name="filter_by" class="form-select">
+          <option value="all" {% if filter_by == "all" %}selected{% endif %}>Todos</option>
+          <option value="nome" {% if filter_by == "nome" %}selected{% endif %}>Nome</option>
+          <option value="cpf" {% if filter_by == "cpf" %}selected{% endif %}>CPF</option>
+          <option value="email" {% if filter_by == "email" %}selected{% endif %}>Email</option>
+        </select>
+      </div>
+      <div class="col-md-9">
+        <div class="input-group">
+          <input type="text" name="q" value="{{ query }}" class="form-control" placeholder="Pesquisar...">
+          <button class="btn btn-outline-primary" type="submit">
+            <i class="bi bi-search"></i> Buscar
+          </button>
+        </div>
+      </div>
+    </div>
+  </form>
+
+  <!-- Tabela de Hóspedes -->
+  <div class="card shadow-sm">
+    <div class="card-body">
+      <div class="table-responsive">
+        <table class="table table-hover table-bordered">
+          <thead class="table-light">
+            <tr>
+              <th>ID</th>
+              <th>Nome</th>
+              <th>CPF</th>
+              <th>Email</th>
+              <th>Telefone</th>
+              <th>Endereço</th>
+              <th>Ações</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for hospede in hospedes %}
+            <tr>
+              <td>{{ hospede.id }}</td>
+              <td>{{ hospede.nome }}</td>
+              <td>{{ hospede.cpf }}</td>
+              <td>{{ hospede.email }}</td>
+              <td>{{ hospede.telefone }}</td>
+              <td>{{ hospede.endereco }}</td>
+              <td>
+                <a href="{% url 'editar_hospede' hospede.id %}" class="btn btn-sm btn-primary">
+                  <i class="bi bi-pencil-square"></i> Editar
+                </a>
+                <a href="#" class="btn btn-sm btn-danger" onclick="deleteHospede({{ hospede.id }}); return false;">
+                  <i class="bi bi-trash"></i> Excluir
+                </a>
+              </td>
+            </tr>
+            {% empty %}
+            <tr>
+              <td colspan="7" class="text-center">Nenhum hóspede cadastrado.</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Paginação -->
+      <nav>
+        <ul class="pagination justify-content-center">
+          {% if hospedes.has_previous %}
+          <li class="page-item">
+            <a class="page-link" href="?page={{ hospedes.previous_page_number }}{% if query %}&q={{ query }}{% endif %}{% if filter_by %}&filter_by={{ filter_by }}{% endif %}">Anterior</a>
+          </li>
+          {% else %}
+          <li class="page-item disabled">
+            <span class="page-link">Anterior</span>
+          </li>
+          {% endif %}
+
+          {% for num in hospedes.paginator.page_range %}
+            {% if hospedes.number == num %}
+            <li class="page-item active">
+              <span class="page-link">{{ num }}</span>
+            </li>
+            {% elif num > hospedes.number|add:'-3' and num < hospedes.number|add:'3' %}
+            <li class="page-item">
+              <a class="page-link" href="?page={{ num }}{% if query %}&q={{ query }}{% endif %}{% if filter_by %}&filter_by={{ filter_by }}{% endif %}">{{ num }}</a>
+            </li>
+            {% endif %}
+          {% endfor %}
+
+          {% if hospedes.has_next %}
+          <li class="page-item">
+            <a class="page-link" href="?page={{ hospedes.next_page_number }}{% if query %}&q={{ query }}{% endif %}{% if filter_by %}&filter_by={{ filter_by }}{% endif %}">Próximo</a>
+          </li>
+          {% else %}
+          <li class="page-item disabled">
+            <span class="page-link">Próximo</span>
+          </li>
+          {% endif %}
+        </ul>
+      </nav>
+    </div>
+  </div>
+</div>
+
+<!-- Modal para confirmação de exclusão de hóspede -->
+<div class="modal fade" id="deleteHospedeModal" tabindex="-1" aria-labelledby="deleteHospedeModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="deleteHospedeModalLabel">Confirmar Exclusão</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+      </div>
+      <div class="modal-body">
+        Tem certeza que deseja excluir este hóspede?
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button type="button" class="btn btn-danger" id="confirmDeleteHospede">Excluir</button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  let hospedeIdToDelete = null;
+  
+  function deleteHospede(hospedeId) {
+    hospedeIdToDelete = hospedeId;
+    var deleteModal = new bootstrap.Modal(document.getElementById('deleteHospedeModal'));
+    deleteModal.show();
+  }
+
+  document.getElementById('confirmDeleteHospede').addEventListener('click', function() {
+    const csrftoken = getCookie('csrftoken');
+    fetch(`/api/hospedes/${hospedeIdToDelete}/`, {
+      method: 'DELETE',
+      headers: {
+        'X-CSRFToken': csrftoken,
+        'Content-Type': 'application/json'
+      }
+    })
+    .then(response => {
+      if (response.status === 204) {
+        alert('Hóspede excluído com sucesso.');
+        location.reload();
+      } else {
+        return response.json().then(data => {
+          alert(data.message || 'Erro ao excluir o hóspede.');
+        });
+      }
+    })
+    .catch(error => {
+      console.error('Erro:', error);
+      alert('Erro ao excluir o hóspede.');
+    });
+  });
+
+  function getCookie(name) {
+      let cookieValue = null;
+      if (document.cookie && document.cookie !== '') {
+          const cookies = document.cookie.split(';');
+          for (let i = 0; i < cookies.length; i++) {
+              const cookie = cookies[i].trim();
+              if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                  cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                  break;
+              }
+          }
+      }
+      return cookieValue;
+  }
+</script>
+{% endblock %}
