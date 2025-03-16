@@ -21,6 +21,8 @@ class QuartoSerializer(serializers.ModelSerializer):
 
 
 class CamaSerializer(serializers.ModelSerializer):
+    reserva_atual = serializers.SerializerMethodField()
+    
     class Meta:
         model = Cama
         fields = [
@@ -28,9 +30,25 @@ class CamaSerializer(serializers.ModelSerializer):
             'quarto',
             'identificacao',
             'status',
+            'reserva_atual',
             'criado_em',
             'atualizado_em'
         ]
+    
+    def get_reserva_atual(self, obj):
+        reserva = obj.reserva_set.filter(status='ATIVA').first()
+        if reserva:
+            return {
+                'id': reserva.id,
+                'hospede': {
+                    'id': reserva.hospede.id,
+                    'nome': reserva.hospede.nome,
+                    'cpf': reserva.hospede.cpf
+                },
+                'data_checkin': reserva.data_checkin,
+                'data_checkout': reserva.data_checkout
+            }
+        return None
 
 
 class HospedeSerializer(serializers.ModelSerializer):

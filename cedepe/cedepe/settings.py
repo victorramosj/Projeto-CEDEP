@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     'reservas',
     'cedepe',
     'rest_framework',
+    'django_filters',
 ]
 
 MIDDLEWARE = [

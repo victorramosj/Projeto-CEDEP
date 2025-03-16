@@ -2,141 +2,227 @@
 {% load static %}
 
 {% block title %}Formulário Reserva{% endblock %}
+{% block extra_style %}
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+{% endblock %}
 
 {% block content %}
-
-    <div class="container mt-5">
-        <div class="row justify-content-center">
-            <div class="col-md-8">
-                <div class="card shadow">
-                    <div class="card-header bg-success text-white">
-                        <h3 class="mb-0">
-                          <i class="bi bi-journal-plus me-2"></i>
-                          {% if reserva %}Editar Reserva{% else %}Nova Reserva{% endif %}
-                        </h3>
-                      </div>
-                      
-                    <div class="card-body">
-                        {% if form.errors %}
-                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                            <h5 class="alert-heading">
-                                <i class="bi bi-exclamation-octagon-fill"></i> Erros no formulário!
-                            </h5>
-                            <ul class="mb-0">
-                                {% for field, errors in form.errors.items %}
-                                    {% for error in errors %}
-                                        <li>{{ error }}</li>
-                                    {% endfor %}
-                                {% endfor %}
-                            </ul>
-                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
-                        </div>
-                        {% endif %}
-                        <form method="post">
-                            {% csrf_token %}
-                            
-                            <!-- Hóspede -->
-                            <div class="mb-3">
-                                <label class="form-label" for="id_hospede">
-                                    <i class="bi bi-person me-2"></i>Hóspede
-                                </label>
-                                <select name="hospede" id="id_hospede" 
-                                    class="form-select {% if form.hospede.errors %}is-invalid{% endif %}">
-                                    <option value="">Selecione...</option>
-                                    {% for hospede in form.hospede.field.queryset %}
-                                        <option value="{{ hospede.pk }}" 
-                                            {% if form.hospede.value == hospede.pk %}selected{% endif %}>
-                                            {{ hospede.nome }}
-                                        </option>
-                                    {% endfor %}
-                                </select>
-                                {% for error in form.hospede.errors %}
-                                    <div class="invalid-feedback">{{ error }}</div>
-                                {% endfor %}
-                            </div>
-
-                            <!-- Cama -->
-                            <div class="mb-3">
-                                <label class="form-label" for="id_cama">
-                                    <i class="bi bi-bed me-2"></i>Cama
-                                </label>
-                                <select name="cama" id="id_cama" 
-                                    class="form-select {% if form.cama.errors %}is-invalid{% endif %}">
-                                    <option value="">Selecione...</option>
-                                    {% for cama in form.cama.field.queryset %}
-                                        <option value="{{ cama.pk }}" 
-                                            {% if form.cama.value == cama.pk %}selected{% endif %}>
-                                            {{ cama.identificacao }} (Quarto {{ cama.quarto.numero }})
-                                        </option>
-                                    {% endfor %}
-                                </select>
-                                {% for error in form.cama.errors %}
-                                    <div class="invalid-feedback">{{ error }}</div>
-                                {% endfor %}
-                            </div>
-
-                            <!-- Datas -->
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <div class="mb-3">
-                                        <label class="form-label" for="id_data_checkin">
-                                            <i class="bi bi-calendar-check me-2"></i>Check-in
-                                        </label>
-                                        <input type="date" name="data_checkin" id="id_data_checkin"
-                                            class="form-control {% if form.data_checkin.errors %}is-invalid{% endif %}"
-                                            value="{{ form.data_checkin.value|date:'Y-m-d'|default:'' }}">
-                                        {% for error in form.data_checkin.errors %}
-                                            <div class="invalid-feedback">{{ error }}</div>
-                                        {% endfor %}
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="mb-3">
-                                        <label class="form-label" for="id_data_checkout">
-                                            <i class="bi bi-calendar-x me-2"></i>Check-out
-                                        </label>
-                                        <input type="date" name="data_checkout" id="id_data_checkout"
-                                            class="form-control {% if form.data_checkout.errors %}is-invalid{% endif %}"
-                                            value="{{ form.data_checkout.value|date:'Y-m-d'|default:'' }}">
-                                        {% for error in form.data_checkout.errors %}
-                                            <div class="invalid-feedback">{{ error }}</div>
-                                        {% endfor %}
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Status -->
-                            <div class="mb-3">
-                                <label class="form-label" for="id_status">
-                                    <i class="bi bi-list-check me-2"></i>Status
-                                </label>
-                                <select name="status" id="id_status" 
-                                    class="form-select {% if form.status.errors %}is-invalid{% endif %}">
-                                    {% for value, label in form.fields.status.choices %}
-                                        <option value="{{ value }}" 
-                                            {% if form.status.value == value %}selected{% endif %}>
-                                            {{ label }}
-                                        </option>
-                                    {% endfor %}
-                                </select>
-                                {% for error in form.status.errors %}
-                                    <div class="invalid-feedback">{{ error }}</div>
-                                {% endfor %}
-                            </div>
-
-                            <div class="d-grid gap-2 d-md-flex justify-content-end">
-                                <button type="submit" class="btn btn-primary">
-                                    <i class="bi bi-save me-2"></i>Salvar
-                                </button>
-                                <a href="{% url 'gerenciar_reservas' %}" class="btn btn-secondary">
-                                    <i class="bi bi-x-circle me-2"></i>Cancelar
-                                </a>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            </div>
+<div class="container mt-5">
+  <div class="row justify-content-center">
+    <div class="col-md-8">
+      <div class="card shadow">
+        <div class="card-header bg-success text-white">
+          <h3 class="mb-0">
+            <i class="bi bi-journal-plus me-2"></i>
+            {% if reserva %}Editar Reserva{% else %}Nova Reserva{% endif %}
+          </h3>
         </div>
+
+        <div class="card-body">
+          {% if form.errors %}
+          <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <h5 class="alert-heading">
+              <i class="bi bi-exclamation-octagon-fill"></i> Erros no formulário!
+            </h5>
+            <ul class="mb-0">
+              {% for field, errors in form.errors.items %}
+              {% for error in errors %}
+              <li>{{ error }}</li>
+              {% endfor %}
+              {% endfor %}
+            </ul>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+          </div>
+          {% endif %}
+          <form method="post">
+            {% csrf_token %}
+
+            <!-- Hóspede -->
+            <div class="mb-3">
+              <label class="form-label" for="id_hospede">
+                <i class="bi bi-person me-2"></i>Hóspede
+              </label>
+              <select name="hospede" id="id_hospede"
+                class="form-select {% if form.hospede.errors %}is-invalid{% endif %}">
+                <option value="">Selecione...</option>
+                {% for hospede in form.hospede.field.queryset %}
+                <option value="{{ hospede.pk }}" {% if form.hospede.value == hospede.pk %}selected{% endif %}>
+                  {{ hospede.nome }}
+                </option>
+                {% endfor %}
+              </select>
+              {% for error in form.hospede.errors %}
+              <div class="invalid-feedback">{{ error }}</div>
+              {% endfor %}
+            </div>
+
+            <!-- Quarto -->
+            <div class="mb-3">
+              <label class="form-label" for="id_quarto">
+                <i class="bi bi-door-open me-2"></i>Quarto
+              </label>
+              <select name="quarto" id="id_quarto" class="form-select" required>
+                <option value="">Selecione um quarto...</option>
+                {% for quarto in quartos %}
+                <option value="{{ quarto.id }}" {% if quarto.id == quarto_selecionado %}selected{% endif %}>
+                    Quarto {{ quarto.numero }}
+                </option>
+                {% endfor %}
+            </select>
+            
+            </div>
+
+            <!-- Cama Disponível (carregado dinamicamente) -->
+            <div class="mb-3">
+              <label class="form-label" for="id_cama">
+                <i class="bi bi-bed me-2"></i>Cama Disponível
+              </label>
+              <select name="cama" id="id_cama" class="form-select {% if form.cama.errors %}is-invalid{% endif %}"
+                {% if not quarto_selecionado %}disabled{% endif %}>
+                {% if cama_selecionada %}
+                    <option value="{{ cama_selecionada.id }}" selected>
+                        {{ cama_selecionada.identificacao }}
+                    </option>
+                {% else %}
+                    <option value="">Selecione um quarto primeiro</option>
+                {% endif %}
+        </select>
+
+              {% for error in form.cama.errors %}
+              <div class="invalid-feedback">{{ error }}</div>
+              {% endfor %}
+            </div>
+
+            <!-- Datas -->
+            <div class="row">
+              <div class="col-md-6">
+                <div class="mb-3">
+                  <label class="form-label" for="id_data_checkin">
+                    <i class="bi bi-calendar-check me-2"></i>Check-in
+                  </label>
+                  <input type="date" name="data_checkin" id="id_data_checkin"
+                         class="form-control {% if form.data_checkin.errors %}is-invalid{% endif %}"
+                         value="{{ form.data_checkin.value|date:'Y-m-d'|default:'' }}">
+                  {% for error in form.data_checkin.errors %}
+                  <div class="invalid-feedback">{{ error }}</div>
+                  {% endfor %}
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="mb-3">
+                  <label class="form-label" for="id_data_checkout">
+                    <i class="bi bi-calendar-x me-2"></i>Check-out
+                  </label>
+                  <input type="date" name="data_checkout" id="id_data_checkout"
+                         class="form-control {% if form.data_checkout.errors %}is-invalid{% endif %}"
+                         value="{{ form.data_checkout.value|date:'Y-m-d'|default:'' }}">
+                  {% for error in form.data_checkout.errors %}
+                  <div class="invalid-feedback">{{ error }}</div>
+                  {% endfor %}
+                </div>
+              </div>
+            </div>
+
+            <!-- Status -->
+            <div class="mb-3">
+              <label class="form-label" for="id_status">
+                <i class="bi bi-list-check me-2"></i>Status
+              </label>
+              <select name="status" id="id_status"
+                      class="form-select {% if form.status.errors %}is-invalid{% endif %}">
+                {% for value, label in form.fields.status.choices %}
+                <option value="{{ value }}" {% if form.status.value == value %}selected{% endif %}>
+                  {{ label }}
+                </option>
+                {% endfor %}
+              </select>
+              {% for error in form.status.errors %}
+              <div class="invalid-feedback">{{ error }}</div>
+              {% endfor %}
+            </div>
+
+            <div class="d-grid gap-2 d-md-flex justify-content-end">
+              <button type="submit" class="btn btn-primary">
+                <i class="bi bi-save me-2"></i>Salvar
+              </button>
+              <a href="{% url 'gerenciar_reservas' %}" class="btn btn-secondary">
+                <i class="bi bi-x-circle me-2"></i>Cancelar
+              </a>
+              <a href="{% url 'mapa_interativo' %}" class="btn btn-info">
+                <i class="bi bi-arrow-left-circle me-2"></i>Retornar ao Mapa
+              </a>
+            </div>
+          </form>
+        </div>
+      </div>
     </div>
-   
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const quartoSelect = document.getElementById('id_quarto');
+    const camaSelect = document.getElementById('id_cama');
+    // Captura o id da cama selecionada, se houver, para comparações (sempre como string)
+    const selectedCamaId = "{{ cama_selecionada.id|default:'' }}";
+    
+    // Inicializa os selects com Select2
+    $(quartoSelect).select2({
+      placeholder: "Selecione um quarto",
+      allowClear: true
+    });
+    
+    $(camaSelect).select2({
+      placeholder: "Selecione uma cama",
+      allowClear: true
+    });
+    
+    // Função para carregar as camas disponíveis via AJAX para o quarto selecionado
+    async function carregarCamas(quartoId) {
+      if (!quartoId) {
+        $(camaSelect).empty().append('<option value="">Selecione um quarto primeiro</option>');
+        $(camaSelect).prop('disabled', true).trigger('change');
+        return;
+      }
+      
+      try {
+        const response = await fetch(`/reservas/camas_disponiveis/?quarto=${quartoId}`);
+        if (!response.ok) throw new Error('Erro na resposta do servidor');
+        const data = await response.json();
+        
+        $(camaSelect).empty();
+        if (data.camas.length > 0) {
+          data.camas.forEach(cama => {
+            const isSelected = (String(cama.id) === selectedCamaId);
+            const newOption = new Option(cama.identificacao, cama.id, false, isSelected);
+            $(camaSelect).append(newOption);
+          });
+        } else {
+          $(camaSelect).append('<option value="">Nenhuma cama disponível</option>');
+        }
+        
+        $(camaSelect).prop('disabled', false).trigger('change');
+      } catch (error) {
+        console.error('Erro:', error);
+        $(camaSelect).empty().append('<option value="">Erro ao carregar camas</option>');
+      }
+    }
+    
+    // Quando o quarto selecionado mudar, carrega as camas correspondentes
+    $(quartoSelect).on('change', function() {
+      const quartoId = this.value;
+      carregarCamas(quartoId);
+      $(camaSelect).val(null).trigger('change');
+    });
+    
+    // Se já houver um quarto selecionado (edição de reserva), carrega as camas dele
+    {% if quarto_selecionado %}
+      carregarCamas("{{ quarto_selecionado }}");
+    {% endif %}
+  });
+</script>
 {% endblock %}

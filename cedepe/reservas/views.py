@@ -16,15 +16,16 @@ class QuartoViewSet(viewsets.ModelViewSet):
 
 
 class CamaViewSet(viewsets.ModelViewSet):
-    """
-    ViewSet para o CRUD de Camas.
-    Permite criar, listar, atualizar e excluir camas.
-    Possui busca pela identificação da cama.
-    """
     queryset = Cama.objects.all()
     serializer_class = CamaSerializer
-    filter_backends = [filters.SearchFilter]
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter]
+    filterset_fields = ['quarto']
     search_fields = ['identificacao']
+
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        context.update({'request': self.request})
+        return context
 
 
 class HospedeViewSet(viewsets.ModelViewSet):
@@ -50,6 +51,12 @@ class ReservaViewSet(viewsets.ModelViewSet):
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     filterset_fields = ['hospede', 'cama__quarto', 'status']
     search_fields = ['hospede__nome', 'cama__quarto__numero', 'status']
+
+    def perform_destroy(self, instance):
+        cama = instance.cama
+        cama.status = 'DISPONIVEL'
+        cama.save()
+        instance.delete()
 
 # reservas/views.py
 from django.shortcuts import render, redirect, get_object_or_404
@@ -244,14 +251,27 @@ def hospede_form(request, pk=None):
 
 from django.shortcuts import render, get_object_or_404, redirect
 from .forms import ReservaForm
-from .models import Reserva
+from .models import Reserva, Cama, Quarto
 
 def reserva_form(request, pk=None):
-    """ Cria ou edita uma Reserva. """
+    reserva = None
+    quarto_selecionado = None
+    cama_selecionada = None
+    
+    # Verifica se veio cama por query parameter
+    cama_id = request.GET.get('cama')
+    if cama_id:
+        cama_selecionada = get_object_or_404(Cama, pk=cama_id)
+        quarto_selecionado = cama_selecionada.quarto.id
+
+    # Se for edição, carrega a reserva
     if pk:
         reserva = get_object_or_404(Reserva, pk=pk)
-    else:
-        reserva = None
+        cama_selecionada = reserva.cama
+        quarto_selecionado = reserva.cama.quarto.id
+
+    # Recupera todos os quartos para preencher o select
+    quartos = Quarto.objects.all()
 
     if request.method == 'POST':
         form = ReservaForm(request.POST, instance=reserva)
@@ -259,10 +279,39 @@ def reserva_form(request, pk=None):
             form.save()
             return redirect('gerenciar_reservas')
     else:
-        form = ReservaForm(instance=reserva)
+        initial = {'cama': cama_selecionada} if cama_selecionada else {}
+        form = ReservaForm(instance=reserva, initial=initial)
 
-    context = {'form': form, 'reserva': reserva}
+    context = {
+        'form': form,
+        'reserva': reserva,
+        'quartos': quartos,
+        'quarto_selecionado': quarto_selecionado,
+        'cama_selecionada': cama_selecionada
+    }
     return render(request, 'reservas/reserva_form.html', context)
+
+
+from django.http import JsonResponse
+from .models import Cama
+
+def camas_disponiveis(request):
+    quarto_id = request.GET.get('quarto')
+    try:
+        camas = Cama.objects.filter(
+            quarto__id=quarto_id,
+            status='DISPONIVEL'
+        ).prefetch_related('reserva_set')
+        
+        serializer = CamaSerializer(camas, many=True)
+        return JsonResponse({
+            'camas': serializer.data
+        })
+    
+    except Exception as e:
+        return JsonResponse({
+            'error': str(e)
+        }, status=400)
 
 # reservas/views.py
 from django.shortcuts import render
@@ -306,3 +355,10 @@ def dashboard(request):
     }
     
     return render(request, 'reservas/dashboard.html', context)
+
+def mapa_interativo(request):
+    hospedes = Hospede.objects.all()
+    context = {
+        'hospedes': hospedes
+    }
+    return render(request, 'reservas/mapa_interativo.html', context)

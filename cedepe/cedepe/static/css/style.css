@@ -1,4 +1,4 @@
-/* Classe personalizada para cor de fundo CEDEPE */
+/* Botões ativos */
 .bg-primary {
     background-color: #10295d !important;
   }
@@ -31,9 +31,7 @@
     transition: transform 0.2s;
 }
 
-.card:hover {
-    transform: translateY(-2px);
-}
+
 
 .table-hover tbody tr:hover {
     background-color: #f8f9fa;
@@ -49,9 +47,7 @@
     transition: transform 0.2s;
 }
 
-.card:hover {
-    transform: translateY(-3px);
-}
+
 
 .table-hover tbody tr:hover {
     background-color: #f8f9fa;
@@ -63,4 +59,110 @@
 }
 
 
+/* Estilos da Sidebar */
+.bg-cedepe {
+    background-color: #10295d !important;
+}
+
+.sidebar-link {
+    transition: all 0.3s ease;
+    border-radius: 8px !important;
+    margin: 2px 0;
+}
+
+.sidebar-link:hover {
+    background-color: rgba(255, 255, 255, 0.1) !important;
+    transform: translateX(5px);
+}
+
+.sidebar-link.active {
+    background-color: #f5bf26 !important;
+    color: #10295d !important;
+    font-weight: 600;
+}
+
+.nav-pills .nav-link.active {
+    background-color: #f5bf26;
+    color: #10295d;
+}
+
+.btn-cedepe-yellow {
+    background-color: #f5bf26;
+    color: #10295d;
+    font-weight: 500;
+}
+
+.btn-cedepe-yellow:hover {
+    background-color: #e0ac22;
+    color: #10295d;
+}
+
+
+.dropdown-menu-dark {
+    background-color: #1a365d;
+}
+
+.dropdown-item:hover {
+    background-color: #2c4d7a;
+}
+
+/* Ajuste de altura do conteúdo principal */
+body {
+    min-height: 100vh;
+}
+
+/* Fonte personalizada - Adicione no início do CSS */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;500;700&display=swap');
+
+.brand-text {
+    color: #f5bf26 !important;
+    font-size: 1.25rem; /* Ajustei o tamanho */
+    font-weight: 600; /* Ajustei o peso da fonte */
+    font-family: 'Open Sans', sans-serif; /* Fonte secundária */
+    letter-spacing: 0.5px; /* Ajustei o espaçamento entre letras */
+    text-align: center;
+    display: block;
+    width: 100%;
+    margin-left: 0; /* Removi o espaçamento da imagem */
+    text-transform: uppercase; /* Texto em maiúsculas */
+}
+
+/* Container do logo */
+.logo-container {
+    display: flex !important;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 1rem 0;
+}
+
+/* Ajuste da imagem */
+.logo-container img {
+    width: 140px !important; /* Aumentei o tamanho */
+    margin-bottom: 0.5rem;
+}
+
+/* Botões ativos */
+.sidebar-link.active {
+    background-color: white !important; /* Fundo branco */
+    color: #10295d !important; /* Azul do tema */
+    font-weight: 600;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    position: relative;
+    margin-left: 10px;
+    border-radius: 5px;
+}
+
+/* Indicador lateral */
+.sidebar-link.active::before {
+    content: '';
+    position: absolute;
+    left: -10px;
+    top: 0;
+    height: 100%;
+    width: 4px;
+    background-color: #f5bf26;
+    border-radius: 2px;
+}
 

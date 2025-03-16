@@ -6,172 +6,113 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>{% block title %}Sistema de Gerenciar Hospedagens CEDEPE{% endblock %}</title>
-  <!-- Bootstrap CSS -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-  <!-- Bootstrap Icons -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
-  <!-- CSS customizado -->
   <link rel="stylesheet" href="{% static 'css/style.css' %}">
   <link rel="icon" type="image/png" href="{% static 'images/CARD DA GRE.png' %}">
-  <!-- Font Awesome CSS -->
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <style>
-    /* EXEMPLO DE PALETA BASEADA NO LOGO */
-
-    /* Azul principal do logo */
-    .bg-cedepe {
-      background-color: #10295d !important;
-    }
-
-    /* Exemplo de cores de destaque (usadas no logo) */
-    /* Ajuste ou use somente as que você precisar */
-    .text-cedepe-yellow { color: #f5bf26 !important; } /* Amarelo */
-    .text-cedepe-green  { color: #34a853 !important; } /* Verde */
-    .text-cedepe-red    { color: #ea4335 !important; } /* Vermelho */
-
-    /* Marca do sistema na navbar */
-    .navbar-brand {
-      display: flex;
-      align-items: center;
-      gap: 10px; /* espaço entre imagem e texto */
-    }
-    .brand-text {
-      font-weight: 600;
-      font-size: 1.4rem;
-      letter-spacing: 0.5px;
-      /* Amarelo de destaque */
-      color: #f5bf26 !important;
-      text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.15);
-      margin: 0;
-      padding: 0;
-    }
-
-    /* Ajuste de cor dos itens da navbar em modo "dark" */
-    .navbar-dark .navbar-nav .nav-link {
-      color: #f5bf26; /* amarelo de destaque */
-      transition: color 0.2s ease-in-out;
-    }
-    .navbar-dark .navbar-nav .nav-link:hover {
-      color: #ea4335; /* vermelho ao passar o mouse */
-    }
-
-    /* Botões no navbar (padrão .btn-light) */
-    /* Caso queira usar um estilo customizado, crie .btn-cedepe */
-    .btn-light {
-      color: #10295d; /* texto no tom de azul */
-      background-color: #f5f5f5;
-      border: 1px solid #d9d9d9;
-    }
-    .btn-light:hover {
-      background-color: #e9ecef;
-      color: #10295d;
-    }
-
-    
-  </style>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  {% block extra_style %}{% endblock %}
 </head>
 
-<body>
-  <!-- Navbar com fundo claro e botões brancos -->
-  <nav class="navbar navbar-expand-lg navbar-dark ">
-    <div class="container">
-      <a class="navbar-brand" href="{% url 'home' %}">
-        <!-- Logo -->
-        <img src="{% static 'images/CARD DA GRE.png' %}" alt="Logo GRE"
-             style="width: 60px; height: auto;">
-        <!-- Texto da marca -->
+<body class="d-flex">
+  <!-- Sidebar Fixo -->
+  <div class="d-flex flex-column flex-shrink-0 p-3 bg-cedepe text-white" style="width: 280px; height: 100vh;">
+    <div class="bg-white p-3 shadow-sm border border-success rounded-3 border-start-danger logo-container">
+      <a href="{% url 'home' %}" class="d-flex flex-column align-items-center text-dark text-decoration-none">
+        <img src="{% static 'images/CARD DA GRE.png' %}" alt="Logo GRE">
         <span class="brand-text">Hospedagens CEDEPE</span>
       </a>
-      
-      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNavbar"
-        aria-controls="mainNavbar" aria-expanded="false" aria-label="Alternar navegação">
-        <span class="navbar-toggler-icon"></span>
-      </button>
-      
-      <div class="collapse navbar-collapse" id="mainNavbar">
-        <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-          <!-- Botão Início -->
-          <li class="nav-item me-2">
-            <a class="btn btn-light" href="{% url 'home' %}">
-              <i class="bi bi-house-door-fill"></i> Início
-            </a>
-          </li>
-
-          {% if user.is_authenticated and user.is_staff %}
-          <!-- Botão Dashboard -->
-          <li class="nav-item me-2">
-            <a class="btn btn-light" href="{% url 'dashboard' %}">
-              <i class="fas fa-tachometer-alt fa-spin"></i> Dashboard
-            </a>
-          </li>
-          
-          <!-- Links para gerenciar os recursos de hospedagem -->
-          <li class="nav-item me-2">
-            <a class="btn btn-light" href="{% url 'gerenciar_quartos' %}">
-              <i class="bi bi-door-open-fill"></i> Quartos
-            </a>
-          </li>
-          <li class="nav-item me-2">
-            <a class="btn btn-light" href="{% url 'gerenciar_camas' %}">
-              <i class="fas fa-bed me-2"></i>Camas
-            </a>
-          </li>
-          <li class="nav-item me-2">
-            <a class="btn btn-light" href="{% url 'gerenciar_hospedes' %}">
-              <i class="bi bi-people-fill"></i> Hóspedes
-            </a>
-          </li>
-          <li class="nav-item me-2">
-            <a class="btn btn-light" href="{% url 'gerenciar_reservas' %}">
-              <i class="bi bi-calendar-check-fill"></i> Reservas
-            </a>
-          </li>
-          {% endif %}
-        </ul>
-        
-        <!-- Menu de autenticação -->
-        <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
-          {% if user.is_authenticated %}
-          <li class="nav-item me-2">
-            <a class="btn btn-light" href="#">
-              <i class="bi bi-person-fill"></i> {{ user.username }}
-            </a>
-          </li>
-          <li class="nav-item">
-            <a href="{% url 'logout' %}" class="btn btn-outline-danger ">
-              <i class="bi bi-box-arrow-right me-2"></i> Sair
-          </a>
-          </li>
-          {% else %}
-          <li class="nav-item me-2">
-            <a class="btn btn-light" href="{% url 'login' %}">
-              <i class="bi bi-box-arrow-in-right"></i> Login
-            </a>
-          </li>
-          <li class="nav-item">
-            <a class="btn btn-light text-cedepe-red" href="{% url 'register' %}">
-              <i class="bi bi-person-plus"></i> Register
-            </a>
-          </li>
-          {% endif %}
-        </ul>
-      </div>
     </div>
-  </nav>
 
-  <!-- Conteúdo principal -->
-  <div class="container mt-4">
-    {% block content %}
-    <!-- Conteúdo específico de cada página -->
-    {% endblock %}
+    <hr>
+
+    <ul class="nav nav-pills flex-column mb-auto">
+      <li class="nav-item">
+        <a href="{% url 'home' %}" class="nav-link text-white sidebar-link">
+          <i class="bi bi-house-door-fill me-2"></i>
+          Início
+        </a>
+      </li>
+
+      {% if user.is_authenticated and user.is_staff %}
+      <li>
+        <a href="{% url 'dashboard' %}" class="nav-link text-white sidebar-link">
+          <i class="fas fa-tachometer-alt me-2"></i>
+          Dashboard
+        </a>
+      </li>
+      <li>
+        <a href="/reservas/mapa-interativo/" class="nav-link text-white sidebar-link">
+          <i class="bi bi-calendar-check-fill me-2"></i>
+          Mapa dos quartos
+        </a>
+      </li>
+      <li>
+        <a href="{% url 'gerenciar_quartos' %}" class="nav-link text-white sidebar-link">
+          <i class="bi bi-door-open-fill me-2"></i>
+          Quartos
+        </a>
+      </li>
+      <li>
+        <a href="{% url 'gerenciar_camas' %}" class="nav-link text-white sidebar-link">
+          <i class="fas fa-bed me-2"></i>
+          Camas
+        </a>
+      </li>
+      <li>
+        <a href="{% url 'gerenciar_hospedes' %}" class="nav-link text-white sidebar-link">
+          <i class="bi bi-people-fill me-2"></i>
+          Hóspedes
+        </a>
+      </li>
+      <li>
+        <a href="{% url 'gerenciar_reservas' %}" class="nav-link text-white sidebar-link">
+          <i class="bi bi-calendar-check-fill me-2"></i>
+          Reservas
+        </a>
+      </li>
+      {% endif %}
+    </ul>
+
+    <hr>
+
+    {% if user.is_authenticated %}
+    <div class="text-center mb-3">
+      <i class="bi bi-person-circle me-2"></i>
+      <strong>{{ user.username }}</strong>
+    </div>
+    <a href="{% url 'logout' %}" class="btn btn-danger w-100">
+      <i class="bi bi-box-arrow-right me-2"></i>Logout
+    </a>
+    {% else %}
+    <div class="d-grid gap-2">
+      <a href="{% url 'login' %}" class="btn btn-outline-light">
+        <i class="bi bi-box-arrow-in-right me-2"></i>Login
+      </a>
+      <a href="{% url 'register' %}" class="btn btn-cedepe-yellow">
+        <i class="bi bi-person-plus me-2"></i>Registrar
+      </a>
+    </div>
+    {% endif %}
+  
+    </div>
   </div>
 
-  <!-- Footer -->
-  <footer class="bg-light text-center py-3 mt-5 border-top">
-    <div class="container">
-      <small>&copy; {% now "Y" %} Sistema de Gerenciar Hospedagens CEDEPE. Todos os direitos reservados.</small>
-    </div>
-  </footer>
+  <!-- Conteúdo Principal -->
+  <div class="flex-grow-1 overflow-auto" style="height: 100vh;">
+    <main class="container-fluid p-4">
+      {% block content %}
+      <!-- Conteúdo específico de cada página -->
+      {% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-light text-center py-3 border-top">
+      <div class="container">
+        <small>&copy; {% now "Y" %} Sistema de Gerenciar Hospedagens CEDEPE. Todos os direitos reservados.</small>
+      </div>
+    </footer>
+  </div>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   {% block scripts %}{% endblock %}

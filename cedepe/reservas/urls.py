@@ -22,6 +22,7 @@ urlpatterns = [
     path('camas/', views.gerenciar_camas, name='gerenciar_camas'),
     path('camas/form/', views.cama_form, name='cama_form'),
     path('camas/form/<int:pk>/', views.cama_form, name='editar_cama'),
+    path('camas_disponiveis/', views.camas_disponiveis, name='camas_disponiveis'),
 
     path('hospedes/', views.gerenciar_hospedes, name='gerenciar_hospedes'),
     path('hospedes/form/', views.hospede_form, name='hospede_form'),
@@ -32,4 +33,5 @@ urlpatterns = [
     path('reservas/form/<int:pk>/', views.reserva_form, name='editar_reserva'),
     
     path('dashboard/', views.dashboard, name='dashboard'),
+    path('mapa-interativo/', views.mapa_interativo, name='mapa_interativo'),
 ]
