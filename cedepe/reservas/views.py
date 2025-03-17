@@ -277,7 +277,7 @@ def reserva_form(request, pk=None):
         form = ReservaForm(request.POST, instance=reserva)
         if form.is_valid():
             form.save()
-            return redirect('gerenciar_reservas')
+            return redirect('mapa_interativo')
     else:
         initial = {'cama': cama_selecionada} if cama_selecionada else {}
         form = ReservaForm(instance=reserva, initial=initial)
