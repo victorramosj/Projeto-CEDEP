@@ -12,32 +12,43 @@ class EventoSerializer(serializers.ModelSerializer):
         model = Evento
         fields = '__all__'
 
+from django.utils.timezone import now
+from rest_framework import serializers
+from .models import Agendamento
+
 class AgendamentoSerializer(serializers.ModelSerializer):
     class Meta:
         model = Agendamento
         fields = '__all__'
 
     def validate(self, data):
-        """
-        Valida se a sala já está ocupada no período selecionado e se o horário de fim é maior que o de início.
-        """
         inicio = data.get('inicio')
         fim = data.get('fim')
         sala = data.get('sala')
 
-        if inicio and fim and inicio >= fim:
-            raise serializers.ValidationError({"horario": "O horário de início deve ser anterior ao horário de fim."})
+        # Validação de horário
+        if inicio and fim:
+            if inicio >= fim:
+                raise serializers.ValidationError({
+                    "fim": "Horário de término deve ser posterior ao início."
+                })
+            if inicio < now():
+                raise serializers.ValidationError({
+                    "inicio": "Não é possível agendar no passado."
+                })
 
-        if inicio and inicio < now():
-            raise serializers.ValidationError({"inicio": "O horário de início não pode ser no passado."})
-
-        if sala and inicio and fim:
-            conflitos = Agendamento.objects.filter(
-                sala=sala,
-                inicio__lt=fim,  # O início de outro evento deve ser menor que o fim do novo evento
-                fim__gt=inicio  # O fim de outro evento deve ser maior que o início do novo evento
-            )
-            if conflitos.exists():
-                raise serializers.ValidationError({"sala": "Já existe um agendamento nesse horário para essa sala."})
+        # Validação de conflito de horário na mesma sala
+        qs = Agendamento.objects.filter(
+            sala=sala,
+            inicio__lt=fim,   # Início de outro evento é antes do fim do novo
+            fim__gt=inicio    # Fim de outro evento é depois do início do novo
+        )
+        if self.instance:
+            qs = qs.exclude(pk=self.instance.pk)
+        if qs.exists():
+            raise serializers.ValidationError({
+                "sala": "Conflito de horário nesta sala."
+            })
 
         return data
+

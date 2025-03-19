@@ -23,6 +23,6 @@ urlpatterns = [
     path('agendamentos/', views.gerenciar_agendamentos, name='gerenciar_agendamentos'),
     path('agendamentos/novo/', views.agendamento_form, name='agendamento_form'),
     path('agendamentos/editar/<int:pk>/', views.agendamento_form, name='editar_agendamento'),
-    path('api/agendamentos/', views.agendamentos_api, name='agendamentos_api'),
+    
 
 ]

@@ -126,6 +126,11 @@ def gerenciar_agendamentos(request):
     }
     return render(request, 'eventos/gerenciar_agendamentos.html', context)
 
+from django.shortcuts import get_object_or_404, redirect, render
+from django.contrib import messages
+from .models import Agendamento
+from .forms import AgendamentoForm
+
 def agendamento_form(request, pk=None):
     agendamento = get_object_or_404(Agendamento, pk=pk) if pk else None
     
@@ -134,6 +139,11 @@ def agendamento_form(request, pk=None):
         if form.is_valid():
             form.save()
             return redirect('gerenciar_agendamentos')
+        else:
+            # Adiciona mensagens de erro para cada campo inválido
+            for field, errors in form.errors.items():
+                for error in errors:
+                    messages.error(request, f"Erro no campo {field}: {error}")
     else:
         form = AgendamentoForm(instance=agendamento)
     
@@ -163,7 +173,7 @@ class AgendamentoViewSet(viewsets.ModelViewSet):
     serializer_class = AgendamentoSerializer
     filter_backends = [DjangoFilterBackend, filters.SearchFilter]
     filterset_fields = ['sala', 'evento']
-    search_fields = ['descricao']
+    search_fields = ['evento__descricao']  # Ajustado para buscar pela descrição do evento
 
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
@@ -184,11 +194,11 @@ class AgendamentoViewSet(viewsets.ModelViewSet):
             data = [{
                 'id': agendamento.id,
                 'title': agendamento.evento.titulo,
-                'start': agendamento.data_hora_inicio.isoformat(),
-                'end': agendamento.data_hora_fim.isoformat(),
+                'start': agendamento.inicio.isoformat(),
+                'end': agendamento.fim.isoformat(),
                 'extendedProps': {
                     'sala': agendamento.sala.nome,
-                    'descricao': agendamento.descricao
+                    'descricao': agendamento.evento.descricao
                 }
             } for agendamento in queryset]
             return Response(data)
@@ -200,10 +210,12 @@ class AgendamentoViewSet(viewsets.ModelViewSet):
 
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
-    # eventos/views.py
+
 from django.utils import timezone
 from django.shortcuts import render
 from django.db.models import Count
+from .models import Evento, Agendamento, Sala
+
 def dashboard(request):
     total_eventos = Evento.objects.count()
     total_agendamentos = Agendamento.objects.count()
@@ -228,23 +240,3 @@ def dashboard(request):
     }
     
     return render(request, 'eventos/dashboard.html', context)
-from django.http import JsonResponse
-from .models import Agendamento
-
-def agendamentos_api(request):
-    agendamentos = Agendamento.objects.all()
-    events = []
-    
-    for agendamento in agendamentos:
-        events.append({
-            'id': agendamento.id,
-            'title': agendamento.evento.titulo,
-            'start': agendamento.data_hora_inicio.isoformat(),
-            'end': agendamento.data_hora_fim.isoformat(),
-            'extendedProps': {
-                'sala': agendamento.sala.nome,
-                'descricao': agendamento.descricao
-            }
-        })
-    
-    return JsonResponse(events, safe=False)

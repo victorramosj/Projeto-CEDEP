@@ -5,75 +5,106 @@
 
 {% block content %}
 <div class="container-fluid px-4">
-    <h1 class="text-danger">Dashboard de Eventos</h1>
-    
-    <!-- Botão para adicionar evento -->
-    <div class="mb-3">
-        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addEventModal">
-            <i class="bi bi-plus-circle me-2"></i>Adicionar Evento
-        </button>
-    </div>
-    
+    <h1 class="text-danger mb-4">Dashboard de Eventos</h1>
+
+    <!-- Botões de Ação Principais -->
+   
+
     <!-- Cards de Resumo -->
     <div class="row g-4 my-2">
-        <!-- Total Eventos -->
         <div class="col-12 col-md-4">
-            <div class="card shadow border-start-primary h-100">
+            <div class="card shadow border-start-primary h-100 hover-scale">
                 <div class="card-body">
-                    <h5 class="text-muted mb-2">
-                        <i class="bi bi-calendar-event me-2"></i>Eventos
-                    </h5>
-                    <p class="h1 text-primary">{{ total_eventos }}</p>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h5 class="text-muted mb-2">
+                                <i class="bi bi-calendar-event me-2"></i>Eventos
+                            </h5>
+                            <p class="h1 text-primary mb-0">{{ total_eventos }}</p>
+                        </div>
+                        <i class="bi bi-calendar-event fs-1 text-primary opacity-25"></i>
+                    </div>
                 </div>
             </div>
         </div>
-        <!-- Total Agendamentos -->
+
         <div class="col-12 col-md-4">
-            <div class="card shadow border-start-success h-100">
+            <div class="card shadow border-start-success h-100 hover-scale">
                 <div class="card-body">
-                    <h5 class="text-muted mb-2">
-                        <i class="bi bi-clock me-2"></i>Agendamentos
-                    </h5>
-                    <p class="h1 text-success">{{ total_agendamentos }}</p>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h5 class="text-muted mb-2">
+                                <i class="bi bi-clock me-2"></i>Agendamentos
+                            </h5>
+                            <p class="h1 text-success mb-0">{{ total_agendamentos }}</p>
+                        </div>
+                        <i class="bi bi-clock fs-1 text-success opacity-25"></i>
+                    </div>
                 </div>
             </div>
         </div>
-        <!-- Total Salas -->
+
         <div class="col-12 col-md-4">
-            <div class="card shadow border-start-info h-100">
+            <div class="card shadow border-start-info h-100 hover-scale">
                 <div class="card-body">
-                    <h5 class="text-muted mb-2">
-                        <i class="bi bi-building me-2"></i>Salas
-                    </h5>
-                    <p class="h1 text-info">{{ total_salas }}</p>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h5 class="text-muted mb-2">
+                                <i class="fas fa-door-open me-2"></i>Salas
+                            </h5>
+                            <p class="h1 text-info mb-0">{{ total_salas }}</p>
+                        </div>
+                        <i class="bi bi-building fs-1 text-info opacity-25"></i>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
-    
-    <!-- Calendário de Eventos -->
-    <div class="row g-4 my-2">
-        <div class="col-12">
+    <div class="row g-3 mb-4">
+        <div class="col-md-4">
+            <a href="{% url 'evento_form' %}" class="btn btn-primary w-100 btn-md hover-scale">
+                <i class="bi bi-calendar-plus me-2"></i>Novo Evento
+            </a>
+        </div>
+        
+        <div class="col-md-4">
+            <a href="{% url 'agendamento_form' %}" class="btn btn-success w-100 btn-md hover-scale">
+                <i class="bi bi-clock-history me-2"></i>Novo Agendamento
+            </a>
+        </div>
+        <div class="col-md-4">
+            <a href="{% url 'sala_form' %}" class="btn btn-info w-100 btn-md hover-scale">
+                <i class="bi bi-door-open me-2"></i>Nova Sala
+            </a>
+        </div>
+    </div>
+
+    <!-- Calendário e Tabela -->
+    <div class="row g-4 mt-4">
+        <!-- Calendário FullCalendar -->
+        <div class="col-12 col-xl-8">
             <div class="card shadow h-100">
-                <div class="card-header bg-info text-white">
+                <div class="card-header bg-info text-white d-flex justify-content-between align-items-center">
                     <h5 class="card-title mb-0">
-                        <i class="bi bi-calendar me-2"></i>Calendário de Eventos
+                        <i class="bi bi-calendar-week me-2"></i>Calendário de Eventos
                     </h5>
+                    <div class="btn-group">
+                        <button class="btn btn-sm btn-light" id="prev-btn"><i class="bi bi-chevron-left"></i></button>
+                        <button class="btn btn-sm btn-light" id="next-btn"><i class="bi bi-chevron-right"></i></button>
+                    </div>
                 </div>
                 <div class="card-body">
                     <div id="calendar"></div>
                 </div>
             </div>
         </div>
-    </div>
-    
-    <!-- Tabela de Agendamentos Próximos -->
-    <div class="row g-4 my-2">
-        <div class="col-12">
+
+        <!-- Tabela de Agendamentos -->
+        <div class="col-12 col-xl-4">
             <div class="card shadow h-100">
                 <div class="card-header bg-info text-white">
                     <h5 class="card-title mb-0">
-                        <i class="bi bi-clock-history me-2"></i>Agendamentos Próximos
+                        <i class="bi bi-list-task me-2"></i>Próximos Agendamentos
                     </h5>
                 </div>
                 <div class="card-body p-0">
@@ -81,25 +112,28 @@
                         <table class="table table-hover mb-0">
                             <thead class="table-light">
                                 <tr>
-                                    <th>Evento</th>
-                                    <th>Sala</th>
-                                    <th>Início</th>
-                                    <th>Término</th>
-                                    <th>Participantes</th>
+                                    <th><i class="bi bi-calendar me-1"></i>Evento</th>
+                                    <th><i class="bi bi-door-open me-1"></i>Sala</th>
+                                    <th><i class="bi bi-clock me-1"></i>Horário</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {% for agendamento in upcoming_agendamentos %}
-                                <tr>
+                                <tr class="clickable-row" data-href="{% url 'editar_agendamento' agendamento.id %}">
                                     <td>{{ agendamento.evento.titulo }}</td>
                                     <td>{{ agendamento.sala.nome }}</td>
-                                    <td>{{ agendamento.inicio|date:"d/m/Y H:i" }}</td>
-                                    <td>{{ agendamento.fim|date:"d/m/Y H:i" }}</td>
-                                    <td>{{ agendamento.participantes }}</td>
+                                    <td>
+                                        <div class="text-nowrap">
+                                            <small class="text-muted"> {{ agendamento.inicio|date:"d/m H:i" }} -
+                                            {{ agendamento.fim|date:"H:i" }}</small>
+                                        </div>
+                                    </td>
                                 </tr>
                                 {% empty %}
                                 <tr>
-                                    <td colspan="5" class="text-center">Nenhum agendamento próximo</td>
+                                    <td colspan="3" class="text-center py-4 text-muted">
+                                        Nenhum agendamento agendado
+                                    </td>
                                 </tr>
                                 {% endfor %}
                             </tbody>
@@ -109,218 +143,65 @@
             </div>
         </div>
     </div>
-    
 </div>
 
-<!-- Modal de Detalhes do Evento -->
-<div class="modal fade" id="eventDetailModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Detalhes do Evento</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <p><strong>Título:</strong> <span id="eventTitle"></span></p>
-                <p><strong>Sala:</strong> <span id="eventSala"></span></p>
-                <p><strong>Início:</strong> <span id="eventStart"></span></p>
-                <p><strong>Término:</strong> <span id="eventEnd"></span></p>
-                <p><strong>Descrição:</strong> <span id="eventDesc"></span></p>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
-            </div>
-        </div>
-    </div>
-</div>
+<!-- Estilos Customizados -->
+<style>
+    .hover-scale {
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .hover-scale:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 .5rem 1rem rgba(0,0,0,.15)!important;
+    }
+    .clickable-row {
+        cursor: pointer;
+        transition: background-color 0.2s ease;
+    }
+    .clickable-row:hover {
+        background-color: #f8f9fa;
+    }
+    .fc th {
+        padding: 8px 2px!important;
+    }
+</style>
 
-<!-- Modal para Adicionar Evento -->
-<div class="modal fade" id="addEventModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Novo Agendamento</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <form id="eventForm" method="post">
-                <div class="modal-body">
-                    {% csrf_token %}
-                    <div class="alert alert-danger d-none" id="formErrors"></div>
-                    
-                    <div class="mb-3">
-                        <label class="form-label">Evento</label>
-                        <select name="evento" class="form-select" required>
-                            {% for evento in eventos %}
-                            <option value="{{ evento.id }}">{{ evento.titulo }}</option>
-                            {% endfor %}
-                        </select>
-                        <div class="invalid-feedback" id="eventoError"></div>
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label class="form-label">Sala</label>
-                        <select name="sala" class="form-select" required>
-                            {% for sala in salas %}
-                            <option value="{{ sala.id }}">{{ sala.nome }}</option>
-                            {% endfor %}
-                        </select>
-                        <div class="invalid-feedback" id="salaError"></div>
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label class="form-label">Data/Hora Início</label>
-                        <input type="datetime-local" name="data_hora_inicio" class="form-control" required>
-                        <div class="invalid-feedback" id="startError"></div>
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label class="form-label">Data/Hora Término</label>
-                        <input type="datetime-local" name="data_hora_fim" class="form-control" required>
-                        <div class="invalid-feedback" id="endError"></div>
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label class="form-label">Descrição</label>
-                        <textarea name="descricao" class="form-control" rows="3"></textarea>
-                        <div class="invalid-feedback" id="descricaoError"></div>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" class="btn btn-primary">Salvar</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-
-<!-- CSS do FullCalendar -->
+<!-- Scripts do FullCalendar -->
 <link href='https://cdn.jsdelivr.net/npm/@fullcalendar/core@6.1.8/main.min.css' rel='stylesheet' />
 <link href='https://cdn.jsdelivr.net/npm/@fullcalendar/daygrid@6.1.8/main.min.css' rel='stylesheet' />
-<link href='https://cdn.jsdelivr.net/npm/@fullcalendar/timegrid@6.1.8/main.min.css' rel='stylesheet' />
-
-<!-- JS do FullCalendar -->
 <script src='https://cdn.jsdelivr.net/npm/@fullcalendar/core@6.1.8/main.min.js'></script>
 <script src='https://cdn.jsdelivr.net/npm/@fullcalendar/daygrid@6.1.8/main.min.js'></script>
-<script src='https://cdn.jsdelivr.net/npm/@fullcalendar/timegrid@6.1.8/main.min.js'></script>
-<script src='https://cdn.jsdelivr.net/npm/@fullcalendar/interaction@6.1.8/main.min.js'></script>
 <script src='https://cdn.jsdelivr.net/npm/@fullcalendar/core@6.1.8/locales/pt-br.js'></script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    var calendarEl = document.getElementById('calendar');
-    var calendar = new FullCalendar.Calendar(calendarEl, {
+    // Configuração do Calendário
+    const calendarEl = document.getElementById('calendar');
+    const calendar = new FullCalendar.Calendar(calendarEl, {
         locale: 'pt-br',
         initialView: 'dayGridMonth',
-        headerToolbar: {
-            left: 'prev,next today',
-            center: 'title',
-            right: 'dayGridMonth,timeGridWeek,timeGridDay'
-        },
-        events: '/api/agendamentos/',  // Endpoint da API que retorna os agendamentos em JSON
-        eventClick: function(info) {
-            // Preencher modal de detalhes
-            document.getElementById('eventTitle').textContent = info.event.title;
-            document.getElementById('eventSala').textContent = info.event.extendedProps.sala;
-            document.getElementById('eventStart').textContent = info.event.start.toLocaleString();
-            document.getElementById('eventEnd').textContent = info.event.end ? info.event.end.toLocaleString() : 'N/A';
-            document.getElementById('eventDesc').textContent = info.event.extendedProps.descricao || 'Sem descrição';
-            
-            var modal = new bootstrap.Modal(document.getElementById('eventDetailModal'));
-            modal.show();
-        },
-        dateClick: function(info) {
-            // Preencher data inicial no formulário
-            document.querySelector('input[name=\"start\"]').value = info.dateStr + 'T00:00';
-            var modal = new bootstrap.Modal(document.getElementById('addEventModal'));
-            modal.show();
+        headerToolbar: false,
+        events: '/eventos/api/agendamentos/?format=fullcalendar', 
+        eventDisplay: 'block',
+        eventColor: '#0dcaf0',
+        eventDidMount: function(info) {
+            info.el.querySelector('.fc-event-title').innerHTML = `
+                <div class="fw-bold">${info.event.title}</div>
+                <small>${info.event.extendedProps.sala}</small>
+            `;
         }
     });
+
+    // Controles de Navegação
+    document.getElementById('prev-btn').addEventListener('click', () => calendar.prev());
+    document.getElementById('next-btn').addEventListener('click', () => calendar.next());
+    
     calendar.render();
 
-    document.getElementById('eventForm').addEventListener('submit', function(e) {
-    e.preventDefault();
-    
-    // Resetar erros
-    document.querySelectorAll('.form-control, .form-select').forEach(el => el.classList.remove('is-invalid'));
-    document.querySelectorAll('.invalid-feedback').forEach(el => el.textContent = '');
-    document.getElementById('formErrors').classList.add('d-none');
-
-    var formData = new FormData(this);
-    
-    fetch('/eventos/api/agendamentos/', {  // URL corrigida
-        method: 'POST',
-        body: formData,
-        headers: {
-            'X-Requested-With': 'XMLHttpRequest',
-        }
-    })
-    .then(response => {
-        if (!response.ok) {
-            return response.json().then(err => Promise.reject(err));
-        }
-        return response.json();
-    })
-    .then(data => {
-        if (data.id) { // Sucesso
-            calendar.refetchEvents();
-            bootstrap.Modal.getInstance(document.getElementById('addEventModal')).hide();
-        }
-    })
-    .catch(error => {
-        console.error('Erro:', error);
-        
-        // Erros de validação
-        if (error.detail) {
-            // Erro geral
-            document.getElementById('formErrors').textContent = error.detail;
-            document.getElementById('formErrors').classList.remove('d-none');
-        } 
-        else {
-            // Erros de campo específico
-            for (const [field, messages] of Object.entries(error)) {
-                const input = document.querySelector(`[name="${field}"]`);
-                const errorDiv = document.getElementById(`${field}Error`);
-                
-                if (input && errorDiv) {
-                    input.classList.add('is-invalid');
-                    errorDiv.textContent = messages.join(', ');
-                }
-            }
-            
-            // Mostrar erros não mapeados
-            if (Object.keys(error).length === 0) {
-                document.getElementById('formErrors').textContent = 'Erro desconhecido ao processar a requisição';
-                document.getElementById('formErrors').classList.remove('d-none');
-            }
-        }
+    // Interatividade da Tabela
+    document.querySelectorAll('.clickable-row').forEach(row => {
+        row.addEventListener('click', () => window.location = row.dataset.href);
     });
-});
-});
-
-// Exemplo de gráfico para Agendamentos por Evento (usando eventos recentes se necessário)
-new Chart(document.getElementById('eventosChart'), {
-        type: 'bar',
-        data: {
-            labels: [{% for evento in recent_eventos %}'{{ evento.titulo }}',{% endfor %}],
-            datasets: [{
-                label: 'Agendamentos',
-                data: [{% for evento in recent_eventos %}{{ evento.agendamentos.count }},{% endfor %}],
-                backgroundColor: '#36b9cc',
-                borderWidth: 1
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            scales: {
-                y: { beginAtZero: true, grid: { color: '#f8f9fa' } },
-                x: { grid: { display: false } }
-            },
-            plugins: {
-                legend: { display: false }
-            }
-        }
 });
 </script>
 {% endblock %}

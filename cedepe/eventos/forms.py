@@ -12,10 +12,21 @@ class EventoForm(forms.ModelForm):
         model = Evento
         fields = '__all__'
 
+from django import forms
+from django.utils.timezone import now
+from .models import Agendamento
+
 class AgendamentoForm(forms.ModelForm):
     class Meta:
         model = Agendamento
         fields = '__all__'
+        widgets = {
+            'evento': forms.Select(attrs={'class': 'form-select'}),
+            'sala': forms.Select(attrs={'class': 'form-select'}),
+            'inicio': forms.DateTimeInput(attrs={'class': 'form-control', 'type': 'datetime-local'}),
+            'fim': forms.DateTimeInput(attrs={'class': 'form-control', 'type': 'datetime-local'}),
+            'participantes': forms.TextInput(attrs={'class': 'form-control'}),
+        }
 
     def clean(self):
         cleaned_data = super().clean()
@@ -23,23 +34,21 @@ class AgendamentoForm(forms.ModelForm):
         fim = cleaned_data.get('fim')
         sala = cleaned_data.get('sala')
 
-        # Valida se o horário de início é anterior ao horário de fim
+        # Validação de horário
         if inicio and fim:
             if inicio >= fim:
-                self.add_error('inicio', 'O horário de início deve ser anterior ao horário de fim.')
-                self.add_error('fim', 'O horário de fim deve ser posterior ao horário de início.')
+                self.add_error('fim', 'O horário de término deve ser posterior ao início.')
             if inicio < now():
                 self.add_error('inicio', 'O horário de início não pode ser no passado.')
 
-        # Valida conflitos de agendamento na mesma sala
+        # Validação de conflito de agendamento na mesma sala
         if sala and inicio and fim:
             conflitos = Agendamento.objects.filter(
                 sala=sala,
-                inicio__lt=fim,  # O início de outro evento deve ser menor que o fim do novo evento
-                fim__gt=inicio   # O fim de outro evento deve ser maior que o início do novo evento
+                inicio__lt=fim,
+                fim__gt=inicio
             )
-            # Excluir o próprio agendamento em caso de atualização
-            if self.instance.pk:
+            if self.instance and self.instance.pk:
                 conflitos = conflitos.exclude(pk=self.instance.pk)
             if conflitos.exists():
                 self.add_error('sala', 'Já existe um agendamento nesse horário para essa sala.')

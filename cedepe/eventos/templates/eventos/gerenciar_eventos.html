@@ -131,7 +131,7 @@
 
   document.getElementById('confirmDelete').addEventListener('click', function() {
     const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
-    fetch(`/api/eventos/${itemIdToDelete}/`, {
+    fetch(`/eventos/api/eventos/${itemIdToDelete}/`, {
       method: 'DELETE',
       headers: {
         'X-CSRFToken': csrftoken,

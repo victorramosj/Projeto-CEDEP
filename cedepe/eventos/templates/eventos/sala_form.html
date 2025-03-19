@@ -15,17 +15,35 @@
     <div class="card-body">
       <form method="post">
         {% csrf_token %}
+        <!-- Nome -->
         <div class="mb-3">
-          <label class="form-label">Nome</label>
-          {{ form.nome }}
+          <label class="form-label" for="id_nome">Nome</label>
+          <input type="text" name="nome" id="id_nome" 
+                 class="form-control {% if form.nome.errors %}is-invalid{% endif %}" 
+                 value="{{ form.nome.value|default:'' }}">
+          {% for error in form.nome.errors %}
+            <div class="invalid-feedback">{{ error }}</div>
+          {% endfor %}
         </div>
+        <!-- Capacidade -->
         <div class="mb-3">
-          <label class="form-label">Capacidade</label>
-          {{ form.capacidade }}
+          <label class="form-label" for="id_capacidade">Capacidade</label>
+          <input type="number" name="capacidade" id="id_capacidade" 
+                 class="form-control {% if form.capacidade.errors %}is-invalid{% endif %}" 
+                 value="{{ form.capacidade.value|default:'' }}">
+          {% for error in form.capacidade.errors %}
+            <div class="invalid-feedback">{{ error }}</div>
+          {% endfor %}
         </div>
+        <!-- Localização -->
         <div class="mb-3">
-          <label class="form-label">Localização</label>
-          {{ form.localizacao }}
+          <label class="form-label" for="id_localizacao">Localização</label>
+          <input type="text" name="localizacao" id="id_localizacao" 
+                 class="form-control {% if form.localizacao.errors %}is-invalid{% endif %}" 
+                 value="{{ form.localizacao.value|default:'' }}">
+          {% for error in form.localizacao.errors %}
+            <div class="invalid-feedback">{{ error }}</div>
+          {% endfor %}
         </div>
         <div class="d-grid gap-2 d-md-flex justify-content-end">
           <button type="submit" class="btn btn-primary">Salvar</button>
