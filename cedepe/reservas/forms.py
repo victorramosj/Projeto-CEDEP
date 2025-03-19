@@ -15,7 +15,7 @@ class CamaForm(forms.ModelForm):
 class HospedeForm(forms.ModelForm):
     class Meta:
         model = Hospede
-        fields = ['nome', 'cpf', 'email', 'telefone', 'endereco']
+        fields = ['nome', 'cpf', 'email', 'telefone', 'instituicao', 'endereco']
 
 from django import forms
 from django.core.exceptions import ValidationError

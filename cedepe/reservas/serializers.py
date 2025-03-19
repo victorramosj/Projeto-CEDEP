@@ -61,9 +61,11 @@ class HospedeSerializer(serializers.ModelSerializer):
             'email',
             'telefone',
             'endereco',
+            'instituicao',  
             'criado_em',
             'atualizado_em'
         ]
+
 
 
 class ReservaSerializer(serializers.ModelSerializer):

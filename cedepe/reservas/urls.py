@@ -32,6 +32,6 @@ urlpatterns = [
     path('reservas/form/', views.reserva_form, name='reserva_form'),
     path('reservas/form/<int:pk>/', views.reserva_form, name='editar_reserva'),
     
-    path('dashboard/', views.dashboard, name='dashboard'),
+    path('dashboard_hospedagens/', views.dashboard, name='dashboard_hospedagens'),
     path('mapa-interativo/', views.mapa_interativo, name='mapa_interativo'),
 ]

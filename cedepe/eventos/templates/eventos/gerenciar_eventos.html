@@ -1,0 +1,150 @@
+{% extends "cedepe/base.html" %}
+{% load static %}
+
+{% block title %}Gerenciar Eventos{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>Gerenciar Eventos</h1>
+    <a href="{% url 'evento_form' %}" class="btn btn-success">
+      <i class="bi bi-plus-circle"></i> Novo Evento
+    </a>
+  </div>
+
+  <!-- Filtro de busca -->
+  <form method="GET" class="mb-4">
+    <div class="input-group">
+      <input type="text" name="q" value="{{ query }}" class="form-control" placeholder="Pesquisar...">
+      <button class="btn btn-outline-primary" type="submit">
+        <i class="bi bi-search"></i> Buscar
+      </button>
+    </div>
+  </form>
+
+  <!-- Tabela de Eventos -->
+  <div class="card shadow-sm">
+    <div class="card-body">
+      <div class="table-responsive">
+        <table class="table table-hover">
+          <thead>
+            <tr>
+              <th>Título</th>
+              <th>Organizador</th>
+              <th>Data de Criação</th>
+              <th>Ações</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for evento in eventos %}
+            <tr>
+              <td>{{ evento.titulo }}</td>
+              <td>{{ evento.organizador }}</td>
+              <td>{{ evento.data_criacao|date:"d/m/Y H:i" }}</td>
+              <td>
+                <a href="{% url 'editar_evento' evento.pk %}" class="btn btn-sm btn-primary">
+                  <i class="bi bi-pencil"></i> Editar
+                </a>
+                <button class="btn btn-sm btn-danger" onclick="deleteEvento({{ evento.pk }})">
+                  <i class="bi bi-trash"></i> Excluir
+                </button>
+              </td>
+            </tr>
+            {% empty %}
+            <tr>
+              <td colspan="4" class="text-center">Nenhum evento cadastrado.</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Paginação -->
+      <nav>
+        <ul class="pagination justify-content-center">
+          {% if eventos.has_previous %}
+          <li class="page-item">
+            <a class="page-link" href="?page={{ eventos.previous_page_number }}{% if query %}&q={{ query }}{% endif %}">Anterior</a>
+          </li>
+          {% else %}
+          <li class="page-item disabled">
+            <span class="page-link">Anterior</span>
+          </li>
+          {% endif %}
+
+          {% for num in eventos.paginator.page_range %}
+            {% if eventos.number == num %}
+            <li class="page-item active">
+              <span class="page-link">{{ num }}</span>
+            </li>
+            {% elif num > eventos.number|add:'-3' and num < eventos.number|add:'3' %}
+            <li class="page-item">
+              <a class="page-link" href="?page={{ num }}{% if query %}&q={{ query }}{% endif %}">{{ num }}</a>
+            </li>
+            {% endif %}
+          {% endfor %}
+
+          {% if eventos.has_next %}
+          <li class="page-item">
+            <a class="page-link" href="?page={{ eventos.next_page_number }}{% if query %}&q={{ query }}{% endif %}">Próximo</a>
+          </li>
+          {% else %}
+          <li class="page-item disabled">
+            <span class="page-link">Próximo</span>
+          </li>
+          {% endif %}
+        </ul>
+      </nav>
+    </div>
+  </div>
+</div>
+
+<!-- Modal de Confirmação -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="deleteModalLabel">Confirmar Exclusão</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        Tem certeza que deseja excluir este evento?
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button type="button" class="btn btn-danger" id="confirmDelete">Excluir</button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  let itemIdToDelete = null;
+
+  function deleteEvento(id) {
+    itemIdToDelete = id;
+    const deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
+    deleteModal.show();
+  }
+
+  document.getElementById('confirmDelete').addEventListener('click', function() {
+    const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+    fetch(`/api/eventos/${itemIdToDelete}/`, {
+      method: 'DELETE',
+      headers: {
+        'X-CSRFToken': csrftoken,
+        'Content-Type': 'application/json'
+      }
+    })
+    .then(response => {
+      if (response.ok) {
+        location.reload();
+      } else {
+        alert('Erro ao excluir o evento');
+      }
+    });
+  });
+</script>
+{% endblock %}

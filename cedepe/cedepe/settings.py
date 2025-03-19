@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     'cedepe',
     'rest_framework',
     'django_filters',
+    'eventos',
 ]
 
 MIDDLEWARE = [

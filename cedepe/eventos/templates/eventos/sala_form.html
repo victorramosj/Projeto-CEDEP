@@ -1,0 +1,38 @@
+{% extends "cedepe/base.html" %}
+{% load static %}
+
+{% block title %}{% if sala %}Editar Sala{% else %}Nova Sala{% endif %}{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+  <div class="card shadow">
+    <div class="card-header bg-primary text-white">
+      <h3 class="mb-0">
+        <i class="bi bi-door-open me-2"></i>
+        {% if sala %}Editar Sala{% else %}Nova Sala{% endif %}
+      </h3>
+    </div>
+    <div class="card-body">
+      <form method="post">
+        {% csrf_token %}
+        <div class="mb-3">
+          <label class="form-label">Nome</label>
+          {{ form.nome }}
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Capacidade</label>
+          {{ form.capacidade }}
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Localização</label>
+          {{ form.localizacao }}
+        </div>
+        <div class="d-grid gap-2 d-md-flex justify-content-end">
+          <button type="submit" class="btn btn-primary">Salvar</button>
+          <a href="{% url 'gerenciar_salas' %}" class="btn btn-secondary">Cancelar</a>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

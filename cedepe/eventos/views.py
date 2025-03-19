@@ -1,0 +1,250 @@
+from django.shortcuts import render, get_object_or_404, redirect
+from rest_framework import viewsets, filters
+from django_filters.rest_framework import DjangoFilterBackend
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+from django.http import JsonResponse
+from .models import Sala, Evento, Agendamento
+from .forms import SalaForm, EventoForm, AgendamentoForm
+
+ITENS_POR_PAGINA = 10
+
+# Views para Salas
+def gerenciar_salas(request):
+    query = request.GET.get('q', '')
+    filter_by = request.GET.get('filter_by', 'all')
+    page_number = request.GET.get('page')
+
+    salas_list = Sala.objects.all()
+    
+    if query:
+        salas_list = salas_list.filter(
+            Q(nome__icontains=query) |
+            Q(localizacao__icontains=query)
+        )
+    
+    paginator = Paginator(salas_list, ITENS_POR_PAGINA)
+    
+    try:
+        salas = paginator.page(page_number)
+    except PageNotAnInteger:
+        salas = paginator.page(1)
+    except EmptyPage:
+        salas = paginator.page(paginator.num_pages)
+
+    context = {
+        'salas': salas,
+        'query': query,
+        'filter_by': filter_by,
+    }
+    return render(request, 'eventos/gerenciar_salas.html', context)
+
+def sala_form(request, pk=None):
+    sala = get_object_or_404(Sala, pk=pk) if pk else None
+    
+    if request.method == 'POST':
+        form = SalaForm(request.POST, instance=sala)
+        if form.is_valid():
+            form.save()
+            return redirect('gerenciar_salas')
+    else:
+        form = SalaForm(instance=sala)
+    
+    context = {'form': form, 'sala': sala}
+    return render(request, 'eventos/sala_form.html', context)
+
+# Views para Eventos
+def gerenciar_eventos(request):
+    query = request.GET.get('q', '')
+    filter_by = request.GET.get('filter_by', 'all')
+    page_number = request.GET.get('page')
+
+    eventos_list = Evento.objects.all()
+    
+    if query:
+        eventos_list = eventos_list.filter(
+            Q(titulo__icontains=query) |
+            Q(organizador__icontains=query)
+        )
+    
+    paginator = Paginator(eventos_list, ITENS_POR_PAGINA)
+    
+    try:
+        eventos = paginator.page(page_number)
+    except PageNotAnInteger:
+        eventos = paginator.page(1)
+    except EmptyPage:
+        eventos = paginator.page(paginator.num_pages)
+
+    context = {
+        'eventos': eventos,
+        'query': query,
+        'filter_by': filter_by,
+    }
+    return render(request, 'eventos/gerenciar_eventos.html', context)
+
+def evento_form(request, pk=None):
+    evento = get_object_or_404(Evento, pk=pk) if pk else None
+    
+    if request.method == 'POST':
+        form = EventoForm(request.POST, instance=evento)
+        if form.is_valid():
+            form.save()
+            return redirect('gerenciar_eventos')
+    else:
+        form = EventoForm(instance=evento)
+    
+    context = {'form': form, 'evento': evento}
+    return render(request, 'eventos/evento_form.html', context)
+
+# Views para Agendamentos
+def gerenciar_agendamentos(request):
+    query = request.GET.get('q', '')
+    filter_by = request.GET.get('filter_by', 'all')
+    page_number = request.GET.get('page')
+
+    agendamentos_list = Agendamento.objects.all()
+    
+    if query:
+        agendamentos_list = agendamentos_list.filter(
+            Q(evento__titulo__icontains=query) |
+            Q(sala__nome__icontains=query)
+        )
+    
+    paginator = Paginator(agendamentos_list, ITENS_POR_PAGINA)
+    
+    try:
+        agendamentos = paginator.page(page_number)
+    except PageNotAnInteger:
+        agendamentos = paginator.page(1)
+    except EmptyPage:
+        agendamentos = paginator.page(paginator.num_pages)
+
+    context = {
+        'agendamentos': agendamentos,
+        'query': query,
+        'filter_by': filter_by,
+    }
+    return render(request, 'eventos/gerenciar_agendamentos.html', context)
+
+def agendamento_form(request, pk=None):
+    agendamento = get_object_or_404(Agendamento, pk=pk) if pk else None
+    
+    if request.method == 'POST':
+        form = AgendamentoForm(request.POST, instance=agendamento)
+        if form.is_valid():
+            form.save()
+            return redirect('gerenciar_agendamentos')
+    else:
+        form = AgendamentoForm(instance=agendamento)
+    
+    context = {'form': form, 'agendamento': agendamento}
+    return render(request, 'eventos/agendamento_form.html', context)
+
+# views.py (parte da API)
+from rest_framework import viewsets, status
+from rest_framework.response import Response
+from .models import Sala, Evento, Agendamento
+from .serializers import SalaSerializer, EventoSerializer, AgendamentoSerializer
+
+class SalaViewSet(viewsets.ModelViewSet):
+    queryset = Sala.objects.all()
+    serializer_class = SalaSerializer
+    filter_backends = [filters.SearchFilter]
+    search_fields = ['nome', 'localizacao']
+
+class EventoViewSet(viewsets.ModelViewSet):
+    queryset = Evento.objects.all()
+    serializer_class = EventoSerializer
+    filter_backends = [filters.SearchFilter]
+    search_fields = ['titulo', 'organizador']
+
+class AgendamentoViewSet(viewsets.ModelViewSet):
+    queryset = Agendamento.objects.all()
+    serializer_class = AgendamentoSerializer
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter]
+    filterset_fields = ['sala', 'evento']
+    search_fields = ['descricao']
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        headers = self.get_success_headers(serializer.data)
+        return Response(
+            serializer.data,
+            status=status.HTTP_201_CREATED,
+            headers=headers
+        )
+
+    def list(self, request, *args, **kwargs):
+        queryset = self.filter_queryset(self.get_queryset())
+        
+        # Formato específico para FullCalendar
+        if request.query_params.get('format') == 'fullcalendar':
+            data = [{
+                'id': agendamento.id,
+                'title': agendamento.evento.titulo,
+                'start': agendamento.data_hora_inicio.isoformat(),
+                'end': agendamento.data_hora_fim.isoformat(),
+                'extendedProps': {
+                    'sala': agendamento.sala.nome,
+                    'descricao': agendamento.descricao
+                }
+            } for agendamento in queryset]
+            return Response(data)
+        
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
+    # eventos/views.py
+from django.utils import timezone
+from django.shortcuts import render
+from django.db.models import Count
+def dashboard(request):
+    total_eventos = Evento.objects.count()
+    total_agendamentos = Agendamento.objects.count()
+    total_salas = Sala.objects.count()
+    # Agendamentos próximos: que ainda não iniciaram (ou em andamento, dependendo da lógica)
+    upcoming_agendamentos = Agendamento.objects.filter(inicio__gte=timezone.now()).order_by('inicio')[:5]
+    
+    # Agendamentos por Sala para o gráfico
+    agendamentos_por_sala = Agendamento.objects.values('sala__nome').annotate(total=Count('id'))
+    salas_labels = [item['sala__nome'] for item in agendamentos_por_sala]
+    salas_data = [item['total'] for item in agendamentos_por_sala]
+    
+    context = {
+        'total_eventos': total_eventos,
+        'total_agendamentos': total_agendamentos,
+        'total_salas': total_salas,
+        'upcoming_agendamentos': upcoming_agendamentos,
+        'salas_labels': salas_labels,
+        'salas_data': salas_data,
+        'salas': Sala.objects.all(),    # para o form do modal
+        'eventos': Evento.objects.all(),  # para o form do modal
+    }
+    
+    return render(request, 'eventos/dashboard.html', context)
+from django.http import JsonResponse
+from .models import Agendamento
+
+def agendamentos_api(request):
+    agendamentos = Agendamento.objects.all()
+    events = []
+    
+    for agendamento in agendamentos:
+        events.append({
+            'id': agendamento.id,
+            'title': agendamento.evento.titulo,
+            'start': agendamento.data_hora_inicio.isoformat(),
+            'end': agendamento.data_hora_fim.isoformat(),
+            'extendedProps': {
+                'sala': agendamento.sala.nome,
+                'descricao': agendamento.descricao
+            }
+        })
+    
+    return JsonResponse(events, safe=False)

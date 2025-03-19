@@ -70,6 +70,19 @@
                                 {% endfor %}
                             </div>
 
+                            <!-- Nova Instituição -->
+                            <div class="mb-3">
+                                <label class="form-label" for="id_instituicao">
+                                    <i class="bi bi-building me-2"></i>Instituição
+                                </label>
+                                <input type="text" name="instituicao" id="id_instituicao" 
+                                    class="form-control {% if form.instituicao.errors %}is-invalid{% endif %}" 
+                                    value="{{ form.instituicao.value|default:'' }}">
+                                {% for error in form.instituicao.errors %}
+                                    <div class="invalid-feedback">{{ error }}</div>
+                                {% endfor %}
+                            </div>
+
                             <!-- Endereço -->
                             <div class="mb-3">
                                 <label class="form-label" for="id_endereco">
@@ -97,4 +110,4 @@
             </div>
         </div>
     </div>
-    {% endblock %}
+{% endblock %}

@@ -1,0 +1,47 @@
+
+{% extends "cedepe/base.html" %}
+{% load static %}
+
+{% block title %}{% if agendamento %}Editar Agendamento{% else %}Novo Agendamento{% endif %}{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+  <div class="card shadow">
+    <div class="card-header bg-primary text-white">
+      <h3 class="mb-0">
+        <i class="bi bi-clock me-2"></i>
+        {% if agendamento %}Editar Agendamento{% else %}Novo Agendamento{% endif %}
+      </h3>
+    </div>
+    <div class="card-body">
+      <form method="post">
+        {% csrf_token %}
+        <div class="mb-3">
+          <label class="form-label">Evento</label>
+          {{ form.evento }}
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Sala</label>
+          {{ form.sala }}
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Início</label>
+          {{ form.inicio }}
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Fim</label>
+          {{ form.fim }}
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Participantes</label>
+          {{ form.participantes }}
+        </div>
+        <div class="d-grid gap-2 d-md-flex justify-content-end">
+          <button type="submit" class="btn btn-primary">Salvar</button>
+          <a href="{% url 'gerenciar_agendamentos' %}" class="btn btn-secondary">Cancelar</a>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -11,12 +11,10 @@
   <link rel="stylesheet" href="{% static 'bootstrap/css/bootstrap.min.css' %}">
 
   <!-- Bootstrap Icons -->
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.3.0/font/bootstrap-icons.css">
 
   <!-- Font Awesome -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-
-
 
   <link rel="stylesheet" href="{% static 'css/style.css' %}">
   <link rel="icon" type="image/png" href="{% static 'images/CARD DA GRE.png' %}">
@@ -27,61 +25,98 @@
 <body class="d-flex">
   <!-- Sidebar Fixo -->
   <div class="d-flex flex-column flex-shrink-0 p-3 bg-cedepe text-white" style="width: 280px; height: 100vh;">
-    <div class="bg-white p-3 shadow-sm border border-success rounded-3 border-start-danger logo-container">
+    <div class="bg-white p-3 shadow-sm border border-success rounded-3 logo-container">
       <a href="{% url 'home' %}" class="d-flex flex-column align-items-center text-dark text-decoration-none">
         <img src="{% static 'images/CARD DA GRE.png' %}" alt="Logo GRE">
-        <span class="brand-text">Hospedagens CEDEPE</span>
+        <span class="brand-text">CEDEPE</span>
       </a>
     </div>
 
     <hr>
 
     <ul class="nav nav-pills flex-column mb-auto">
+      <!-- Link para Início -->
       <li class="nav-item">
-        <a href="{% url 'home' %}" class="nav-link text-white sidebar-link">
+        <a href="{% url 'home' %}" class="nav-link text-white sidebar-link {% if request.resolver_match.url_name == 'home' %}active{% endif %}">
           <i class="fas fa-home me-2"></i>
           Início
         </a>
       </li>
 
       {% if user.is_authenticated and user.is_staff %}
-      <li>
-        <a href="{% url 'dashboard' %}" class="nav-link text-white sidebar-link">
-          <i class="fas fa-tachometer-alt me-2"></i>
-          Dashboard
+      <!-- Menu de Hospedagens -->
+      <li class="nav-item">
+        <a href="{% url 'dashboard_hospedagens' %}" class="nav-link text-white sidebar-link">
+          <i class="fas fa-hotel me-2"></i>
+          Hospedagens
         </a>
+        <ul class="nav flex-column ms-3">
+          <li>
+            <a href="{% url 'dashboard_hospedagens' %}" class="nav-link text-white sidebar-link {% if request.resolver_match.url_name == 'dashboard_hospedagens' %}active{% endif %}">
+              <i class="fas fa-chart-line me-2"></i>Dashboard Hospedagens
+            </a>
+          </li>
+          <li>
+            <a href="{% url 'mapa_interativo' %}" class="nav-link text-white sidebar-link {% if request.resolver_match.url_name == 'mapa_interativo' %}active{% endif %}">
+              <i class="fas fa-map me-2"></i>Mapa dos quartos
+            </a>
+          </li>
+          <li>
+            <a href="{% url 'gerenciar_quartos' %}" class="nav-link text-white sidebar-link {% if request.resolver_match.url_name == 'gerenciar_quartos' %}active{% endif %}">
+              <i class="fas fa-door-open me-2"></i>Quartos
+            </a>
+          </li>
+          <li>
+            <a href="{% url 'gerenciar_camas' %}" class="nav-link text-white sidebar-link {% if request.resolver_match.url_name == 'gerenciar_camas' %}active{% endif %}">
+              <i class="fas fa-bed me-2"></i>Camas
+            </a>
+          </li>
+          <li>
+            <a href="{% url 'gerenciar_hospedes' %}" class="nav-link text-white sidebar-link {% if request.resolver_match.url_name == 'gerenciar_hospedes' %}active{% endif %}">
+              <i class="fas fa-users me-2"></i>Hóspedes
+            </a>
+          </li>
+          <li>
+            <a href="{% url 'gerenciar_reservas' %}" class="nav-link text-white sidebar-link {% if request.resolver_match.url_name == 'gerenciar_reservas' %}active{% endif %}">
+              <i class="fas fa-calendar-check me-2"></i>Reservas
+            </a>
+          </li>
+        </ul>
       </li>
-      <li>
-        <a href="/reservas/mapa-interativo/" class="nav-link text-white sidebar-link">
-          <i class="fas fa-map-marked-alt me-2"></i>
-          Mapa dos quartos
+
+      <!-- Menu de Eventos -->
+      <li class="nav-item">
+        <a href="{% url 'dashboard_eventos' %}" class="nav-link text-white sidebar-link">
+          <i class="fas fa-calendar-alt me-2"></i>
+          Eventos
         </a>
+        <ul class="nav flex-column ms-3">
+          <li>
+            <a href="{% url 'dashboard_eventos' %}" class="nav-link text-white sidebar-link {% if request.resolver_match.url_name == 'dashboard_eventos' %}active{% endif %}">
+              <i class="fas fa-chart-line me-2"></i>Dashboard Eventos
+            </a>
+          </li>
+          <li>
+            <a href="{% url 'gerenciar_eventos' %}" class="nav-link text-white sidebar-link {% if request.resolver_match.url_name == 'gerenciar_eventos' %}active{% endif %}">
+              <i class="fas fa-calendar me-2"></i>Gerenciar Eventos
+            </a>
+          </li>
+          <li>
+            <a href="{% url 'gerenciar_agendamentos' %}" class="nav-link text-white sidebar-link {% if request.resolver_match.url_name == 'gerenciar_agendamentos' %}active{% endif %}">
+              <i class="fas fa-clock me-2"></i>Gerenciar Agendamentos
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="{% url 'gerenciar_salas' %}" class="nav-link text-white sidebar-link {% if request.resolver_match.url_name == 'gerenciar_salas' %}active{% endif %}">
+                <i class="bi bi-house-door"></i> Gerenciar Salas
+            </a>
+        </li>
+        
+        </ul>
       </li>
-      <li>
-        <a href="{% url 'gerenciar_quartos' %}" class="nav-link text-white sidebar-link">
-          <i class="fas fa-door-open me-2"></i>
-          Quartos
-        </a>
-      </li>
-      <li>
-        <a href="{% url 'gerenciar_camas' %}" class="nav-link text-white sidebar-link">
-          <i class="fas fa-bed me-2"></i>
-          Camas
-        </a>
-      </li>
-      <li>
-        <a href="{% url 'gerenciar_hospedes' %}" class="nav-link text-white sidebar-link">
-          <i class="fas fa-users me-2"></i>
-          Hóspedes
-        </a>
-      </li>
-      <li>
-        <a href="{% url 'gerenciar_reservas' %}" class="nav-link text-white sidebar-link">
-          <i class="fas fa-calendar-check me-2"></i>
-          Reservas
-        </a>
-      </li>
-      <li>
+
+      <!-- Central de controle -->
+      <li class="nav-item">
         <a href="/admin" class="nav-link text-white sidebar-link">
           <i class="fas fa-tools me-2"></i>
           Central de controle
@@ -123,7 +158,7 @@
     <!-- Footer -->
     <footer class="bg-light text-center py-3 border-top">
       <div class="container">
-        <small>&copy; {% now "Y" %} Sistema de Gerenciar Hospedagens CEDEPE. Todos os direitos reservados.</small>
+        <small>&copy; {% now "Y" %} Sistema CEDEPE. Todos os direitos reservados.</small>
       </div>
     </footer>
   </div>

@@ -64,22 +64,50 @@
     background-color: #10295d !important;
 }
 
-.sidebar-link {
+/* Estilos gerais da Sidebar */
+.bg-cedepe {
+    background-color: #10295d !important;
+  }
+  
+  .sidebar-link {
+    display: block;
+    color: #ffffff;
+    padding: 10px 15px;
     transition: all 0.3s ease;
-    border-radius: 8px !important;
+    border-radius: 8px;
     margin: 2px 0;
-}
-
-.sidebar-link:hover {
+    text-decoration: none;
+  }
+  
+  /* Hover: animação e deslocamento */
+  .sidebar-link:hover {
     background-color: rgba(255, 255, 255, 0.1) !important;
     transform: translateX(5px);
-}
-
-.sidebar-link.active {
-    background-color: #f5bf26 !important;
-    color: #10295d !important;
+  }
+  
+  /* Estado ativo: item selecionado */
+  .sidebar-link.active {
+    background-color: white !important; /* Fundo branco */
+    color: #10295d !important;          /* Texto azul */
     font-weight: 600;
-}
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    position: relative;
+    margin-left: 10px;
+    border-radius: 5px;
+  }
+  
+  /* Indicador lateral para o item ativo */
+  .sidebar-link.active::before {
+    content: '';
+    position: absolute;
+    left: -10px;
+    top: 0;
+    height: 100%;
+    width: 4px;
+    background-color: #f5bf26;
+    border-radius: 2px;
+  }
+  
 
 .nav-pills .nav-link.active {
     background-color: #f5bf26;

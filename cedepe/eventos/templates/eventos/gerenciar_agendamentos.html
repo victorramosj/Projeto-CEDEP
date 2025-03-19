@@ -1,0 +1,152 @@
+{% extends "cedepe/base.html" %}
+{% load static %}
+
+{% block title %}Gerenciar Agendamentos{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>Gerenciar Agendamentos</h1>
+    <a href="{% url 'agendamento_form' %}" class="btn btn-success">
+      <i class="bi bi-plus-circle"></i> Novo Agendamento
+    </a>
+  </div>
+
+  <!-- Filtro de busca -->
+  <form method="GET" class="mb-4">
+    <div class="input-group">
+      <input type="text" name="q" value="{{ query }}" class="form-control" placeholder="Pesquisar...">
+      <button class="btn btn-outline-primary" type="submit">
+        <i class="bi bi-search"></i> Buscar
+      </button>
+    </div>
+  </form>
+
+  <!-- Tabela de Agendamentos -->
+  <div class="card shadow-sm">
+    <div class="card-body">
+      <div class="table-responsive">
+        <table class="table table-hover">
+          <thead>
+            <tr>
+              <th>Evento</th>
+              <th>Sala</th>
+              <th>Início</th>
+              <th>Fim</th>
+              <th>Ações</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for agendamento in agendamentos %}
+            <tr>
+              <td>{{ agendamento.evento.titulo }}</td>
+              <td>{{ agendamento.sala.nome }}</td>
+              <td>{{ agendamento.inicio|date:"d/m/Y H:i" }}</td>
+              <td>{{ agendamento.fim|date:"d/m/Y H:i" }}</td>
+              <td>
+                <a href="{% url 'editar_agendamento' agendamento.pk %}" class="btn btn-sm btn-primary">
+                  <i class="bi bi-pencil"></i> Editar
+                </a>
+                <button class="btn btn-sm btn-danger" onclick="deleteAgendamento({{ agendamento.pk }})">
+                  <i class="bi bi-trash"></i> Excluir
+                </button>
+              </td>
+            </tr>
+            {% empty %}
+            <tr>
+              <td colspan="5" class="text-center">Nenhum agendamento cadastrado.</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Paginação -->
+      <nav>
+        <ul class="pagination justify-content-center">
+          {% if agendamentos.has_previous %}
+          <li class="page-item">
+            <a class="page-link" href="?page={{ agendamentos.previous_page_number }}{% if query %}&q={{ query }}{% endif %}">Anterior</a>
+          </li>
+          {% else %}
+          <li class="page-item disabled">
+            <span class="page-link">Anterior</span>
+          </li>
+          {% endif %}
+
+          {% for num in agendamentos.paginator.page_range %}
+            {% if agendamentos.number == num %}
+            <li class="page-item active">
+              <span class="page-link">{{ num }}</span>
+            </li>
+            {% elif num > agendamentos.number|add:'-3' and num < agendamentos.number|add:'3' %}
+            <li class="page-item">
+              <a class="page-link" href="?page={{ num }}{% if query %}&q={{ query }}{% endif %}">{{ num }}</a>
+            </li>
+            {% endif %}
+          {% endfor %}
+
+          {% if agendamentos.has_next %}
+          <li class="page-item">
+            <a class="page-link" href="?page={{ agendamentos.next_page_number }}{% if query %}&q={{ query }}{% endif %}">Próximo</a>
+          </li>
+          {% else %}
+          <li class="page-item disabled">
+            <span class="page-link">Próximo</span>
+          </li>
+          {% endif %}
+        </ul>
+      </nav>
+    </div>
+  </div>
+</div>
+
+<!-- Modal de Confirmação -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="deleteModalLabel">Confirmar Exclusão</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        Tem certeza que deseja excluir este agendamento?
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button type="button" class="btn btn-danger" id="confirmDelete">Excluir</button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  let itemIdToDelete = null;
+
+  function deleteAgendamento(id) {
+    itemIdToDelete = id;
+    const deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
+    deleteModal.show();
+  }
+
+  document.getElementById('confirmDelete').addEventListener('click', function() {
+    const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+    fetch(`/api/agendamentos/${itemIdToDelete}/`, {
+      method: 'DELETE',
+      headers: {
+        'X-CSRFToken': csrftoken,
+        'Content-Type': 'application/json'
+      }
+    })
+    .then(response => {
+      if (response.ok) {
+        location.reload();
+      } else {
+        alert('Erro ao excluir o agendamento');
+      }
+    });
+  });
+</script>
+{% endblock %}

@@ -1,0 +1,38 @@
+{% extends "cedepe/base.html" %}
+{% load static %}
+
+{% block title %}{% if evento %}Editar Evento{% else %}Novo Evento{% endif %}{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+  <div class="card shadow">
+    <div class="card-header bg-primary text-white">
+      <h3 class="mb-0">
+        <i class="bi bi-calendar-event me-2"></i>
+        {% if evento %}Editar Evento{% else %}Novo Evento{% endif %}
+      </h3>
+    </div>
+    <div class="card-body">
+      <form method="post">
+        {% csrf_token %}
+        <div class="mb-3">
+          <label class="form-label">Título</label>
+          {{ form.titulo }}
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Descrição</label>
+          {{ form.descricao }}
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Organizador</label>
+          {{ form.organizador }}
+        </div>
+        <div class="d-grid gap-2 d-md-flex justify-content-end">
+          <button type="submit" class="btn btn-primary">Salvar</button>
+          <a href="{% url 'gerenciar_eventos' %}" class="btn btn-secondary">Cancelar</a>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

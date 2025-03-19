@@ -36,11 +36,13 @@ class Hospede(models.Model):
     email = models.EmailField()
     telefone = models.CharField(max_length=20)
     endereco = models.TextField()
+    instituicao = models.CharField(max_length=150, null=True, blank=True)
     criado_em = models.DateTimeField(auto_now_add=True)
     atualizado_em = models.DateTimeField(auto_now=True)
 
     def __str__(self):
         return self.nome
+
 
 class Reserva(models.Model):
     """ Representa a reserva de uma cama por um hóspede. """
