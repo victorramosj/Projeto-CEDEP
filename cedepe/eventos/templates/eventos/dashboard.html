@@ -145,6 +145,8 @@
             <form id="eventForm" method="post">
                 <div class="modal-body">
                     {% csrf_token %}
+                    <div class="alert alert-danger d-none" id="formErrors"></div>
+                    
                     <div class="mb-3">
                         <label class="form-label">Evento</label>
                         <select name="evento" class="form-select" required>
@@ -152,7 +154,9 @@
                             <option value="{{ evento.id }}">{{ evento.titulo }}</option>
                             {% endfor %}
                         </select>
+                        <div class="invalid-feedback" id="eventoError"></div>
                     </div>
+                    
                     <div class="mb-3">
                         <label class="form-label">Sala</label>
                         <select name="sala" class="form-select" required>
@@ -160,18 +164,25 @@
                             <option value="{{ sala.id }}">{{ sala.nome }}</option>
                             {% endfor %}
                         </select>
+                        <div class="invalid-feedback" id="salaError"></div>
                     </div>
+                    
                     <div class="mb-3">
                         <label class="form-label">Data/Hora Início</label>
-                        <input type="datetime-local" name="start" class="form-control" required>
+                        <input type="datetime-local" name="data_hora_inicio" class="form-control" required>
+                        <div class="invalid-feedback" id="startError"></div>
                     </div>
+                    
                     <div class="mb-3">
                         <label class="form-label">Data/Hora Término</label>
-                        <input type="datetime-local" name="end" class="form-control" required>
+                        <input type="datetime-local" name="data_hora_fim" class="form-control" required>
+                        <div class="invalid-feedback" id="endError"></div>
                     </div>
+                    
                     <div class="mb-3">
                         <label class="form-label">Descrição</label>
                         <textarea name="descricao" class="form-control" rows="3"></textarea>
+                        <div class="invalid-feedback" id="descricaoError"></div>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -229,12 +240,15 @@ document.addEventListener('DOMContentLoaded', function() {
 
     document.getElementById('eventForm').addEventListener('submit', function(e) {
     e.preventDefault();
+    
+    // Resetar erros
+    document.querySelectorAll('.form-control, .form-select').forEach(el => el.classList.remove('is-invalid'));
+    document.querySelectorAll('.invalid-feedback').forEach(el => el.textContent = '');
+    document.getElementById('formErrors').classList.add('d-none');
 
     var formData = new FormData(this);
-
-    console.log("Enviando requisição AJAX para adicionar um novo agendamento...");
     
-    fetch('/api/eventos/agendamentos/novo/', {
+    fetch('/eventos/api/agendamentos/', {  // URL corrigida
         method: 'POST',
         body: formData,
         headers: {
@@ -242,29 +256,44 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     })
     .then(response => {
-        console.log("Resposta recebida:", response);
-        
         if (!response.ok) {
-            throw new Error("Erro HTTP: " + response.status);
+            return response.json().then(err => Promise.reject(err));
         }
-        
         return response.json();
     })
     .then(data => {
-        console.log("Dados da resposta:", data);
-
-        if (data.success) {
-            console.log("Agendamento criado com sucesso!");
+        if (data.id) { // Sucesso
             calendar.refetchEvents();
             bootstrap.Modal.getInstance(document.getElementById('addEventModal')).hide();
-        } else {
-            console.error("Erro no servidor:", data.error);
-            alert('Erro: ' + data.error);
         }
     })
     .catch(error => {
-        console.error("Erro na requisição:", error);
-        alert("Erro na requisição: " + error.message);
+        console.error('Erro:', error);
+        
+        // Erros de validação
+        if (error.detail) {
+            // Erro geral
+            document.getElementById('formErrors').textContent = error.detail;
+            document.getElementById('formErrors').classList.remove('d-none');
+        } 
+        else {
+            // Erros de campo específico
+            for (const [field, messages] of Object.entries(error)) {
+                const input = document.querySelector(`[name="${field}"]`);
+                const errorDiv = document.getElementById(`${field}Error`);
+                
+                if (input && errorDiv) {
+                    input.classList.add('is-invalid');
+                    errorDiv.textContent = messages.join(', ');
+                }
+            }
+            
+            // Mostrar erros não mapeados
+            if (Object.keys(error).length === 0) {
+                document.getElementById('formErrors').textContent = 'Erro desconhecido ao processar a requisição';
+                document.getElementById('formErrors').classList.remove('d-none');
+            }
+        }
     });
 });
 });
