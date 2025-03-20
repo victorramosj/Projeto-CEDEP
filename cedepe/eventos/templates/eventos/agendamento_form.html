@@ -7,77 +7,77 @@
 <div class="container mt-5">
   <div class="row justify-content-center">
     <div class="col-md-6">
-  <div class="card shadow">
-    <div class="card-header bg-primary text-white">
-      <h3 class="mb-0">
-        <i class="bi bi-clock me-2"></i>
-        {% if agendamento %}Editar Agendamento{% else %}Novo Agendamento{% endif %}
-      </h3>
-    </div>
-    <div class="card-body">
-      <form method="post">
-        {% csrf_token %}
-        <!-- Exibição de erros não relacionados a um campo específico -->
-        {% if form.non_field_errors %}
-        <div class="alert alert-danger">
-          <ul class="mb-0">
-            {% for error in form.non_field_errors %}
-              <li>{{ error }}</li>
+      <div class="card shadow">
+        <div class="card-header bg-primary text-white">
+          <h3 class="mb-0">
+            <i class="bi bi-clock me-2"></i>
+            {% if agendamento %}Editar Agendamento{% else %}Novo Agendamento{% endif %}
+          </h3>
+        </div>
+        <div class="card-body">
+          <form method="post">
+            {% csrf_token %}
+            <!-- Exibição de erros não relacionados a um campo específico -->
+            {% if messages %}
+            {% for message in messages %}
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+              {{ message }}
+              <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+            </div>
             {% endfor %}
-          </ul>
-        </div>
-        {% endif %}
+            {% endif %}
 
-        <!-- Evento -->
-        <div class="mb-3">
-          <label class="form-label" for="id_evento">Evento</label>
-          {{ form.evento }}
-          {% for error in form.evento.errors %}
-            <div class="invalid-feedback">{{ error }}</div>
-          {% endfor %}
+
+            <!-- Evento -->
+            <div class="mb-3">
+              <label class="form-label" for="id_evento">Evento</label>
+              {{ form.evento }}
+              {% for error in form.evento.errors %}
+              <div class="invalid-feedback">{{ error }}</div>
+              {% endfor %}
+            </div>
+            <!-- Sala -->
+            <div class="mb-3">
+              <label class="form-label" for="id_sala">Sala</label>
+              {{ form.sala }}
+              {% for error in form.sala.errors %}
+              <div class="invalid-feedback">{{ error }}</div>
+              {% endfor %}
+            </div>
+            <!-- Início -->
+            <div class="mb-3">
+              <label class="form-label" for="id_inicio">Início</label>
+              {{ form.inicio }}
+              {% for error in form.inicio.errors %}
+              <div class="invalid-feedback">{{ error }}</div>
+              {% endfor %}
+            </div>
+            <!-- Fim -->
+            <div class="mb-3">
+              <label class="form-label" for="id_fim">Fim</label>
+              {{ form.fim }}
+              {% for error in form.fim.errors %}
+              <div class="invalid-feedback">{{ error }}</div>
+              {% endfor %}
+            </div>
+            <!-- Participantes -->
+            <div class="mb-3">
+              <label class="form-label" for="id_participantes">Participantes</label>
+              {{ form.participantes }}
+              {% for error in form.participantes.errors %}
+              <div class="invalid-feedback">{{ error }}</div>
+              {% endfor %}
+            </div>
+            <div class="d-grid gap-2 d-md-flex justify-content-end">
+              <button type="submit" class="btn btn-primary">Salvar</button>
+              <a href="{% url 'gerenciar_salas' %}" class="btn btn-secondary">Ir para o Gerenciamento</a>
+              <a href="{% url 'dashboard_eventos' %}" class="btn btn-outline-dark">Ir para o Dashboard</a>
+            </div>
+
+          </form>
         </div>
-        <!-- Sala -->
-        <div class="mb-3">
-          <label class="form-label" for="id_sala">Sala</label>
-          {{ form.sala }}
-          {% for error in form.sala.errors %}
-            <div class="invalid-feedback">{{ error }}</div>
-          {% endfor %}
-        </div>
-        <!-- Início -->
-        <div class="mb-3">
-          <label class="form-label" for="id_inicio">Início</label>
-          {{ form.inicio }}
-          {% for error in form.inicio.errors %}
-            <div class="invalid-feedback">{{ error }}</div>
-          {% endfor %}
-        </div>
-        <!-- Fim -->
-        <div class="mb-3">
-          <label class="form-label" for="id_fim">Fim</label>
-          {{ form.fim }}
-          {% for error in form.fim.errors %}
-            <div class="invalid-feedback">{{ error }}</div>
-          {% endfor %}
-        </div>
-        <!-- Participantes -->
-        <div class="mb-3">
-          <label class="form-label" for="id_participantes">Participantes</label>
-          {{ form.participantes }}
-          {% for error in form.participantes.errors %}
-            <div class="invalid-feedback">{{ error }}</div>
-          {% endfor %}
-        </div>
-        <div class="d-grid gap-2 d-md-flex justify-content-end">
-          <button type="submit" class="btn btn-primary">Salvar</button>
-          <a href="{% url 'gerenciar_salas' %}" class="btn btn-secondary">Ir para o Gerenciamento</a>
-          <a href="{% url 'dashboard_eventos' %}" class="btn btn-outline-dark">Ir para o Dashboard</a>
-        </div>
-        
-      </form>
+      </div>
     </div>
-  </div>
-  </div>
   </div>
 </div>
 {% endblock %}

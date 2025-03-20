@@ -138,7 +138,7 @@ def agendamento_form(request, pk=None):
         form = AgendamentoForm(request.POST, instance=agendamento)
         if form.is_valid():
             form.save()
-            return redirect('gerenciar_agendamentos')
+            return redirect('dashboard_eventos')
         else:
             # Adiciona mensagens de erro para cada campo inválido
             for field, errors in form.errors.items():

@@ -19,21 +19,15 @@
         </div>
 
         <div class="card-body">
-          {% if form.errors %}
-          <div class="alert alert-danger alert-dismissible fade show" role="alert">
-            <h5 class="alert-heading">
-              <i class="bi bi-exclamation-octagon-fill"></i> Erros no formulário!
-            </h5>
-            <ul class="mb-0">
-              {% for field, errors in form.errors.items %}
-              {% for error in errors %}
-              <li>{{ error }}</li>
-              {% endfor %}
-              {% endfor %}
-            </ul>
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
-          </div>
-          {% endif %}
+          {% if messages %}
+  {% for message in messages %}
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+      {{ message }}
+      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+    </div>
+  {% endfor %}
+{% endif %}
+
           <form method="post">
             {% csrf_token %}
 

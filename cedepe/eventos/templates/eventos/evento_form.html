@@ -17,6 +17,15 @@
     <div class="card-body">
       <form method="post">
         {% csrf_token %}
+        {% if messages %}
+  {% for message in messages %}
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+      {{ message }}
+      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+    </div>
+  {% endfor %}
+{% endif %}
+
         <!-- Título -->
         <div class="mb-3">
           <label class="form-label" for="id_titulo">Título</label>
