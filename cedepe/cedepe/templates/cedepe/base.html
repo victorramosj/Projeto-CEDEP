@@ -22,7 +22,7 @@
   {% block extra_style %}{% endblock %}
 </head>
 
-<body class="d-flex">
+<body class="d-flex min-vh-100" > 
   <!-- Sidebar Fixo -->
   <div class="d-flex flex-column flex-shrink-0 p-3 bg-cedepe text-white" style="width: 280px; height: 100vh;">
     <div class="bg-white p-3 shadow-sm border border-success rounded-3 logo-container">
@@ -148,17 +148,17 @@
   </div>
 
   <!-- Conteúdo Principal -->
-  <div class="flex-grow-1 overflow-auto" style="height: 100vh;">
-    <main class="container-fluid p-4">
+  <div class="flex-grow-1 overflow-auto " style="height: 100vh; background: radial-gradient(circle, #ffffff 0%, #cce7ff 100%);" >
+    <main class="container-fluid vh-100 p-4 flex-grow-1 overflow-auto">
       {% block content %}
       <!-- Conteúdo específico de cada página -->
       {% endblock %}
     </main>
 
     <!-- Footer -->
-    <footer class="bg-light text-center py-3 border-top">
+    <footer class="bg-info text-center py-3 border-top">
       <div class="container">
-        <small>&copy; {% now "Y" %} Sistema CEDEPE - GRE DEPUTADO ANTÔNIO NOVAES. Todos os direitos reservados.</small>
+      <strong><small class="text-white">&copy; {% now "Y" %} CEDEPE - GRE DEPUTADO ANTÔNIO NOVAES.</strong> Todos os direitos reservados.</small>
       </div>
     </footer>
   </div>

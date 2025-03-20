@@ -8,8 +8,17 @@
 {% endblock %}
 
 {% block content %}
-<div class="container-fluid px-4">
-    <h1 class="text-start text-danger mb-4">Mapa Interativo</h1>
+<div class="container-fluid px-4 vh-100" >
+    <div class="p-4 mb-4 text-center" >
+        <h1 class=" mb-2" style="color: #10295d">
+          <i class="bi bi-map-fill me-2"></i>
+          Mapa Interativo
+        </h1>
+        <p class="text-dark mb-0">Visualize a disposição de quartos e camas do nosso sistema de hospedagens</p>
+      </div>
+      
+    
+    
     
     <div class="row g-4" id="mapContainer">
         <div class="col-12 text-center">
@@ -93,7 +102,7 @@ document.addEventListener("DOMContentLoaded", function() {
             quartoDiv.className = "col-md-4 mb-4";
             quartoDiv.innerHTML = `
                 <div class="card h-100 shadow-sm">
-                    <div class="card-header bg-primary text-white">
+                    <div class="card-header bg-info text-white">
                         <h5 class="card-title mb-0">
                             <i class="fas fa-door-open me-2"></i>
                             Quarto ${quarto.numero}
