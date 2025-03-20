@@ -42,8 +42,7 @@
       <div class="table-responsive">
         <table class="table table-hover table-bordered">
           <thead class="table-light">
-            <tr>
-              <th>ID</th>
+            <tr>              
               <th>Quarto</th>
               <th>Identificação</th>
               <th>Status</th>
@@ -52,8 +51,7 @@
           </thead>
           <tbody>
             {% for cama in camas %}
-            <tr>
-              <td>{{ cama.id }}</td>
+            <tr>              
               <td>{{ cama.quarto.numero }}</td>
               <td>{{ cama.identificacao }}</td>
               <td>

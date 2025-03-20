@@ -78,7 +78,7 @@
         <table class="table table-hover table-bordered">
           <thead class="table-light">
             <tr>
-              <th>ID</th>
+              
               <th>Hóspede</th>
               <th>Quarto</th>
               <th>Cama</th>
@@ -91,7 +91,7 @@
           <tbody>
             {% for reserva in reservas %}
             <tr>
-              <td>{{ reserva.id }}</td>
+              
               <td>{{ reserva.hospede.nome }}</td>
               <td>{{ reserva.cama.quarto.numero }}</td>
               <td>{{ reserva.cama.identificacao }}</td>

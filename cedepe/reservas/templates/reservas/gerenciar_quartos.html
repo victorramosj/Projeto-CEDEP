@@ -42,8 +42,7 @@
       <div class="table-responsive">
         <table class="table table-hover table-bordered">
           <thead class="table-light">
-            <tr>
-              <th>ID</th>
+            <tr>              
               <th>Número</th>
               <th>Descrição</th>
               <th>Camas Disponíveis</th>
@@ -53,7 +52,7 @@
           <tbody>
             {% for quarto in quartos %}
             <tr>
-              <td>{{ quarto.id }}</td>
+              
               <td>{{ quarto.numero }}</td>
               <td>{{ quarto.descricao }}</td>
               <td>{{ quarto.camas_disponiveis }}</td>

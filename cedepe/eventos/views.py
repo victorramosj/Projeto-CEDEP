@@ -240,3 +240,28 @@ def dashboard(request):
     }
     
     return render(request, 'eventos/dashboard.html', context)
+
+# views.py
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from .models import Agendamento
+from rest_framework import permissions
+
+# views.py
+class FullCalendarEventsView(APIView):
+    permission_classes = [permissions.AllowAny]
+
+    def get(self, request, format=None):
+        agendamentos = Agendamento.objects.all()
+        events = [{
+            'id': agendamento.id,
+            'title': agendamento.evento.titulo,
+            'start': agendamento.inicio.isoformat(),
+            'end': agendamento.fim.isoformat(),
+            'extendedProps': {
+                'sala': agendamento.sala.nome,
+                'descricao': agendamento.evento.descricao,
+                'horario': f"{agendamento.inicio.strftime('%H:%M')} - {agendamento.fim.strftime('%H:%M')}"  # Novo campo
+            }
+        } for agendamento in agendamentos]
+        return Response(events)

@@ -7,6 +7,7 @@ router.register(r'eventos', views.EventoViewSet, basename='evento')
 router.register(r'agendamentos', views.AgendamentoViewSet, basename='agendamento')
 urlpatterns = [
     path('api/', include(router.urls)),
+    path('api/fullcalendar/', views.FullCalendarEventsView.as_view(), name='fullcalendar-events'),
     
     path('dashboard_eventos/', views.dashboard, name='dashboard_eventos'),
    # Salas

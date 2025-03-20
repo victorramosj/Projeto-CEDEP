@@ -16,10 +16,17 @@ from django.utils.timezone import now
 from rest_framework import serializers
 from .models import Agendamento
 
+# serializers.py
 class AgendamentoSerializer(serializers.ModelSerializer):
+    sala_nome = serializers.CharField(source='sala.nome', read_only=True)
+    evento_titulo = serializers.CharField(source='evento.titulo', read_only=True)
+    evento_descricao = serializers.CharField(source='evento.descricao', read_only=True)
+    horario = serializers.SerializerMethodField()
     class Meta:
         model = Agendamento
         fields = '__all__'
+    def get_horario(self, obj):
+        return f"{obj.inicio.strftime('%H:%M')} - {obj.fim.strftime('%H:%M')}"
 
     def validate(self, data):
         inicio = data.get('inicio')
