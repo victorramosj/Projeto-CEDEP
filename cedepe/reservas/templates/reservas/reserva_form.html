@@ -20,13 +20,13 @@
 
         <div class="card-body">
           {% if messages %}
-  {% for message in messages %}
-    <div class="alert alert-danger alert-dismissible fade show" role="alert">
-      {{ message }}
-      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
-    </div>
-  {% endfor %}
-{% endif %}
+          {% for message in messages %}
+          <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+          </div>
+          {% endfor %}
+          {% endif %}
 
           <form method="post">
             {% csrf_token %}
@@ -36,15 +36,21 @@
               <label class="form-label" for="id_hospede">
                 <i class="bi bi-person me-2"></i>Hóspede
               </label>
-              <select name="hospede" id="id_hospede"
-                class="form-select {% if form.hospede.errors %}is-invalid{% endif %}">
-                <option value="">Selecione...</option>
-                {% for hospede in form.hospede.field.queryset %}
-                <option value="{{ hospede.pk }}" {% if form.hospede.value == hospede.pk %}selected{% endif %}>
-                  {{ hospede.nome }}
-                </option>
-                {% endfor %}
-              </select>
+              <div class="input-group">
+                <select name="hospede" id="id_hospede"
+                  class="form-select {% if form.hospede.errors %}is-invalid{% endif %}">
+                  <option value="">Selecione...</option>
+                  {% for hospede in form.hospede.field.queryset %}
+                  <option value="{{ hospede.pk }}" {% if form.hospede.value == hospede.pk %}selected{% endif %}>
+                    {{ hospede.nome }}
+                  </option>
+                  {% endfor %}
+                </select>
+                <button type="button" class="btn btn-outline-success" data-bs-toggle="modal"
+                  data-bs-target="#hospedeModal">
+                  <i class="bi bi-plus-lg"></i> Novo
+                </button>
+              </div>
               {% for error in form.hospede.errors %}
               <div class="invalid-feedback">{{ error }}</div>
               {% endfor %}
@@ -59,14 +65,13 @@
                 <option value="">Selecione um quarto...</option>
                 {% for quarto in quartos %}
                 <option value="{{ quarto.id }}" {% if quarto.id == quarto_selecionado %}selected{% endif %}>
-                    Quarto {{ quarto.numero }}
+                  Quarto {{ quarto.numero }}
                 </option>
                 {% endfor %}
-            </select>
-            
+              </select>
             </div>
 
-            <!-- Cama Disponível (carregado dinamicamente) -->
+            <!-- Cama Disponível -->
             <div class="mb-3">
               <label class="form-label" for="id_cama">
                 <i class="bi bi-bed me-2"></i>Cama Disponível
@@ -74,14 +79,13 @@
               <select name="cama" id="id_cama" class="form-select {% if form.cama.errors %}is-invalid{% endif %}"
                 {% if not quarto_selecionado %}disabled{% endif %}>
                 {% if cama_selecionada %}
-                    <option value="{{ cama_selecionada.id }}" selected>
-                        {{ cama_selecionada.identificacao }}
-                    </option>
+                <option value="{{ cama_selecionada.id }}" selected>
+                  {{ cama_selecionada.identificacao }}
+                </option>
                 {% else %}
-                    <option value="">Selecione um quarto primeiro</option>
+                <option value="">Selecione um quarto primeiro</option>
                 {% endif %}
-        </select>
-
+              </select>
               {% for error in form.cama.errors %}
               <div class="invalid-feedback">{{ error }}</div>
               {% endfor %}
@@ -95,8 +99,8 @@
                     <i class="bi bi-calendar-check me-2"></i>Check-in
                   </label>
                   <input type="date" name="data_checkin" id="id_data_checkin"
-                         class="form-control {% if form.data_checkin.errors %}is-invalid{% endif %}"
-                         value="{{ form.data_checkin.value|date:'Y-m-d'|default:'' }}">
+                    class="form-control {% if form.data_checkin.errors %}is-invalid{% endif %}"
+                    value="{{ form.data_checkin.value|date:'Y-m-d'|default:'' }}">
                   {% for error in form.data_checkin.errors %}
                   <div class="invalid-feedback">{{ error }}</div>
                   {% endfor %}
@@ -108,8 +112,8 @@
                     <i class="bi bi-calendar-x me-2"></i>Check-out
                   </label>
                   <input type="date" name="data_checkout" id="id_data_checkout"
-                         class="form-control {% if form.data_checkout.errors %}is-invalid{% endif %}"
-                         value="{{ form.data_checkout.value|date:'Y-m-d'|default:'' }}">
+                    class="form-control {% if form.data_checkout.errors %}is-invalid{% endif %}"
+                    value="{{ form.data_checkout.value|date:'Y-m-d'|default:'' }}">
                   {% for error in form.data_checkout.errors %}
                   <div class="invalid-feedback">{{ error }}</div>
                   {% endfor %}
@@ -122,8 +126,7 @@
               <label class="form-label" for="id_status">
                 <i class="bi bi-list-check me-2"></i>Status
               </label>
-              <select name="status" id="id_status"
-                      class="form-select {% if form.status.errors %}is-invalid{% endif %}">
+              <select name="status" id="id_status" class="form-select {% if form.status.errors %}is-invalid{% endif %}">
                 {% for value, label in form.fields.status.choices %}
                 <option value="{{ value }}" {% if form.status.value == value %}selected{% endif %}>
                   {{ label }}
@@ -152,71 +155,149 @@
     </div>
   </div>
 </div>
+
+<!-- Modal para Novo Hóspede -->
+<div class="modal fade" id="hospedeModal" tabindex="-1" aria-labelledby="hospedeModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header bg-success text-white">
+        <h5 class="modal-title" id="hospedeModalLabel">
+          <i class="bi bi-person-plus me-2"></i>
+          Novo Hóspede
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
+      </div>
+      <div class="modal-body">
+        <div id="hospedeFormContainer">
+          {% include "reservas/hospede_form_modal.html" %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
 {% endblock %}
 
 {% block scripts %}
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.inputmask/5.0.8/jquery.inputmask.min.js"></script>
+
 <script>
   document.addEventListener('DOMContentLoaded', function() {
-    const quartoSelect = document.getElementById('id_quarto');
-    const camaSelect = document.getElementById('id_cama');
-    // Captura o id da cama selecionada, se houver, para comparações (sempre como string)
-    const selectedCamaId = "{{ cama_selecionada.id|default:'' }}";
-    
-    // Inicializa os selects com Select2
-    $(quartoSelect).select2({
-      placeholder: "Selecione um quarto",
+    // Inicialização do Select2
+    $('#id_quarto, #id_cama').select2({
+      placeholder: "Selecione...",
       allowClear: true
     });
-    
-    $(camaSelect).select2({
-      placeholder: "Selecione uma cama",
-      allowClear: true
-    });
-    
-    // Função para carregar as camas disponíveis via AJAX para o quarto selecionado
-    async function carregarCamas(quartoId) {
+
+    // Máscaras para os campos
+    $('.cpf-mask').inputmask('999.999.999-99');
+    $('.phone-mask').inputmask('(99) 99999-9999');
+
+    // Carregamento de camas
+    const carregarCamas = async (quartoId) => {
       if (!quartoId) {
-        $(camaSelect).empty().append('<option value="">Selecione um quarto primeiro</option>');
-        $(camaSelect).prop('disabled', true).trigger('change');
+        $('#id_cama').empty().append('<option value="">Selecione um quarto primeiro</option>');
+        $('#id_cama').prop('disabled', true).trigger('change');
         return;
       }
-      
+
       try {
         const response = await fetch(`/reservas/camas_disponiveis/?quarto=${quartoId}`);
-        if (!response.ok) throw new Error('Erro na resposta do servidor');
         const data = await response.json();
         
-        $(camaSelect).empty();
+        $('#id_cama').empty();
         if (data.camas.length > 0) {
           data.camas.forEach(cama => {
-            const isSelected = (String(cama.id) === selectedCamaId);
-            const newOption = new Option(cama.identificacao, cama.id, false, isSelected);
-            $(camaSelect).append(newOption);
+            $('#id_cama').append(new Option(cama.identificacao, cama.id, false, cama.id === "{{ cama_selecionada.id|default:'' }}"));
           });
         } else {
-          $(camaSelect).append('<option value="">Nenhuma cama disponível</option>');
+          $('#id_cama').append('<option value="">Nenhuma cama disponível</option>');
         }
-        
-        $(camaSelect).prop('disabled', false).trigger('change');
+        $('#id_cama').prop('disabled', false).trigger('change');
       } catch (error) {
         console.error('Erro:', error);
-        $(camaSelect).empty().append('<option value="">Erro ao carregar camas</option>');
+        $('#id_cama').empty().append('<option value="">Erro ao carregar camas</option>');
       }
-    }
-    
-    // Quando o quarto selecionado mudar, carrega as camas correspondentes
-    $(quartoSelect).on('change', function() {
-      const quartoId = this.value;
-      carregarCamas(quartoId);
-      $(camaSelect).val(null).trigger('change');
+    };
+
+    // Evento de mudança no quarto
+    $('#id_quarto').on('change', function() {
+      carregarCamas(this.value);
     });
-    
-    // Se já houver um quarto selecionado (edição de reserva), carrega as camas dele
+
     {% if quarto_selecionado %}
       carregarCamas("{{ quarto_selecionado }}");
     {% endif %}
+
+    // No bloco scripts do template de reservas
+$(document).ready(function() {
+  // Máscaras para os campos
+  $('.cpf-mask').inputmask('999.999.999-99');
+  $('.phone-mask').inputmask('(99) 99999-9999');
+
+  // Submit do formulário via AJAX
+  $('#hospedeForm').on('submit', function(e) {
+    e.preventDefault();
+    const form = $(this);
+    const url = form.attr('action');
+    
+    $.ajax({
+      type: 'POST',
+      url: url,
+      data: form.serialize(),
+      success: function(response) {
+        if (response.success) {
+          $('#hospedeModal').modal('hide');
+          recarregarHospedes();
+          // Seleciona automaticamente o novo hóspede
+          $('#id_hospede').val(response.hospede_id).trigger('change');
+        } else {
+          // Atualiza o formulário com os erros
+          $('#hospedeFormContainer').html(response.form_html);
+          // Reaplica máscaras
+          $('.cpf-mask').inputmask('999.999.999-99');
+          $('.phone-mask').inputmask('(99) 99999-9999');
+        }
+      },
+      error: function() {
+        alert('Ocorreu um erro ao salvar o hóspede.');
+      }
+    });
   });
+
+  // Função melhorada para recarregar hóspedes
+  function recarregarHospedes() {
+    $.get('{% url "listar_hospedes_json" %}', function(data) {
+      const select = $('#id_hospede');
+      select.empty().append('<option value="">Selecione...</option>');
+      
+      $.each(data, function(index, hospede) {
+        select.append($('<option>', {
+          value: hospede.id,
+          text: hospede.nome
+        }));
+      });
+      
+      select.trigger('change');
+    });
+  }
+});
+$(document).ready(function() {
+  // Máscara para CPF
+  $('#id_cpf').inputmask({
+    mask: '999.999.999-99',
+    placeholder: '___.___.___-__',
+    clearIncomplete: true
+  });
+
+  // Máscara para telefone (aceita 8 ou 9 dígitos)
+  $('#id_telefone').inputmask({
+    mask: ['(99) 9999-9999', '(99) 99999-9999'],
+    keepStatic: true,
+    placeholder: '(  ) _____-____',
+    clearIncomplete: true
+  });
+});
 </script>
 {% endblock %}

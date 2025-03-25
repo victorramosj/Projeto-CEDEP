@@ -83,18 +83,26 @@ def gerenciar_eventos(request):
     return render(request, 'eventos/gerenciar_eventos.html', context)
 
 def evento_form(request, pk=None):
-    evento = get_object_or_404(Evento, pk=pk) if pk else None
+    evento = None
+    if pk:
+        evento = get_object_or_404(Evento, pk=pk)
     
     if request.method == 'POST':
         form = EventoForm(request.POST, instance=evento)
         if form.is_valid():
             form.save()
+            next_url = request.GET.get('next')
+            if next_url:
+                return redirect(next_url)
             return redirect('gerenciar_eventos')
     else:
         form = EventoForm(instance=evento)
     
-    context = {'form': form, 'evento': evento}
-    return render(request, 'eventos/evento_form.html', context)
+    return render(request, 'eventos/evento_form.html', {
+        'form': form,
+        'evento': evento
+    })
+    
 
 # Views para Agendamentos
 def gerenciar_agendamentos(request):

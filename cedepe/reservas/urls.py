@@ -27,6 +27,7 @@ urlpatterns = [
     path('hospedes/', views.gerenciar_hospedes, name='gerenciar_hospedes'),
     path('hospedes/form/', views.hospede_form, name='hospede_form'),
     path('hospedes/form/<int:pk>/', views.hospede_form, name='editar_hospede'),
+    path('hospedes/json/', views.listar_hospedes_json, name='listar_hospedes_json'),
 
     path('reservas/', views.gerenciar_reservas, name='gerenciar_reservas'),
     path('reservas/form/', views.reserva_form, name='reserva_form'),

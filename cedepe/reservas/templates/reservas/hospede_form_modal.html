@@ -1,0 +1,148 @@
+<form id="hospedeForm" method="post" action="{% url 'hospede_form' %}?next={{ request.path }}">
+  {% csrf_token %}
+  
+  <div class="row">
+    <!-- Nome -->
+    <div class="col-md-6 mb-3">
+      <label class="form-label" for="id_nome">
+        <i class="bi bi-person-badge me-2"></i>Nome Completo
+      </label>
+      <div class="input-group">
+        <span class="input-group-text">
+          <i class="bi bi-person-fill"></i>
+        </span>
+        <input type="text" name="nome" id="id_nome" 
+               class="form-control {% if form.nome.errors %}is-invalid{% endif %}" 
+               value="{{ form.nome.value|default:'' }}" 
+               placeholder="João da Silva" required>
+      </div>
+      {% for error in form.nome.errors %}
+        <div class="invalid-feedback">{{ error }}</div>
+      {% endfor %}
+    </div>
+
+    <!-- CPF -->
+    <div class="col-md-6 mb-3">
+      <label class="form-label" for="id_cpf">
+        <i class="bi bi-file-earmark-text me-2"></i>CPF
+      </label>
+      <div class="input-group">
+        <span class="input-group-text">
+          <i class="bi bi-credit-card-fill"></i>
+        </span>
+        <input type="text" name="cpf" id="id_cpf" 
+               class="form-control cpf-mask {% if form.cpf.errors %}is-invalid{% endif %}" 
+               value="{{ form.cpf.value|default:'' }}"
+               placeholder="000.000.000-00" required>
+      </div>
+      {% for error in form.cpf.errors %}
+        <div class="invalid-feedback">{{ error }}</div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <div class="row">
+    <!-- Email -->
+    <div class="col-md-6 mb-3">
+      <label class="form-label" for="id_email">
+        <i class="bi bi-envelope me-2"></i>Email
+      </label>
+      <div class="input-group">
+        <span class="input-group-text">
+          <i class="bi bi-at"></i>
+        </span>
+        <input type="email" name="email" id="id_email" 
+               class="form-control {% if form.email.errors %}is-invalid{% endif %}" 
+               value="{{ form.email.value|default:'' }}"
+               placeholder="exemplo@email.com" required>
+      </div>
+      {% for error in form.email.errors %}
+        <div class="invalid-feedback">{{ error }}</div>
+      {% endfor %}
+    </div>
+
+    <!-- Telefone -->
+    <div class="col-md-6 mb-3">
+      <label class="form-label" for="id_telefone">
+        <i class="bi bi-telephone me-2"></i>Telefone
+      </label>
+      <div class="input-group">
+        <span class="input-group-text">
+          <i class="bi bi-phone-fill"></i>
+        </span>
+        <input type="text" name="telefone" id="id_telefone" 
+               class="form-control phone-mask {% if form.telefone.errors %}is-invalid{% endif %}" 
+               value="{{ form.telefone.value|default:'' }}"
+               placeholder="(00) 00000-0000" required>
+      </div>
+      {% for error in form.telefone.errors %}
+        <div class="invalid-feedback">{{ error }}</div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <!-- Instituição -->
+  <div class="mb-3">
+    <label class="form-label" for="id_instituicao">
+      <i class="bi bi-building me-2"></i>Instituição
+    </label>
+    <div class="input-group">
+      <span class="input-group-text">
+        <i class="bi bi-bank2"></i>
+      </span>
+      <input type="text" name="instituicao" id="id_instituicao" 
+             class="form-control {% if form.instituicao.errors %}is-invalid{% endif %}" 
+             value="{{ form.instituicao.value|default:'' }}"
+             placeholder="Nome da instituição">
+    </div>
+    {% for error in form.instituicao.errors %}
+      <div class="invalid-feedback">{{ error }}</div>
+    {% endfor %}
+  </div>
+
+  <!-- Endereço -->
+  <div class="mb-3">
+    <label class="form-label" for="id_endereco">
+      <i class="bi bi-house-door me-2"></i>Endereço
+    </label>
+    <div class="input-group">
+      <span class="input-group-text">
+        <i class="bi bi-map-fill"></i>
+      </span>
+      <textarea name="endereco" id="id_endereco" 
+                class="form-control {% if form.endereco.errors %}is-invalid{% endif %}" 
+                rows="3"
+                placeholder="Av. Principal, 123 - Centro - Cidade/UF">{{ form.endereco.value|default:'' }}</textarea>
+    </div>
+    {% for error in form.endereco.errors %}
+      <div class="invalid-feedback">{{ error }}</div>
+    {% endfor %}
+  </div>
+
+  <div class="modal-footer">
+    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+      <i class="bi bi-x-circle me-2"></i>Cancelar
+    </button>
+    <button type="submit" class="btn btn-success">
+      <i class="bi bi-save me-2"></i>Salvar Hóspede
+    </button>
+  </div>
+</form>
+<script>
+  $(document).ready(function() {
+  // Máscara para CPF
+  $('#id_cpf').inputmask({
+    mask: '999.999.999-99',
+    placeholder: '___.___.___-__',
+    clearIncomplete: true
+  });
+
+  // Máscara para telefone (aceita 8 ou 9 dígitos)
+  $('#id_telefone').inputmask({
+    mask: ['(99) 9999-9999', '(99) 99999-9999'],
+    keepStatic: true,
+    placeholder: '(  ) _____-____',
+    clearIncomplete: true
+  });
+});
+</script>

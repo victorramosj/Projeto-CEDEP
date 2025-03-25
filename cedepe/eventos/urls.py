@@ -18,6 +18,7 @@ urlpatterns = [
     # Eventos
     path('eventos/', views.gerenciar_eventos, name='gerenciar_eventos'),
     path('eventos/novo/', views.evento_form, name='evento_form'),
+    path('eventos/novo/modal', views.evento_form, name='evento_form_modal'),
     path('eventos/editar/<int:pk>/', views.evento_form, name='editar_evento'),
     
     # Agendamentos

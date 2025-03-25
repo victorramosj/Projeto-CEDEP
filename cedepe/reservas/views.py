@@ -230,24 +230,54 @@ def cama_form(request, pk=None):
     return render(request, 'reservas/cama_form.html', context)
 
 
+from django.http import JsonResponse
+
 def hospede_form(request, pk=None):
-    """ Cria ou edita um Hóspede. """
-    if pk:
-        hospede = get_object_or_404(Hospede, pk=pk)
-    else:
-        hospede = None
+    hospede = get_object_or_404(Hospede, pk=pk) if pk else None
+    next_url = request.GET.get('next', '')
 
     if request.method == 'POST':
         form = HospedeForm(request.POST, instance=hospede)
         if form.is_valid():
-            form.save()
+            novo_hospede = form.save()
+            
+            if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+                return JsonResponse({
+                    'success': True,
+                    'hospede_id': novo_hospede.id,
+                    'message': 'Hóspede salvo com sucesso!'
+                })
+            
+            if next_url:
+                return redirect(next_url)
             return redirect('gerenciar_hospedes')
+        
+        if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+            return JsonResponse({
+                'success': False,
+                'form_html': render_to_string('reservas/hospede_form_modal.html', {
+                    'form': form
+                }, request=request)
+            }, status=400)
     else:
         form = HospedeForm(instance=hospede)
 
-    context = {'form': form, 'hospede': hospede}
-    return render(request, 'reservas/hospede_form.html', context)
+    if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+        return JsonResponse({
+            'form_html': render_to_string('reservas/hospede_form_modal.html', {
+                'form': form,
+                'next': next_url
+            }, request=request)
+        })
 
+    return render(request, 'reservas/hospede_form.html', {
+        'form': form,
+        'hospede': hospede
+    })
+
+def listar_hospedes_json(request):
+    hospedes = Hospede.objects.all().values('id', 'nome')
+    return JsonResponse(list(hospedes), safe=False)
 
 from django.shortcuts import render, get_object_or_404, redirect
 from .forms import ReservaForm

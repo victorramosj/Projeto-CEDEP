@@ -31,7 +31,12 @@
             <!-- Evento -->
             <div class="mb-3">
               <label class="form-label" for="id_evento">Evento</label>
-              {{ form.evento }}
+              <div class="input-group">
+                {{ form.evento }}
+                <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#eventoModal">
+                  <i class="bi bi-plus-lg"></i> Novo
+                </button>
+              </div>
               {% for error in form.evento.errors %}
               <div class="invalid-feedback">{{ error }}</div>
               {% endfor %}
@@ -76,6 +81,23 @@
 
           </form>
         </div>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- Modal para Novo Evento -->
+<div class="modal fade" id="eventoModal" tabindex="-1" aria-labelledby="eventoModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header bg-primary text-white">
+        <h5 class="modal-title" id="eventoModalLabel">
+          <i class="bi bi-calendar-event me-2"></i>
+          Novo Evento
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
+      </div>
+      <div class="modal-body">
+        {% include "eventos/evento_form_modal.html" %}
       </div>
     </div>
   </div>

@@ -1,0 +1,48 @@
+<form method="post" action="{% url 'evento_form' %}?next={{ request.path }}">
+  {% csrf_token %}
+  {% if messages %}
+    {% for message in messages %}
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+      {{ message }}
+      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+    </div>
+    {% endfor %}
+  {% endif %}
+
+  <!-- Título -->
+  <div class="mb-3">
+    <label class="form-label" for="id_titulo">Título</label>
+    <input type="text" name="titulo" id="id_titulo" 
+           class="form-control {% if form.titulo.errors %}is-invalid{% endif %}" 
+           value="{{ form.titulo.value|default:'' }}" required>
+    {% for error in form.titulo.errors %}
+      <div class="invalid-feedback">{{ error }}</div>
+    {% endfor %}
+  </div>
+
+  <!-- Descrição -->
+  <div class="mb-3">
+    <label class="form-label" for="id_descricao">Descrição</label>
+    <textarea name="descricao" id="id_descricao" rows="3" 
+              class="form-control {% if form.descricao.errors %}is-invalid{% endif %}" required>{{ form.descricao.value|default:'' }}</textarea>
+    {% for error in form.descricao.errors %}
+      <div class="invalid-feedback">{{ error }}</div>
+    {% endfor %}
+  </div>
+
+  <!-- Organizador -->
+  <div class="mb-3">
+    <label class="form-label" for="id_organizador">Organizador</label>
+    <input type="text" name="organizador" id="id_organizador" 
+           class="form-control {% if form.organizador.errors %}is-invalid{% endif %}" 
+           value="{{ form.organizador.value|default:'' }}" required>
+    {% for error in form.organizador.errors %}
+      <div class="invalid-feedback">{{ error }}</div>
+    {% endfor %}
+  </div>
+
+  <div class="modal-footer">
+    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+    <button type="submit" class="btn btn-primary">Salvar Evento</button>
+  </div>
+</form>
