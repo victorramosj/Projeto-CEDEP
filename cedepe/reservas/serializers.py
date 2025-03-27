@@ -66,7 +66,7 @@ class HospedeSerializer(serializers.ModelSerializer):
             'atualizado_em'
         ]
 
-
+from datetime import date
 
 class ReservaSerializer(serializers.ModelSerializer):
     class Meta:
@@ -83,20 +83,31 @@ class ReservaSerializer(serializers.ModelSerializer):
         ]
 
     def validate(self, data):
-        # Validação para garantir que a data de check-in seja anterior à data de check-out
-        if data['data_checkin'] >= data['data_checkout']:
+        # Recupera a instância atual (para atualizações parciais)
+        instance = self.instance
+        
+        # Usa o valor enviado ou o valor atual da instância
+        data_checkin = data.get('data_checkin', instance.data_checkin if instance else None)
+        data_checkout = data.get('data_checkout', instance.data_checkout if instance else None)
+        
+        # Se ambos os valores estiverem definidos, faz a validação
+        if data_checkin and data_checkout and data_checkin >= data_checkout:
             raise serializers.ValidationError("Data de check-in deve ser anterior à data de check-out.")
 
-        # Se a reserva for ativa, deve verificar:
-        # 1. Que a cama está disponível
-        # 2. Que o hóspede não possua outra reserva ativa
-        if data.get('status', 'ATIVA') == 'ATIVA':
-            cama = data.get('cama')
-            if cama.status != 'DISPONIVEL':
+        # Se a reserva for ativa, as outras validações são aplicadas
+        if data.get('status', instance.status if instance else 'ATIVA') == 'ATIVA':
+            cama = data.get('cama', instance.cama if instance else None)
+            if cama and cama.status != 'DISPONIVEL':
                 raise serializers.ValidationError("A cama selecionada não está disponível para reserva.")
 
-            hospede = data.get('hospede')
-            if Reserva.objects.filter(hospede=hospede, status='ATIVA').exists():
+            hospede = data.get('hospede', instance.hospede if instance else None)
+            if hospede and Reserva.objects.filter(hospede=hospede, status='ATIVA').exclude(id=instance.id if instance else None).exists():
                 raise serializers.ValidationError("Este hóspede já possui uma reserva ativa.")
 
         return data
+
+    def update(self, instance, validated_data):
+        # Se o status for alterado para FINALIZADA, atualiza a data_checkout para a data atual
+        if validated_data.get('status') == 'FINALIZADA':
+            validated_data['data_checkout'] = date.today()
+        return super().update(instance, validated_data)

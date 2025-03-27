@@ -230,8 +230,6 @@ def cama_form(request, pk=None):
     return render(request, 'reservas/cama_form.html', context)
 
 
-from django.http import JsonResponse
-
 def hospede_form(request, pk=None):
     hospede = get_object_or_404(Hospede, pk=pk) if pk else None
     next_url = request.GET.get('next', '')
@@ -245,6 +243,7 @@ def hospede_form(request, pk=None):
                 return JsonResponse({
                     'success': True,
                     'hospede_id': novo_hospede.id,
+                    'nome': novo_hospede.nome,  # inclua o nome para atualizar o select
                     'message': 'Hóspede salvo com sucesso!'
                 })
             
@@ -275,13 +274,10 @@ def hospede_form(request, pk=None):
         'hospede': hospede
     })
 
+
 def listar_hospedes_json(request):
     hospedes = Hospede.objects.all().values('id', 'nome')
     return JsonResponse(list(hospedes), safe=False)
-
-from django.shortcuts import render, get_object_or_404, redirect
-from .forms import ReservaForm
-from .models import Reserva, Cama, Quarto
 
 def reserva_form(request, pk=None):
     reserva = None
@@ -302,14 +298,18 @@ def reserva_form(request, pk=None):
 
     # Recupera todos os quartos para preencher o select
     quartos = Quarto.objects.all()
-
+    
     if request.method == 'POST':
         form = ReservaForm(request.POST, instance=reserva)
         if form.is_valid():
             form.save()
             return redirect('mapa_interativo')
+        else:
+            # Recupera seleções do POST para manter estado
+            quarto_selecionado = request.POST.get('quarto')
+            cama_selecionada = request.POST.get('cama')
     else:
-        initial = {'cama': cama_selecionada} if cama_selecionada else {}
+        initial = {'cama': cama_selecionada.id if cama_selecionada else None}
         form = ReservaForm(instance=reserva, initial=initial)
 
     context = {
@@ -317,10 +317,9 @@ def reserva_form(request, pk=None):
         'reserva': reserva,
         'quartos': quartos,
         'quarto_selecionado': quarto_selecionado,
-        'cama_selecionada': cama_selecionada
+        'cama_selecionada': cama_selecionada.id if cama_selecionada else None
     }
     return render(request, 'reservas/reserva_form.html', context)
-
 
 from django.http import JsonResponse
 from .models import Cama

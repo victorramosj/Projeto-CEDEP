@@ -135,17 +135,17 @@
           </li>
           <li>
             <a href="{% url 'gerenciar_eventos' %}" class="nav-link text-white sidebar-link {% if request.resolver_match.url_name == 'gerenciar_eventos' %}active{% endif %}">
-              <i class="fas fa-calendar me-2"></i>Gerenciar Eventos
+              <i class="fas fa-calendar me-2"></i>Eventos
             </a>
           </li>
           <li>
             <a href="{% url 'gerenciar_agendamentos' %}" class="nav-link text-white sidebar-link {% if request.resolver_match.url_name == 'gerenciar_agendamentos' %}active{% endif %}">
-              <i class="fas fa-clock me-2"></i>Gerenciar Agendamentos
+              <i class="fas fa-clock me-2"></i>Agendamentos
             </a>
           </li>
           <li class="nav-item">
             <a href="{% url 'gerenciar_salas' %}" class="nav-link text-white sidebar-link {% if request.resolver_match.url_name == 'gerenciar_salas' %}active{% endif %}">
-              <i class="bi bi-house-door"></i> Gerenciar Salas
+              <i class="bi bi-house-door"></i> Salas
             </a>
           </li>
         </ul>

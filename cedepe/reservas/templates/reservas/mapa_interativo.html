@@ -154,8 +154,8 @@ document.addEventListener("DOMContentLoaded", function() {
         const newReservationBtn = document.getElementById('newReservationBtn');
         const newReservationSection = document.getElementById('newReservationSection');
 
-        newReservationBtn.href = `/reservas/reservas/form/?quarto=${cama.quarto}&cama=${cama.id}`;
-
+        // Corrigido para passar o ID do quarto
+        newReservationBtn.href = `/reservas/reservas/form/?quarto=${cama.quarto.id}&cama=${cama.id}`;
         let guestInfo = '';
         if (cama.status === 'OCUPADA' && cama.reserva_atual) {
             guestInfo = `
@@ -191,26 +191,29 @@ document.addEventListener("DOMContentLoaded", function() {
     }
 
     document.getElementById('removeGuestBtn').addEventListener('click', function() {
-        if (currentCama && currentCama.reserva_atual) {
-            if (confirm('Tem certeza que deseja remover o hóspede desta cama?')) {
-                fetch(`/reservas/api/reservas/${currentCama.reserva_atual.id}/`, {
-                    method: 'DELETE',
-                    headers: {
-                        'X-CSRFToken': '{{ csrf_token }}'
-                    }
-                })
-                .then(response => {
-                    if (response.ok) {
-                        showToast('Hóspede removido com sucesso!', 'success');
-                        modal.hide();
-                        setTimeout(() => location.reload(), 1000);
-                    } else {
-                        showToast('Erro ao remover hóspede', 'danger');
-                    }
-                });
-            }
+    if (currentCama && currentCama.reserva_atual) {
+        if (confirm('Tem certeza que deseja finalizar a hospedagem e desocupar a cama?')) {
+            fetch(`/reservas/api/reservas/${currentCama.reserva_atual.id}/`, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify({ status: 'FINALIZADA' })
+            })
+            .then(response => {
+                if (response.ok) {
+                    showToast('Hospedagem finalizada com sucesso!', 'success');
+                    modal.hide();
+                    setTimeout(() => location.reload(), 1000);
+                } else {
+                    showToast('Erro ao finalizar a hospedagem', 'danger');
+                }
+            });
         }
-    });
+    }
+});
+
 
     function showToast(message, type) {
         const toast = document.createElement('div');

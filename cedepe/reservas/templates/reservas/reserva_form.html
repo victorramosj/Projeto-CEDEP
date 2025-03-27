@@ -56,41 +56,41 @@
               {% endfor %}
             </div>
 
-            <!-- Quarto -->
-            <div class="mb-3">
-              <label class="form-label" for="id_quarto">
-                <i class="bi bi-door-open me-2"></i>Quarto
-              </label>
-              <select name="quarto" id="id_quarto" class="form-select" required>
-                <option value="">Selecione um quarto...</option>
-                {% for quarto in quartos %}
-                <option value="{{ quarto.id }}" {% if quarto.id == quarto_selecionado %}selected{% endif %}>
-                  Quarto {{ quarto.numero }}
-                </option>
-                {% endfor %}
-              </select>
-            </div>
+           <!-- Quarto -->
+<div class="mb-3">
+  <label class="form-label" for="id_quarto">
+      <i class="bi bi-door-open me-2"></i>Quarto
+  </label>
+  <select name="quarto" id="id_quarto" class="form-select" required>
+      <option value="">Selecione um quarto...</option>
+      {% for quarto in quartos %}
+      <option value="{{ quarto.id }}" 
+          {% if quarto.id == quarto_selecionado %}selected{% endif %}
+          data-cor="{{ quarto.cor }}">  <!-- Adicione este atributo se necessário -->
+          Quarto {{ quarto.numero }} - {{ quarto.get_tipo_display }}
+      </option>
+      {% endfor %}
+  </select>
+</div>
 
-            <!-- Cama Disponível -->
-            <div class="mb-3">
-              <label class="form-label" for="id_cama">
-                <i class="bi bi-bed me-2"></i>Cama Disponível
-              </label>
-              <select name="cama" id="id_cama" class="form-select {% if form.cama.errors %}is-invalid{% endif %}"
-                {% if not quarto_selecionado %}disabled{% endif %}>
-                {% if cama_selecionada %}
-                <option value="{{ cama_selecionada.id }}" selected>
-                  {{ cama_selecionada.identificacao }}
-                </option>
-                {% else %}
-                <option value="">Selecione um quarto primeiro</option>
-                {% endif %}
-              </select>
-              {% for error in form.cama.errors %}
-              <div class="invalid-feedback">{{ error }}</div>
-              {% endfor %}
-            </div>
-
+<!-- Cama Disponível -->
+<div class="mb-3">
+  <label class="form-label" for="id_cama">
+      <i class="bi bi-bed me-2"></i>Cama
+  </label>
+  <select name="cama" id="id_cama" class="form-select {% if form.cama.errors %}is-invalid{% endif %}">
+      {% if cama_selecionada %}
+          <option value="{{ cama_selecionada }}" selected>
+              {% firstof cama_selecionada.identificacao "Cama selecionada" %}
+          </option>
+      {% else %}
+          <option value="">Selecione um quarto primeiro</option>
+      {% endif %}
+  </select>
+  {% for error in form.cama.errors %}
+  <div class="invalid-feedback">{{ error }}</div>
+  {% endfor %}
+</div>
             <!-- Datas -->
             <div class="row">
               <div class="col-md-6">
@@ -181,123 +181,97 @@
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.inputmask/5.0.8/jquery.inputmask.min.js"></script>
+<script>
+  $(document).ready(function() {
+      // Quando o formulário de novo hóspede for submetido via AJAX
+      $('#hospedeForm').on('submit', function(e) {
+          e.preventDefault();  // previne o envio tradicional do formulário
+          var formData = $(this).serialize();
+
+          $.ajax({
+              url: $(this).attr('action'),
+              method: 'POST',
+              data: formData,
+              headers: {'X-Requested-With': 'XMLHttpRequest'},
+              success: function(response) {
+                  if (response.success) {
+                      // Adiciona a nova opção ao select de hóspedes e a seleciona
+                      var novaOpcao = new Option(response.nome, response.hospede_id, true, true);
+                      $('#id_hospede').append(novaOpcao).trigger('change');
+
+                      // Exibe uma mensagem de sucesso (opcional)
+                      alert(response.message);
+
+                      // Fecha o modal
+                      $('#hospedeModal').modal('hide');
+                  } else {
+                      // Se houver erros, atualiza o conteúdo do modal com o formulário re-renderizado
+                      $('#hospedeFormContainer').html(response.form_html);
+                  }
+              },
+              error: function(xhr, status, error) {
+                  console.error("Erro ao salvar hóspede:", error);
+              }
+          });
+      });
+  });
+</script>
 
 <script>
   document.addEventListener('DOMContentLoaded', function() {
     // Inicialização do Select2
     $('#id_quarto, #id_cama').select2({
-      placeholder: "Selecione...",
-      allowClear: true
+        placeholder: "Selecione...",
+        allowClear: true
     });
 
-    // Máscaras para os campos
-    $('.cpf-mask').inputmask('999.999.999-99');
-    $('.phone-mask').inputmask('(99) 99999-9999');
-
-    // Carregamento de camas
-    const carregarCamas = async (quartoId) => {
-      if (!quartoId) {
-        $('#id_cama').empty().append('<option value="">Selecione um quarto primeiro</option>');
-        $('#id_cama').prop('disabled', true).trigger('change');
-        return;
-      }
-
-      try {
-        const response = await fetch(`/reservas/camas_disponiveis/?quarto=${quartoId}`);
-        const data = await response.json();
-        
-        $('#id_cama').empty();
-        if (data.camas.length > 0) {
-          data.camas.forEach(cama => {
-            $('#id_cama').append(new Option(cama.identificacao, cama.id, false, cama.id === "{{ cama_selecionada.id|default:'' }}"));
-          });
-        } else {
-          $('#id_cama').append('<option value="">Nenhuma cama disponível</option>');
+    // Função para carregar camas
+    const carregarCamas = async (quartoId, camaSelecionadaId) => {
+        if (!quartoId) {
+            $('#id_cama').empty().append('<option value="">Selecione um quarto primeiro</option>');
+            $('#id_cama').prop('disabled', true).trigger('change');
+            return;
         }
-        $('#id_cama').prop('disabled', false).trigger('change');
-      } catch (error) {
-        console.error('Erro:', error);
-        $('#id_cama').empty().append('<option value="">Erro ao carregar camas</option>');
-      }
+
+        try {
+            const response = await fetch(`/reservas/camas_disponiveis/?quarto=${quartoId}`);
+            const data = await response.json();
+            
+            $('#id_cama').empty();
+            
+            // Mantém a cama pré-selecionada mesmo se não estiver na lista
+            if (camaSelecionadaId) {
+                const camaExistente = data.camas.find(c => c.id == camaSelecionadaId);
+                if (!camaExistente) {
+                    $('#id_cama').append(
+                        new Option("Cama selecionada (indisponível)", camaSelecionadaId, true, true)
+                    );
+                }
+            }
+            
+            // Adiciona novas opções
+            data.camas.forEach(cama => {
+                const isSelected = cama.id == camaSelecionadaId;
+                $('#id_cama').append(new Option(cama.identificacao, cama.id, false, isSelected));
+            });
+            
+            $('#id_cama').prop('disabled', false).trigger('change');
+        } catch (error) {
+            console.error('Erro:', error);
+            $('#id_cama').empty().append('<option value="">Erro ao carregar camas</option>');
+        }
     };
 
     // Evento de mudança no quarto
     $('#id_quarto').on('change', function() {
-      carregarCamas(this.value);
+        carregarCamas(this.value, null);
     });
 
-    {% if quarto_selecionado %}
-      carregarCamas("{{ quarto_selecionado }}");
+    // Carrega inicialmente se houver quarto selecionado
+    {% if quarto_selecionado and cama_selecionada %}
+        $('#id_quarto').val("{{ quarto_selecionado }}").trigger('change');
+        carregarCamas("{{ quarto_selecionado }}", "{{ cama_selecionada }}");
     {% endif %}
-
-    // No bloco scripts do template de reservas
-$(document).ready(function() {
-  // Máscaras para os campos
-  $('.cpf-mask').inputmask('999.999.999-99');
-  $('.phone-mask').inputmask('(99) 99999-9999');
-
-  // Submit do formulário via AJAX
-  $('#hospedeForm').on('submit', function(e) {
-    e.preventDefault();
-    const form = $(this);
-    const url = form.attr('action');
-    
-    $.ajax({
-      type: 'POST',
-      url: url,
-      data: form.serialize(),
-      success: function(response) {
-        if (response.success) {
-          $('#hospedeModal').modal('hide');
-          recarregarHospedes();
-          // Seleciona automaticamente o novo hóspede
-          $('#id_hospede').val(response.hospede_id).trigger('change');
-        } else {
-          // Atualiza o formulário com os erros
-          $('#hospedeFormContainer').html(response.form_html);
-          // Reaplica máscaras
-          $('.cpf-mask').inputmask('999.999.999-99');
-          $('.phone-mask').inputmask('(99) 99999-9999');
-        }
-      },
-      error: function() {
-        alert('Ocorreu um erro ao salvar o hóspede.');
-      }
-    });
-  });
-
-  // Função melhorada para recarregar hóspedes
-  function recarregarHospedes() {
-    $.get('{% url "listar_hospedes_json" %}', function(data) {
-      const select = $('#id_hospede');
-      select.empty().append('<option value="">Selecione...</option>');
-      
-      $.each(data, function(index, hospede) {
-        select.append($('<option>', {
-          value: hospede.id,
-          text: hospede.nome
-        }));
-      });
-      
-      select.trigger('change');
-    });
-  }
 });
-$(document).ready(function() {
-  // Máscara para CPF
-  $('#id_cpf').inputmask({
-    mask: '999.999.999-99',
-    placeholder: '___.___.___-__',
-    clearIncomplete: true
-  });
-
-  // Máscara para telefone (aceita 8 ou 9 dígitos)
-  $('#id_telefone').inputmask({
-    mask: ['(99) 9999-9999', '(99) 99999-9999'],
-    keepStatic: true,
-    placeholder: '(  ) _____-____',
-    clearIncomplete: true
-  });
-});
-</script>
+  </script>
 {% endblock %}
