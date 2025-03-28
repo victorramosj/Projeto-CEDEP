@@ -1,3 +1,14 @@
+# No início do template
+{% load custom_filters %}
+
+# Crie um arquivo templatetags/custom_filters.py com:
+from django import template
+
+register = template.Library()
+
+@register.filter
+def get_class(value):
+    return value.__class__.__name__
 {% extends "cedepe/base.html" %}
 {% load static %}
 
@@ -80,17 +91,22 @@
   </label>
   <select name="cama" id="id_cama" class="form-select {% if form.cama.errors %}is-invalid{% endif %}">
       {% if cama_selecionada %}
-          <option value="{{ cama_selecionada }}" selected>
-              {% firstof cama_selecionada.identificacao "Cama selecionada" %}
-          </option>
-      {% else %}
-          <option value="">Selecione um quarto primeiro</option>
-      {% endif %}
-  </select>
-  {% for error in form.cama.errors %}
-  <div class="invalid-feedback">{{ error }}</div>
-  {% endfor %}
-</div>
+          <!-- Modifique o option da cama para -->
+      <option value="{{ cama_selecionada }}" selected>
+        {% if cama_selecionada|get_class == 'Cama' %}
+            {{ cama_selecionada.identificacao }}
+        {% else %}
+            Cama selecionada
+        {% endif %}
+      </option>
+            {% else %}
+                <option value="">Selecione um quarto primeiro</option>
+            {% endif %}
+        </select>
+        {% for error in form.cama.errors %}
+        <div class="invalid-feedback">{{ error }}</div>
+        {% endfor %}
+      </div>
             <!-- Datas -->
             <div class="row">
               <div class="col-md-6">

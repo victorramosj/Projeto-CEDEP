@@ -48,6 +48,7 @@
               <th>CPF</th>
               <th>Email</th>
               <th>Telefone</th>
+              <th>Instituição</th>
               <th>Endereço</th>
               <th>Ações</th>
             </tr>
@@ -60,6 +61,7 @@
               <td>{{ hospede.cpf }}</td>
               <td>{{ hospede.email }}</td>
               <td>{{ hospede.telefone }}</td>
+              <td>{{ hospede.instituicao }}</td>
               <td>{{ hospede.endereco }}</td>
               <td>
                 <a href="{% url 'editar_hospede' hospede.id %}" class="btn btn-sm btn-primary">

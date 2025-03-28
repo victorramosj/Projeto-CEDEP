@@ -5,6 +5,7 @@ from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.http import JsonResponse
 from .models import Sala, Evento, Agendamento
 from .forms import SalaForm, EventoForm, AgendamentoForm
+from django.db.models import Q
 
 ITENS_POR_PAGINA = 10
 

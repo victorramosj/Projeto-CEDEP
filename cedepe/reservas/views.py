@@ -3,6 +3,7 @@ from django_filters.rest_framework import DjangoFilterBackend
 from .models import Quarto, Cama, Hospede, Reserva
 from .serializers import QuartoSerializer, CamaSerializer, HospedeSerializer, ReservaSerializer
 
+
 class QuartoViewSet(viewsets.ModelViewSet):
     """
     ViewSet para o CRUD de Quartos.
@@ -229,7 +230,7 @@ def cama_form(request, pk=None):
     context = {'form': form, 'cama': cama}
     return render(request, 'reservas/cama_form.html', context)
 
-
+from django.template.loader import render_to_string
 def hospede_form(request, pk=None):
     hospede = get_object_or_404(Hospede, pk=pk) if pk else None
     next_url = request.GET.get('next', '')
@@ -296,7 +297,6 @@ def reserva_form(request, pk=None):
         cama_selecionada = reserva.cama
         quarto_selecionado = reserva.cama.quarto.id
 
-    # Recupera todos os quartos para preencher o select
     quartos = Quarto.objects.all()
     
     if request.method == 'POST':
@@ -305,9 +305,18 @@ def reserva_form(request, pk=None):
             form.save()
             return redirect('mapa_interativo')
         else:
-            # Recupera seleções do POST para manter estado
-            quarto_selecionado = request.POST.get('quarto')
-            cama_selecionada = request.POST.get('cama')
+            # CORREÇÃO AQUI: Buscar a instância da cama pelo ID
+            cama_id_post = request.POST.get('cama')
+            if cama_id_post:
+                try:
+                    cama_selecionada = Cama.objects.get(pk=cama_id_post)
+                    quarto_selecionado = cama_selecionada.quarto.id
+                except Cama.DoesNotExist:
+                    cama_selecionada = None
+                    quarto_selecionado = None
+            else:
+                cama_selecionada = None
+                quarto_selecionado = None
     else:
         initial = {'cama': cama_selecionada.id if cama_selecionada else None}
         form = ReservaForm(instance=reserva, initial=initial)
@@ -317,7 +326,8 @@ def reserva_form(request, pk=None):
         'reserva': reserva,
         'quartos': quartos,
         'quarto_selecionado': quarto_selecionado,
-        'cama_selecionada': cama_selecionada.id if cama_selecionada else None
+        # CORREÇÃO AQUI: Usar o ID diretamente se for string
+        'cama_selecionada': cama_selecionada.id if hasattr(cama_selecionada, 'id') else cama_selecionada
     }
     return render(request, 'reservas/reserva_form.html', context)
 
