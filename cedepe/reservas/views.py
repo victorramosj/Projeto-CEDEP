@@ -283,20 +283,21 @@ def listar_hospedes_json(request):
 def reserva_form(request, pk=None):
     reserva = None
     quarto_selecionado = None
-    cama_selecionada = None
+    cama_selecionada_obj = None
     
     # Verifica se veio cama por query parameter
-    cama_id = request.GET.get('cama')
-    if cama_id:
-        cama_selecionada = get_object_or_404(Cama, pk=cama_id)
-        quarto_selecionado = cama_selecionada.quarto.id
+    cama_id_param = request.GET.get('cama')
+    if cama_id_param:
+        cama_selecionada_obj = get_object_or_404(Cama, pk=cama_id_param)
+        quarto_selecionado = cama_selecionada_obj.quarto.id
 
     # Se for edição, carrega a reserva
     if pk:
         reserva = get_object_or_404(Reserva, pk=pk)
-        cama_selecionada = reserva.cama
+        cama_selecionada_obj = reserva.cama
         quarto_selecionado = reserva.cama.quarto.id
 
+    # Recupera todos os quartos para preencher o select
     quartos = Quarto.objects.all()
     
     if request.method == 'POST':
@@ -305,31 +306,31 @@ def reserva_form(request, pk=None):
             form.save()
             return redirect('mapa_interativo')
         else:
-            # CORREÇÃO AQUI: Buscar a instância da cama pelo ID
+            # Recupera seleções do POST para manter estado
+            quarto_selecionado = request.POST.get('quarto')
             cama_id_post = request.POST.get('cama')
-            if cama_id_post:
-                try:
-                    cama_selecionada = Cama.objects.get(pk=cama_id_post)
-                    quarto_selecionado = cama_selecionada.quarto.id
-                except Cama.DoesNotExist:
-                    cama_selecionada = None
-                    quarto_selecionado = None
-            else:
-                cama_selecionada = None
-                quarto_selecionado = None
+            # Tenta recuperar o objeto Cama a partir do ID recebido (que é uma string)
+            try:
+                cama_selecionada_obj = Cama.objects.get(pk=cama_id_post)
+            except (Cama.DoesNotExist, ValueError):
+                cama_selecionada_obj = None
     else:
-        initial = {'cama': cama_selecionada.id if cama_selecionada else None}
-        form = ReservaForm(instance=reserva, initial=initial)
-
+        # Se não for POST, inicializa o formulário com a cama selecionada, se houver
+        form = ReservaForm(instance=reserva, initial={'cama': cama_selecionada_obj.id if cama_selecionada_obj else None})
+    
+    # Se for POST e o formulário não for válido, recria o formulário (não esqueça de passar o initial)
+    if request.method == 'POST' and not form.is_valid():
+        form = ReservaForm(request.POST, instance=reserva, initial={'cama': cama_selecionada_obj.id if cama_selecionada_obj else None})
+    
     context = {
         'form': form,
         'reserva': reserva,
         'quartos': quartos,
         'quarto_selecionado': quarto_selecionado,
-        # CORREÇÃO AQUI: Usar o ID diretamente se for string
-        'cama_selecionada': cama_selecionada.id if hasattr(cama_selecionada, 'id') else cama_selecionada
+        'cama_selecionada': cama_selecionada_obj.id if cama_selecionada_obj else None
     }
     return render(request, 'reservas/reserva_form.html', context)
+
 
 from django.http import JsonResponse
 from .models import Cama
