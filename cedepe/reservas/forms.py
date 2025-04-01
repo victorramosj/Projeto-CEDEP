@@ -56,11 +56,10 @@ class ReservaForm(forms.ModelForm):
     def save(self, commit=True):
         reserva = super().save(commit=False)
 
-        # Atualiza o status da cama conforme a data de check-in
+        # Atualiza o status da cama: somente marca como ocupada se o check-in for hoje
         if reserva.status == 'ATIVA':
             hoje = date.today()
-            # Somente marca a cama como ocupada se o check-in já tiver chegado e a reserva ainda não tiver expirado.
-            if reserva.data_checkin <= hoje < reserva.data_checkout:
+            if reserva.data_checkin == hoje:
                 reserva.cama.status = 'OCUPADA'
             else:
                 reserva.cama.status = 'DISPONIVEL'
