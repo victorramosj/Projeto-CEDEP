@@ -283,8 +283,8 @@ def listar_hospedes_json(request):
 from datetime import date
 from django.shortcuts import get_object_or_404, redirect, render
 # Certifique-se de importar os modelos e formulários necessários:
-# from .models import Quarto, Cama, Reserva
-# from .forms import ReservaForm
+from .models import Quarto, Cama, Reserva
+from .forms import ReservaForm
 
 def reserva_form(request, pk=None):
     reserva = None

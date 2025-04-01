@@ -19,8 +19,8 @@ class HospedeForm(forms.ModelForm):
 
 from django import forms
 from django.core.exceptions import ValidationError
-from .models import Reserva, Cama, Hospede
 from datetime import date
+from .models import Reserva, Cama, Hospede
 
 class ReservaForm(forms.ModelForm):
     class Meta:
@@ -56,14 +56,19 @@ class ReservaForm(forms.ModelForm):
     def save(self, commit=True):
         reserva = super().save(commit=False)
 
-        # Atualiza o status da cama ao salvar a reserva
+        # Atualiza o status da cama conforme a data de check-in
         if reserva.status == 'ATIVA':
-            reserva.cama.status = 'OCUPADA'
+            hoje = date.today()
+            # Somente marca a cama como ocupada se o check-in já tiver chegado e a reserva ainda não tiver expirado.
+            if reserva.data_checkin <= hoje < reserva.data_checkout:
+                reserva.cama.status = 'OCUPADA'
+            else:
+                reserva.cama.status = 'DISPONIVEL'
         elif reserva.status in ['CANCELADA', 'FINALIZADA']:
             reserva.cama.status = 'DISPONIVEL'
 
         if commit:
-            reserva.cama.save()  # Salva o status da cama
-            reserva.save()  # Salva a reserva
+            reserva.cama.save()  # Salva o novo status da cama
+            reserva.save()       # Salva a reserva
 
         return reserva
