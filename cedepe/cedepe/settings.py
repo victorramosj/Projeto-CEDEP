@@ -96,9 +96,9 @@ CSRF_TRUSTED_ORIGINS = [
     'https://cedepegrefloresta.com.br'
 ]
 # Configurações de HTTPS (obrigatório para produção)
-SECURE_SSL_REDIRECT = True  # Redireciona HTTP → HTTPS
-SESSION_COOKIE_SECURE = True  # Cookies só via HTTPS
-CSRF_COOKIE_SECURE = True  # Proteção CSRF só via HTTPS
+SECURE_SSL_REDIRECT = False  # Desative para testar
+SESSION_COOKIE_SECURE = False  # Cookies só via HTTPS
+CSRF_COOKIE_SECURE = False # Proteção CSRF só via HTTPS
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')  # Para proxies como Railway
 
 # Arquivos estáticos (se aplicável)
