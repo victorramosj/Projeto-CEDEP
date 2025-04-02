@@ -99,6 +99,16 @@
             </a>
           </li>
           <li>
+            <a href="{% url 'gerenciar_reservas' %}" class="nav-link text-white sidebar-link {% if request.resolver_match.url_name == 'gerenciar_reservas' %}active{% endif %}">
+              <i class="fas fa-calendar-check me-2"></i>Reservas
+            </a>
+          </li>
+          <li>
+            <a href="{% url 'gerenciar_ocupacoes' %}" class="nav-link text-white sidebar-link {% if request.resolver_match.url_name == 'gerenciar_reservas' %}active{% endif %}">
+              <i class="fas fa-calendar-check me-2"></i>Ocupacoes
+            </a>
+          </li>
+          <li>
             <a href="{% url 'gerenciar_quartos' %}" class="nav-link text-white sidebar-link {% if request.resolver_match.url_name == 'gerenciar_quartos' %}active{% endif %}">
               <i class="fas fa-door-open me-2"></i>Quartos
             </a>
@@ -113,11 +123,7 @@
               <i class="fas fa-users me-2"></i>Hóspedes
             </a>
           </li>
-          <li>
-            <a href="{% url 'gerenciar_reservas' %}" class="nav-link text-white sidebar-link {% if request.resolver_match.url_name == 'gerenciar_reservas' %}active{% endif %}">
-              <i class="fas fa-calendar-check me-2"></i>Reservas
-            </a>
-          </li>
+          
         </ul>
       </li>
 

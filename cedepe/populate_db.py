@@ -55,12 +55,12 @@ def criar_hospedes():
     return [Hospede.objects.create(**data) for data in hospedes_data]
 
 def criar_quartos_e_camas():
-    for i in range(1, 11):  # Criar 10 quartos numerados de 101 a 110
+    for i in range(1, 11):  # Criar 10 quartos (pode ajustar a numeração conforme necessário)
         quarto = Quarto.objects.create(
-            numero=f"{0 + i}",
-            descricao=f"Quarto padrão - Andar Térreo"
+            numero=f"{i}",
+            descricao="Quarto padrão - Andar Térreo"
         )
-        # Criar apenas 6 camas por quarto
+        # Criar 6 camas por quarto
         for j in range(1, 7):
             Cama.objects.create(
                 quarto=quarto,
@@ -69,25 +69,13 @@ def criar_quartos_e_camas():
             )
 
 def criar_reservas(hospedes):
-    # Para cada hóspede, cria uma reserva em uma cama disponível
+    # Para cada hóspede, cria uma reserva (sem vincular cama/quarto)
     for hospede in hospedes:
-        quartos_disponiveis = Quarto.objects.filter(camas__status='DISPONIVEL').distinct()
-        if not quartos_disponiveis.exists():
-            print("Não há camas disponíveis para reservas.")
-            break
-
-        quarto = random.choice(list(quartos_disponiveis))
-        cama = quarto.camas.filter(status='DISPONIVEL').first()
-        if not cama:
-            continue
-
         checkin = datetime.now() - timedelta(days=random.randint(1, 30))
         checkout = checkin + timedelta(days=random.randint(1, 14))
-        status = 'ATIVA' if checkout > datetime.now() else 'FINALIZADA'
-
+        status = random.choice(['PENDENTE', 'CONFIRMADA', 'CANCELADA'])
         Reserva.objects.create(
             hospede=hospede,
-            cama=cama,
             data_checkin=checkin.date(),
             data_checkout=checkout.date(),
             status=status

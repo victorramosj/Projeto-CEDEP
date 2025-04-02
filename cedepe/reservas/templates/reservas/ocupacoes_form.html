@@ -1,7 +1,7 @@
 {% extends "cedepe/base.html" %}
 {% load static %}
 
-{% block title %}Formulário Reserva{% endblock %}
+{% block title %}Formulário Ocupação{% endblock %}
 {% block extra_style %}
 <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
 {% endblock %}
@@ -11,10 +11,10 @@
   <div class="row justify-content-center">
     <div class="col-md-8">
       <div class="card shadow">
-        <div class="card-header bg-success text-white">
+        <div class="card-header bg-primary text-white">
           <h3 class="mb-0">
             <i class="bi bi-journal-plus me-2"></i>
-            {% if reserva %}Editar Reserva{% else %}Nova Reserva{% endif %}
+            {% if ocupacao %}Editar Ocupação{% else %}Nova Ocupação{% endif %}
           </h3>
         </div>
 
@@ -51,6 +51,40 @@
                 </button>
               </div>
               {% for error in form.hospede.errors %}
+                <div class="invalid-feedback">{{ error }}</div>
+              {% endfor %}
+            </div>
+
+            <!-- Quarto -->
+            <div class="mb-3">
+              <label class="form-label" for="id_quarto">
+                <i class="bi bi-door-open me-2"></i>Quarto
+              </label>
+              <select name="quarto" id="id_quarto" class="form-select" required>
+                <option value="">Selecione um quarto...</option>
+                {% for quarto in quartos %}
+                  <option value="{{ quarto.id }}" {% if quarto.id == quarto_selecionado %}selected{% endif %}>
+                    Quarto {{ quarto.numero }}
+                  </option>
+                {% endfor %}
+              </select>
+            </div>
+
+            <!-- Cama Disponível -->
+            <div class="mb-3">
+              <label class="form-label" for="id_cama">
+                <i class="bi bi-bed me-2"></i>Cama
+              </label>
+              <select name="cama" id="id_cama" class="form-select {% if form.cama.errors %}is-invalid{% endif %}">
+                {% if cama_selecionada %}
+                  <option value="{{ cama_selecionada }}" selected>
+                    {{ cama_selecionada.identificacao }}
+                  </option>
+                {% else %}
+                  <option value="">Selecione um quarto primeiro</option>
+                {% endif %}
+              </select>
+              {% for error in form.cama.errors %}
                 <div class="invalid-feedback">{{ error }}</div>
               {% endfor %}
             </div>
@@ -106,11 +140,8 @@
               <button type="submit" class="btn btn-primary">
                 <i class="bi bi-save me-2"></i>Salvar
               </button>
-              <a href="{% url 'gerenciar_reservas' %}" class="btn btn-secondary">
+              <a href="{% url 'gerenciar_ocupacoes' %}" class="btn btn-secondary">
                 <i class="bi bi-x-circle me-2"></i>Cancelar
-              </a>
-              <a href="{% url 'mapa_interativo' %}" class="btn btn-info">
-                <i class="bi bi-arrow-left-circle me-2"></i>Retornar ao Mapa
               </a>
             </div>
           </form>
@@ -169,11 +200,48 @@
               }
           });
       });
-
-      $('#id_hospede').select2({
-          placeholder: "Selecione um hóspede",
+      
+      $('#id_hospede, #id_quarto, #id_cama').select2({
+          placeholder: "Selecione...",
           allowClear: true
       });
+
+      // Carregar camas disponíveis conforme o quarto selecionado
+      const carregarCamas = async (quartoId, camaSelecionadaId) => {
+          if (!quartoId) {
+              $('#id_cama').empty().append('<option value="">Selecione um quarto primeiro</option>');
+              $('#id_cama').prop('disabled', true).trigger('change');
+              return;
+          }
+          try {
+              const response = await fetch(`/reservas/camas_disponiveis/?quarto=${quartoId}`);
+              const data = await response.json();
+              $('#id_cama').empty();
+              if (camaSelecionadaId) {
+                  const camaExistente = data.camas.find(c => c.id == camaSelecionadaId);
+                  if (!camaExistente) {
+                      $('#id_cama').append(new Option("Cama selecionada (indisponível)", camaSelecionadaId, true, true));
+                  }
+              }
+              data.camas.forEach(cama => {
+                  const isSelected = cama.id == camaSelecionadaId;
+                  $('#id_cama').append(new Option(cama.identificacao, cama.id, false, isSelected));
+              });
+              $('#id_cama').prop('disabled', false).trigger('change');
+          } catch (error) {
+              console.error('Erro:', error);
+              $('#id_cama').empty().append('<option value="">Erro ao carregar camas</option>');
+          }
+      };
+
+      $('#id_quarto').on('change', function() {
+          carregarCamas(this.value, null);
+      });
+
+      {% if quarto_selecionado and cama_selecionada %}
+          $('#id_quarto').val("{{ quarto_selecionado }}").trigger('change');
+          carregarCamas("{{ quarto_selecionado }}", "{{ cama_selecionada }}");
+      {% endif %}
   });
 </script>
 {% endblock %}

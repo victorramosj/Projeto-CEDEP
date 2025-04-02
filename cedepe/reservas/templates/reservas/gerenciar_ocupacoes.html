@@ -1,15 +1,15 @@
 {% extends "cedepe/base.html" %}
 {% load static %}
 
-{% block title %}Gerenciar Reservas{% endblock %}
+{% block title %}Gerenciar Ocupações{% endblock %}
 
 {% block content %}
 <div class="container-fluid px-4">
   <div class="d-flex justify-content-between align-items-center mb-4">
-    <h1 class="mb-2" style="color: #10295d">Gerenciar Reservas</h1>
+    <h1 class="mb-2" style="color: #10295d">Gerenciar Ocupações</h1>
     <div>
-      <a href="{% url 'reserva_form' %}" class="btn btn-success btn-sm me-2">
-        <i class="bi bi-plus-circle"></i> Nova Reserva
+      <a href="{% url 'ocupacao_form' %}" class="btn btn-success btn-sm me-2">
+        <i class="bi bi-plus-circle"></i> Nova Ocupação
       </a>
     </div>
   </div>
@@ -21,12 +21,14 @@
         <select name="filter_by" class="form-select" id="filter-by">
           <option value="all" {% if filter_by == "all" %}selected{% endif %}>Todos</option>
           <option value="hospede" {% if filter_by == "hospede" %}selected{% endif %}>Hóspede</option>
+          <option value="quarto" {% if filter_by == "quarto" %}selected{% endif %}>Quarto</option>
+          <option value="cama" {% if filter_by == "cama" %}selected{% endif %}>Cama</option>
           <option value="status" {% if filter_by == "status" %}selected{% endif %}>Status</option>
         </select>
       </div>
       <div class="col-md-9">
         <div class="input-group">
-          <!-- Campo de texto para Hóspede -->
+          <!-- Campo de texto para Hospede, Quarto ou Cama -->
           <input type="text" 
                  name="q" 
                  value="{{ query }}" 
@@ -41,9 +43,9 @@
                   id="status-select" 
                   {% if filter_by != "status" %}style="display: none;"{% endif %}>
             <option value="">Selecione um status...</option>
-            <option value="PENDENTE" {% if query == "PENDENTE" %}selected{% endif %}>Pendente</option>
-            <option value="CONFIRMADA" {% if query == "CONFIRMADA" %}selected{% endif %}>Confirmada</option>
+            <option value="ATIVA" {% if query == "ATIVA" %}selected{% endif %}>Ativa</option>
             <option value="CANCELADA" {% if query == "CANCELADA" %}selected{% endif %}>Cancelada</option>
+            <option value="FINALIZADA" {% if query == "FINALIZADA" %}selected{% endif %}>Finalizada</option>
           </select>
           
           <button class="btn btn-outline-primary" type="submit">
@@ -70,7 +72,7 @@
       });
   </script>
 
-  <!-- Tabela de Reservas -->
+  <!-- Tabela de Ocupações -->
   <div class="card shadow-sm">
     <div class="card-body">
       <div class="table-responsive">
@@ -78,6 +80,8 @@
           <thead class="table-light">
             <tr>
               <th>Hóspede</th>
+              <th>Quarto</th>
+              <th>Cama</th>
               <th>Check-in</th>
               <th>Check-out</th>
               <th>Status</th>
@@ -85,28 +89,30 @@
             </tr>
           </thead>
           <tbody>
-            {% for reserva in reservas %}
+            {% for ocupacao in ocupacoes %}
             <tr>
-              <td>{{ reserva.hospede.nome }}</td>
-              <td>{{ reserva.data_checkin|date:"d/m/Y" }}</td>
-              <td>{{ reserva.data_checkout|date:"d/m/Y" }}</td>
+              <td>{{ ocupacao.hospede.nome }}</td>
+              <td>{{ ocupacao.cama.quarto.numero }}</td>
+              <td>{{ ocupacao.cama.identificacao }}</td>
+              <td>{{ ocupacao.data_checkin|date:"d/m/Y" }}</td>
+              <td>{{ ocupacao.data_checkout|date:"d/m/Y" }}</td>
               <td>
-                <span class="badge {% if reserva.status == 'PENDENTE' %}bg-warning{% elif reserva.status == 'CONFIRMADA' %}bg-success{% else %}bg-secondary{% endif %}">
-                  {{ reserva.get_status_display }}
+                <span class="badge {% if ocupacao.status == 'ATIVA' %}bg-success{% elif ocupacao.status == 'CANCELADA' %}bg-warning{% else %}bg-secondary{% endif %}">
+                  {{ ocupacao.get_status_display }}
                 </span>
               </td>
               <td>
-                <a href="{% url 'editar_reserva' reserva.id %}" class="btn btn-sm btn-primary">
+                <a href="{% url 'editar_ocupacao' ocupacao.id %}" class="btn btn-sm btn-primary">
                   <i class="bi bi-pencil-square"></i> Editar
                 </a>
-                <a href="#" class="btn btn-sm btn-danger" onclick="deleteReserva({{ reserva.id }}); return false;">
+                <a href="#" class="btn btn-sm btn-danger" onclick="deleteOcupacao({{ ocupacao.id }}); return false;">
                   <i class="bi bi-trash"></i> Excluir
                 </a>
               </td>
             </tr>
             {% empty %}
             <tr>
-              <td colspan="5" class="text-center">Nenhuma reserva cadastrada.</td>
+              <td colspan="7" class="text-center">Nenhuma ocupação cadastrada.</td>
             </tr>
             {% endfor %}
           </tbody>
@@ -116,9 +122,9 @@
       <!-- Paginação -->
       <nav>
         <ul class="pagination justify-content-center">
-          {% if reservas.has_previous %}
+          {% if ocupacoes.has_previous %}
           <li class="page-item">
-            <a class="page-link" href="?page={{ reservas.previous_page_number }}{% if query %}&q={{ query }}{% endif %}{% if filter_by %}&filter_by={{ filter_by }}{% endif %}">Anterior</a>
+            <a class="page-link" href="?page={{ ocupacoes.previous_page_number }}{% if query %}&q={{ query }}{% endif %}{% if filter_by %}&filter_by={{ filter_by }}{% endif %}">Anterior</a>
           </li>
           {% else %}
           <li class="page-item disabled">
@@ -126,21 +132,21 @@
           </li>
           {% endif %}
 
-          {% for num in reservas.paginator.page_range %}
-            {% if reservas.number == num %}
+          {% for num in ocupacoes.paginator.page_range %}
+            {% if ocupacoes.number == num %}
             <li class="page-item active">
               <span class="page-link">{{ num }}</span>
             </li>
-            {% elif num > reservas.number|add:'-3' and num < reservas.number|add:'3' %}
+            {% elif num > ocupacoes.number|add:'-3' and num < ocupacoes.number|add:'3' %}
             <li class="page-item">
               <a class="page-link" href="?page={{ num }}{% if query %}&q={{ query }}{% endif %}{% if filter_by %}&filter_by={{ filter_by }}{% endif %}">{{ num }}</a>
             </li>
             {% endif %}
           {% endfor %}
 
-          {% if reservas.has_next %}
+          {% if ocupacoes.has_next %}
           <li class="page-item">
-            <a class="page-link" href="?page={{ reservas.next_page_number }}{% if query %}&q={{ query }}{% endif %}{% if filter_by %}&filter_by={{ filter_by }}{% endif %}">Próximo</a>
+            <a class="page-link" href="?page={{ ocupacoes.next_page_number }}{% if query %}&q={{ query }}{% endif %}{% if filter_by %}&filter_by={{ filter_by }}{% endif %}">Próximo</a>
           </li>
           {% else %}
           <li class="page-item disabled">
@@ -153,20 +159,20 @@
   </div>
 </div>
 
-<!-- Modal para confirmação de exclusão de reserva -->
-<div class="modal fade" id="deleteReservaModal" tabindex="-1" aria-labelledby="deleteReservaModalLabel" aria-hidden="true">
+<!-- Modal para confirmação de exclusão de ocupação -->
+<div class="modal fade" id="deleteOcupacaoModal" tabindex="-1" aria-labelledby="deleteOcupacaoModalLabel" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title" id="deleteReservaModalLabel">Confirmar Exclusão</h5>
+        <h5 class="modal-title" id="deleteOcupacaoModalLabel">Confirmar Exclusão</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
       </div>
       <div class="modal-body">
-        Tem certeza que deseja excluir esta reserva?
+        Tem certeza que deseja excluir esta ocupação?
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-        <button type="button" class="btn btn-danger" id="confirmDeleteReserva">Excluir</button>
+        <button type="button" class="btn btn-danger" id="confirmDeleteOcupacao">Excluir</button>
       </div>
     </div>
   </div>
@@ -175,17 +181,17 @@
 
 {% block scripts %}
 <script>
-  let reservaIdToDelete = null;
+  let ocupacaoIdToDelete = null;
   
-  function deleteReserva(reservaId) {
-    reservaIdToDelete = reservaId;
-    var deleteModal = new bootstrap.Modal(document.getElementById('deleteReservaModal'));
+  function deleteOcupacao(ocupacaoId) {
+    ocupacaoIdToDelete = ocupacaoId;
+    var deleteModal = new bootstrap.Modal(document.getElementById('deleteOcupacaoModal'));
     deleteModal.show();
   }
 
-  document.getElementById('confirmDeleteReserva').addEventListener('click', function() {
+  document.getElementById('confirmDeleteOcupacao').addEventListener('click', function() {
     const csrftoken = getCookie('csrftoken');
-    fetch(`/reservas/api/reservas/${reservaIdToDelete}/`, {
+    fetch(`/reservas/api/ocupacoes/${ocupacaoIdToDelete}/`, {
       method: 'DELETE',
       headers: {
         'X-CSRFToken': csrftoken,
@@ -194,17 +200,17 @@
     })
     .then(response => {
       if (response.status === 204) {
-        alert('Reserva excluída com sucesso.');
+        alert('Ocupação excluída com sucesso.');
         location.reload();
       } else {
         return response.json().then(data => {
-          alert(data.message || 'Erro ao excluir a reserva.');
+          alert(data.message || 'Erro ao excluir a ocupação.');
         });
       }
     })
     .catch(error => {
       console.error('Erro:', error);
-      alert('Erro ao excluir a reserva.');
+      alert('Erro ao excluir a ocupação.');
     });
   });
 

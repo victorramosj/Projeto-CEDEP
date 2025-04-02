@@ -41,23 +41,42 @@ class HospedeViewSet(viewsets.ModelViewSet):
     search_fields = ['nome', 'cpf', 'email']
 
 
+from rest_framework import viewsets, filters
+from django_filters.rest_framework import DjangoFilterBackend
+from .models import Quarto, Cama, Hospede, Reserva, Ocupacao
+from .serializers import QuartoSerializer, CamaSerializer, HospedeSerializer, ReservaSerializer, OcupacaoSerializer
+
 class ReservaViewSet(viewsets.ModelViewSet):
     """
     ViewSet para o CRUD de Reservas.
-    Permite criar, listar, atualizar e excluir reservas.
-    É possível filtrar por hóspede, quarto (através da cama) e status da reserva.
+    Agora a reserva envolve apenas informações do hóspede, datas e status.
     """
     queryset = Reserva.objects.all()
     serializer_class = ReservaSerializer
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
-    filterset_fields = ['hospede', 'cama__quarto', 'status']
-    search_fields = ['hospede__nome', 'cama__quarto__numero', 'status']
+    filterset_fields = ['hospede', 'status']
+    search_fields = ['hospede__nome', 'status']
 
     def perform_destroy(self, instance):
-        cama = instance.cama
-        cama.status = 'DISPONIVEL'
-        cama.save()
         instance.delete()
+
+class OcupacaoViewSet(viewsets.ModelViewSet):
+    """
+    ViewSet para o CRUD de Ocupações.
+    Gerencia o controle de quartos e camas ocupadas.
+    """
+    queryset = Ocupacao.objects.all()
+    serializer_class = OcupacaoSerializer
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
+    filterset_fields = ['hospede', 'cama', 'status']
+    search_fields = ['hospede__nome', 'cama__identificacao', 'status']
+    
+    def perform_create(self, serializer):
+        # Ao criar uma ocupação ATIVA, atualiza o status da cama
+        ocupacao = serializer.save()
+        if ocupacao.status == 'ATIVA':
+            ocupacao.cama.status = 'OCUPADA'
+            ocupacao.cama.save()
 
 # reservas/views.py
 from django.shortcuts import render, redirect, get_object_or_404
@@ -158,6 +177,14 @@ def gerenciar_hospedes(request):
     }
     return render(request, 'reservas/gerenciar_hospedes.html', context)
 
+# reservas/views.py
+from django.shortcuts import render, redirect, get_object_or_404
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+from .models import Quarto, Cama, Hospede, Reserva, Ocupacao
+from .forms import QuartoForm, CamaForm, HospedeForm, ReservaForm, OcupacaoForm  # certifique-se de criar OcupacaoForm
+
+ITENS_POR_PAGINA = 10
+
 def gerenciar_reservas(request):
     query = request.GET.get('q', '')
     filter_by = request.GET.get('filter_by', 'all')
@@ -167,9 +194,7 @@ def gerenciar_reservas(request):
     
     if query:
         reservas_list = reservas_list.filter(
-            Q(hospede__nome__icontains=query) |
-            Q(cama__identificacao__icontains=query) |
-            Q(cama__quarto__numero__icontains=query)
+            Q(hospede__nome__icontains=query)
         )
     
     if filter_by != 'all':
@@ -190,6 +215,23 @@ def gerenciar_reservas(request):
         'filter_by': filter_by,
     }
     return render(request, 'reservas/gerenciar_reservas.html', context)
+
+def reserva_form(request, pk=None):
+    reserva = get_object_or_404(Reserva, pk=pk) if pk else None
+
+    if request.method == 'POST':
+        form = ReservaForm(request.POST, instance=reserva)
+        if form.is_valid():
+            form.save()
+            return redirect('mapa_interativo')
+    else:
+        form = ReservaForm(instance=reserva)
+    
+    context = {
+        'form': form,
+        'reserva': reserva,
+    }
+    return render(request, 'reservas/reserva_form.html', context)
 
 # Views para criação e edição (Formulários)
 
@@ -280,56 +322,55 @@ def listar_hospedes_json(request):
     hospedes = Hospede.objects.all().values('id', 'nome')
     return JsonResponse(list(hospedes), safe=False)
 
-def reserva_form(request, pk=None):
-    reserva = None
-    quarto_selecionado = None
-    cama_selecionada_obj = None
-    
-    # Verifica se veio cama por query parameter
-    cama_id_param = request.GET.get('cama')
-    if cama_id_param:
-        cama_selecionada_obj = get_object_or_404(Cama, pk=cama_id_param)
-        quarto_selecionado = cama_selecionada_obj.quarto.id
+def gerenciar_ocupacoes(request):
+    query = request.GET.get('q', '')
+    filter_by = request.GET.get('filter_by', 'all')
+    page_number = request.GET.get('page')
 
-    # Se for edição, carrega a reserva
-    if pk:
-        reserva = get_object_or_404(Reserva, pk=pk)
-        cama_selecionada_obj = reserva.cama
-        quarto_selecionado = reserva.cama.quarto.id
-
-    # Recupera todos os quartos para preencher o select
-    quartos = Quarto.objects.all()
+    ocupacoes_list = Ocupacao.objects.select_related('hospede', 'cama').all()
     
+    if query:
+        ocupacoes_list = ocupacoes_list.filter(
+            Q(hospede__nome__icontains=query) |
+            Q(cama__identificacao__icontains=query)
+        )
+    
+    if filter_by != 'all':
+        ocupacoes_list = ocupacoes_list.filter(status=filter_by)
+    
+    paginator = Paginator(ocupacoes_list, ITENS_POR_PAGINA)
+    
+    try:
+        ocupacoes = paginator.page(page_number)
+    except PageNotAnInteger:
+        ocupacoes = paginator.page(1)
+    except EmptyPage:
+        ocupacoes = paginator.page(paginator.num_pages)
+
+    context = {
+        'ocupacoes': ocupacoes,
+        'query': query,
+        'filter_by': filter_by,
+    }
+    return render(request, 'reservas/gerenciar_ocupacoes.html', context)
+
+def ocupacao_form(request, pk=None):
+    ocupacao = get_object_or_404(Ocupacao, pk=pk) if pk else None
+
     if request.method == 'POST':
-        form = ReservaForm(request.POST, instance=reserva)
+        form = OcupacaoForm(request.POST, instance=ocupacao)
         if form.is_valid():
             form.save()
-            return redirect('mapa_interativo')
-        else:
-            # Recupera seleções do POST para manter estado
-            quarto_selecionado = request.POST.get('quarto')
-            cama_id_post = request.POST.get('cama')
-            # Tenta recuperar o objeto Cama a partir do ID recebido (que é uma string)
-            try:
-                cama_selecionada_obj = Cama.objects.get(pk=cama_id_post)
-            except (Cama.DoesNotExist, ValueError):
-                cama_selecionada_obj = None
+            return redirect('gerenciar_ocupacoes')
     else:
-        # Se não for POST, inicializa o formulário com a cama selecionada, se houver
-        form = ReservaForm(instance=reserva, initial={'cama': cama_selecionada_obj.id if cama_selecionada_obj else None})
-    
-    # Se for POST e o formulário não for válido, recria o formulário (não esqueça de passar o initial)
-    if request.method == 'POST' and not form.is_valid():
-        form = ReservaForm(request.POST, instance=reserva, initial={'cama': cama_selecionada_obj.id if cama_selecionada_obj else None})
+        form = OcupacaoForm(instance=ocupacao)
     
     context = {
         'form': form,
-        'reserva': reserva,
-        'quartos': quartos,
-        'quarto_selecionado': quarto_selecionado,
-        'cama_selecionada': cama_selecionada_obj.id if cama_selecionada_obj else None
+        'ocupacao': ocupacao,
     }
-    return render(request, 'reservas/reserva_form.html', context)
+    return render(request, 'reservas/ocupacoes_form.html', context)
+
 
 
 from django.http import JsonResponse
@@ -353,7 +394,6 @@ def camas_disponiveis(request):
             'error': str(e)
         }, status=400)
 
-# reservas/views.py
 from django.shortcuts import render
 from django.db.models import Count, Q
 from .models import Quarto, Cama, Hospede, Reserva
@@ -364,13 +404,16 @@ def dashboard(request):
     total_quartos = Quarto.objects.count()
     total_camas = Cama.objects.count()
     total_hospedes = Hospede.objects.count()
-    reservas_ativas = Reserva.objects.filter(status='ATIVA').count()
+    # Para reservas, consideramos "confirmadas" como ativas
+    reservas_ativas = Reserva.objects.filter(status='CONFIRMADA').count()
     
-    # Status das camas
+    # Status das camas: considere que o primeiro item (DISPONIVEL) e o segundo (OCUPADA)
     status_camas = Cama.objects.values('status').annotate(total=Count('id'))
+    # Ordena de forma que 'DISPONIVEL' venha primeiro (ajuste conforme necessidade)
+    status_camas = sorted(status_camas, key=lambda x: x['status'])
     
-    # Reservas recentes
-    recent_reservations = Reserva.objects.select_related('hospede', 'cama').order_by('-criado_em')[:5]
+    # Reservas recentes: sem relação com quarto ou cama
+    recent_reservations = Reserva.objects.select_related('hospede').order_by('-criado_em')[:5]
     
     # Reservas por status
     reservas_status = Reserva.objects.values('status').annotate(total=Count('id'))
