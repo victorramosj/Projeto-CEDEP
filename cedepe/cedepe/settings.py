@@ -48,8 +48,7 @@ MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',    
-    'django.middleware.csrf.CsrfViewMiddleware',
-    
+    'django.middleware.csrf.CsrfViewMiddleware',    
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
@@ -97,6 +96,11 @@ CSRF_TRUSTED_ORIGINS = [
     'https://projeto-cedep-production.up.railway.app',
     'https://cedepegrefloresta.com.br'
 ]
+# Configurações de HTTPS (obrigatório para produção)
+SECURE_SSL_REDIRECT = True  # Redireciona HTTP → HTTPS
+SESSION_COOKIE_SECURE = True  # Cookies só via HTTPS
+CSRF_COOKIE_SECURE = True  # Proteção CSRF só via HTTPS
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')  # Para proxies como Railway
 
 # Arquivos estáticos (se aplicável)
 STATIC_URL = '/static/'
@@ -112,7 +116,7 @@ DATABASES = {
     'default': dj_database_url.config(
         default=DATABASE_URL,
         conn_max_age=600,
-        ssl_require=not DEBUG
+        ssl_require=True
     )
 }
 

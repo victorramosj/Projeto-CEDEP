@@ -1,0 +1,104 @@
+/* static/reservas/css/mapa.css */
+/* Estilos personalizados específicos para o mapa */
+.map-quarto-card {
+    transition: transform 0.2s;
+    min-height: 200px;
+}
+
+.map-quarto-card:hover {
+    transform: translateY(-5px);
+}
+
+.cama {
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border: 2px solid transparent;
+    background: #e3f2fd;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
+}
+
+.cama:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.cama.occupied {
+    background: #ffcdd2;
+    border-color: #ef9a9a;
+}
+
+/* Ajustes para ícones personalizados */
+.fa-bed-empty:before {
+    content: "\f236";
+    color: #6c757d;
+}
+
+/* Manter apenas estilos específicos não cobertos pelo Bootstrap */
+#mapContainer.loading-overlay {
+    position: relative;
+    min-height: 300px;
+}
+
+.loading-spinner {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+/* static/reservas/css/mapa.css */
+.guest-list {
+    max-height: 300px;
+    overflow-y: auto;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+}
+
+.guest-item:hover {
+    background-color: #f8f9fa;
+}
+
+.select-guest {
+    transition: all 0.3s ease;
+}
+
+.select-guest:hover {
+    transform: scale(1.05);
+}
+
+.current-guest-section {
+    padding: 15px;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    margin-bottom: 20px;
+}
+
+.reservation-section {
+    padding: 15px;
+    background-color: #fff;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+}
+/* static/reservas/css/mapa.css */
+.new-reservation-section {
+    padding: 20px;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    border: 1px solid #dee2e6;
+}
+
+#newReservationBtn {
+    transition: all 0.3s ease;
+}
+
+#newReservationBtn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.alert-info {
+    border-left: 4px solid #17a2b8;
+}
