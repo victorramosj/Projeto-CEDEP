@@ -63,8 +63,9 @@
               <select name="quarto" id="id_quarto" class="form-select" required>
                 <option value="">Selecione um quarto...</option>
                 {% for quarto in quartos %}
-                  <option value="{{ quarto.id }}" {% if quarto.id == quarto_selecionado %}selected{% endif %}>
-                    Quarto {{ quarto.numero }}
+                  <option value="{{ quarto.id }}" 
+                          {% if quarto.id == quarto_selecionado %}selected{% endif %}>
+                    Quarto {{ quarto.numero }} - {{ quarto.descricao|truncatechars:20 }}
                   </option>
                 {% endfor %}
               </select>
@@ -176,72 +177,52 @@
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <script>
   $(document).ready(function() {
-      // Submissão do formulário de novo hóspede via AJAX
-      $('#hospedeForm').on('submit', function(e) {
-          e.preventDefault();
-          var formData = $(this).serialize();
-          $.ajax({
-              url: $(this).attr('action'),
-              method: 'POST',
-              data: formData,
-              headers: {'X-Requested-With': 'XMLHttpRequest'},
-              success: function(response) {
-                  if (response.success) {
-                      var novaOpcao = new Option(response.nome, response.hospede_id, true, true);
-                      $('#id_hospede').append(novaOpcao).trigger('change');
-                      alert(response.message);
-                      $('#hospedeModal').modal('hide');
-                  } else {
-                      $('#hospedeFormContainer').html(response.form_html);
-                  }
-              },
-              error: function(xhr, status, error) {
-                  console.error("Erro ao salvar hóspede:", error);
-              }
-          });
-      });
-      
+      // Inicializar Select2
       $('#id_hospede, #id_quarto, #id_cama').select2({
           placeholder: "Selecione...",
           allowClear: true
       });
-
-      // Carregar camas disponíveis conforme o quarto selecionado
+  
+      // Carregar camas dinamicamente
       const carregarCamas = async (quartoId, camaSelecionadaId) => {
+          const camaSelect = $('#id_cama');
+          camaSelect.empty().prop('disabled', true);
+          
           if (!quartoId) {
-              $('#id_cama').empty().append('<option value="">Selecione um quarto primeiro</option>');
-              $('#id_cama').prop('disabled', true).trigger('change');
+              camaSelect.append('<option value="">Selecione um quarto primeiro</option>');
               return;
           }
+  
           try {
               const response = await fetch(`/reservas/camas_disponiveis/?quarto=${quartoId}`);
-              const data = await response.json();
-              $('#id_cama').empty();
-              if (camaSelecionadaId) {
-                  const camaExistente = data.camas.find(c => c.id == camaSelecionadaId);
-                  if (!camaExistente) {
-                      $('#id_cama').append(new Option("Cama selecionada (indisponível)", camaSelecionadaId, true, true));
-                  }
+              const {camas} = await response.json();
+              
+              camaSelect.empty();
+              if (camas.length > 0) {
+                  camas.forEach(cama => {
+                      const selected = cama.id == camaSelecionadaId;
+                      camaSelect.append(new Option(cama.identificacao, cama.id, false, selected));
+                  });
+                  camaSelect.prop('disabled', false);
+              } else {
+                  camaSelect.append('<option value="">Nenhuma cama disponível neste quarto</option>');
               }
-              data.camas.forEach(cama => {
-                  const isSelected = cama.id == camaSelecionadaId;
-                  $('#id_cama').append(new Option(cama.identificacao, cama.id, false, isSelected));
-              });
-              $('#id_cama').prop('disabled', false).trigger('change');
           } catch (error) {
               console.error('Erro:', error);
-              $('#id_cama').empty().append('<option value="">Erro ao carregar camas</option>');
+              camaSelect.append('<option value="">Erro ao carregar camas</option>');
           }
+          camaSelect.trigger('change');
       };
-
+  
+      // Evento de mudança no select de quartos
       $('#id_quarto').on('change', function() {
           carregarCamas(this.value, null);
       });
-
-      {% if quarto_selecionado and cama_selecionada %}
-          $('#id_quarto').val("{{ quarto_selecionado }}").trigger('change');
-          carregarCamas("{{ quarto_selecionado }}", "{{ cama_selecionada }}");
+  
+      // Carregar camas se já houver quarto selecionado
+      {% if ocupacao %}
+          carregarCamas({{ ocupacao.cama.quarto.id }}, {{ ocupacao.cama.id }});
       {% endif %}
   });
-</script>
+  </script>
 {% endblock %}

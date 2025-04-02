@@ -16,6 +16,7 @@ class HospedeForm(forms.ModelForm):
     class Meta:
         model = Hospede
         fields = ['nome', 'cpf', 'email', 'telefone', 'instituicao', 'endereco']
+from datetime import date
 
 class OcupacaoForm(forms.ModelForm):  # Novo form para Ocupacao
     class Meta:

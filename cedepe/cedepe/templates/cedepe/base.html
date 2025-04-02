@@ -104,10 +104,11 @@
             </a>
           </li>
           <li>
-            <a href="{% url 'gerenciar_ocupacoes' %}" class="nav-link text-white sidebar-link {% if request.resolver_match.url_name == 'gerenciar_reservas' %}active{% endif %}">
-              <i class="fas fa-calendar-check me-2"></i>Ocupacoes
+            <a href="{% url 'gerenciar_ocupacoes' %}" class="nav-link text-white sidebar-link {% if request.resolver_match.url_name == 'gerenciar_ocupacoes' %}active{% endif %}">
+              <i class="fas fa-calendar-alt me-2"></i>Ocupacoes
             </a>
           </li>
+          
           <li>
             <a href="{% url 'gerenciar_quartos' %}" class="nav-link text-white sidebar-link {% if request.resolver_match.url_name == 'gerenciar_quartos' %}active{% endif %}">
               <i class="fas fa-door-open me-2"></i>Quartos

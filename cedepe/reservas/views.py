@@ -354,9 +354,11 @@ def gerenciar_ocupacoes(request):
     }
     return render(request, 'reservas/gerenciar_ocupacoes.html', context)
 
+# views.py
 def ocupacao_form(request, pk=None):
     ocupacao = get_object_or_404(Ocupacao, pk=pk) if pk else None
-
+    quartos = Quarto.objects.all()
+    
     if request.method == 'POST':
         form = OcupacaoForm(request.POST, instance=ocupacao)
         if form.is_valid():
@@ -368,11 +370,15 @@ def ocupacao_form(request, pk=None):
     context = {
         'form': form,
         'ocupacao': ocupacao,
+        'quartos': quartos,
+        'quarto_selecionado': ocupacao.cama.quarto.id if ocupacao else None,
+        'cama_selecionada': ocupacao.cama.id if ocupacao else None
     }
     return render(request, 'reservas/ocupacoes_form.html', context)
 
 
 
+# views.py
 from django.http import JsonResponse
 from .models import Cama
 
@@ -382,17 +388,18 @@ def camas_disponiveis(request):
         camas = Cama.objects.filter(
             quarto__id=quarto_id,
             status='DISPONIVEL'
-        ).prefetch_related('reserva_set')
+        )
         
-        serializer = CamaSerializer(camas, many=True)
-        return JsonResponse({
-            'camas': serializer.data
-        })
+        data = [{
+            'id': cama.id,
+            'identificacao': cama.identificacao,
+            'status': cama.status
+        } for cama in camas]
+        
+        return JsonResponse({'camas': data})
     
     except Exception as e:
-        return JsonResponse({
-            'error': str(e)
-        }, status=400)
+        return JsonResponse({'error': str(e)}, status=400)
 
 from django.shortcuts import render
 from django.db.models import Count, Q

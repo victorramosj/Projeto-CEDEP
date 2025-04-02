@@ -8,17 +8,14 @@
 {% endblock %}
 
 {% block content %}
-<div class="container-fluid px-4 " >
-    <div class="p-4 mb-4 text-center" >
-        <h1 class=" mb-2" style="color: #10295d">
+<div class="container-fluid px-4">
+    <div class="p-4 mb-4 text-center">
+        <h1 class="mb-2" style="color: #10295d">
           <i class="bi bi-map-fill me-2"></i>
           Mapa Interativo
         </h1>
         <p class="text-dark mb-0">Visualize a disposição de quartos e camas do nosso sistema de hospedagens</p>
-      </div>
-      
-    
-    
+    </div>
     
     <div class="row g-4" id="mapContainer">
         <div class="col-12 text-center">
@@ -42,31 +39,30 @@
             </div>
             <div class="modal-body">
                 <div id="camaInfo" class="mb-4">
-                    <!-- Informações do hóspede atual serão inseridas aqui via JavaScript -->
+                    <!-- Informações da ocupação atual serão inseridas aqui via JavaScript -->
                 </div>
-                <div class="new-reservation-section" id="newReservationSection">
+                <div class="new-occupancy-section" id="newOccupancySection">
                     <div class="d-flex justify-content-between align-items-center mb-3">
-                        <h5 class="mb-0"><i class="fas fa-user-plus me-2"></i>Nova Reserva</h5>
-                        <a id="newReservationBtn" href="#" class="btn btn-primary">
-                            <i class="fas fa-plus-circle me-2"></i>Adicionar Reserva
+                        <h5 class="mb-0"><i class="fas fa-user-plus me-2"></i>Nova Ocupação</h5>
+                        <a id="newOccupancyBtn" href="#" class="btn btn-primary">
+                            <i class="fas fa-plus-circle me-2"></i>Adicionar Ocupação
                         </a>
                     </div>
                     <div class="alert alert-info">
                         <i class="fas fa-info-circle me-2"></i>
-                        Selecione um hóspede e preencha os dados da reserva no formulário dedicado.
+                        Selecione um hóspede e preencha os dados da ocupação no formulário dedicado.
                     </div>
                 </div>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-danger" id="removeGuestBtn" style="display: none;">
-                    <i class="fas fa-user-times me-2"></i>Remover Hóspede
+                    <i class="fas fa-user-times me-2"></i>Finalizar Ocupação
                 </button>
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
             </div>
         </div>
     </div>
 </div>
-
 {% endblock %}
 
 {% block scripts %}
@@ -76,25 +72,18 @@ document.addEventListener("DOMContentLoaded", function() {
     const modal = new bootstrap.Modal(document.getElementById('camaModal'));
     let currentCama = null;
 
-    // Função para carregar hóspedes (caso precise futuramente)
-    let hospedes = [];
-    fetch('/reservas/api/hospedes/')
-        .then(response => response.json())
-        .then(data => hospedes = data);
-
-    // Função para agrupar um array por uma chave
-    const groupBy = (array, key) => array.reduce((acc, item) => {
-        (acc[item[key]] = acc[item[key]] || []).push(item);
-        return acc;
-    }, {});
-
+    // Carrega a lista de quartos e camas via API
     Promise.all([
         fetch('/reservas/api/quartos/').then(r => r.json()),
         fetch('/reservas/api/camas/').then(r => r.json())
     ])
     .then(([quartos, camas]) => {
         mapContainer.innerHTML = '';
-        // Agrupa as camas pelo id do quarto (assumindo que o serializer de Cama retorna o campo \"quarto\" como o id do quarto)
+        // Agrupa as camas pelo id do quarto (assumindo que o serializer de Cama retorna o campo "quarto" como id)
+        const groupBy = (array, key) => array.reduce((acc, item) => {
+            (acc[item[key]] = acc[item[key]] || []).push(item);
+            return acc;
+        }, {});
         const camasPorQuarto = groupBy(camas, 'quarto');
 
         quartos.forEach(quarto => {
@@ -122,23 +111,18 @@ document.addEventListener("DOMContentLoaded", function() {
                 camaDiv.className = "col-6 col-sm-4";
                 // Verifica o status da cama: se for 'OCUPADA', considera ocupada; caso contrário, disponível
                 const isOcupada = (cama.status === 'OCUPADA');
-                // Exibe o ícone adequado e adiciona classe \"occupied\" se estiver ocupada
                 camaDiv.innerHTML = `
                     <div class="cama ${isOcupada ? 'occupied' : ''} p-2 text-center rounded">
                         <i class="${isOcupada ? 'fas fa-bed' : 'fas fa-bed-empty'} fa-lg mb-2"></i>
                         <div class="small">${cama.identificacao}</div>
                     </div>
                 `;
-
-                // Adiciona evento de clique para exibir detalhes da cama
                 camaDiv.querySelector('.cama').addEventListener('click', () => {
                     currentCama = cama;
                     mostrarDetalhesCama(cama);
                 });
-
                 camasContainer.appendChild(camaDiv);
             });
-
             mapContainer.appendChild(quartoDiv);
         });
     })
@@ -151,16 +135,16 @@ document.addEventListener("DOMContentLoaded", function() {
         document.getElementById('camaNumero').textContent = cama.identificacao;
         const infoDiv = document.getElementById('camaInfo');
         const removeBtn = document.getElementById('removeGuestBtn');
-        const newReservationBtn = document.getElementById('newReservationBtn');
-        const newReservationSection = document.getElementById('newReservationSection');
+        const newOccupancyBtn = document.getElementById('newOccupancyBtn');
+        const newOccupancySection = document.getElementById('newOccupancySection');
 
-        // Corrigido para passar o ID do quarto
-        newReservationBtn.href = `/reservas/reservas/form/?quarto=${cama.quarto.id}&cama=${cama.id}`;
-        let guestInfo = '';
+        // Atualiza o link para criar nova ocupação: utiliza a rota de ocupações
+        newOccupancyBtn.href = `/reservas/ocupacoes/form/?quarto=${cama.quarto}&cama=${cama.id}`;
+        let occupancyInfo = '';
         if (cama.status === 'OCUPADA' && cama.reserva_atual) {
-            guestInfo = `
+            occupancyInfo = `
                 <div class="alert alert-info">
-                    <h5><i class="fas fa-user-check me-2"></i>Hóspede Atual</h5>
+                    <h5><i class="fas fa-user-check me-2"></i>Ocupação Atual</h5>
                     <div class="row mt-3">
                         <div class="col-md-6">
                             <p class="mb-1"><strong>Nome:</strong> ${cama.reserva_atual.hospede.nome}</p>
@@ -174,46 +158,46 @@ document.addEventListener("DOMContentLoaded", function() {
                 </div>
             `;
             removeBtn.style.display = 'inline-block';
-            newReservationSection.style.display = 'none';
+            newOccupancySection.style.display = 'none';
         } else {
-            guestInfo = `
+            occupancyInfo = `
                 <div class="alert alert-success">
                     <i class="fas fa-bed me-2"></i>
-                    Cama Disponível - Nenhum hóspede associado
+                    Cama Disponível - Nenhuma ocupação ativa
                 </div>
             `;
             removeBtn.style.display = 'none';
-            newReservationSection.style.display = 'block';
+            newOccupancySection.style.display = 'block';
         }
         
-        infoDiv.innerHTML = guestInfo;
+        infoDiv.innerHTML = occupancyInfo;
         modal.show();
     }
 
+    // Evento para finalizar (encerrar) a ocupação atual
     document.getElementById('removeGuestBtn').addEventListener('click', function() {
-    if (currentCama && currentCama.reserva_atual) {
-        if (confirm('Tem certeza que deseja finalizar a hospedagem e desocupar a cama?')) {
-            fetch(`/reservas/api/reservas/${currentCama.reserva_atual.id}/`, {
-                method: 'PATCH',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': '{{ csrf_token }}'
-                },
-                body: JSON.stringify({ status: 'FINALIZADA' })
-            })
-            .then(response => {
-                if (response.ok) {
-                    showToast('Hospedagem finalizada com sucesso!', 'success');
-                    modal.hide();
-                    setTimeout(() => location.reload(), 1000);
-                } else {
-                    showToast('Erro ao finalizar a hospedagem', 'danger');
-                }
-            });
+        if (currentCama && currentCama.reserva_atual) {
+            if (confirm('Tem certeza que deseja finalizar a ocupação e desocupar a cama?')) {
+                fetch(`/reservas/api/ocupacoes/${currentCama.reserva_atual.id}/`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': '{{ csrf_token }}'
+                    },
+                    body: JSON.stringify({ status: 'FINALIZADA' })
+                })
+                .then(response => {
+                    if (response.ok) {
+                        showToast('Ocupação finalizada com sucesso!', 'success');
+                        modal.hide();
+                        setTimeout(() => location.reload(), 1000);
+                    } else {
+                        showToast('Erro ao finalizar a ocupação', 'danger');
+                    }
+                });
+            }
         }
-    }
-});
-
+    });
 
     function showToast(message, type) {
         const toast = document.createElement('div');
