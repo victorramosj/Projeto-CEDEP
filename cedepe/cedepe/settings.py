@@ -84,8 +84,24 @@ WSGI_APPLICATION = 'cedepe.wsgi.application'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv('DEBUG', 'False') == 'True'
 
-# Configure ALLOWED_HOSTS para produção
-ALLOWED_HOSTS = ['projeto-cedep-production.up.railway.app', 'localhost', '127.0.0.1']
+# Domínios permitidos
+ALLOWED_HOSTS = [
+    'projeto-cedep-production.up.railway.app',
+    'cedepegrefloresta.com.br',
+    'localhost',
+    '127.0.0.1'
+]
+
+# Proteção CSRF (se usar formulários)
+CSRF_TRUSTED_ORIGINS = [
+    'https://projeto-cedep-production.up.railway.app',
+    'https://cedepegrefloresta.com.br'
+]
+
+# Arquivos estáticos (se aplicável)
+STATIC_URL = '/static/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 
 

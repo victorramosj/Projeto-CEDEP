@@ -1,2 +1,2 @@
 release: python manage.py migrate
-web: gunicorn cedepe.wsgi --log-file -
+web: gunicorn cedepe.wsgi --bind 0.0.0.0:$PORT --workers 2 --log-file -
