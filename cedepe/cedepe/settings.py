@@ -9,8 +9,9 @@ https://docs.djangoproject.com/en/5.1/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.1/ref/settings/
 """
-
+import os
 from pathlib import Path
+import dj_database_url
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -19,8 +20,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-6gj3&fnb$y_z15&v=e$r9guwvbf%qd@b!c+*td-zf&e94+d3cj'
+
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -74,14 +74,12 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'cedepe.wsgi.application'
-import os
+
 
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
-# SECURITY WARNING: keep the secret key used in production secret!
-# Substitua pela variável de ambiente
-SECRET_KEY = os.getenv('SECRET_KEY', 'HKhnFzXggtmylfsSKcPbVGfQEvataqYo')
+
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv('DEBUG', 'False') == 'True'
@@ -89,12 +87,10 @@ DEBUG = os.getenv('DEBUG', 'False') == 'True'
 # Configure ALLOWED_HOSTS para produção
 ALLOWED_HOSTS = ['*']
 
-import dj_database_url
-from pathlib import Path
 
 
 # Configure as variáveis antes da configuração do banco
-DATABASE_URL = os.getenv('DATABASE_URL', 'postgresql://postgres:HKhnFzXggtmylfsSKcPbVGfQEvataqYo@postgres.railway.internal:5432/railway')  # Coloque sua URL como fallback
+DATABASE_URL = os.getenv('DATABASE_URL', 'postgresql://postgres:HKhnFzXggtmylfsSKcPbVGfQEvataqYo@shortline.proxy.rlwy.net:13741/railway')  # Coloque sua URL como fallback
 
 DATABASES = {
     'default': dj_database_url.config(
