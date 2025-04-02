@@ -48,6 +48,7 @@ MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
@@ -73,17 +74,36 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'cedepe.wsgi.application'
-
+import os
 
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
+# SECURITY WARNING: keep the secret key used in production secret!
+# Substitua pela variável de ambiente
+SECRET_KEY = os.getenv('SECRET_KEY', 'HKhnFzXggtmylfsSKcPbVGfQEvataqYo')
+
+# SECURITY WARNING: don't run with debug turned on in production!
+DEBUG = os.getenv('DEBUG', 'False') == 'True'
+
+# Configure ALLOWED_HOSTS para produção
+ALLOWED_HOSTS = ['*']
+
+import dj_database_url
+from pathlib import Path
+
+
+# Configure as variáveis antes da configuração do banco
+DATABASE_URL = os.getenv('DATABASE_URL', 'postgresql://postgres:HKhnFzXggtmylfsSKcPbVGfQEvataqYo@postgres.railway.internal:5432/railway')  # Coloque sua URL como fallback
+
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    }
+    'default': dj_database_url.config(
+        default=DATABASE_URL,
+        conn_max_age=600,
+        ssl_require=not DEBUG
+    )
 }
+
 
 
 # Password validation
@@ -127,7 +147,9 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
 
-STATIC_URL = 'static/'
+STATIC_URL = '/static/'
+STATIC_ROOT = BASE_DIR / 'staticfiles'
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
