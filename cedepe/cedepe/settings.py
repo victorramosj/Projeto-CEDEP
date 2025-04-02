@@ -23,10 +23,16 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
-ALLOWED_HOSTS = []
-
+SECRET_KEY = os.getenv('SECRET_KEY')  # Defina no Railway
+# Domínios permitidos
+ALLOWED_HOSTS = [
+    'projeto-cedep-production.up.railway.app',
+    'cedepegrefloresta.com.br',
+    'localhost',
+    '127.0.0.1'
+]
 
 # Application definition
 
@@ -83,13 +89,6 @@ WSGI_APPLICATION = 'cedepe.wsgi.application'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv('DEBUG', 'False') == 'True'
 
-# Domínios permitidos
-ALLOWED_HOSTS = [
-    'projeto-cedep-production.up.railway.app',
-    'cedepegrefloresta.com.br',
-    'localhost',
-    '127.0.0.1'
-]
 
 # Proteção CSRF (se usar formulários)
 CSRF_TRUSTED_ORIGINS = [
