@@ -11,10 +11,10 @@ class EventoSerializer(serializers.ModelSerializer):
     class Meta:
         model = Evento
         fields = '__all__'
-
-from django.utils.timezone import now
+from django.utils.timezone import now, make_aware
 from rest_framework import serializers
 from .models import Agendamento
+from datetime import datetime
 
 # serializers.py
 class AgendamentoSerializer(serializers.ModelSerializer):
@@ -22,9 +22,11 @@ class AgendamentoSerializer(serializers.ModelSerializer):
     evento_titulo = serializers.CharField(source='evento.titulo', read_only=True)
     evento_descricao = serializers.CharField(source='evento.descricao', read_only=True)
     horario = serializers.SerializerMethodField()
+
     class Meta:
         model = Agendamento
         fields = '__all__'
+
     def get_horario(self, obj):
         return f"{obj.inicio.strftime('%H:%M')} - {obj.fim.strftime('%H:%M')}"
 
@@ -32,6 +34,12 @@ class AgendamentoSerializer(serializers.ModelSerializer):
         inicio = data.get('inicio')
         fim = data.get('fim')
         sala = data.get('sala')
+
+        # Garantir que os datetimes são timezone-aware
+        if isinstance(inicio, datetime) and inicio.tzinfo is None:
+            inicio = make_aware(inicio)
+        if isinstance(fim, datetime) and fim.tzinfo is None:
+            fim = make_aware(fim)
 
         # Validação de horário
         if inicio and fim:
