@@ -240,9 +240,11 @@
 
         const calendarEl = document.getElementById('calendar');
         calendarEl.style.height = '650px';
+        
 
         const calendar = new FullCalendar.Calendar(calendarEl, {
         locale: 'pt-br',
+        timeZone: 'America/Sao_Paulo',
         // Exibe o header com o título (nome do mês) e botões de navegação:
         headerToolbar: {
           left:'',
@@ -282,8 +284,8 @@
                 
                 <div class="w-100">
                     <div class="d-flex justify-content-between align-items-center">
-                        <div class="fc-event-title text-dark fw-bold">${arg.event.title}</div>
-                        <small class="me-4 fc-event-horario text-dark "> <i class="bi  bi-clock-history text-dark  me-2"></i>${arg.event.extendedProps.horario}</small>
+                        <div class="fc-event-title text-dark fw-bold me-1">${arg.event.title}</div>
+                        <small class="fc-event-horario text-dark "> <i class="bi  bi-clock-history text-dark me 1"></i>${arg.event.extendedProps.horario}</small>
                     </div>
                     
                     <div class="fc-event-sala text-dark small"> ${arg.event.extendedProps.sala}</div>

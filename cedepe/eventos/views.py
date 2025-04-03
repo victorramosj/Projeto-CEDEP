@@ -182,7 +182,7 @@ class AgendamentoViewSet(viewsets.ModelViewSet):
     serializer_class = AgendamentoSerializer
     filter_backends = [DjangoFilterBackend, filters.SearchFilter]
     filterset_fields = ['sala', 'evento']
-    search_fields = ['evento__descricao']  # Ajustado para buscar pela descrição do evento
+    search_fields = ['evento__descricao']
 
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
@@ -198,13 +198,12 @@ class AgendamentoViewSet(viewsets.ModelViewSet):
     def list(self, request, *args, **kwargs):
         queryset = self.filter_queryset(self.get_queryset())
         
-        # Formato específico para FullCalendar
         if request.query_params.get('format') == 'fullcalendar':
             data = [{
                 'id': agendamento.id,
                 'title': agendamento.evento.titulo,
-                'start': agendamento.inicio.isoformat(),
-                'end': agendamento.fim.isoformat(),
+                'start': timezone.localtime(agendamento.inicio).isoformat(),
+                'end': timezone.localtime(agendamento.fim).isoformat(),
                 'extendedProps': {
                     'sala': agendamento.sala.nome,
                     'descricao': agendamento.evento.descricao
@@ -256,7 +255,6 @@ from rest_framework.response import Response
 from .models import Agendamento
 from rest_framework import permissions
 
-# views.py
 class FullCalendarEventsView(APIView):
     permission_classes = [permissions.AllowAny]
 
@@ -265,12 +263,12 @@ class FullCalendarEventsView(APIView):
         events = [{
             'id': agendamento.id,
             'title': agendamento.evento.titulo,
-            'start': agendamento.inicio.isoformat(),
-            'end': agendamento.fim.isoformat(),
+            'start': timezone.localtime(agendamento.inicio).isoformat(),
+            'end': timezone.localtime(agendamento.fim).isoformat(),
             'extendedProps': {
                 'sala': agendamento.sala.nome,
                 'descricao': agendamento.evento.descricao,
-                'horario': f"{agendamento.inicio.strftime('%H:%M')} - {agendamento.fim.strftime('%H:%M')}"  # Novo campo
+                'horario': f"{timezone.localtime(agendamento.inicio).strftime('%H:%M')} - {timezone.localtime(agendamento.fim).strftime('%H:%M')}"
             }
         } for agendamento in agendamentos]
         return Response(events)

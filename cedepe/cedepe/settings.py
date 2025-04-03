@@ -21,13 +21,6 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
 
-
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
-
-
-SECRET_KEY = os.getenv("SECRET_KEY", "HKhnFzXggtmylfsSKcPbVGfQEvataqYo")
-
 # Domínios permitidos
 ALLOWED_HOSTS = [
     'projeto-cedep-production.up.railway.app',
@@ -53,7 +46,8 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
-    'django.middleware.security.SecurityMiddleware',
+    'django.middleware.security.SecurityMiddleware',    
+    'whitenoise.middleware.WhiteNoiseMiddleware',  # ADICIONE ESTA LINHA
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',    
     'django.middleware.csrf.CsrfViewMiddleware',    
@@ -88,8 +82,14 @@ WSGI_APPLICATION = 'cedepe.wsgi.application'
 
 
 
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+import environ
+import os
+
+env = environ.Env()
+environ.Env.read_env()  # Isso carrega as variáveis do .env local (não usado no Railway)
+
+SECRET_KEY = env("SECRET_KEY", default="chave_secreta_fallback")
+DEBUG = env.bool("DEBUG", default=False)
 
 
 
