@@ -352,10 +352,28 @@ def gerenciar_ocupacoes(request):
     }
     return render(request, 'reservas/gerenciar_ocupacoes.html', context)
 
-# views.py
 def ocupacao_form(request, pk=None):
     ocupacao = get_object_or_404(Ocupacao, pk=pk) if pk else None
     quartos = Quarto.objects.all()
+    
+    # Captura os parâmetros da URL
+    quarto_id = request.GET.get('quarto')
+    cama_id = request.GET.get('cama')
+    
+    # Obter o objeto Cama se cama_id existir
+    cama_selecionada_obj = None
+    if cama_id:
+        try:
+            cama_selecionada_obj = Cama.objects.get(id=cama_id)
+        except Cama.DoesNotExist:
+            pass
+    
+    initial = {}
+    if not ocupacao:
+        if quarto_id:
+            initial['quarto'] = int(quarto_id)
+        if cama_id:
+            initial['cama'] = int(cama_id)
     
     if request.method == 'POST':
         form = OcupacaoForm(request.POST, instance=ocupacao)
@@ -363,14 +381,15 @@ def ocupacao_form(request, pk=None):
             form.save()
             return redirect('gerenciar_ocupacoes')
     else:
-        form = OcupacaoForm(instance=ocupacao)
+        form = OcupacaoForm(instance=ocupacao, initial=initial)
     
     context = {
         'form': form,
         'ocupacao': ocupacao,
         'quartos': quartos,
-        'quarto_selecionado': ocupacao.cama.quarto.id if ocupacao else None,
-        'cama_selecionada': ocupacao.cama.id if ocupacao else None
+        'quarto_selecionado': ocupacao.cama.quarto.id if ocupacao else quarto_id,
+        'cama_selecionada': ocupacao.cama.id if ocupacao else cama_id,
+        'cama_selecionada_obj': cama_selecionada_obj  # Novo
     }
     return render(request, 'reservas/ocupacoes_form.html', context)
 
