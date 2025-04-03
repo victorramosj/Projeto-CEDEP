@@ -120,32 +120,30 @@ def gerenciar_camas(request):
     filter_by = request.GET.get('filter_by', 'all')
     page_number = request.GET.get('page')
 
-    camas_list = Cama.objects.all()
-    
-    if query:
-        camas_list = camas_list.filter(
-            Q(identificacao__icontains=query) |
-            Q(quarto__numero__icontains=query)
-        )
-    
-    if filter_by != 'all':
-        camas_list = camas_list.filter(status=filter_by)
-    
-    paginator = Paginator(camas_list, ITENS_POR_PAGINA)
-    
-    try:
-        camas = paginator.page(page_number)
-    except PageNotAnInteger:
-        camas = paginator.page(1)
-    except EmptyPage:
-        camas = paginator.page(paginator.num_pages)
+    camas_list = Cama.objects.select_related('quarto').all()
+    quartos = Quarto.objects.all().order_by('numero')  # Lista os quartos disponíveis
 
-    context = {
+    if query:
+        if filter_by == 'identificacao':
+            camas_list = camas_list.filter(identificacao__icontains=query)
+        elif filter_by == 'quarto':
+            try:
+                query = int(query)  # Certifique-se de que é um número
+                camas_list = camas_list.filter(quarto__numero=query)
+            except ValueError:
+                camas_list = Cama.objects.none()  # Retorna lista vazia se a conversão falhar
+        elif filter_by == 'status':
+            camas_list = camas_list.filter(status=query)
+
+    paginator = Paginator(camas_list, 10)  
+    camas = paginator.get_page(page_number)
+
+    return render(request, 'reservas/gerenciar_camas.html', {
         'camas': camas,
+        'quartos': quartos,
         'query': query,
-        'filter_by': filter_by,
-    }
-    return render(request, 'reservas/gerenciar_camas.html', context)
+        'filter_by': filter_by
+    })
 
 def gerenciar_hospedes(request):
     query = request.GET.get('q', '')

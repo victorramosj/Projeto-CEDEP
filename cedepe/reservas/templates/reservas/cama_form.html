@@ -37,10 +37,11 @@
                                 class="form-select {% if form.quarto.errors %}is-invalid{% endif %}">
                                 <option value="">Selecione...</option>
                                 {% for quarto in form.quarto.field.queryset %}
-                                <option value="{{ quarto.pk }}" {% if form.quarto.value==quarto.pk %}selected{% endif
-                                    %}>
+                                <option value="{{ quarto.pk }}"
+                                    {% if form.quarto.value == quarto.pk %}selected{% endif %}>
                                     {{ quarto.numero }}
                                 </option>
+                            
                                 {% endfor %}
                             </select>
                             {% for error in form.quarto.errors %}
@@ -69,7 +70,7 @@
                             <select name="status" id="id_status"
                                 class="form-select {% if form.status.errors %}is-invalid{% endif %}">
                                 {% for value, label in form.fields.status.choices %}
-                                <option value="{{ value }}" {% if form.status.value==value %}selected{% endif %}>
+                                <option value="{{ value }}" {% if form.status.value == value %}selected{% endif %}>
                                     {{ label }}
                                 </option>
                                 {% endfor %}

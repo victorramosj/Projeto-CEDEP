@@ -14,27 +14,95 @@
     </div>
   </div>
 
-  <!-- Filtro de busca -->
-  <form method="GET" class="mb-4">
-    <div class="row g-2">
+ <!-- Substitua todo o bloco do form por este código -->
+<form method="GET" class="mb-4">
+  <div class="row g-2">
       <div class="col-md-3">
-        <select name="filter_by" class="form-select">
-          <option value="all" {% if filter_by == "all" %}selected{% endif %}>Todos</option>
-          <option value="identificacao" {% if filter_by == "identificacao" %}selected{% endif %}>Identificação</option>
-          <option value="quarto" {% if filter_by == "quarto" %}selected{% endif %}>Quarto</option>
-          <option value="status" {% if filter_by == "status" %}selected{% endif %}>Status</option>
-        </select>
+          <select name="filter_by" class="form-select" id="filter-by">
+              <option value="all" {% if filter_by == "all" %}selected{% endif %}>Todos</option>
+              <option value="identificacao" {% if filter_by == "identificacao" %}selected{% endif %}>Identificação</option>
+              <option value="quarto" {% if filter_by == "quarto" %}selected{% endif %}>Quarto</option>
+              <option value="status" {% if filter_by == "status" %}selected{% endif %}>Status</option>
+          </select>
       </div>
       <div class="col-md-9">
-        <div class="input-group">
-          <input type="text" name="q" value="{{ query }}" class="form-control" placeholder="Pesquisar...">
-          <button class="btn btn-outline-primary" type="submit">
-            <i class="bi bi-search"></i> Buscar
-          </button>
-        </div>
+          <div class="input-group">
+            <input type="text" 
+            id="search-input" 
+            class="form-control" 
+            placeholder="Pesquisar..."
+            {% if filter_by == "quarto" or filter_by == "status" %}disabled{% endif %}>
+        
+        <select id="quarto-select" class="form-select" {% if filter_by != "quarto" %}disabled style="display: none;"{% endif %}>
+            <option value="">Todos os quartos...</option>
+            {% for quarto in quartos %}
+            <option value="{{ quarto.numero }}" {% if query == quarto.numero|stringformat:"s" %}selected{% endif %}>Quarto {{ quarto.numero }}</option>
+            {% endfor %}
+        </select>
+        
+        <select id="status-select" class="form-select" {% if filter_by != "status" %}disabled style="display: none;"{% endif %}>
+            <option value="">Todos os status...</option>
+            <option value="DISPONIVEL" {% if query == "DISPONIVEL" %}selected{% endif %}>Disponível</option>
+            <option value="OCUPADA" {% if query == "OCUPADA" %}selected{% endif %}>Ocupada</option>
+        </select>
+        
+
+              <button class="btn btn-outline-primary" type="submit">
+                  <i class="bi bi-search"></i> Buscar
+              </button>
+          </div>
       </div>
-    </div>
-  </form>
+  </div>
+</form>
+
+<!-- Atualize o script JavaScript -->
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const filterBy = document.getElementById('filter-by');
+    const searchInput = document.getElementById('search-input');
+    const quartoSelect = document.getElementById('quarto-select');
+    const statusSelect = document.getElementById('status-select');
+
+    function toggleFields() {
+        // Remover o nome "q" de todos os campos
+        searchInput.removeAttribute("name");
+        quartoSelect.removeAttribute("name");
+        statusSelect.removeAttribute("name");
+
+        // Esconder e desativar todos os campos
+        searchInput.style.display = 'none';
+        quartoSelect.style.display = 'none';
+        statusSelect.style.display = 'none';
+        searchInput.disabled = true;
+        quartoSelect.disabled = true;
+        statusSelect.disabled = true;
+
+        // Ativar e exibir apenas o campo selecionado
+        if (filterBy.value === 'quarto') {
+            quartoSelect.style.display = 'block';
+            quartoSelect.disabled = false;
+            quartoSelect.setAttribute("name", "q");
+        } else if (filterBy.value === 'status') {
+            statusSelect.style.display = 'block';
+            statusSelect.disabled = false;
+            statusSelect.setAttribute("name", "q");
+        } else {
+            searchInput.style.display = 'block';
+            searchInput.disabled = false;
+            searchInput.setAttribute("name", "q");
+        }
+    }
+
+    // Inicializar campos corretamente
+    toggleFields();
+
+    // Atualizar ao mudar filtro
+    filterBy.addEventListener('change', function() {
+        toggleFields();
+    });
+});
+
+</script>
 
   <!-- Tabela de Camas -->
   <div class="card shadow-sm">
