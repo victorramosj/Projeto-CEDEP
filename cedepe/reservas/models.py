@@ -28,19 +28,22 @@ class Cama(models.Model):
     def __str__(self):
         return f"{self.identificacao} - {self.quarto.numero} ({self.get_status_display()})"
 
+from django.db import models
+
 class Hospede(models.Model):
     """ Representa um hóspede. """
-    nome = models.CharField(max_length=100)
-    cpf = models.CharField(max_length=14, unique=True)
-    email = models.EmailField()
-    telefone = models.CharField(max_length=20)
-    endereco = models.TextField()
+    nome = models.CharField(max_length=100, null=True, blank=True)
+    cpf = models.CharField(max_length=14, unique=True, null=True, blank=True)
+    email = models.EmailField(null=True, blank=True)
+    telefone = models.CharField(max_length=20, null=True, blank=True)
+    endereco = models.TextField(null=True, blank=True)
     instituicao = models.CharField(max_length=150, null=True, blank=True)
     criado_em = models.DateTimeField(auto_now_add=True)
     atualizado_em = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return self.nome
+        return self.nome or "Hóspede sem nome"
+
 
 class Ocupacao(models.Model):
     """ Representa a ocupação efetiva de uma cama (antiga Reserva). """

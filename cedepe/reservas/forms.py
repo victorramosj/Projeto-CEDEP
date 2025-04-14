@@ -32,10 +32,7 @@ class OcupacaoForm(forms.ModelForm):  # Novo form para Ocupacao
         status = cleaned_data.get('status')
 
         if cama and cama.status != 'DISPONIVEL':
-            raise forms.ValidationError("A cama selecionada não está disponível.")
-
-        if hospede and Ocupacao.objects.filter(hospede=hospede, status='ATIVA').exists():
-            raise forms.ValidationError("Este hóspede já possui uma ocupação ativa.")
+            raise forms.ValidationError("A cama selecionada não está disponível.")        
 
         if data_checkin and data_checkout and data_checkin >= data_checkout:
             raise forms.ValidationError("A data de check-in deve ser anterior à data de check-out.")

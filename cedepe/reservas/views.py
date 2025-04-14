@@ -181,7 +181,7 @@ from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from .models import Quarto, Cama, Hospede, Reserva, Ocupacao
 from .forms import QuartoForm, CamaForm, HospedeForm, ReservaForm, OcupacaoForm  # certifique-se de criar OcupacaoForm
 
-ITENS_POR_PAGINA = 10
+ITENS_POR_PAGINA = 20
 
 def gerenciar_reservas(request):
     query = request.GET.get('q', '')
@@ -221,7 +221,7 @@ def reserva_form(request, pk=None):
         form = ReservaForm(request.POST, instance=reserva)
         if form.is_valid():
             form.save()
-            return redirect('mapa_interativo')
+            return redirect('gerenciar_reservas')
     else:
         form = ReservaForm(instance=reserva)
     
