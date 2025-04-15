@@ -1,4 +1,5 @@
 from django.contrib import admin
+from django.utils import timezone
 from .models import (
     Setor, Escola, GREUser, Questionario, Pergunta, 
     Monitoramento, Resposta, TipoProblema, RelatoProblema
@@ -17,33 +18,52 @@ class RespostaInline(admin.TabularInline):
     readonly_fields = ('pergunta',)
     
     def has_add_permission(self, request, obj):
-        return False  # Impede adição de novas respostas diretamente no admin
+        return False
 
 @admin.register(Setor)
 class SetorAdmin(admin.ModelAdmin):
-    list_display = ('nome',)
+    list_display = ('nome', 'hierarquia_completa')
     search_fields = ('nome',)
+    list_filter = ('parent',)
+
+    def hierarquia_completa(self, obj):
+        return obj.hierarquia_completa
+    hierarquia_completa.short_description = 'Hierarquia'
 
 @admin.register(Escola)
 class EscolaAdmin(admin.ModelAdmin):
     list_display = ('nome', 'inep', 'email_escola', 'funcao_monitoramento')
     search_fields = ('nome', 'inep', 'email_escola')
     list_filter = ('funcao_monitoramento',)
-
+    
 @admin.register(GREUser)
 class GREUserAdmin(admin.ModelAdmin):
-    list_display = ('user', 'setor', 'escola', 'cargo', 'is_gestor', 'is_gre')
-    list_filter = ('setor', 'escola')
-    search_fields = ('user__username', 'user__first_name', 'user__last_name', 'cargo')
-    readonly_fields = ('is_gestor', 'is_gre')
-    
-    def is_gestor(self, obj):
-        return obj.is_gestor()
-    is_gestor.boolean = True
-    
-    def is_gre(self, obj):
-        return obj.is_gre()
-    is_gre.boolean = True
+    list_display = (
+        'user', 'tipo_usuario', 'nivel_acesso', 
+        'setor', 'escolas_vinculadas', 'cpf', 'celular'
+    )
+    list_filter = ('tipo_usuario', 'setor')
+    search_fields = (
+        'user__username', 'cpf', 'celular',
+        'user__first_name', 'user__last_name'
+    )
+    filter_horizontal = ('escolas',)
+    fieldsets = (
+        ('Dados Pessoais', {
+            'fields': ('user', 'cpf', 'celular', 'cargo')
+        }),
+        ('Vinculos Institucionais', {
+            'fields': ('tipo_usuario', 'setor', 'escolas')
+        }),
+    )
+
+    def nivel_acesso(self, obj):
+        return obj.nivel_acesso
+    nivel_acesso.short_description = 'Nível de Acesso'
+
+    def escolas_vinculadas(self, obj):
+        return ", ".join([e.nome for e in obj.escolas.all()])
+    escolas_vinculadas.short_description = 'Escolas'
 
 @admin.register(Questionario)
 class QuestionarioAdmin(admin.ModelAdmin):
@@ -52,7 +72,7 @@ class QuestionarioAdmin(admin.ModelAdmin):
     search_fields = ('titulo', 'descricao')
     inlines = [PerguntaInline]
     filter_horizontal = ('escolas_destino',)
-    
+
     def quantidade_perguntas(self, obj):
         return obj.pergunta_set.count()
     quantidade_perguntas.short_description = 'Perguntas'
@@ -64,39 +84,31 @@ class PerguntaAdmin(admin.ModelAdmin):
     search_fields = ('texto',)
     ordering = ('questionario', 'ordem')
 
-class RespostaInline(admin.TabularInline):
-    model = Resposta
-    extra = 0
-    readonly_fields = ('pergunta', 'resposta_sn', 'resposta_num', 'resposta_texto', 'foto')
-    
-    def has_add_permission(self, request, obj):
-        return False
-
 @admin.register(Monitoramento)
 class MonitoramentoAdmin(admin.ModelAdmin):
-    list_display = ('questionario', 'escola', 'data_envio', 'data_resposta', 'status', 'respondido_por')
-    list_filter = ('questionario__setor', 'status', 'escola', 'data_envio')
-    search_fields = ('escola__nome', 'questionario__titulo', 'respondido_por__user__username')
+    list_display = ('questionario', 'escola', 'status', 'data_envio', 'respondido_por')
+    list_filter = ('questionario__setor', 'status', 'escola')
+    search_fields = ('escola__nome', 'questionario__titulo')
     date_hierarchy = 'data_envio'
     inlines = [RespostaInline]
     readonly_fields = ('data_envio', 'data_resposta')
     actions = ['marcar_como_resolvido', 'marcar_como_urgente']
-    
+
     def marcar_como_resolvido(self, request, queryset):
         queryset.update(status='R', data_resposta=timezone.now())
-    marcar_como_resolvido.short_description = "Marcar selecionados como Resolvidos"
-    
+    marcar_como_resolvido.short_description = "Marcar como Resolvido"
+
     def marcar_como_urgente(self, request, queryset):
         queryset.update(status='U')
-    marcar_como_urgente.short_description = "Marcar selecionados como Urgentes"
+    marcar_como_urgente.short_description = "Marcar como Urgente"
 
 @admin.register(Resposta)
 class RespostaAdmin(admin.ModelAdmin):
     list_display = ('monitoramento', 'pergunta', 'resposta_formatada')
     list_filter = ('monitoramento__questionario__setor', 'monitoramento__escola')
-    search_fields = ('pergunta__texto', 'monitoramento__escola__nome')
+    search_fields = ('pergunta__texto',)
     readonly_fields = ('monitoramento', 'pergunta')
-    
+
     def resposta_formatada(self, obj):
         return obj.resposta_formatada()
     resposta_formatada.short_description = 'Resposta'
@@ -109,21 +121,24 @@ class TipoProblemaAdmin(admin.ModelAdmin):
 
 @admin.register(RelatoProblema)
 class RelatoProblemaAdmin(admin.ModelAdmin):
-    list_display = ('tipo_problema', 'gestor', 'escola', 'data_relato', 'status', 'responsavel')
-    list_filter = ('tipo_problema__setor', 'status', 'data_relato')
-    search_fields = ('gestor__user__username', 'tipo_problema__descricao', 'descricao_adicional')
+    list_display = (
+        'tipo_problema', 'prioridade', 'status', 
+        'gestor', 'escola_relacionada', 'data_relato', 'responsavel'
+    )
+    list_filter = ('tipo_problema__setor', 'status', 'prioridade')
+    search_fields = ('descricao_adicional', 'solucao_aplicada')
     date_hierarchy = 'data_relato'
     readonly_fields = ('data_relato',)
     actions = ['marcar_como_resolvido', 'marcar_como_urgente']
-    
-    def escola(self, obj):
-        return obj.gestor.escola if obj.gestor.escola else '-'
-    escola.short_description = 'Escola'
-    
+
+    def escola_relacionada(self, obj):
+        return obj.gestor.escolas.first().nome if obj.gestor.escolas.exists() else '-'
+    escola_relacionada.short_description = 'Escola'
+
     def marcar_como_resolvido(self, request, queryset):
         queryset.update(status='R', data_resolucao=timezone.now())
-    marcar_como_resolvido.short_description = "Marcar selecionados como Resolvidos"
-    
+    marcar_como_resolvido.short_description = "Marcar como Resolvido"
+
     def marcar_como_urgente(self, request, queryset):
         queryset.update(status='U')
-    marcar_como_urgente.short_description = "Marcar selecionados como Urgentes"
+    marcar_como_urgente.short_description = "Marcar como Urgente"
