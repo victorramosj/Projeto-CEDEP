@@ -90,7 +90,7 @@ env = environ.Env()
 environ.Env.read_env()  # Isso carrega as variáveis do .env local (não usado no Railway)
 
 SECRET_KEY = env("SECRET_KEY", default="chave_secreta_fallback")
-DEBUG = env.bool("DEBUG", default=True)
+DEBUG = env.bool("DEBUG", default=False)
 
 
 
