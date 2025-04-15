@@ -194,7 +194,9 @@
                                 {% for agendamento in upcoming_agendamentos %}
                                 <tr class="clickable-row" data-href="{% url 'editar_agendamento' agendamento.id %}">
                                     <td>{{ agendamento.evento.titulo }}</td>
-                                    <td>{{ agendamento.sala.nome }}</td>
+                                    <td>
+                                        {{ agendamento.salas.all|join:", " }}  <!-- Corrected 'sala' to 'salas' -->
+                                    </td>
                                     <td>
                                         <div class="text-nowrap">
                                             <small class="text-muted">
@@ -277,19 +279,20 @@
             failureCallback(error);
           }
         },
-            eventContent: function(arg) {
+        eventContent: function(arg) {
     return {
         html: `
             <div class="fc-event-main-frame d-flex align-items-center">
-                
                 <div class="w-100">
                     <div class="d-flex justify-content-between align-items-center">
                         <div class="fc-event-title text-dark fw-bold me-1">${arg.event.title}</div>
-                        <small class="fc-event-horario text-dark "> <i class="bi  bi-clock-history text-dark me 1"></i>${arg.event.extendedProps.horario}</small>
+                        <small class="fc-event-horario text-dark "> 
+                            <i class="bi  bi-clock-history text-dark me 1"></i>${arg.event.extendedProps.horario}
+                        </small>
                     </div>
-                    
-                    <div class="fc-event-sala text-dark small"> ${arg.event.extendedProps.sala}</div>
-                    
+                    <div class="fc-event-sala text-dark small">
+                        ${arg.event.extendedProps.salas.join(', ')} <!-- Corrected 'sala' to 'salas' and removed .map -->
+                    </div>
                 </div>
             </div> 
         `

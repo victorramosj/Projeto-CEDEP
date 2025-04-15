@@ -25,7 +25,7 @@ class Evento(models.Model):
 
 class Agendamento(models.Model):
     evento = models.ForeignKey(Evento, on_delete=models.CASCADE, related_name='agendamentos')
-    sala = models.ForeignKey(Sala, on_delete=models.CASCADE, related_name='agendamentos')
+    salas = models.ManyToManyField(Sala, related_name='agendamentos')
     inicio = models.DateTimeField()
     fim = models.DateTimeField()
     participantes = models.CharField(
@@ -34,9 +34,6 @@ class Agendamento(models.Model):
         null=True,
         help_text="Insira os nomes dos participantes separados por vírgula (opcional)."
     )
-
-    class Meta:
-        unique_together = ('sala', 'inicio', 'fim')  # Evita conflitos de horário na mesma sala
 
     def __str__(self):
         return f"{self.evento.titulo} ({self.inicio} - {self.fim})"

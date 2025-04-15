@@ -1,7 +1,7 @@
 # serializers.py
 from rest_framework import serializers
 from .models import Quarto, Cama, Hospede, Ocupacao, Reserva  # Alterado a importação
-
+from datetime import date  # Adicione esta linha
 class QuartoSerializer(serializers.ModelSerializer):
     camas_disponiveis = serializers.SerializerMethodField()
 
@@ -102,6 +102,9 @@ class OcupacaoSerializer(serializers.ModelSerializer):  # Novo serializer para O
     def update(self, instance, validated_data):
         if validated_data.get('status') == 'FINALIZADA':
             validated_data['data_checkout'] = date.today()
+            # Liberar a cama associada
+            instance.cama.status = 'DISPONIVEL'
+            instance.cama.save()
         return super().update(instance, validated_data)
 
 class ReservaSerializer(serializers.ModelSerializer):  # Novo serializer para Reserva

@@ -40,7 +40,9 @@
             {% for agendamento in agendamentos %}
             <tr>
               <td>{{ agendamento.evento.titulo }}</td>
-              <td>{{ agendamento.sala.nome }}</td>
+              <td>
+                {{ agendamento.salas.all|join:", " }}  <!-- Corrected 'sala' to 'salas' -->
+            </td>
               <td>{{ agendamento.inicio|date:"d/m/Y H:i" }}</td>
               <td>{{ agendamento.fim|date:"d/m/Y H:i" }}</td>
               <td>

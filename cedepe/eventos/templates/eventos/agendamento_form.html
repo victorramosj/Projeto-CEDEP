@@ -42,13 +42,15 @@
               {% endfor %}
             </div>
             <!-- Sala -->
-            <div class="mb-3">
-              <label class="form-label" for="id_sala">Sala</label>
-              {{ form.sala }}
-              {% for error in form.sala.errors %}
-              <div class="invalid-feedback">{{ error }}</div>
-              {% endfor %}
-            </div>
+            <!-- Substituir a seção de "Sala" por "Salas" -->
+<div class="mb-3">
+  <label class="form-label" for="id_salas">Salas</label>
+  {{ form.salas }}
+  {% for error in form.salas.errors %}
+  <div class="invalid-feedback">{{ error }}</div>
+  {% endfor %}
+</div>
+
             <!-- Início -->
             <div class="mb-3">
               <label class="form-label" for="id_inicio">Início</label>

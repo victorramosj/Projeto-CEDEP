@@ -232,9 +232,10 @@ def dashboard(request):
     upcoming_agendamentos = Agendamento.objects.filter(inicio__gte=timezone.now()).order_by('inicio')[:5]
     
     # Agendamentos por Sala para o gráfico
-    agendamentos_por_sala = Agendamento.objects.values('sala__nome').annotate(total=Count('id'))
-    salas_labels = [item['sala__nome'] for item in agendamentos_por_sala]
-    salas_data = [item['total'] for item in agendamentos_por_sala]
+    agendamentos_por_sala = Sala.objects.annotate(total=Count('agendamentos')).filter(total__gt=0)
+    salas_labels = [sala.nome for sala in agendamentos_por_sala]
+    salas_data = [sala.total for sala in agendamentos_por_sala]
+
     
     context = {
         'total_eventos': total_eventos,
@@ -266,7 +267,7 @@ class FullCalendarEventsView(APIView):
             'start': timezone.localtime(agendamento.inicio).isoformat(),
             'end': timezone.localtime(agendamento.fim).isoformat(),
             'extendedProps': {
-                'sala': agendamento.sala.nome,
+                'salas': [sala.nome for sala in agendamento.salas.all()],
                 'descricao': agendamento.evento.descricao,
                 'horario': f"{timezone.localtime(agendamento.inicio).strftime('%H:%M')} - {timezone.localtime(agendamento.fim).strftime('%H:%M')}"
             }

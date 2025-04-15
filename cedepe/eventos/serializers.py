@@ -16,32 +16,36 @@ from rest_framework import serializers
 from .models import Agendamento
 from datetime import datetime
 
-# serializers.py
 class AgendamentoSerializer(serializers.ModelSerializer):
-    sala_nome = serializers.CharField(source='sala.nome', read_only=True)
+    salas = serializers.PrimaryKeyRelatedField(
+        many=True, queryset=Sala.objects.all()
+    )
+    sala_nomes = serializers.SerializerMethodField()
     evento_titulo = serializers.CharField(source='evento.titulo', read_only=True)
     evento_descricao = serializers.CharField(source='evento.descricao', read_only=True)
     horario = serializers.SerializerMethodField()
 
     class Meta:
         model = Agendamento
-        fields = '__all__'
-
+        fields = '__all__'  # ou use: ['id', 'evento', 'salas', 'inicio', 'fim', 'participantes', ...]
+    
+    def get_sala_nomes(self, obj):
+        return [sala.nome for sala in obj.salas.all()]
+    
     def get_horario(self, obj):
         return f"{obj.inicio.strftime('%H:%M')} - {obj.fim.strftime('%H:%M')}"
 
     def validate(self, data):
         inicio = data.get('inicio')
         fim = data.get('fim')
-        sala = data.get('sala')
+        salas = data.get('salas')
 
-        # Garantir que os datetimes são timezone-aware
+        # Garantir timezone-aware
         if isinstance(inicio, datetime) and inicio.tzinfo is None:
             inicio = make_aware(inicio)
         if isinstance(fim, datetime) and fim.tzinfo is None:
             fim = make_aware(fim)
 
-        # Validação de horário
         if inicio and fim:
             if inicio >= fim:
                 raise serializers.ValidationError({
@@ -52,18 +56,20 @@ class AgendamentoSerializer(serializers.ModelSerializer):
                     "inicio": "Não é possível agendar no passado."
                 })
 
-        # Validação de conflito de horário na mesma sala
-        qs = Agendamento.objects.filter(
-            sala=sala,
-            inicio__lt=fim,   # Início de outro evento é antes do fim do novo
-            fim__gt=inicio    # Fim de outro evento é depois do início do novo
-        )
-        if self.instance:
-            qs = qs.exclude(pk=self.instance.pk)
-        if qs.exists():
-            raise serializers.ValidationError({
-                "sala": "Conflito de horário nesta sala."
-            })
+        # Validação de conflito para cada sala
+        if salas and inicio and fim:
+            for sala in salas:
+                conflitos = Agendamento.objects.filter(
+                    salas=sala,
+                    inicio__lt=fim,
+                    fim__gt=inicio
+                )
+                if self.instance:
+                    conflitos = conflitos.exclude(pk=self.instance.pk)
+                if conflitos.exists():
+                    raise serializers.ValidationError({
+                        "salas": f"Conflito de horário na sala '{sala.nome}'."
+                    })
 
         return data
 

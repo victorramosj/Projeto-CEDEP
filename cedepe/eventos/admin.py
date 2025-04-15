@@ -5,7 +5,7 @@ from .models import Sala, Evento, Agendamento
 class SalaAdmin(admin.ModelAdmin):
     list_display = ('nome', 'capacidade', 'localizacao')
     search_fields = ('nome',)
-    
+
 @admin.register(Evento)
 class EventoAdmin(admin.ModelAdmin):
     list_display = ('titulo', 'organizador', 'data_criacao')
@@ -14,7 +14,11 @@ class EventoAdmin(admin.ModelAdmin):
 
 @admin.register(Agendamento)
 class AgendamentoAdmin(admin.ModelAdmin):
-    list_display = ('evento', 'sala', 'inicio', 'fim')
-    search_fields = ('evento__titulo', 'sala__nome')
-    list_filter = ('sala', 'inicio', 'fim')
-    
+    list_display = ('evento', 'listar_salas', 'inicio', 'fim')
+    search_fields = ('evento__titulo', 'salas__nome')
+    list_filter = ('salas', 'inicio', 'fim')
+    filter_horizontal = ('salas',)  # facilita seleção de múltiplas salas no admin
+
+    def listar_salas(self, obj):
+        return ", ".join([sala.nome for sala in obj.salas.all()])
+    listar_salas.short_description = 'Salas'

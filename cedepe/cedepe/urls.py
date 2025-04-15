@@ -7,6 +7,7 @@ urlpatterns = [
     path('admin/', admin.site.urls, name='admin'),
     path('reservas/', include('reservas.urls')),  # Inclui as URLs do app reservas
     path('eventos/', include('eventos.urls')),  # Inclui as URLs do app reservas
+    path('monitoramento/', include('monitoramento.urls')), 
     path('', views.dashboard, name='home'),  # View principal
     # Rotas de autenticação
     path('login/', views.user_login, name='login'),

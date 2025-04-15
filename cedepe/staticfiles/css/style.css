@@ -144,7 +144,7 @@ body {
 @import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;500;700&display=swap');
 
 .brand-text {
-    color: #f5bf26 !important;
+    color: #10295d !important;
     font-size: 1.25rem; /* Ajustei o tamanho */
     font-weight: 600; /* Ajustei o peso da fonte */
     font-family: 'Open Sans', sans-serif; /* Fonte secundária */
@@ -167,7 +167,7 @@ body {
 
 /* Ajuste da imagem */
 .logo-container img {
-    width: 140px !important; /* Aumentei o tamanho */
+    width: 190px !important; /* Aumentei o tamanho */
     margin-bottom: 0.5rem;
 }
 
