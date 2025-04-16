@@ -18,10 +18,29 @@ class Escola(models.Model):
     nome = models.CharField(max_length=255)
     inep = models.CharField(max_length=20, unique=True)
     email_escola = models.EmailField()
-    foto_fachada = models.URLField(blank=True, null=True)
-    legenda_foto = models.TextField(blank=True)
-    funcao_monitoramento = models.CharField(max_length=255, blank=True)
-    
+    endereco = models.TextField(  # New address field
+        verbose_name="Endereço da Escola",
+        blank=True,
+        help_text="Ex: Rua ABC, 123 - Bairro XYZ"
+    )
+    foto_fachada = models.ImageField(
+        upload_to='escolas/fachadas/',
+        blank=True,
+        null=True,
+        verbose_name="Foto da Fachada"
+    )    
+    email_gestor = models.EmailField(  # Manager's email field
+        verbose_name="Email do Gestor",
+        blank=True,
+        help_text="Email oficial do gestor responsável"
+    )
+    gestores = models.ManyToManyField(
+        'GREUser',
+        related_name='escolas_gestoradas',
+        limit_choices_to={'tipo_usuario': 'GESTOR'},
+        blank=True,
+        verbose_name="Gestores da Escola"
+    )    
     def __str__(self):
         return self.nome
 

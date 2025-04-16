@@ -90,7 +90,7 @@ env = environ.Env()
 environ.Env.read_env()  # Isso carrega as variáveis do .env local (não usado no Railway)
 
 SECRET_KEY = env("SECRET_KEY", default="chave_secreta_fallback")
-DEBUG = env.bool("DEBUG", default=False)
+DEBUG = env.bool("DEBUG", default=True)
 
 
 
@@ -113,7 +113,7 @@ STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 
 # Configure as variáveis antes da configuração do banco
-DATABASE_URL = os.getenv('DATABASE_URL', 'postgresql://postgres:HKhnFzXggtmylfsSKcPbVGfQEvataqYo@shortline.proxy.rlwy.net:13741/railway')  # Coloque sua URL como fallback
+'''DATABASE_URL = os.getenv('DATABASE_URL', 'postgresql://postgres:HKhnFzXggtmylfsSKcPbVGfQEvataqYo@shortline.proxy.rlwy.net:13741/railway')  # Coloque sua URL como fallback
 
 DATABASES = {
     'default': dj_database_url.config(
@@ -122,12 +122,20 @@ DATABASES = {
         ssl_require=True
     )
 }
+'''
 import os
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 
+# Configuração para banco de dados SQLite (útil para testes)
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+    }
+}
 
 # Password validation
 # https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators

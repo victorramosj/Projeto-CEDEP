@@ -32,9 +32,17 @@ class SetorAdmin(admin.ModelAdmin):
 
 @admin.register(Escola)
 class EscolaAdmin(admin.ModelAdmin):
-    list_display = ('nome', 'inep', 'email_escola', 'funcao_monitoramento')
-    search_fields = ('nome', 'inep', 'email_escola')
-    list_filter = ('funcao_monitoramento',)
+    list_display = (
+        'nome', 'inep', 'email_escola', 
+        'endereco', 'email_gestor', 'listar_gestores'
+    )
+    search_fields = ('nome', 'inep', 'email_gestor')
+    list_filter = ('gestores__tipo_usuario',)
+    filter_horizontal = ('gestores',)
+    
+    def listar_gestores(self, obj):
+        return ", ".join([g.user.get_full_name() for g in obj.gestores.all()])
+    listar_gestores.short_description = 'Gestores'
     
 @admin.register(GREUser)
 class GREUserAdmin(admin.ModelAdmin):
