@@ -4,7 +4,7 @@ from .models import (
     Setor, Escola, GREUser, Questionario, Pergunta, 
     Monitoramento, Resposta, TipoProblema, RelatoProblema
 )
-
+from django.contrib.admin.filters import EmptyFieldListFilter
 class PerguntaInline(admin.TabularInline):
     model = Pergunta
     extra = 1
@@ -30,35 +30,109 @@ class SetorAdmin(admin.ModelAdmin):
         return obj.hierarquia_completa
     hierarquia_completa.short_description = 'Hierarquia'
 
+from django.contrib import admin
+from django.contrib.auth.models import User
+from django import forms
+from .models import Escola
+
+class EscolaForm(forms.ModelForm):
+    class Meta:
+        model = Escola
+        fields = '__all__'
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if 'user' in self.fields:
+            self.fields['user'].queryset = User.objects.order_by('first_name', 'last_name')
+            self.fields['user'].label_from_instance = lambda obj: f"{obj.get_full_name()} ({obj.username})"
+
 @admin.register(Escola)
 class EscolaAdmin(admin.ModelAdmin):
+    form = EscolaForm
     list_display = (
-        'nome', 'inep', 'email_escola', 
-        'endereco', 'email_gestor', 'listar_gestores'
+        'nome',
+        'inep',
+        'email_escola',
+        'telefone',
+        'nome_gestor',
+        'telefone_gestor',
+        'email_gestor',
+        'has_fachada',
+        'user_display'
     )
-    search_fields = ('nome', 'inep', 'email_gestor')
-    list_filter = ('gestores__tipo_usuario',)
-    filter_horizontal = ('gestores',)
     
-    def listar_gestores(self, obj):
-        return ", ".join([g.user.get_full_name() for g in obj.gestores.all()])
-    listar_gestores.short_description = 'Gestores'
+    search_fields = (
+        'nome',
+        'inep',
+        'email_escola',
+        'telefone',
+        'nome_gestor',
+        'telefone_gestor',
+        'email_gestor',
+        'user__username',
+        'user__first_name',
+        'user__last_name'
+    )
+    
+    list_filter = (
+        ('user', admin.EmptyFieldListFilter),
+        ('foto_fachada', admin.EmptyFieldListFilter),
+    )
+    
+    ordering = ('nome',)
+    list_per_page = 25
+
+    fieldsets = (
+        (None, {
+            'fields': ('nome', 'inep', 'email_escola', 'endereco', 'user')
+        }),
+        ('Contato da Escola', {
+            'fields': ('telefone', 'foto_fachada'),
+        }),
+        ('Gestor', {
+            'fields': ('nome_gestor', 'telefone_gestor', 'email_gestor'),
+        }),
+    )
+
+    def user_display(self, obj):
+        if obj.user:
+            return f"{obj.user.get_full_name()} ({obj.user.username})"
+        return "Nenhum usuário vinculado"
+    user_display.short_description = 'Usuário Vinculado'
+
+    def has_fachada(self, obj):
+        return bool(obj.foto_fachada)
+    has_fachada.boolean = True
+    has_fachada.short_description = 'Tem foto de fachada'
     
 @admin.register(GREUser)
 class GREUserAdmin(admin.ModelAdmin):
     list_display = (
-        'user', 'tipo_usuario', 'nivel_acesso', 
-        'setor', 'escolas_vinculadas', 'cpf', 'celular'
+        'nome_completo',  # Campo personalizado
+        'tipo_usuario', 
+        'nivel_acesso', 
+        'setor', 
+        'escolas_vinculadas', 
+        'cpf', 
+        'celular'
     )
     list_filter = ('tipo_usuario', 'setor')
     search_fields = (
-        'user__username', 'cpf', 'celular',
-        'user__first_name', 'user__last_name'
+        'nome_completo',  # Busca por nome completo
+        'user__username', 
+        'cpf', 
+        'celular'
     )
     filter_horizontal = ('escolas',)
     fieldsets = (
         ('Dados Pessoais', {
-            'fields': ('user', 'cpf', 'celular', 'cargo')
+            'fields': (
+                'user', 
+                'nome_completo',  # Campo adicionado
+                'cpf', 
+                'celular', 
+                'cargo'
+            )
         }),
         ('Vinculos Institucionais', {
             'fields': ('tipo_usuario', 'setor', 'escolas')

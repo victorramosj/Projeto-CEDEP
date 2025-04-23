@@ -2,7 +2,7 @@ import os
 import django
 
 # Configurar o ambiente Django
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "cedepe.settings")
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "sigref.settings")
 django.setup()
 
 from monitoramento.models import Setor

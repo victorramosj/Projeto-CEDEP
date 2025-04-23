@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
+from django.core.validators import RegexValidator
 
 class Setor(models.Model):
     nome = models.CharField(max_length=255)
@@ -18,7 +19,9 @@ class Escola(models.Model):
     nome = models.CharField(max_length=255)
     inep = models.CharField(max_length=20, unique=True)
     email_escola = models.EmailField()
-    endereco = models.TextField(  # New address field
+    nome_gestor = models.CharField(max_length=255)
+    user = models.OneToOneField(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='escola')
+    endereco = models.TextField(
         verbose_name="Endereço da Escola",
         blank=True,
         help_text="Ex: Rua ABC, 123 - Bairro XYZ"
@@ -29,20 +32,35 @@ class Escola(models.Model):
         null=True,
         verbose_name="Foto da Fachada"
     )    
-    email_gestor = models.EmailField(  # Manager's email field
+    email_gestor = models.EmailField(
         verbose_name="Email do Gestor",
         blank=True,
         help_text="Email oficial do gestor responsável"
     )
-    gestores = models.ManyToManyField(
-        'GREUser',
-        related_name='escolas_gestoradas',
-        limit_choices_to={'tipo_usuario': 'GESTOR'},
+    telefone = models.CharField(
+        max_length=15,
         blank=True,
-        verbose_name="Gestores da Escola"
-    )    
+        validators=[
+            RegexValidator(
+                regex=r'^\(\d{2}\) \d{5}-\d{4}$',
+                message='Celular deve estar no formato: (99) 99999-9999'
+            )
+        ]
+    )
+    telefone_gestor = models.CharField(
+        max_length=15,
+        blank=True,
+        validators=[
+            RegexValidator(
+                regex=r'^\(\d{2}\) \d{5}-\d{4}$',
+                message='Celular deve estar no formato: (99) 99999-9999'
+            )
+        ]
+    )
+        
     def __str__(self):
         return self.nome
+
 
 from django.core.validators import RegexValidator
 from django.db import models
@@ -55,7 +73,7 @@ class GREUser(models.Model):
         ('COORDENADOR', 'Coordenador GRE'),
         ('CHEFE_SETOR', 'Chefe de Setor'),
         ('MONITOR', 'Monitor Escolar'),
-        ('GESTOR', 'Gestor da Escola'),
+        ('ESCOLA', 'Escola'), 
         ('CEDEPE', 'Técnico CEDEPE/Secretaria'),
     ]
     
@@ -63,6 +81,7 @@ class GREUser(models.Model):
     setor = models.ForeignKey(Setor, on_delete=models.SET_NULL, null=True, blank=True)
     escolas = models.ManyToManyField(Escola, blank=True, related_name='usuarios')
     cargo = models.CharField(max_length=100, blank=True)
+    nome_completo = models.CharField(max_length=255, blank=True)
     tipo_usuario = models.CharField(
         max_length=15,  # Aumentado para caber os novos tipos
         choices=TIPO_USUARIO_CHOICES,
@@ -96,10 +115,11 @@ class GREUser(models.Model):
     def __str__(self):
         return self.user.get_full_name()
     
+    
     # Métodos de verificação de perfil atualizados
-    def is_gestor(self):
-        """Verifica se o usuário é gestor escolar"""
-        return self.tipo_usuario == 'GESTOR' and self.escolas.exists()
+    def is_escola(self):
+        """Verifica se o usuário é a escola"""
+        return self.tipo_usuario == 'ESCOLA' and self.escolas.exists()
     
     def is_monitor(self):
         """Verifica se o usuário é monitor escolar"""

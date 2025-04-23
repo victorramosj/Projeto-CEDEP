@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 import random
 
 # Configurar o ambiente Django
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "cedepe.settings")
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "sigref.settings")
 django.setup()
 
 from reservas.models import Hospede, Quarto, Cama, Reserva

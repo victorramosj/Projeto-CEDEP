@@ -39,7 +39,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'reservas',
-    'cedepe',
+    'sigref',
     'rest_framework',
     'django_filters',
     'eventos',
@@ -57,7 +57,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-ROOT_URLCONF = 'cedepe.urls'
+ROOT_URLCONF = 'sigref.urls'
 
 TEMPLATES = [
     {
@@ -75,7 +75,7 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'cedepe.wsgi.application'
+WSGI_APPLICATION = 'sigref.wsgi.application'
 
 
 # Database
