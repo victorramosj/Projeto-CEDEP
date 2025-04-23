@@ -36,7 +36,7 @@ def user_login(request):
 
                     # Redirecionamento inteligente (ajuste conforme sua lógica)
                     if gre_user.is_admin():
-                        return redirect('admin_dashboard')
+                        return redirect('home')
                     elif gre_user.is_coordenador():
                         return redirect('coordenador_home')
                     elif gre_user.is_chefe_setor():

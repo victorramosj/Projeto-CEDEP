@@ -83,8 +83,8 @@
     </a>
   </li>
 
-  {% if user.is_authenticated and user.is_staff %}
-    {# --- Hospedagens --- #}
+  {% if user.is_authenticated and user.is_staff or request.session.tipo_usuario == 'cedepe' %}
+    {# Mostrar opções de hospedagem #}
     {% with current=request.resolver_match.url_name %}
       <li class="nav-item">
         <a class="nav-link text-white sidebar-link d-flex justify-content-between align-items-center"
@@ -143,7 +143,7 @@
         </ul>
       </li>
     {% endwith %}
-
+    {% endif %} 
     {# --- Eventos --- #}
     {% with current=request.resolver_match.url_name %}
       <li class="nav-item">
@@ -164,6 +164,7 @@
               <i class="fas fa-chart-line me-2"></i>Dashboard Eventos
             </a>
           </li>
+          {% if user.is_authenticated and user.is_staff or request.session.tipo_usuario == 'cedepe' %}
           <li>
             <a href="{% url 'gerenciar_eventos' %}"
                class="nav-link text-white sidebar-link {% if current == 'gerenciar_eventos' %}active{% endif %}">
@@ -182,17 +183,18 @@
               <i class="bi bi-house-door me-2"></i>Salas
             </a>
           </li>
+          {% endif %}
         </ul>
       </li>
     {% endwith %}
-
+    {% if user.is_authenticated and user.is_staff %}
     {# --- Central de controle --- #}
     <li class="nav-item">
       <a href="/admin" class="nav-link text-white sidebar-link {% if request.path == '/admin/' %}active{% endif %}">
         <i class="fas fa-tools me-2"></i>Central de controle
       </a>
     </li>
-  {% endif %}
+    {% endif %}
 </ul>
     
 
