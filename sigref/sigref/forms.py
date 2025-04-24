@@ -83,4 +83,3 @@ class PasswordResetForm(forms.Form):
     email = forms.EmailField(
         widget=forms.EmailInput(attrs={'class': 'form-control', 'placeholder': 'Digite seu e-mail'})
     )
-   

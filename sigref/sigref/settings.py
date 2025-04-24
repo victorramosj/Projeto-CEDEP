@@ -39,16 +39,17 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'reservas',
-    'sigref',
-    'rest_framework',
+    'sigref',    
     'django_filters',
     'eventos',
     'monitoramento',
+    'rest_framework',
+    'rest_framework.authtoken',  # Se for usar autenticação por token
 ]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',    
-    'whitenoise.middleware.WhiteNoiseMiddleware',  # ADICIONE ESTA LINHA
+    'whitenoise.middleware.WhiteNoiseMiddleware',  
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',    
     'django.middleware.csrf.CsrfViewMiddleware',    
@@ -156,12 +157,14 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 REST_FRAMEWORK = {
-    'DEFAULT_RENDERER_CLASSES': (
-        'rest_framework.renderers.JSONRenderer',
-        'rest_framework.renderers.BrowsableAPIRenderer',
-    ),
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticated',
+    ],
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.SessionAuthentication',
+        'rest_framework.authentication.TokenAuthentication',
+    ]
 }
-
 
 # Internationalization
 # https://docs.djangoproject.com/en/5.1/topics/i18n/
