@@ -13,6 +13,16 @@ import os
 from pathlib import Path
 import dj_database_url
 
+# settings.py (no início do arquivo)
+from pathlib import Path
+import os
+import dj_database_url
+from dotenv import load_dotenv
+
+# Carrega variáveis do .env
+load_dotenv()
+
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -112,18 +122,19 @@ STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 
 
-# Configure as variáveis antes da configuração do banco
-DATABASE_URL = os.getenv('DATABASE_URL', 'postgresql://postgres:HKhnFzXggtmylfsSKcPbVGfQEvataqYo@shortline.proxy.rlwy.net:13741/railway')  # Coloque sua URL como fallback
 
+# settings.py (parte corrigida)
+
+# Configuração do Banco de Dados (usando apenas variáveis de ambiente)
 DATABASES = {
     'default': dj_database_url.config(
-        default=DATABASE_URL,
+        default=os.getenv('DATABASE_URL'),  
         conn_max_age=600,
         ssl_require=True
     )
 }
-import os
 
+# Configurações de Media (não precisa de alteração)
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
