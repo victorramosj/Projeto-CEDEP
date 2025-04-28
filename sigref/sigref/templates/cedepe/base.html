@@ -65,8 +65,8 @@
     <div class="logo-section">
       <div class="bg-white p-3 shadow-sm border border-success rounded-3 logo-container">
         <a href="{% url 'home' %}" class="d-flex flex-column align-items-center text-dark text-decoration-none">
-          <img src="{% static 'images/CARD DA GRE.png' %}" alt="Logo GRE">
-          <span class="brand-text">FLORESTA - PE</span>
+          <img src="{% static 'images/SIGREF.png' %}" alt="Logo GRE">
+        
         </a>
       </div>
       <hr>
@@ -82,7 +82,44 @@
       Início
     </a>
   </li>
-
+  {# --- Monitoramentos --- #}
+  {% with current=request.resolver_match.url_name %}
+    <li class="nav-item">
+      <a class="nav-link text-white sidebar-link d-flex justify-content-between align-items-center"
+         data-bs-toggle="collapse"
+         href="#monitoramentosSubmenu"
+         role="button"
+         aria-expanded="{{ current|url_in:'dashboard_monitoramentos,gerenciar_monitoramentos,relatos_problemas'|yesno:'true,false' }}"
+         aria-controls="monitoramentosSubmenu">
+        <span><i class="fas fa-clipboard-list me-2"></i>Monitoramentos</span>
+        <i class="fas fa-chevron-down"></i>
+      </a>
+      <ul class="nav flex-column ms-3 collapse {% if current|url_in:'dashboard_monitoramentos,gerenciar_monitoramentos,relatos_problemas' %}show{% endif %}"
+          id="monitoramentosSubmenu">
+        <li>
+          
+          <a href="#"
+             class="nav-link text-white sidebar-link {% if current == 'dashboard_monitoramentos' %}active{% endif %}">
+            <i class="fas fa-chart-bar me-2"></i>Dashboard Monitoramentos
+          </a>
+        </li>
+        {% if user.is_authenticated and user.is_staff or request.session.tipo_usuario == 'cedepe' %}
+        <li>
+          <a href="#"
+             class="nav-link text-white sidebar-link {% if current == 'gerenciar_monitoramentos' %}active{% endif %}">
+            <i class="fas fa-tasks me-2"></i>Gerenciar Monitoramentos
+          </a>
+        </li>
+        <li>
+          <a href="#"
+             class="nav-link text-white sidebar-link {% if current == 'relatos_problemas' %}active{% endif %}">
+            <i class="fas fa-exclamation-triangle me-2"></i>Relatos de Problemas
+          </a>
+        </li>
+        {% endif %}
+      </ul>
+    </li>
+  {% endwith %}
   {% if user.is_authenticated and user.is_staff or request.session.tipo_usuario == 'cedepe' %}
     {# Mostrar opções de hospedagem #}
     {% with current=request.resolver_match.url_name %}
@@ -187,6 +224,11 @@
         </ul>
       </li>
     {% endwith %}
+
+    
+
+
+   
     {% if user.is_authenticated and user.is_staff %}
     {# --- Central de controle --- #}
     <li class="nav-item">

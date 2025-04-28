@@ -143,18 +143,7 @@ body {
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;500;700&display=swap');
 
-.brand-text {
-    color: #10295d !important;
-    font-size: 1.25rem; /* Ajustei o tamanho */
-    font-weight: 600; /* Ajustei o peso da fonte */
-    font-family: 'Open Sans', sans-serif; /* Fonte secundária */
-    letter-spacing: 0.5px; /* Ajustei o espaçamento entre letras */
-    text-align: center;
-    display: block;
-    width: 100%;
-    margin-left: 0; /* Removi o espaçamento da imagem */
-    text-transform: uppercase; /* Texto em maiúsculas */
-}
+
 
 /* Container do logo */
 .logo-container {
@@ -167,8 +156,8 @@ body {
 
 /* Ajuste da imagem */
 .logo-container img {
-    width: 180px !important; /* Aumentei o tamanho */
-    margin-bottom: 0.5rem;
+    width: 21rem !important; /* Aumentei o tamanho */
+    margin-bottom: 0.1rem;
 }
 
 /* Botões ativos */

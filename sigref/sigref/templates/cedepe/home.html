@@ -7,15 +7,15 @@
         <h1 class="fw-bold mb-4 typing-effect">
             <span class="typing-text">
                 {% if user.is_authenticated %}
-                Olá! Bem-vindo, {{ user.username }}!
-                <p>Usuário: {{ request.user.username }}</p>
-                <p>Tipo: {{ request.session.tipo_usuario }}</p>
-                <p>Acesso: {{ request.session.nivel_acesso }}</p>
+                    {% with gre_user=user.greuser %}
+                        Olá! Bem-vindo, {{ gre_user.nome_completo }}!
+                    {% endwith %}
                 {% else %}
-                Bem-vindo ao Sistema de Gestão de Hospedagens!📊{% endif %}
+                    Bem-vindo ao Sistema de Gestão de Hospedagens!📊
+                {% endif %}
             </span>
-
         </h1>
+        
 
         {% if user.is_authenticated %}
         <p class="lead text-muted">Gerencie seus recursos com facilidade e eficiência.</p>
