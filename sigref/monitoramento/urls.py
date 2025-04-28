@@ -41,7 +41,7 @@ urlpatterns = [
     ),
     path('questionarios/<int:pk>/perguntas/', views.GerenciarPerguntasView.as_view(), 
          name='gerenciar_perguntas'),
-    path('questionarios/<int:pk>/', views.DetalheQuestionarioView.as_view(), 
+    path('questionarios/<int:pk>/', views. DetalheMonitoramentoView.as_view(), 
          name='detalhe_questionario'),
     path('', include(router.urls)),
     path('', include(questionario_router.urls)),
