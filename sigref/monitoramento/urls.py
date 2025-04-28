@@ -24,9 +24,6 @@ monitoramento_router = routers.NestedSimpleRouter(router, r'monitoramentos', loo
 monitoramento_router.register(r'respostas', views.RespostaViewSet, basename='monitoramento-respostas')
 
 urlpatterns = [
-    path('', include(router.urls)),
-    path('', include(questionario_router.urls)),
-    path('', include(monitoramento_router.urls)),
     
     path('minhas-escolas/', views.MinhasEscolasView.as_view(), name='minhas-escolas'),
      # Monitoramentos
@@ -42,7 +39,15 @@ urlpatterns = [
         views.AssignEscolasQuestionario.as_view(), 
         name='assign_escolas'
     ),
-    path('questionarios/adicionar/', views.AdicionarQuestionarioView.as_view(), name='questionarios-add'),
+    path('questionarios/<int:pk>/perguntas/', views.GerenciarPerguntasView.as_view(), 
+         name='gerenciar_perguntas'),
+    path('questionarios/<int:pk>/', views.DetalheQuestionarioView.as_view(), 
+         name='detalhe_questionario'),
+    path('', include(router.urls)),
+    path('', include(questionario_router.urls)),
+    path('', include(monitoramento_router.urls)),
+    
+    
 ]
 
 if settings.DEBUG:

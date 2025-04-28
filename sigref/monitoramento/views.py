@@ -255,30 +255,62 @@ def fluxo_monitoramento(request):
         'monitoramentos': monitoramentos,
     })
 
-from rest_framework.views import APIView
+from rest_framework.renderers import TemplateHTMLRenderer
 from rest_framework.response import Response
-from rest_framework import status
-from django.shortcuts import render
-from .models import Questionario
-from .serializers import QuestionarioSerializer
-
+from rest_framework.renderers import JSONRenderer  # Importação do JSONRenderer
 class AdicionarQuestionarioView(APIView):
-    template_name = 'monitoramento/adicionar_questionario.html'
+    permission_classes = [IsAuthenticated]
+    template_name = 'monitoramentos/adicionar_questionario.html'  # Caminho do seu template
     
+    renderer_classes = [TemplateHTMLRenderer, JSONRenderer]  # Adicione esta linha
+
     def get(self, request):
-        # Exibe o formulário HTML
-        return render(request, self.template_name)
-    
+        # Renderiza o template HTML diretamente
+        return Response(template_name=self.template_name)
+
     def post(self, request):
         serializer = QuestionarioSerializer(data=request.data)
         if serializer.is_valid():
-            serializer.save()
-            return Response({
-                'success': True,
-                'message': 'Questionário criado com sucesso!',
-                'data': serializer.data
-            }, status=status.HTTP_201_CREATED)
-        return Response({
-            'success': False,
-            'errors': serializer.errors
-        }, status=status.HTTP_400_BAD_REQUEST)
+            serializer.save(criado_por=request.user)
+            return Response(
+                {'success': True, 'message': 'Questionário criado com sucesso!'},
+                status=status.HTTP_201_CREATED
+            )
+        return Response(
+            {'success': False, 'errors': serializer.errors},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+        
+# views.py
+from django.views.generic import DetailView
+from django.forms import inlineformset_factory
+
+class GerenciarPerguntasView(DetailView):
+    model = Questionario
+    template_name = 'monitoramento/gerenciar_perguntas.html'
+    context_object_name = 'questionario'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        PerguntaFormSet = inlineformset_factory(
+            Questionario, 
+            Pergunta, 
+            fields=('texto', 'ordem', 'tipo_resposta'),
+            extra=1
+        )
+        context['formset'] = PerguntaFormSet(instance=self.object)
+        return context
+
+    def post(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        PerguntaFormSet = inlineformset_factory(
+            Questionario, 
+            Pergunta, 
+            fields=('texto', 'ordem', 'tipo_resposta')
+        )
+        formset = PerguntaFormSet(request.POST, instance=self.object)
+        
+        if formset.is_valid():
+            formset.save()
+            return redirect('detalhe_questionario', pk=self.object.pk)
+        return self.render_to_response(self.get_context_data(formset=formset))
