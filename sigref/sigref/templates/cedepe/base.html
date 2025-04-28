@@ -83,6 +83,7 @@
   </li>
   {# --- Monitoramentos --- #}
   {% with current=request.resolver_match.url_name %}
+  {% if user.is_authenticated and user.is_staff %}
     <li class="nav-item">
       <a class="nav-link text-white sidebar-link d-flex justify-content-between align-items-center"
          data-bs-toggle="collapse"
@@ -102,7 +103,7 @@
             <i class="fas fa-chart-bar me-2"></i>Dashboard Monitoramentos
           </a>
         </li>
-        {% if user.is_authenticated and user.is_staff %}
+        
         <li>
           <a href="{% url 'fluxo_monitoramento_setores' %}"
              class="nav-link text-white sidebar-link {% if current == 'gerenciar_monitoramentos' %}active{% endif %}">
@@ -115,9 +116,11 @@
             <i class="fas fa-exclamation-triangle me-2"></i>Relatos de Problemas
           </a>
         </li>
-        {% endif %}
+        
       </ul>
+      
     </li>
+    {% endif %}
   {% endwith %}
   {% if user.is_authenticated and user.is_staff or request.session.tipo_usuario == 'cedepe' %}
     {# Mostrar opções de hospedagem #}
