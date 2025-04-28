@@ -63,13 +63,28 @@ class PerguntaSerializer(serializers.ModelSerializer):
         fields = '__all__'
         read_only_fields = ['questionario']
 
+from rest_framework import serializers
+from .models import Questionario, Escola
+from rest_framework.permissions import IsAuthenticated
+
 class QuestionarioSerializer(serializers.ModelSerializer):
-    perguntas = PerguntaSerializer(many=True, read_only=True)
-    escolas_destino = serializers.PrimaryKeyRelatedField(queryset=Escola.objects.all(), many=True)
+    permission_classes = [IsAuthenticated]
+    escolas = serializers.PrimaryKeyRelatedField(
+        many=True,
+        queryset=Escola.objects.all(),
+        required=False
+    )
 
     class Meta:
         model = Questionario
         fields = '__all__'
+        extra_kwargs = {
+            'criado_por': {'read_only': True}
+        }
+
+    def create(self, validated_data):
+        validated_data['criado_por'] = self.context['request'].user
+        return super().create(validated_data)
 
 class RespostaSerializer(serializers.ModelSerializer):
     resposta_formatada = serializers.SerializerMethodField()

@@ -1,7 +1,9 @@
 /* Botões ativos */
 .bg-primary {
     background-color: #10295d !important;
-  }
+}
+
+/* Efeito de cursor piscando */
 .typing-effect::after {
     content: "|"; /* Cursor piscando */
     display: inline-block;
@@ -20,17 +22,33 @@
 
 .typing-text {
     display: inline-block;
-    overflow: hidden;
-    white-space: nowrap;
+    overflow: hidden; /* Mantém escondido o texto extra */
+    white-space: nowrap; /* Não quebra linha */
     border-right: 2px solid transparent;
     width: 0;
     animation: typing 3s steps(30, end) forwards;
+    font-size: 2.5rem; /* Tamanho para desktop */
+    max-width: 100%; /* Limita para a largura da tela */
 }
+
+/* Responsividade */
+@media (max-width: 768px) {
+    .typing-text {
+        font-size: 1.8rem; /* Tablets */
+    }
+}
+
+@media (max-width: 576px) {
+    .typing-text {
+        font-size: 1.4rem; /* Celulares */
+    }
+}
+
+
 .card {
     border-radius: 0.5rem;
     transition: transform 0.2s;
 }
-
 
 
 .table-hover tbody tr:hover {
@@ -151,14 +169,21 @@ body {
     flex-direction: column;
     align-items: center;
     text-align: center;
-    padding: 1rem 0;
+    padding: 0;
 }
-
-/* Ajuste da imagem */
 .logo-container img {
-    width: 21rem !important; /* Aumentei o tamanho */
-    margin-bottom: 0.1rem;
-}
+    /* Responsividade */
+    width: 130%;
+    max-width: 25rem;  /* ou qualquer outro valor máximo */
+    height: auto;
+    display: block;
+    
+    
+    margin-top: -3rem;    /* ajusta pra subir */
+    margin-bottom: -3.6rem; /* ajusta pra descer */
+  }
+  
+
 
 /* Botões ativos */
 .sidebar-link.active {

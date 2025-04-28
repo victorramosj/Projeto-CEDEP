@@ -1,0 +1,92 @@
+{% extends "cedepe/base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2 class="mb-4">Adicionar Novo Questionário</h2>
+    <form id="questionarioForm">
+        {% csrf_token %}
+        
+        <div class="mb-3">
+            <label for="titulo" class="form-label">Título:</label>
+            <input type="text" class="form-control" id="titulo" name="titulo" required>
+        </div>
+        
+        <div class="mb-3">
+            <label for="descricao" class="form-label">Descrição:</label>
+            <textarea class="form-control" id="descricao" name="descricao" rows="3"></textarea>
+        </div>
+        
+        <div class="mb-3">
+            <label class="form-label">Escolas Atribuídas:</label>
+            <div id="escolasContainer" class="border p-2">
+                <!-- As escolas serão carregadas via AJAX -->
+            </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary">
+            <i class="fas fa-save me-2"></i>Salvar Questionário
+        </button>
+    </form>
+</div>
+
+<script>
+document.getElementById('questionarioForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const formData = {
+        titulo: document.getElementById('titulo').value,
+        descricao: document.getElementById('descricao').value,
+        escolas: Array.from(document.querySelectorAll('.escola-checkbox:checked'))
+                    .map(checkbox => checkbox.value)
+    };
+
+    try {
+        const response = await fetch('{% url "questionarios-add" %}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            body: JSON.stringify(formData)
+        });
+
+        const data = await response.json();
+        
+        if (data.success) {
+            alert('Questionário salvo com sucesso!');
+            window.location.href = '{% url "dashboard_monitoramentos" %}';
+        } else {
+            alert('Erro ao salvar: ' + JSON.stringify(data.errors));
+        }
+    } catch (error) {
+        console.error('Erro:', error);
+        alert('Erro na comunicação com o servidor');
+    }
+});
+
+// Carrega escolas via AJAX
+window.addEventListener('DOMContentLoaded', async () => {
+    try {
+        const response = await fetch('/api/escolas/');
+        const escolas = await response.json();
+        
+        const container = document.getElementById('escolasContainer');
+        escolas.forEach(escola => {
+            const div = document.createElement('div');
+            div.className = 'form-check';
+            div.innerHTML = `
+                <input class="form-check-input escola-checkbox" type="checkbox" 
+                       value="${escola.id}" id="escola-${escola.id}">
+                <label class="form-check-label" for="escola-${escola.id}">
+                    ${escola.nome}
+                </label>
+            `;
+            container.appendChild(div);
+        });
+    } catch (error) {
+        console.error('Erro ao carregar escolas:', error);
+    }
+});
+</script>
+{% endblock %}

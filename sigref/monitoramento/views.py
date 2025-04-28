@@ -254,3 +254,31 @@ def fluxo_monitoramento(request):
         'questionario_selecionado': questionario_selecionado,
         'monitoramentos': monitoramentos,
     })
+
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
+from django.shortcuts import render
+from .models import Questionario
+from .serializers import QuestionarioSerializer
+
+class AdicionarQuestionarioView(APIView):
+    template_name = 'monitoramento/adicionar_questionario.html'
+    
+    def get(self, request):
+        # Exibe o formulário HTML
+        return render(request, self.template_name)
+    
+    def post(self, request):
+        serializer = QuestionarioSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response({
+                'success': True,
+                'message': 'Questionário criado com sucesso!',
+                'data': serializer.data
+            }, status=status.HTTP_201_CREATED)
+        return Response({
+            'success': False,
+            'errors': serializer.errors
+        }, status=status.HTTP_400_BAD_REQUEST)

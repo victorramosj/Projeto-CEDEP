@@ -3,35 +3,37 @@
 
 {% block content %}
 <div class="container d-flex justify-content-center align-items-center min-vh-100">
-    <div class="text-center">
+  <div class="text-center">
+    {% if user.is_authenticated %}
+      {% with gre_user=user.greuser %}
         <h1 class="fw-bold mb-4 typing-effect">
-            <span class="typing-text">
-                {% if user.is_authenticated %}
-                    {% with gre_user=user.greuser %}
-                        Olá! Bem-vindo, {{ gre_user.nome_completo }}!
-                    {% endwith %}
-                {% else %}
-                    Bem-vindo ao Sistema de Gestão de Hospedagens!📊
-                {% endif %}
-            </span>
+          <span class="typing-text">
+            Olá! Bem-vindo,{{ gre_user.nome_completo }}!
+          </span>
         </h1>
-        
+      {% endwith %}
+    {% else %}
+      <h1 class="fw-bold mb-4 typing-effect">
+        <span class="typing-text">
+          Bem-vindo ao Sistema de Gestão de Hospedagens!📊
+        </span>
+      </h1>
+    {% endif %}
 
-        {% if user.is_authenticated %}
-        <p class="lead text-muted">Gerencie seus recursos com facilidade e eficiência.</p>
-        <a href="{% url 'dashboard_hospedagens' %}" class="btn btn-outline-info btn-lg mt-3">
-            <i class="fas fa-tachometer-alt fa-spin"></i> Acessar Dashboard
-        </a>
-        <a href="{% url 'logout' %}" class="btn btn-outline-danger btn-lg mt-3">
-            <i class="bi bi-box-arrow-right me-2"></i> Sair
-        </a>
-        {% else %}
-        <p class="lead text-muted">Acesse sua conta ou registre-se para começar.</p>
-        <a href="{% url 'login' %}" class="btn btn-outline-success btn-lg mt-3">
-            <i class="bi bi-box-arrow-in-right me-2"></i> Entrar
-        </a>
-
-        {% endif %}
-    </div>
+    {% if user.is_authenticated %}
+      <p class="lead text-muted">Gerencie seus recursos com facilidade e eficiência.</p>
+      <a href="{% url 'dashboard_hospedagens' %}" class="btn btn-outline-info btn-lg mt-3">
+        <i class="fas fa-tachometer-alt fa-spin"></i> Acessar Dashboard
+      </a>
+      <a href="{% url 'logout' %}" class="btn btn-outline-danger btn-lg mt-3">
+        <i class="bi bi-box-arrow-right me-2"></i> Sair
+      </a>
+    {% else %}
+      <p class="lead text-muted">Acesse sua conta ou registre-se para começar.</p>
+      <a href="{% url 'login' %}" class="btn btn-outline-success btn-lg mt-3">
+        <i class="bi bi-box-arrow-in-right me-2"></i> Entrar
+      </a>
+    {% endif %}
+  </div>
 </div>
 {% endblock %}

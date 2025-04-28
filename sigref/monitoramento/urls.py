@@ -42,6 +42,7 @@ urlpatterns = [
         views.AssignEscolasQuestionario.as_view(), 
         name='assign_escolas'
     ),
+    path('questionarios/adicionar/', views.AdicionarQuestionarioView.as_view(), name='questionarios-add'),
 ]
 
 if settings.DEBUG:
