@@ -137,3 +137,120 @@ class MinhasEscolasView(APIView):
         escolas = user.escolas.all()
         serializer = EscolaSerializer(escolas, many=True)
         return Response(serializer.data)
+    
+from django.shortcuts import render, get_object_or_404
+from django.views import View
+from django.utils.decorators import method_decorator
+from django.contrib.auth.decorators import login_required
+
+from django.utils import timezone
+from django.db.models import Count, Q
+from .models import Monitoramento, RelatoProblema, Questionario
+
+def dashboard_monitoramentos(request):
+    user = request.user.greuser
+    context = {'section': 'dashboard_monitoramentos'}
+    
+    # Filtros baseados no tipo de usuário
+    if user.is_admin() or user.is_coordenador():
+        monitoramentos = Monitoramento.objects.all()
+        problemas = RelatoProblema.objects.all()
+    elif user.is_chefe_setor():
+        monitoramentos = Monitoramento.objects.filter(escola__setor=user.setor)
+        problemas = RelatoProblema.objects.filter(tipo_problema__setor=user.setor)
+    else:
+        monitoramentos = Monitoramento.objects.filter(escola__in=user.escolas.all())
+        problemas = RelatoProblema.objects.filter(gestor=user)
+
+    # Estatísticas
+    total_monitoramentos = monitoramentos.count()
+    monitoramentos_pendentes = monitoramentos.filter(status='P').count()
+    problemas_urgentes = problemas.filter(prioridade='U').count()
+
+    # Gráfico de status
+    status_data = monitoramentos.values('status').annotate(total=Count('status'))
+    status_labels = [dict(Monitoramento.STATUS_CHOICES).get(item['status'], '') for item in status_data]
+    status_values = [item['total'] for item in status_data]
+
+    context.update({
+        'total_monitoramentos': total_monitoramentos,
+        'monitoramentos_pendentes': monitoramentos_pendentes,
+        'problemas_urgentes': problemas_urgentes,
+        'status_labels': status_labels,
+        'status_values': status_values,
+        'upcoming_monitoramentos': monitoramentos.order_by('-data_envio')[:5],
+        'problemas_recentes': problemas.order_by('-data_relato')[:5]
+    })
+    
+    return render(request, 'monitoramentos/dashboard_monitoramentos.html', context)
+
+
+
+class RelatosProblemasView(View):
+    @method_decorator(login_required)
+    def get(self, request):
+        user = request.user.greuser
+        problemas = RelatoProblema.objects.all()
+
+        if user.is_admin() or user.is_coordenador():
+            problemas = problemas
+        elif user.is_chefe_setor():
+            problemas = problemas.filter(tipo_problema__setor=user.setor)
+        else:
+            problemas = problemas.filter(gestor=user)
+
+        return render(request, 'monitoramentos/relatos.html', {
+            'problemas': problemas.order_by('-data_relato'),
+            'prioridade_choices': dict(RelatoProblema.PRIORIDADE_CHOICES),
+            'section': 'relatos_problemas'
+        })
+
+class DetalheMonitoramentoView(View):
+    @method_decorator(login_required)
+    def get(self, request, pk):
+        monitoramento = get_object_or_404(Monitoramento, pk=pk)
+        if not request.user.greuser.pode_acessar_escola(monitoramento.escola):
+            raise PermissionDenied
+
+        return render(request, 'monitoramentos/detalhe.html', {
+            'monitoramento': monitoramento,
+            'respostas': monitoramento.respostas.all(),
+            'status_choices': dict(Monitoramento.STATUS_CHOICES)
+        })
+    
+from django.shortcuts import render, get_object_or_404
+from django.contrib.auth.decorators import login_required
+from .models import Setor, Questionario, Monitoramento
+
+@login_required
+def fluxo_monitoramento(request):
+    # passo 1: puxar os setores que o usuário realmente tem permissão
+    setores_permitidos = request.user.greuser.setores_permitidos()
+
+    # passo 1.1: setor selecionado pela querystring
+    setor_id = request.GET.get('setor')
+    setor_selecionado = None
+    if setor_id:
+        setor_selecionado = get_object_or_404(Setor, pk=setor_id)
+
+    # passo 2: questionário selecionado
+    questionario_id = request.GET.get('questionario')
+    questionario_selecionado = None
+    if questionario_id:
+        questionario_selecionado = get_object_or_404(Questionario, pk=questionario_id)
+
+    # passo 3: últimos monitoramentos (limitado a 10)
+    monitoramentos = []
+    if questionario_selecionado:
+        monitoramentos = (
+            Monitoramento.objects
+            .filter(questionario=questionario_selecionado)
+            .order_by('-data_envio')[:10]
+        )
+
+    return render(request, 'monitoramentos/fluxo_monitoramento_setores.html', {
+        'setores_permitidos': setores_permitidos,
+        'setor_selecionado': setor_selecionado,
+        'questionario_selecionado': questionario_selecionado,
+        'monitoramentos': monitoramentos,
+    })

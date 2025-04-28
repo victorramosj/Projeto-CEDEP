@@ -65,8 +65,7 @@
     <div class="logo-section">
       <div class="bg-white p-3 shadow-sm border border-success rounded-3 logo-container">
         <a href="{% url 'home' %}" class="d-flex flex-column align-items-center text-dark text-decoration-none">
-          <img src="{% static 'images/SIGREF.png' %}" alt="Logo GRE">
-        
+          <img src="{% static 'images/SIGREF.png' %}" alt="Logo GRE">        
         </a>
       </div>
       <hr>
@@ -98,20 +97,20 @@
           id="monitoramentosSubmenu">
         <li>
           
-          <a href="#"
+          <a href="{% url 'dashboard_monitoramentos' %}"
              class="nav-link text-white sidebar-link {% if current == 'dashboard_monitoramentos' %}active{% endif %}">
             <i class="fas fa-chart-bar me-2"></i>Dashboard Monitoramentos
           </a>
         </li>
-        {% if user.is_authenticated and user.is_staff or request.session.tipo_usuario == 'cedepe' %}
+        {% if user.is_authenticated and user.is_staff %}
         <li>
-          <a href="#"
+          <a href="{% url 'fluxo_monitoramento_setores' %}"
              class="nav-link text-white sidebar-link {% if current == 'gerenciar_monitoramentos' %}active{% endif %}">
             <i class="fas fa-tasks me-2"></i>Gerenciar Monitoramentos
           </a>
         </li>
         <li>
-          <a href="#"
+          <a href="{% url 'relatos_problemas' }"
              class="nav-link text-white sidebar-link {% if current == 'relatos_problemas' %}active{% endif %}">
             <i class="fas fa-exclamation-triangle me-2"></i>Relatos de Problemas
           </a>

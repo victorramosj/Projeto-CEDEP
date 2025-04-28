@@ -105,3 +105,73 @@ class RelatoProblemaSerializer(serializers.ModelSerializer):
         model = RelatoProblema
         fields = '__all__'
         read_only_fields = ['data_relato', 'gestor']
+
+from django.shortcuts import render, get_object_or_404
+from django.contrib.auth.decorators import login_required
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status, permissions
+from .models import Setor, Questionario, Monitoramento, Escola
+from .serializers import EscolaSerializer, QuestionarioSerializer
+
+@login_required
+def fluxo_monitoramento(request):
+    # passo 1: setores permitidos
+    setores_permitidos = Setor.objects.filter(usuarios__in=[request.user.greuser]).distinct()
+
+    # identificar setor selecionado
+    setor_id = request.GET.get('setor')
+    setor_selecionado = None
+    if setor_id:
+        setor_selecionado = get_object_or_404(Setor, pk=setor_id)
+
+    # passo 2: questionário selecionado
+    questionario_id = request.GET.get('questionario')
+    questionario_selecionado = None
+    if questionario_id:
+        questionario_selecionado = get_object_or_404(Questionario, pk=questionario_id)
+
+    # passo 3: últimos monitoramentos (para o questionário)
+    monitoramentos = []
+    if questionario_selecionado:
+        monitoramentos = (
+            Monitoramento.objects
+            .filter(questionario=questionario_selecionado)
+            .order_by('-data_envio')[:10]
+        )
+
+    return render(request, 'cedepe/fluxo_monitoramento_setores.html', {
+        'setores_permitidos': setores_permitidos,
+        'setor_selecionado': setor_selecionado,
+        'questionario_selecionado': questionario_selecionado,
+        'monitoramentos': monitoramentos,
+    })
+
+
+class AssignEscolasQuestionario(APIView):
+    """
+    GET: retorna todas as escolas e as já atribuídas ao questionário
+    POST: recebe { "escolas": [1,2,3] } e atualiza questionario.escolas_destino
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request, pk):
+        questionario = get_object_or_404(Questionario, pk=pk)
+        todas = Escola.objects.all()
+        serializer_todas = EscolaSerializer(todas, many=True, context={'request': request})
+        assigned_ids = list(questionario.escolas_destino.values_list('pk', flat=True))
+        return Response({
+            'escolas': serializer_todas.data,
+            'assigned': assigned_ids
+        })
+
+    def post(self, request, pk):
+        questionario = get_object_or_404(Questionario, pk=pk)
+        ids = request.data.get('escolas', [])
+        # validação básica
+        qs = Escola.objects.filter(pk__in=ids)
+        questionario.escolas_destino.set(qs)
+        questionario.save()
+        # retorna o questionario serializado atualizado
+        serializer = QuestionarioSerializer(questionario, context={'request': request})
+        return Response(serializer.data, status=status.HTTP_200_OK)

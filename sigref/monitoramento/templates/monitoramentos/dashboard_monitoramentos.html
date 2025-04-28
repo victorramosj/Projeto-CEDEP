@@ -1,0 +1,206 @@
+{% extends 'cedepe/base.html' %}
+{% load static custom_tags %}
+
+{% block title %}Dashboard de Monitoramentos{% endblock %}
+
+{% block extra_style %}
+{{ block.super }}
+<style>
+    .card-stat {
+        transition: transform 0.3s ease;
+        cursor: pointer;
+    }
+    
+    .card-stat:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    }
+    
+    .chart-container {
+        height: 300px;
+        min-height: 300px;
+    }
+    
+    .status-badge {
+        font-size: 0.75rem;
+        padding: 0.35rem 0.7rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4">
+    <!-- Cards de Resumo -->
+    <div class="row g-4 my-2">
+        <div class="col-12 col-md-4">
+            <div class="card card-stat shadow border-start-primary h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h5 class="text-muted mb-2">
+                                <i class="fas fa-clipboard-list me-2"></i>Total Monitoramentos
+                            </h5>
+                            <p class="h1 text-primary mb-0">{{ total_monitoramentos }}</p>
+                        </div>
+                        <i class="fas fa-clipboard-check fs-1 text-primary opacity-25"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12 col-md-4">
+            <div class="card card-stat shadow border-start-warning h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h5 class="text-muted mb-2">
+                                <i class="fas fa-exclamation-triangle me-2"></i>Pendentes
+                            </h5>
+                            <p class="h1 text-warning mb-0">{{ monitoramentos_pendentes }}</p>
+                        </div>
+                        <i class="fas fa-clock fs-1 text-warning opacity-25"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12 col-md-4">
+            <div class="card card-stat shadow border-start-danger h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h5 class="text-muted mb-2">
+                                <i class="fas fa-fire me-2"></i>Urgências
+                            </h5>
+                            <p class="h1 text-danger mb-0">{{ problemas_urgentes }}</p>
+                        </div>
+                        <i class="fas fa-bell fs-1 text-danger opacity-25"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Gráfico e Listagens -->
+    <div class="row g-4 mt-4">
+        <!-- Gráfico de Status -->
+        <div class="col-12 col-xl-6">
+            <div class="card shadow h-100">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-chart-pie me-2"></i>Distribuição de Status
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="chart-container">
+                        <canvas id="statusChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Listagens -->
+        <div class="col-12 col-xl-6">
+            <div class="row g-4 h-100">
+                <!-- Monitoramentos Recentes -->
+                <div class="col-12">
+                    <div class="card shadow h-100">
+                        <div class="card-header bg-info text-white">
+                            <h5 class="card-title mb-0">
+                                <i class="fas fa-list-ol me-2"></i>Últimos Monitoramentos
+                            </h5>
+                        </div>
+                        <div class="card-body p-0">
+                            <div class="list-group list-group-flush">
+                                {% for m in upcoming_monitoramentos %}
+                                <a href="#" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h6 class="mb-1">{{ m.questionario.titulo }}</h6>
+                                        <small class="text-muted">{{ m.escola.nome }}</small>
+                                    </div>
+                                    <span class="status-badge badge bg-{% if m.status == 'R' %}success{% elif m.status == 'U' %}danger{% else %}warning{% endif %}">
+                                        {{ m.get_status_display }}
+                                    </span>
+                                </a>
+                                {% empty %}
+                                <div class="list-group-item text-muted">Nenhum monitoramento recente</div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Problemas Recentes -->
+                <div class="col-12">
+                    <div class="card shadow h-100">
+                        <div class="card-header bg-danger text-white">
+                            <h5 class="card-title mb-0">
+                                <i class="fas fa-exclamation-circle me-2"></i>Problemas Recentes
+                            </h5>
+                        </div>
+                        <div class="card-body p-0">
+                            <div class="list-group list-group-flush">
+                                {% for p in problemas_recentes %}
+                                <a href="#" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h6 class="mb-1">{{ p.tipo_problema.descricao|truncatechars:30 }}</h6>
+                                        <small class="text-muted">{{ p.escola.nome }}</small>
+                                    </div>
+                                    <span class="status-badge badge bg-{% if p.prioridade == 'A' %}danger{% elif p.prioridade == 'M' %}warning{% else %}info{% endif %}">
+                                        {{ p.get_prioridade_display }}
+                                    </span>
+                                </a>
+                                {% empty %}
+                                <div class="list-group-item text-muted">Nenhum problema recente</div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ block.super }}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Configuração do gráfico de pizza
+    const ctx = document.getElementById('statusChart').getContext('2d');
+    new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: {{ status_labels|safe }},
+            datasets: [{
+                data: {{ status_values|safe }},
+                backgroundColor: [
+                    '#ff6384', // Vermelho para Urgente
+                    '#4bc0c0', // Verde para Resolvido
+                    '#ffce56'  // Amarelo para Pendente
+                ],
+                borderWidth: 2
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return `${context.label}: ${context.raw} (${((context.raw / {{ total_monitoramentos }}) * 100).toFixed(1)}%)`;
+                        }
+                    }
+                }
+            }
+        }
+    });
+});
+</script>
+{% endblock %}

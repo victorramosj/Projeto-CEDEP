@@ -29,6 +29,19 @@ urlpatterns = [
     path('', include(monitoramento_router.urls)),
     
     path('minhas-escolas/', views.MinhasEscolasView.as_view(), name='minhas-escolas'),
+     # Monitoramentos
+    path('dashboard/monitoramentos/', views.dashboard_monitoramentos, name='dashboard_monitoramentos'),
+    path('relatos/problemas/', views.RelatosProblemasView.as_view(), name='relatos_problemas'),
+    path('monitoramentos/<int:pk>/', views.DetalheMonitoramentoView.as_view(), name='detalhe_monitoramento'),
+     # view de fluxo principal
+    path('fluxo/monitoramento-setores/', views.fluxo_monitoramento, name='fluxo_monitoramento_setores'),
+
+    # endpoint AJAX para atribuir escolas
+    path(
+        'api/questionarios/<int:pk>/assign_escolas/', 
+        views.AssignEscolasQuestionario.as_view(), 
+        name='assign_escolas'
+    ),
 ]
 
 if settings.DEBUG:
