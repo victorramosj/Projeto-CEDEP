@@ -318,54 +318,14 @@ class GerenciarPerguntasView(DetailView):
         )
         return context
 
-from rest_framework import status
-from rest_framework.response import Response
+from rest_framework import generics, permissions
+from .serializers import QuestionarioSerializer
 
-# views.py
-class QuestionarioCreateAPI(APIView):
-    permission_classes = [IsAuthenticated]
+class QuestionarioCreateAPI(generics.CreateAPIView):
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = QuestionarioSerializer
 
-    def post(self, request):
-        # Separa os dados para tratamento correto
-        data = request.data.copy()
-        perguntas_data = data.pop('perguntas', [])
-        escolas_ids = data.pop('escolas', [])
-        monitoramento_data = data.pop('monitoramento', {})
 
-        serializer = QuestionarioSerializer(data=data)
-        if not serializer.is_valid():
-            return Response(serializer.errors, status=400)
-
-        try:
-            # Cria o questionário
-            questionario = serializer.save()
-
-            # Cria as perguntas
-            Pergunta.objects.bulk_create([
-                Pergunta(questionario=questionario, **p) for p in perguntas_data
-            ])
-
-            # Cria os monitoramentos
-            Monitoramento.objects.bulk_create([
-                Monitoramento(
-                    questionario=questionario,
-                    escola_id=escola_id,
-                    data_limite=monitoramento_data.get('data_limite'),
-                    frequencia=monitoramento_data.get('frequencia', 'S'),
-                    status='P'
-                ) for escola_id in escolas_ids
-            ])
-
-            return Response(
-                QuestionarioSerializer(questionario).data, 
-                status=status.HTTP_201_CREATED
-            )
-
-        except Exception as e:
-            return Response(
-                {'error': str(e)}, 
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
     
 # views.py
 def criar_questionario_view(request):

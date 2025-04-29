@@ -62,17 +62,19 @@ class PerguntaSerializer(serializers.ModelSerializer):
         model = Pergunta
         fields = '__all__'
 
+# serializers.py
+
 class QuestionarioSerializer(serializers.ModelSerializer):
-    perguntas = PerguntaSerializer(many=True, read_only=True)  # Apenas leitura
-    escolas = serializers.PrimaryKeyRelatedField(
-        many=True, 
+    perguntas = PerguntaSerializer(many=True, read_only=True)
+    escolas_destino = serializers.PrimaryKeyRelatedField(
+        many=True,
         queryset=Escola.objects.all(),
-        write_only=True  # Campo apenas para escrita
+        write_only=True
     )
 
     class Meta:
         model = Questionario
-        fields = ['id', 'titulo', 'descricao', 'setor', 'perguntas', 'escolas']
+        fields = ['id', 'titulo', 'descricao', 'setor', 'perguntas', 'escolas_destino']
 
 
 class RespostaSerializer(serializers.ModelSerializer):
