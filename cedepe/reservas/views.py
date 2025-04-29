@@ -175,31 +175,40 @@ def gerenciar_hospedes(request):
     }
     return render(request, 'reservas/gerenciar_hospedes.html', context)
 
-# reservas/views.py
-from django.shortcuts import render, redirect, get_object_or_404
+from django.shortcuts import render, get_object_or_404
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+from django.db.models import Q
 from .models import Quarto, Cama, Hospede, Reserva, Ocupacao
-from .forms import QuartoForm, CamaForm, HospedeForm, ReservaForm, OcupacaoForm  # certifique-se de criar OcupacaoForm
+from .forms import QuartoForm, CamaForm, HospedeForm, ReservaForm, OcupacaoForm
 
 ITENS_POR_PAGINA = 20
 
+
 def gerenciar_reservas(request):
-    query = request.GET.get('q', '')
+    # Parâmetros de consulta
+    search = request.GET.get('search', '').strip()
+    status_filter = request.GET.get('status', '').strip()
     filter_by = request.GET.get('filter_by', 'all')
     page_number = request.GET.get('page')
 
+    # Base do queryset
     reservas_list = Reserva.objects.all()
-    
-    if query:
+
+    # Aplicar filtros antes da paginação
+    if filter_by == 'hospede' and search:
+        reservas_list = reservas_list.filter(hospede__nome__icontains=search)
+    elif filter_by == 'status' and status_filter:
+        reservas_list = reservas_list.filter(status__iexact=status_filter)
+    elif filter_by == 'all' and search:
         reservas_list = reservas_list.filter(
-            Q(hospede__nome__icontains=query)
+            Q(hospede__nome__icontains=search) | Q(status__icontains=search)
         )
-    
-    if filter_by != 'all':
-        reservas_list = reservas_list.filter(status=filter_by)
-    
+
+    # Ordenar do mais recente para o mais antigo
+    reservas_list = reservas_list.order_by('-criado_em')
+
+    # Paginação
     paginator = Paginator(reservas_list, ITENS_POR_PAGINA)
-    
     try:
         reservas = paginator.page(page_number)
     except PageNotAnInteger:
@@ -207,9 +216,11 @@ def gerenciar_reservas(request):
     except EmptyPage:
         reservas = paginator.page(paginator.num_pages)
 
+    # Contexto para o template
     context = {
         'reservas': reservas,
-        'query': query,
+        'search': search,
+        'status': status_filter,
         'filter_by': filter_by,
     }
     return render(request, 'reservas/gerenciar_reservas.html', context)
