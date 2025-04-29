@@ -167,15 +167,45 @@
                 <span class="selected-counter" id="selected-counter">0 selecionadas</span>
             </div>
             <div id="escolas-container" class="d-flex flex-wrap"></div>
-            <div class="mt-3">
-                <button class="btn btn-secondary me-2" onclick="prevStep()">
-                    <i class="fas fa-arrow-left me-2"></i>Voltar
-                </button>
-                <button class="btn btn-success" onclick="submitForm()">
-                    Finalizar <i class="fas fa-check ms-2"></i>
-                </button>
-            </div>
+            <div class="d-flex justify-content-between">
+              <button class="btn btn-secondary" onclick="prevStep()">
+                  <i class="fas fa-arrow-left me-2"></i>Voltar
+              </button>
+              <button class="btn btn-primary" onclick="nextStep()">
+                  Próximo <i class="fas fa-arrow-right ms-2"></i>
+              </button>
+          </div>
         </div>
+        <!-- Adicione este novo passo após o passo 3 -->
+<div class="flow-step" data-step="4">
+  <h3 class="mb-4"><i class="fas fa-clipboard-check me-2"></i>Configurar Monitoramento</h3>
+  
+  <div class="mb-4">
+      <label class="form-label">Data Limite</label>
+      <input type="date" class="form-control" id="data-limite" required>
+  </div>
+  
+  <div class="mb-4">
+    <label class="form-label">Frequência de Envio</label>
+    <select class="form-select" id="frequencia">
+        <option value="D">Diário</option>
+        <option value="S">Semanal</option>
+        <option value="Q">Quinzenal</option>
+        <option value="M">Mensal</option>
+        <option value="6">Semestral</option>  <!-- Novo -->
+        <option value="A">Anual</option>      <!-- Novo -->
+    </select>
+</div>
+  
+  <div class="d-flex justify-content-between">
+      <button class="btn btn-secondary" onclick="prevStep()">
+          <i class="fas fa-arrow-left me-2"></i>Voltar
+      </button>
+      <button class="btn btn-success" onclick="submitForm()">
+          Finalizar <i class="fas fa-check ms-2"></i>
+      </button>
+  </div>
+</div>
     </div>
 </div>
 {% endblock %}
@@ -191,13 +221,14 @@ function showStep() {
   document.querySelectorAll('.flow-step').forEach(el => el.classList.remove('active'));
   document.querySelector(`.flow-step[data-step="${currentStep}"]`).classList.add('active');
 }
+// Aumente o número máximo de passos para 4
 function nextStep() {
-  if (currentStep === 0 && !selectedSetorId) {
-    Swal.fire('Atenção!','Selecione um setor','warning'); return;
-  }
-  if (currentStep < 3) currentStep++;
-  showStep();
-  if (currentStep === 3) loadEscolas();
+    if (currentStep === 0 && !selectedSetorId) {
+        Swal.fire('Atenção!','Selecione um setor','warning'); return;
+    }
+    if (currentStep < 4) currentStep++;  // Alterado de 3 para 4
+    showStep();
+    if (currentStep === 3) loadEscolas(); // Mantém a carga de escolas no passo 3
 }
 function prevStep() {
   if (currentStep > 0) currentStep--;
@@ -268,30 +299,49 @@ document.getElementById('search-escolas').addEventListener('input',e=>{
 });
 
 async function submitForm() {
-  const data = {
-    titulo:document.getElementById('titulo').value,
-    descricao:document.getElementById('descricao').value,
-    setor:selectedSetorId,
-    perguntas:Array.from(document.querySelectorAll('.question-card')).map(c=>({
-      texto:c.querySelector('.question-text').value,
-      tipo_resposta:c.querySelector('.question-type').value,
-      ordem:c.querySelector('.question-order').value
-    })),
-    escolas:Array.from(escolasSelecionadas)
-  };
-  try {
-    const resp = await fetch('{% url "questionarios-add" %}',{
-      method:'POST',headers:{'Content-Type':'application/json','X-CSRFToken':'{{ csrf_token }}'},
-      body:JSON.stringify(data)
-    });
-    const result = await resp.json();
-    if (result.id) {
-      Swal.fire({icon:'success',title:'Sucesso!',html:`Questionário criado`})
-        .then(()=>window.location=`{% url 'gerenciar_perguntas' 0 %}`.replace('0',result.id));
-    } else Swal.fire('Erro',result.error||'Falha','error');
-  } catch {
-    Swal.fire('Erro','Falha na comunicação','error');
-  }
+    const data = {
+        titulo: document.getElementById('titulo').value,
+        descricao: document.getElementById('descricao').value,
+        setor: selectedSetorId,
+        perguntas: Array.from(document.querySelectorAll('.question-card')).map(c => ({
+            texto: c.querySelector('.question-text').value,
+            tipo_resposta: c.querySelector('.question-type').value,
+            ordem: parseInt(c.querySelector('.question-order').value)
+        })),
+        escolas: Array.from(escolasSelecionadas),
+        monitoramento: {
+            data_limite: document.getElementById('data-limite').value,
+            frequencia: document.getElementById('frequencia').value
+        }
+    };
+
+    // Validação básica
+    if (!data.titulo || !data.setor || !data.monitoramento.data_limite) {
+        Swal.fire('Erro!', 'Preencha todos os campos obrigatórios', 'error');
+        return;
+    }
+
+    try {
+        const resp = await fetch('{% url "questionarios-add" %}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            body: JSON.stringify(data)
+        });
+
+        const result = await resp.json();
+        
+        if (resp.ok) {
+            Swal.fire({icon: 'success', title: 'Sucesso!', html: `Questionário criado`})
+                .then(() => window.location = `{% url 'gerenciar_perguntas' 0 %}`.replace('0', result.id));
+        } else {
+            Swal.fire('Erro', result.error || 'Falha na criação', 'error');
+        }
+    } catch (error) {
+        Swal.fire('Erro', 'Falha na comunicação com o servidor', 'error');
+    }
 }
 
 document.addEventListener('DOMContentLoaded',showStep);

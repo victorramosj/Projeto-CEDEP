@@ -56,59 +56,23 @@ class GREUserSerializer(serializers.ModelSerializer):
 
 
 
+# serializers.py
 class PerguntaSerializer(serializers.ModelSerializer):
     class Meta:
         model = Pergunta
         fields = '__all__'
-        read_only_fields = ('questionario',)  # Adicione esta linha
-
-    def create(self, validated_data):
-        # Garante que o questionário vem do contexto da URL
-        validated_data['questionario_id'] = self.context['view'].kwargs['questionario_pk']
-        return super().create(validated_data)
 
 class QuestionarioSerializer(serializers.ModelSerializer):
-    setor = serializers.PrimaryKeyRelatedField(queryset=Setor.objects.all())
-    perguntas = PerguntaSerializer(many=True)
+    perguntas = PerguntaSerializer(many=True, read_only=True)  # Apenas leitura
     escolas = serializers.PrimaryKeyRelatedField(
         many=True, 
-        queryset=Escola.objects.all()
+        queryset=Escola.objects.all(),
+        write_only=True  # Campo apenas para escrita
     )
 
     class Meta:
         model = Questionario
         fields = ['id', 'titulo', 'descricao', 'setor', 'perguntas', 'escolas']
-        extra_kwargs = {
-            'setor': {'required': True}
-        }
-
-    def create(self, validated_data):
-        # remove setor enviado pelo cliente
-        validated_data.pop('setor', None)
-
-        perguntas_data = validated_data.pop('perguntas')
-        escolas_data  = validated_data.pop('escolas')
-
-        # Cria o questionário usando o setor do usuário autenticado
-        questionario = Questionario.objects.create(
-            **validated_data,
-            setor=self.context['request'].user.greuser.setor
-        )
-
-        # Cria perguntas
-        Pergunta.objects.bulk_create([
-            Pergunta(questionario=questionario, **p) for p in perguntas_data
-        ])
-
-        # Associa escolas e gera monitoramentos
-        questionario.escolas_destino.set(escolas_data)
-        Monitoramento.objects.bulk_create([
-            Monitoramento(questionario=questionario, escola=escola)
-            for escola in escolas_data
-        ])
-
-        return questionario
-
 
 
 class RespostaSerializer(serializers.ModelSerializer):
@@ -125,6 +89,7 @@ class RespostaSerializer(serializers.ModelSerializer):
 
 class MonitoramentoSerializer(serializers.ModelSerializer):
     status_display = serializers.CharField(source='get_status_display', read_only=True)
+    frequencia_display = serializers.CharField(source='get_frequencia_display', read_only=True)
     respostas = RespostaSerializer(many=True, read_only=True)
 
     class Meta:

@@ -1,4 +1,4 @@
-from rest_framework import viewsets, permissions
+from rest_framework import viewsets, permissions, filters
 from rest_framework.response import Response
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
@@ -43,10 +43,12 @@ def verificar_acesso_setor(setor_requerido):
 
 
 
+# views.py
 class EscolaViewSet(viewsets.ModelViewSet):
-    queryset = Escola.objects.all()
+    queryset = Escola.objects.all().order_by('nome')  # Adicione ordenação
     serializer_class = EscolaSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    filter_backends = [filters.SearchFilter]
+    search_fields = ['nome', 'inep']
 
     @action(detail=True, methods=['get'])
     def monitoramentos(self, request, pk=None):
@@ -98,10 +100,17 @@ class MonitoramentoViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         user = self.request.user.greuser
+        queryset = super().get_queryset()
+        
         if user.is_admin() or user.is_coordenador():
-            return Monitoramento.objects.all()
-        return Monitoramento.objects.filter(escola__in=user.escolas.all())
-
+            return queryset
+        
+        if user.is_chefe_setor():
+            return queryset.filter(
+                questionario__setor__in=user.setor.sub_setores.all() | Setor.objects.filter(id=user.setor.id)
+            )
+        
+        return queryset.filter(escola__in=user.escolas.all())
 class RespostaViewSet(viewsets.ModelViewSet):
     serializer_class = RespostaSerializer
     permission_classes = [permissions.IsAuthenticated]
@@ -312,26 +321,51 @@ class GerenciarPerguntasView(DetailView):
 from rest_framework import status
 from rest_framework.response import Response
 
+# views.py
 class QuestionarioCreateAPI(APIView):
     permission_classes = [IsAuthenticated]
-    
+
     def post(self, request):
-        serializer = QuestionarioSerializer(
-            data=request.data,
-            context={'request': request}
-        )
-        
-        if serializer.is_valid():
+        # Separa os dados para tratamento correto
+        data = request.data.copy()
+        perguntas_data = data.pop('perguntas', [])
+        escolas_ids = data.pop('escolas', [])
+        monitoramento_data = data.pop('monitoramento', {})
+
+        serializer = QuestionarioSerializer(data=data)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=400)
+
+        try:
+            # Cria o questionário
             questionario = serializer.save()
-            return Response({
-                'id': questionario.id,
-                'perguntas': questionario.pergunta_set.count(),
-                'escolas': questionario.escolas_destino.count()
-            }, status=status.HTTP_201_CREATED)
-            
-        return Response({
-            'error': serializer.errors
-        }, status=status.HTTP_400_BAD_REQUEST)
+
+            # Cria as perguntas
+            Pergunta.objects.bulk_create([
+                Pergunta(questionario=questionario, **p) for p in perguntas_data
+            ])
+
+            # Cria os monitoramentos
+            Monitoramento.objects.bulk_create([
+                Monitoramento(
+                    questionario=questionario,
+                    escola_id=escola_id,
+                    data_limite=monitoramento_data.get('data_limite'),
+                    frequencia=monitoramento_data.get('frequencia', 'S'),
+                    status='P'
+                ) for escola_id in escolas_ids
+            ])
+
+            return Response(
+                QuestionarioSerializer(questionario).data, 
+                status=status.HTTP_201_CREATED
+            )
+
+        except Exception as e:
+            return Response(
+                {'error': str(e)}, 
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
     
 # views.py
 def criar_questionario_view(request):

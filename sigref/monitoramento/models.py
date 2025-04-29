@@ -1,6 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import User
 from django.core.validators import RegexValidator
+from dateutil.relativedelta import relativedelta
 
 class Setor(models.Model):
     nome = models.CharField(max_length=255)
@@ -59,6 +60,7 @@ class Escola(models.Model):
 from django.core.validators import RegexValidator
 from django.db import models
 from django.contrib.auth.models import User
+from django.utils import timezone
 
 class GREUser(models.Model):
     # Opções de tipo de usuário corrigidas e organizadas
@@ -201,20 +203,60 @@ class Monitoramento(models.Model):
         ('R', 'Resolvido'),
         ('U', 'Urgente'),
     ]
+    FREQUENCIA_CHOICES = [
+        ('D', 'Diário'),
+        ('S', 'Semanal'),
+        ('Q', 'Quinzenal'),
+        ('M', 'Mensal'),
+        ('6', 'Semestral'),
+        ('A', 'Anual'),
+    ]
     
     questionario = models.ForeignKey(Questionario, on_delete=models.CASCADE)
     escola = models.ForeignKey(Escola, on_delete=models.CASCADE)
     data_envio = models.DateTimeField(auto_now_add=True)
+    data_limite = models.DateField(default=timezone.now)  # Adicione default
+    frequencia = models.CharField(
+        max_length=1, 
+        choices=FREQUENCIA_CHOICES, 
+        default='S',
+        verbose_name="Periodicidade"
+    )
     data_resposta = models.DateTimeField(null=True, blank=True)
     status = models.CharField(max_length=1, choices=STATUS_CHOICES, default='P')
     respondido_por = models.ForeignKey(GREUser, on_delete=models.SET_NULL, null=True, blank=True)
-    
-    def __str__(self):
-        return f"{self.questionario} - {self.escola} - {self.get_status_display()}"
+    criado_em = models.DateTimeField(auto_now_add=True)  # Novo campo para controle
+    atualizado_em = models.DateTimeField(auto_now=True)  # Novo campo para controle
     
     class Meta:
         verbose_name_plural = "Monitoramentos"
+        ordering = ['data_limite']
+    
+    @classmethod
+    def calcular_proxima_data(cls, frequencia, data_base=None):
+        if data_base is None:
+            data_base = timezone.now().date()
+            
+        if frequencia == 'D':
+            return data_base + relativedelta(days=1)
+        elif frequencia == 'S':
+            return data_base + relativedelta(weeks=1)
+        elif frequencia == 'Q':
+            return data_base + relativedelta(weeks=2)
+        elif frequencia == 'M':
+            return data_base + relativedelta(months=1)
+        elif frequencia == '6':
+            return data_base + relativedelta(months=6)
+        elif frequencia == 'A':
+            return data_base + relativedelta(years=1)
+        return data_base
+    
+    def save(self, *args, **kwargs):
+        if not self.data_limite:  # Só calcula se não tiver data definida
+            self.data_limite = self.calcular_proxima_data(self.frequencia)
+        super().save(*args, **kwargs)
 
+        
 class Resposta(models.Model):
     monitoramento = models.ForeignKey(Monitoramento, on_delete=models.CASCADE, related_name='respostas')
     pergunta = models.ForeignKey(Pergunta, on_delete=models.CASCADE)
