@@ -1,149 +1,212 @@
 {% extends 'cedepe/base.html' %}
 {% block content %}
+{% csrf_token %} 
 <div class="container mt-4">
-  <h2>Perguntas do Questionário "{{ questionario.titulo }}"</h2>
-  <button class="btn btn-primary mb-3" id="btn-add">+ Nova Pergunta</button>
-  <table class="table table-striped" id="questions-table">
-    <thead>
-      <tr>
-        <th>Ordem</th>
-        <th>Texto</th>
-        <th>Tipo</th>
-        <th>Ações</th>
-      </tr>
-    </thead>
-    <tbody></tbody>
-  </table>
+    <h2>Perguntas do Questionário "{{ questionario.titulo }}"</h2>
+    <button class="btn btn-primary mb-3" id="btn-add">+ Nova Pergunta</button>
+    <table class="table table-striped" id="questions-table">
+        <thead>
+            <tr>
+                <th>Ordem</th>
+                <th>Texto</th>
+                <th>Tipo</th>
+                <th>Ações</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
 </div>
 
 <!-- Modal de cadastro/edição -->
 <div class="modal fade" id="questionModal" tabindex="-1" aria-labelledby="questionModalLabel" aria-hidden="true">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="questionModalLabel">Pergunta</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
-      </div>
-      <div class="modal-body">
-        <form id="question-form">
-          <input type="hidden" id="question-id">
-          <div class="mb-3">
-            <label for="question-text" class="form-label">Texto</label>
-            <textarea class="form-control" id="question-text" rows="2" required></textarea>
-          </div>
-          <div class="mb-3">
-            <label for="question-order" class="form-label">Ordem</label>
-            <input type="number" class="form-control" id="question-order" min="1" required>
-          </div>
-          <div class="mb-3">
-            <label for="question-type" class="form-label">Tipo</label>
-            <select class="form-select" id="question-type">
-              <option value="SN">Sim/Não</option>
-              <option value="NU">Numérico</option>
-              <option value="TX">Texto</option>
-            </select>
-          </div>
-        </form>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-        <button type="button" class="btn btn-primary" id="btn-save">Salvar</button>
-      </div>
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="questionModalLabel">Pergunta</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+            </div>
+            <div class="modal-body">
+                <form id="question-form">
+                    <input type="hidden" id="question-id"> <!-- Campo adicionado -->
+                    <input type="hidden" id="questionario-id" value="{{ questionario.pk }}">
+                    <div class="mb-3">
+                        <label for="question-text" class="form-label">Texto</label>
+                        <textarea class="form-control" id="question-text" rows="2" required></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label for="question-order" class="form-label">Ordem</label>
+                        <input type="number" class="form-control" id="question-order" min="1" required readonly>
+                        <!-- Adicione o atributo readonly -->
+                    </div>
+                    <div class="mb-3">
+                        <label for="question-type" class="form-label">Tipo</label>
+                        <select class="form-select" id="question-type">
+                            <option value="SN">Sim/Não</option>
+                            <option value="NU">Numérico</option>
+                            <option value="TX">Texto</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" id="btn-save">Salvar</button>
+            </div>
+        </div>
     </div>
-  </div>
 </div>
 {% endblock %}
 
 {% block scripts %}
 {{ block.super }}
 <script>
-(function() {
-  const apiBase = '{% url "questionario-perguntas-list" questionario.pk %}'.replace(/\/$/, '');
-  let modal;
+    (function () {
+        const apiBase = '{{ perguntas_api_url }}'.replace(/\/$/, '');
+        let modal;
 
-  document.addEventListener('DOMContentLoaded', () => {
-    loadQuestions();
-    document.getElementById('btn-add').addEventListener('click', () => openModal());
-    document.getElementById('btn-save').addEventListener('click', saveQuestion);
-    modal = new bootstrap.Modal(document.getElementById('questionModal'));
-  });
+        document.addEventListener('DOMContentLoaded', () => {
+            modal = new bootstrap.Modal(document.getElementById('questionModal'));
+            document.getElementById('btn-add').addEventListener('click', () => openModal());
+            document.getElementById('btn-save').addEventListener('click', saveQuestion);
+            loadQuestions();
+        });
 
-  async function loadQuestions() {
-    const res = await fetch(apiBase + '/');
-    const data = await res.json();
-    const tbody = document.querySelector('#questions-table tbody');
-    tbody.innerHTML = '';
-    data.forEach(q => {
-      const tr = document.createElement('tr');
-      tr.innerHTML = `
-        <td>${q.ordem}</td>
-        <td>${q.texto}</td>
-        <td>${tipoLabel(q.tipo_resposta)}</td>
-        <td>
-          <button class="btn btn-sm btn-warning me-1" onclick="openModal(${q.id})">Editar</button>
-          <button class="btn btn-sm btn-danger" onclick="deleteQuestion(${q.id})">Apagar</button>
-        </td>
-      `;
-      tbody.appendChild(tr);
-    });
-  }
+        async function loadQuestions() {
+            try {
+                const res = await fetch(apiBase);
+                if (!res.ok) throw new Error(`Erro HTTP! status: ${res.status}`);
+                const data = await res.json();
 
-  function tipoLabel(code) {
-    return { SN: 'Sim/Não', NU: 'Numérico', TX: 'Texto' }[code] || code;
-  }
+                const tbody = document.querySelector('#questions-table tbody');
+                tbody.innerHTML = '';
 
-  async function openModal(id) {
-    clearForm();
-    if (id) {
-      const res = await fetch(apiBase + `/${id}/`);
-      const q = await res.json();
-      document.getElementById('question-id').value = q.id;
-      document.getElementById('question-text').value = q.texto;
-      document.getElementById('question-order').value = q.ordem;
-      document.getElementById('question-type').value = q.tipo_resposta;
-    }
-    modal.show();
-  }
+                // Trata paginação se necessário
+                const questions = data.results || data;
 
-  function clearForm() {
-    document.getElementById('question-id').value = '';
-    document.getElementById('question-text').value = '';
-    document.getElementById('question-order').value = '';
-    document.getElementById('question-type').value = 'SN';
-  }
+                questions.forEach(q => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td>${q.ordem}</td>
+                        <td>${q.texto}</td>
+                        <td>${tipoLabel(q.tipo_resposta)}</td>
+                        <td>
+                            <button class="btn btn-sm btn-warning me-1" onclick="openModal(${q.id})">Editar</button>
+                            <button class="btn btn-sm btn-danger" onclick="deleteQuestion(${q.id})">Apagar</button>
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            } catch (error) {
+                console.error('Erro ao carregar perguntas:', error);
+                alert('Erro ao carregar perguntas. Verifique o console para detalhes.');
+            }
+        }
 
-  async function saveQuestion() {
-    const id = document.getElementById('question-id').value;
-    const payload = {
-      texto: document.getElementById('question-text').value,
-      ordem: document.getElementById('question-order').value,
-      tipo_resposta: document.getElementById('question-type').value
-    };
-    const url = id ? `${apiBase}/${id}/` : apiBase + '/';
-    const method = id ? 'PUT' : 'POST';
-    const res = await fetch(url, {
-      method, headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token }}' },
-      body: JSON.stringify(payload)
-    });
-    if (res.ok) {
-      modal.hide();
-      loadQuestions();
-    } else {
-      const err = await res.json();
-      alert('Erro: ' + JSON.stringify(err));
-    }
-  }
+        async function openModal(id) {
+            clearForm();
+            if (id) {
+                try {
+                    const res = await fetch(`${apiBase}/${id}/`);
+                    if (!res.ok) throw new Error(`Erro HTTP! status: ${res.status}`);
+                    const q = await res.json();
 
-  async function deleteQuestion(id) {
-    if (!confirm('Confirma exclusão?')) return;
-    const res = await fetch(apiBase + `/${id}/`, { method: 'DELETE', headers: { 'X-CSRFToken': '{{ csrf_token }}' } });
-    if (res.ok) loadQuestions();
-    else alert('Erro ao apagar');
-  }
+                    document.getElementById('question-id').value = q.id;
+                    document.getElementById('question-text').value = q.texto;
+                    document.getElementById('question-order').value = q.ordem;
+                    document.getElementById('question-type').value = q.tipo_resposta;
+                } catch (error) {
+                    console.error('Erro ao carregar pergunta:', error);
+                    alert('Erro ao carregar dados da pergunta');
+                }
+            } else {
+                try {
+                    // Alterado para usar a paginação padrão do DRF
+                    const res = await fetch(`${apiBase}/?ordering=-ordem&page_size=1`);
+                    const data = await res.json();
 
-  // Expor delete and openModal no escopo global
-  window.deleteQuestion = deleteQuestion;
-  window.openModal = openModal;
-})();
+                    // Acessa os resultados corretamente considerando paginação
+                    const lastQuestion = data.results?.[0];
+                    const nextOrder = lastQuestion ? lastQuestion.ordem + 1 : 1;
+
+                    document.getElementById('question-order').value = nextOrder;
+                } catch (error) {
+                    console.error('Erro ao calcular ordem:', error);
+                    document.getElementById('question-order').value = 1;
+                }
+            }
+            modal.show();
+        }
+
+        function clearForm() {
+            document.getElementById('question-id').value = '';
+            document.getElementById('question-text').value = '';
+            document.getElementById('question-order').value = '';
+            document.getElementById('question-type').value = 'SN';
+        }
+
+        async function saveQuestion() {
+            const id = document.getElementById('question-id').value;
+            const questionarioId = document.getElementById('questionario-id').value;
+
+            const payload = {
+                texto: document.getElementById('question-text').value,
+                ordem: parseInt(document.getElementById('question-order').value),
+                tipo_resposta: document.getElementById('question-type').value,
+                questionario: parseInt(questionarioId)
+            };
+
+            const url = id ? `${apiBase}${id}/` : `${apiBase}/`;
+            const method = id ? 'PUT' : 'POST';
+
+            try {
+                const res = await fetch(url, {
+                    method,
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': '{{ csrf_token }}'
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                const responseText = await res.text(); // Primeiro leia como texto
+
+                if (!res.ok) {
+                    // Tente parsear como JSON, caso contrário mostre o texto cru
+                    throw new Error(JSON.parse(responseText) || responseText);
+                }
+
+                const data = JSON.parse(responseText); // Parseie o JSON só se OK
+                modal.hide();
+                await loadQuestions();
+            } catch (error) {
+                console.error('Erro ao salvar:', error);
+                alert(`Erro ao salvar: ${error.message}`);
+            }
+        }
+
+        async function deleteQuestion(id) {
+            if (!confirm('Confirma exclusão?')) return;
+            try {
+                const res = await fetch(`${apiBase}/${id}/`, {
+                    method: 'DELETE',
+                    headers: { 'X-CSRFToken': '{{ csrf_token }}' }
+                });
+                if (!res.ok) throw new Error('Erro ao excluir');
+                await loadQuestions();
+            } catch (error) {
+                console.error('Erro ao excluir:', error);
+                alert('Erro ao excluir pergunta');
+            }
+        }
+
+        function tipoLabel(code) {
+            return { SN: 'Sim/Não', NU: 'Numérico', TX: 'Texto' }[code] || code;
+        }
+
+        // Expor funções para o escopo global
+        window.deleteQuestion = deleteQuestion;
+        window.openModal = openModal;
+        window.loadQuestions = loadQuestions;
+    })();
 </script>
 {% endblock %}

@@ -72,17 +72,24 @@ class QuestionarioViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save(setor=self.request.user.greuser.setor)
+from rest_framework import filters
+
 
 class PerguntaViewSet(viewsets.ModelViewSet):
     serializer_class = PerguntaSerializer
-    permission_classes = [permissions.IsAuthenticated]
-
+    filter_backends = [filters.OrderingFilter]  # Adicione esta linha
+    ordering_fields = ['ordem']  # E esta linha
+    
     def get_queryset(self):
-        return Pergunta.objects.filter(questionario_id=self.kwargs['questionario_pk'])
-
+        return Pergunta.objects.filter(
+            questionario_id=self.kwargs['questionario_pk']
+        ).order_by('ordem')
+    
     def perform_create(self, serializer):
-        questionario = Questionario.objects.get(pk=self.kwargs['questionario_pk'])
-        serializer.save(questionario=questionario)
+        serializer.save(
+            questionario_id=self.kwargs['questionario_pk']
+        )
+        
 
 class MonitoramentoViewSet(viewsets.ModelViewSet):
     queryset = Monitoramento.objects.all()
@@ -285,40 +292,23 @@ class AdicionarQuestionarioView(APIView):
             status=status.HTTP_400_BAD_REQUEST
         )
         
-# views.py
+
+
 from django.views.generic import DetailView
-from django.forms import inlineformset_factory
+from django.urls import reverse
 
 class GerenciarPerguntasView(DetailView):
     model = Questionario
     template_name = 'monitoramentos/gerenciar_perguntas.html'
-    context_object_name = 'questionario'
-
+    
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        PerguntaFormSet = inlineformset_factory(
-            Questionario, 
-            Pergunta, 
-            fields=('texto', 'ordem', 'tipo_resposta'),
-            extra=1
+        context['perguntas_api_url'] = reverse(
+            'questionario-perguntas-list',
+            kwargs={'questionario_pk': self.object.pk}
         )
-        context['formset'] = PerguntaFormSet(instance=self.object)
         return context
 
-    def post(self, request, *args, **kwargs):
-        self.object = self.get_object()
-        PerguntaFormSet = inlineformset_factory(
-            Questionario, 
-            Pergunta, 
-            fields=('texto', 'ordem', 'tipo_resposta')
-        )
-        formset = PerguntaFormSet(request.POST, instance=self.object)
-        
-        if formset.is_valid():
-            formset.save()
-            return redirect('detalhe_questionario', pk=self.object.pk)
-        return self.render_to_response(self.get_context_data(formset=formset))
-    
 from rest_framework import status
 from rest_framework.response import Response
 
@@ -388,3 +378,39 @@ class GerenciarQuestionariosView(LoginRequiredMixin, TemplateView):
             setor__in=user.setores_permitidos()
         ).order_by('-data_criacao')
         return context
+    
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.views.generic import TemplateView, CreateView
+from django.urls import reverse_lazy
+from .models import Monitoramento, RelatoProblema, TipoProblema
+
+class EscolaDashboardView(LoginRequiredMixin, TemplateView):
+    template_name = 'escolas/escola_dashboard.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        greuser = self.request.user.greuser
+        # pega a primeira escola associada (caso haja mais, escolher lógica similar)
+        escola = greuser.escolas.first()
+        pend_monitor = Monitoramento.objects.filter(escola=escola, status='P')
+        pend_relatos = RelatoProblema.objects.filter(gestor=greuser, status='P')
+
+        context.update({
+            'escola': escola,
+            'pendentes_monitoramentos': pend_monitor.count(),
+            'pendentes_relatos': pend_relatos.count(),
+            # listas para link “ver detalhes”
+            'monitoramentos_list': pend_monitor,
+            'relatos_list': pend_relatos,
+        })
+        return context
+
+class RelatoProblemaCreateView(LoginRequiredMixin, CreateView):
+    model = RelatoProblema
+    fields = ['tipo_problema', 'descricao_adicional', 'foto']
+    template_name = 'escolas/relatar_problema.html'
+    success_url = reverse_lazy('escola_dashboard')
+
+    def form_valid(self, form):
+        form.instance.gestor = self.request.user.greuser
+        return super().form_valid(form)

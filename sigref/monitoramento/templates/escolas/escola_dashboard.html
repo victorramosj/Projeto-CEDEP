@@ -1,0 +1,59 @@
+{% extends 'cedepe/base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container mt-4">
+  <div class="row">
+    <!-- Foto e dados da escola -->
+    <div class="col-md-4 text-center">
+      {% if escola.foto_fachada %}
+        <img src="{{ escola.foto_fachada.url }}" class="img-fluid rounded mb-2" alt="Fachada {{ escola.nome }}">
+      {% else %}
+        <img src="{% static 'img/placeholder-school.png' %}" class="img-fluid rounded mb-2">
+      {% endif %}
+      <h3>{{ escola.nome }}</h3>
+      <p><i class="fas fa-map-marker-alt"></i> {{ escola.endereco }}</p>
+    </div>
+
+    <!-- Cartões de pendências -->
+    <div class="col-md-8">
+      <div class="row">
+        <div class="col-sm-6 mb-3">
+          <div class="card text-white bg-warning h-100">
+            <div class="card-body d-flex flex-column justify-content-between">
+              <div>
+                <h5 class="card-title">Monitoramentos Pendentes</h5>
+                <p class="display-5">{{ pendentes_monitoramentos }}</p>
+              </div>
+              <a href="{% url 'fluxo_monitoramento_setores' %}?escola={{ escola.id }}" 
+                 class="btn btn-light mt-2">
+                Ver monitoramentos
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-sm-6 mb-3">
+          <div class="card text-white bg-danger h-100">
+            <div class="card-body d-flex flex-column justify-content-between">
+              <div>
+                <h5 class="card-title">Relatos Pendentes</h5>
+                <p class="display-5">{{ pendentes_relatos }}</p>
+              </div>
+              <a href="{% url 'relatos_problemas' %}?gestor={{ request.user.greuser.id }}" 
+                 class="btn btn-light mt-2">
+                Ver relatos
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Botão para abrir form de relato -->
+      <a href="{% url 'relatar_problema' %}" class="btn btn-primary">
+        <i class="fas fa-exclamation-circle me-2"></i>Relatar Problema
+      </a>
+    </div>
+  </div>
+</div>
+{% endblock %}

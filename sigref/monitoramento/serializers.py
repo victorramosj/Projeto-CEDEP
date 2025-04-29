@@ -59,7 +59,13 @@ class GREUserSerializer(serializers.ModelSerializer):
 class PerguntaSerializer(serializers.ModelSerializer):
     class Meta:
         model = Pergunta
-        fields = ['texto', 'ordem', 'tipo_resposta']
+        fields = '__all__'
+        read_only_fields = ('questionario',)  # Adicione esta linha
+
+    def create(self, validated_data):
+        # Garante que o questionário vem do contexto da URL
+        validated_data['questionario_id'] = self.context['view'].kwargs['questionario_pk']
+        return super().create(validated_data)
 
 class QuestionarioSerializer(serializers.ModelSerializer):
     setor = serializers.PrimaryKeyRelatedField(queryset=Setor.objects.all())

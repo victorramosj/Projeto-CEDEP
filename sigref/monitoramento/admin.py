@@ -13,12 +13,15 @@ class PerguntaInline(admin.TabularInline):
 
 class RespostaInline(admin.TabularInline):
     model = Resposta
+    fk_name = 'monitoramento'  # <-- esta linha é essencial
     extra = 0
     fields = ('pergunta', 'resposta_sn', 'resposta_num', 'resposta_texto', 'foto')
     readonly_fields = ('pergunta',)
-    
+
     def has_add_permission(self, request, obj):
         return False
+
+
 
 @admin.register(Setor)
 class SetorAdmin(admin.ModelAdmin):
