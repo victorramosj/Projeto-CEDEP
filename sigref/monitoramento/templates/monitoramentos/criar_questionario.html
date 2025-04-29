@@ -1,0 +1,290 @@
+{% extends 'cedepe/base.html' %}
+{% load static %}
+
+{% block extra_style %}
+{{ block.super }}
+<style>
+    .creation-flow {
+        background: #f8f9fa;
+        border-radius: 15px;
+        box-shadow: 0 0 15px rgba(0,0,0,0.1);
+        padding: 1rem;
+    }
+    .flow-step {
+        display: none;
+        padding: 2rem;
+        border-bottom: 2px solid #dee2e6;
+        transition: all 0.3s ease;
+    }
+    .flow-step.active {
+        display: block;
+        background: white;
+        border-color: #0d6efd;
+    }
+    .question-card {
+        background: white;
+        border: 1px solid #dee2e6;
+        border-radius: 10px;
+        margin-bottom: 1rem;
+        padding: 1.5rem;
+    }
+    .escola-pill {
+        background: #e9ecef;
+        border-radius: 20px;
+        padding: 0.5rem 1rem;
+        margin: 0.25rem;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+    .escola-pill.selected {
+        background: #0d6efd;
+        color: white;
+    }
+    .selection-actions {
+        margin-bottom: 1rem;
+        display: flex;
+        gap: 0.5rem;
+    }
+    .select-all-btn {
+        background: #198754;
+        color: white;
+        border: none;
+        padding: 0.5rem 1rem;
+        border-radius: 5px;
+        transition: all 0.3s ease;
+    }
+    .select-all-btn:hover {
+        background: #157347;
+    }
+    .selected-counter {
+        background: #0d6efd;
+        color: white;
+        padding: 0.25rem 0.75rem;
+        border-radius: 20px;
+        font-size: 0.9em;
+    }
+    .setor-card {
+        border: 1px solid #dee2e6;
+        border-radius: 10px;
+        padding: 1rem;
+        margin-bottom: 1rem;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+    .setor-card.selected {
+        border: 2px solid #0d6efd;
+        background-color: #e9f1ff;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4 mt-4">
+    <div class="creation-flow">
+        <!-- Passo 0: Seleção de Setor -->
+        <div class="flow-step" data-step="0">
+            <h3 class="mb-4"><i class="fas fa-sitemap me-2"></i>Selecione o Setor</h3>
+            <div class="row" id="setores-container">
+                {% for setor in setores_permitidos %}
+                <div class="col-md-6">
+                    <div class="setor-card" data-id="{{ setor.id }}" onclick="selectSetor(this)">
+                        <h5>{{ setor.nome }}</h5>
+                        <div class="setor-hierarchy">
+                            {{ setor.hierarquia_completa }}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            <button id="btn-next-0" class="btn btn-primary mt-3" onclick="nextStep()">
+                Próximo <i class="fas fa-arrow-right ms-2"></i>
+            </button>
+        </div>
+
+        <!-- Passo 1: Detalhes do Questionário -->
+        <div class="flow-step" data-step="1">
+            <h3 class="mb-4"><i class="fas fa-file-alt me-2"></i>Novo Questionário</h3>
+            <div class="mb-4">
+                <label class="form-label">Título</label>
+                <input type="text" class="form-control form-control-lg" id="titulo">
+            </div>
+            <div class="mb-4">
+                <label class="form-label">Descrição</label>
+                <textarea class="form-control" id="descricao" rows="3"></textarea>
+            </div>
+            <button id="btn-prev-1" class="btn btn-secondary me-2" onclick="prevStep()">
+                <i class="fas fa-arrow-left me-2"></i>Voltar
+            </button>
+            <button id="btn-next-1" class="btn btn-primary" onclick="nextStep()">
+                Próximo <i class="fas fa-arrow-right ms-2"></i>
+            </button>
+        </div>
+
+        <!-- Passo 2: Perguntas -->
+        <div class="flow-step" data-step="2">
+            <h3 class="mb-4"><i class="fas fa-question-circle me-2"></i>Adicionar Perguntas</h3>
+            <div id="perguntas-container">
+                <div class="question-card">
+                    <div class="row g-3">
+                        <div class="col-md-8">
+                            <input type="text" class="form-control question-text" placeholder="Texto da pergunta">
+                        </div>
+                        <div class="col-md-2">
+                            <select class="form-select question-type">
+                                <option value="SN">Sim/Não</option>
+                                <option value="NU">Numérico</option>
+                                <option value="TX">Texto</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <input type="number" class="form-control question-order" placeholder="Ordem" min="1">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <button class="btn btn-outline-primary mb-3" onclick="addQuestion()">
+                <i class="fas fa-plus me-2"></i>Nova Pergunta
+            </button>
+            <div class="d-flex justify-content-between">
+                <button class="btn btn-secondary" onclick="prevStep()">
+                    <i class="fas fa-arrow-left me-2"></i>Voltar
+                </button>
+                <button class="btn btn-primary" onclick="nextStep()">
+                    Próximo <i class="fas fa-arrow-right ms-2"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Passo 3: Escolas -->
+        <div class="flow-step" data-step="3">
+            <h3 class="mb-4"><i class="fas fa-school me-2"></i>Selecionar Escolas</h3>
+            <div class="selection-actions">
+                <input type="text" class="form-control" id="search-escolas" placeholder="Pesquisar escolas...">
+                <button class="select-all-btn" onclick="selectAllVisible()">
+                    <i class="fas fa-check-double me-2"></i>Selecionar Todas
+                </button>
+                <span class="selected-counter" id="selected-counter">0 selecionadas</span>
+            </div>
+            <div id="escolas-container" class="d-flex flex-wrap"></div>
+            <div class="mt-3">
+                <button class="btn btn-secondary me-2" onclick="prevStep()">
+                    <i class="fas fa-arrow-left me-2"></i>Voltar
+                </button>
+                <button class="btn btn-success" onclick="submitForm()">
+                    Finalizar <i class="fas fa-check ms-2"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ block.super }}
+<script>
+let currentStep = 0;
+let selectedSetorId = null;
+const escolasSelecionadas = new Set();
+
+function showStep() {
+  document.querySelectorAll('.flow-step').forEach(el => el.classList.remove('active'));
+  document.querySelector(`.flow-step[data-step="${currentStep}"]`).classList.add('active');
+}
+function nextStep() {
+  if (currentStep === 0 && !selectedSetorId) {
+    Swal.fire('Atenção!','Selecione um setor','warning'); return;
+  }
+  if (currentStep < 3) currentStep++;
+  showStep();
+  if (currentStep === 3) loadEscolas();
+}
+function prevStep() {
+  if (currentStep > 0) currentStep--;
+  showStep();
+}
+function selectSetor(card) {
+  document.querySelectorAll('.setor-card').forEach(c=>c.classList.remove('selected'));
+  card.classList.add('selected');
+  selectedSetorId = card.dataset.id;
+}
+function addQuestion() {
+  const clone = document.querySelector('.question-card').cloneNode(true);
+  clone.querySelectorAll('input').forEach(i=>i.value='');
+  document.getElementById('perguntas-container').appendChild(clone);
+}
+function updateCounter() {
+  document.getElementById('selected-counter').textContent =
+    `${escolasSelecionadas.size} selecionada${escolasSelecionadas.size!==1?'s':''}`;
+}
+function selectAllVisible() {
+  document.querySelectorAll('.escola-pill:not(.d-none)').forEach(pill=>{
+    const id = pill.dataset.id;
+    escolasSelecionadas.add(id);
+    pill.classList.add('selected');
+  });
+  updateCounter();
+}
+function toggleEscola(id) {
+  const pill = document.querySelector(`.escola-pill[data-id="${id}"]`);
+  if (escolasSelecionadas.has(id)) {
+    escolasSelecionadas.delete(id); pill.classList.remove('selected');
+  } else {
+    escolasSelecionadas.add(id); pill.classList.add('selected');
+  }
+  updateCounter();
+}
+
+async function loadEscolas(search='') {
+  try {
+    const res = await fetch(`/monitoramento/escolas/?search=${encodeURIComponent(search)}`);
+    const raw = await res.json();
+    // Suporte a paginação: usa raw.results se existir, ou raw se for array
+    const list = Array.isArray(raw) ? raw : raw.results || [];
+    const container = document.getElementById('escolas-container');
+    container.innerHTML = list.map(e=>
+      `<div class="escola-pill${escolasSelecionadas.has(e.id.toString())?' selected':''}" data-id="${e.id}" onclick="toggleEscola('${e.id}')">${e.nome}</div>`
+    ).join('');
+    updateCounter();
+  } catch(err) {
+    console.error('Erro ao carregar escolas:', err);
+  }
+}
+
+// filtro local de busca
+document.getElementById('search-escolas').addEventListener('input',e=>{
+  const term = e.target.value.toLowerCase();
+  document.querySelectorAll('.escola-pill').forEach(p=>
+    p.classList.toggle('d-none',!p.textContent.toLowerCase().includes(term))
+  );
+});
+
+async function submitForm() {
+  const data = {
+    titulo:document.getElementById('titulo').value,
+    descricao:document.getElementById('descricao').value,
+    setor:selectedSetorId,
+    perguntas:Array.from(document.querySelectorAll('.question-card')).map(c=>({
+      texto:c.querySelector('.question-text').value,
+      tipo_resposta:c.querySelector('.question-type').value,
+      ordem:c.querySelector('.question-order').value
+    })),
+    escolas:Array.from(escolasSelecionadas)
+  };
+  try {
+    const resp = await fetch('{% url "questionarios-add" %}',{
+      method:'POST',headers:{'Content-Type':'application/json','X-CSRFToken':'{{ csrf_token }}'},
+      body:JSON.stringify(data)
+    });
+    const result = await resp.json();
+    if (result.id) {
+      Swal.fire({icon:'success',title:'Sucesso!',html:`Questionário criado`})
+        .then(()=>window.location=`{% url 'gerenciar_perguntas' 0 %}`.replace('0',result.id));
+    } else Swal.fire('Erro',result.error||'Falha','error');
+  } catch {
+    Swal.fire('Erro','Falha na comunicação','error');
+  }
+}
+
+document.addEventListener('DOMContentLoaded',showStep);
+</script>
+{% endblock %}

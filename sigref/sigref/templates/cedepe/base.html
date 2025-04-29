@@ -84,6 +84,8 @@
   {# --- Monitoramentos --- #}
   {% with current=request.resolver_match.url_name %}
   {% if user.is_authenticated and user.is_staff %}
+  
+    {# Monitoramentos #}
     <li class="nav-item">
       <a class="nav-link text-white sidebar-link d-flex justify-content-between align-items-center"
          data-bs-toggle="collapse"
@@ -97,13 +99,11 @@
       <ul class="nav flex-column ms-3 collapse {% if current|url_in:'dashboard_monitoramentos,gerenciar_monitoramentos,relatos_problemas' %}show{% endif %}"
           id="monitoramentosSubmenu">
         <li>
-          
           <a href="{% url 'dashboard_monitoramentos' %}"
              class="nav-link text-white sidebar-link {% if current == 'dashboard_monitoramentos' %}active{% endif %}">
             <i class="fas fa-chart-bar me-2"></i>Dashboard Monitoramentos
           </a>
         </li>
-        
         <li>
           <a href="{% url 'fluxo_monitoramento_setores' %}"
              class="nav-link text-white sidebar-link {% if current == 'gerenciar_monitoramentos' %}active{% endif %}">
@@ -111,17 +111,45 @@
           </a>
         </li>
         <li>
-          <a href="{% url 'relatos_problemas' }"
+          <a href="{% url 'relatos_problemas' %}"
              class="nav-link text-white sidebar-link {% if current == 'relatos_problemas' %}active{% endif %}">
             <i class="fas fa-exclamation-triangle me-2"></i>Relatos de Problemas
           </a>
         </li>
-        
       </ul>
-      
     </li>
-    {% endif %}
+  
+    {# Questionários #}
+    <li class="nav-item mt-2">
+      <a class="nav-link text-white sidebar-link d-flex justify-content-between align-items-center"
+         data-bs-toggle="collapse"
+         href="#questionariosSubmenu"
+         role="button"
+         aria-expanded="{{ current|url_in:'gerenciar_questionarios,criar-questionario'|yesno:'true,false' }}"
+         aria-controls="questionariosSubmenu">
+        <span><i class="fas fa-file-alt me-2"></i>Questionários</span>
+        <i class="fas fa-chevron-down"></i>
+      </a>
+      <ul class="nav flex-column ms-3 collapse {% if current|url_in:'gerenciar_questionarios,criar-questionario' %}show{% endif %}"
+          id="questionariosSubmenu">
+        <li>
+          <a href="{% url 'gerenciar_questionarios' %}"
+             class="nav-link text-white sidebar-link {% if current == 'gerenciar_questionarios' %}active{% endif %}">
+            <i class="fas fa-list me-2"></i>Gerenciar Questionários
+          </a>
+        </li>
+        <li>
+          <a href="{% url 'criar-questionario' %}"
+             class="nav-link text-white sidebar-link {% if current == 'criar-questionario' %}active{% endif %}">
+            <i class="fas fa-plus me-2"></i>Novo Questionário
+          </a>
+        </li>
+      </ul>
+    </li>
+  
+  {% endif %}
   {% endwith %}
+  
   {% if user.is_authenticated and user.is_staff or request.session.tipo_usuario == 'cedepe' %}
     {# Mostrar opções de hospedagem #}
     {% with current=request.resolver_match.url_name %}

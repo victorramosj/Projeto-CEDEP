@@ -32,20 +32,29 @@ urlpatterns = [
     path('monitoramentos/<int:pk>/', views.DetalheMonitoramentoView.as_view(), name='detalhe_monitoramento'),
      # view de fluxo principal
     path('fluxo/monitoramento-setores/', views.fluxo_monitoramento, name='fluxo_monitoramento_setores'),
-
     # endpoint AJAX para atribuir escolas
     path(
         'api/questionarios/<int:pk>/assign_escolas/', 
         views.AssignEscolasQuestionario.as_view(), 
         name='assign_escolas'
     ),
+     # Gerenciar questionários
+    path(
+        'questionarios/gerenciar/',
+        views.GerenciarQuestionariosView.as_view(),
+        name='gerenciar_questionarios'
+    ),
     path('questionarios/<int:pk>/perguntas/', views.GerenciarPerguntasView.as_view(), 
          name='gerenciar_perguntas'),
     path('questionarios/<int:pk>/', views. DetalheMonitoramentoView.as_view(), 
          name='detalhe_questionario'),
+    path('api/questionarios/create/', views.QuestionarioCreateAPI.as_view(), name='questionarios-add'),
+     path('questionarios/novo/', views.criar_questionario_view, name='criar-questionario'),
     path('', include(router.urls)),
     path('', include(questionario_router.urls)),
     path('', include(monitoramento_router.urls)),
+    
+    
     
     
 ]

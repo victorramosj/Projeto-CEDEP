@@ -1,12 +1,16 @@
 from rest_framework import viewsets, permissions
 from rest_framework.response import Response
 from rest_framework.decorators import action
+from rest_framework.permissions import IsAuthenticated
+from rest_framework import status
 from django.contrib.auth.models import User
 from .models import *
 from .serializers import *
-
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.views.generic import TemplateView
+
 
 def verificar_acesso_monitor(view_func):
     """Decorator para verificar se usuário é monitor"""
@@ -287,7 +291,7 @@ from django.forms import inlineformset_factory
 
 class GerenciarPerguntasView(DetailView):
     model = Questionario
-    template_name = 'monitoramento/gerenciar_perguntas.html'
+    template_name = 'monitoramentos/gerenciar_perguntas.html'
     context_object_name = 'questionario'
 
     def get_context_data(self, **kwargs):
@@ -314,3 +318,73 @@ class GerenciarPerguntasView(DetailView):
             formset.save()
             return redirect('detalhe_questionario', pk=self.object.pk)
         return self.render_to_response(self.get_context_data(formset=formset))
+    
+from rest_framework import status
+from rest_framework.response import Response
+
+class QuestionarioCreateAPI(APIView):
+    permission_classes = [IsAuthenticated]
+    
+    def post(self, request):
+        serializer = QuestionarioSerializer(
+            data=request.data,
+            context={'request': request}
+        )
+        
+        if serializer.is_valid():
+            questionario = serializer.save()
+            return Response({
+                'id': questionario.id,
+                'perguntas': questionario.pergunta_set.count(),
+                'escolas': questionario.escolas_destino.count()
+            }, status=status.HTTP_201_CREATED)
+            
+        return Response({
+            'error': serializer.errors
+        }, status=status.HTTP_400_BAD_REQUEST)
+    
+# views.py
+def criar_questionario_view(request):
+    user = request.user.greuser
+    return render(request, 'monitoramentos/criar_questionario.html', {
+        'setores_permitidos': user.setores_permitidos()
+    })
+class AssignEscolasQuestionario(APIView):
+    """
+    GET: retorna todas as escolas e as já atribuídas ao questionário
+    POST: recebe { "escolas": [1,2,3] } e atualiza questionario.escolas_destino
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request, pk):
+        questionario = get_object_or_404(Questionario, pk=pk)
+        todas = Escola.objects.all()
+        serializer_todas = EscolaSerializer(todas, many=True, context={'request': request})
+        assigned_ids = list(questionario.escolas_destino.values_list('pk', flat=True))
+        return Response({
+            'escolas': serializer_todas.data,
+            'assigned': assigned_ids
+        })
+
+    def post(self, request, pk):
+        questionario = get_object_or_404(Questionario, pk=pk)
+        ids = request.data.get('escolas', [])
+        # validação básica
+        qs = Escola.objects.filter(pk__in=ids)
+        questionario.escolas_destino.set(qs)
+        questionario.save()
+        # retorna o questionario serializado atualizado
+        serializer = QuestionarioSerializer(questionario, context={'request': request})
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+class GerenciarQuestionariosView(LoginRequiredMixin, TemplateView):
+    template_name = 'monitoramentos/gerenciar_questionarios.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        user = self.request.user.greuser
+        # Filtra questionários pelo setor do usuário
+        context['questionarios'] = Questionario.objects.filter(
+            setor__in=user.setores_permitidos()
+        ).order_by('-data_criacao')
+        return context
