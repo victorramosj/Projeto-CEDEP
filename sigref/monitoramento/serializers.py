@@ -62,6 +62,11 @@ class PerguntaSerializer(serializers.ModelSerializer):
         model = Pergunta
         fields = '__all__'
 
+class PerguntaCreateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Pergunta
+        fields = ['texto', 'tipo_resposta', 'ordem']
+
 # serializers.py
 
 class QuestionarioSerializer(serializers.ModelSerializer):

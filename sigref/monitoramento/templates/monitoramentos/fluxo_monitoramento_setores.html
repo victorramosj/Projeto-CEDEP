@@ -7,19 +7,19 @@
 <div class="container-fluid px-4">
     <h2 class="mt-4">Monitoramento por Setores</h2>
     
-    <!-- Breadcrumb -->
-    <nav aria-label="breadcrumb" class="mt-3">
-        <ol class="breadcrumb">
-            <li class="breadcrumb-item"><a href="{% url 'dashboard_monitoramentos' %}">Dashboard</a></li>
-            <li class="breadcrumb-item active">Monitoramento por Setor</li>
-        </ol>
-    </nav>
+    <!-- Botão para o Dashboard -->
+<div class="mt-3">
+    <a href="{% url 'dashboard_monitoramentos' %}" class="btn btn-secondary">
+        <i class="fas fa-arrow-left"></i> Voltar para o Dashboard
+    </a>
+</div>
+
 
     <!-- Passo 1: Seleção de Setor -->
     <div class="card shadow mb-4">
         <div class="card-header bg-primary text-white">
             <h5 class="card-title mb-0">
-                <i class="fas fa-sitemap me-2"></i>Passo 1 - Selecione um Setor
+                <i class="fas fa-sitemap me-2"></i>Selecione um Setor
             </h5>
         </div>
         <div class="card-body">
@@ -56,7 +56,7 @@
     <div class="card shadow mb-4">
         <div class="card-header bg-info text-white">
             <h5 class="card-title mb-0">
-                <i class="fas fa-clipboard-list me-2"></i>Passo 2 - Escolha um Questionário
+                <i class="fas fa-clipboard-list me-2"></i>Escolha um Questionário
             </h5>
         </div>
         <div class="card-body">
@@ -94,11 +94,12 @@
                         <h5>{{ questionario_selecionado.titulo }}</h5>
                         <p class="small">{{ questionario_selecionado.descricao }}</p>
                         <div class="d-grid gap-2">
-                            <a href="{% url 'questionario-perguntas-list' questionario_selecionado.id %}" 
+                            <a href="{% url 'gerenciar_perguntas' questionario_selecionado.id %}" 
                                class="btn btn-outline-primary btn-sm">
                                 <i class="fas fa-edit"></i> Gerenciar Perguntas
                             </a>
                         </div>
+                        
                     {% endif %}
                 </div>
             </div>
@@ -111,7 +112,7 @@
     <div class="card shadow mb-4">
         <div class="card-header bg-success text-white">
             <h5 class="card-title mb-0">
-                <i class="fas fa-school me-2"></i>Passo 3 - Escolas e Monitoramentos
+                <i class="fas fa-school me-2"></i>Escolas e Monitoramentos
             </h5>
         </div>
         <div class="card-body">

@@ -85,18 +85,19 @@
   {% with current=request.resolver_match.url_name %}
   {% if user.is_authenticated and user.is_staff %}
   
-    {# Monitoramentos #}
+  {% with current=request.resolver_match.url_name %}
+  {% if user.is_authenticated and user.is_staff %}
     <li class="nav-item">
       <a class="nav-link text-white sidebar-link d-flex justify-content-between align-items-center"
          data-bs-toggle="collapse"
          href="#monitoramentosSubmenu"
          role="button"
-         aria-expanded="{{ current|url_in:'dashboard_monitoramentos,gerenciar_monitoramentos,relatos_problemas'|yesno:'true,false' }}"
+         aria-expanded="{{ current|url_in:'dashboard_monitoramentos,fluxo_monitoramento_setores,relatos_problemas'|yesno:'true,false' }}"
          aria-controls="monitoramentosSubmenu">
         <span><i class="fas fa-clipboard-list me-2"></i>Monitoramentos</span>
         <i class="fas fa-chevron-down"></i>
       </a>
-      <ul class="nav flex-column ms-3 collapse {% if current|url_in:'dashboard_monitoramentos,gerenciar_monitoramentos,relatos_problemas' %}show{% endif %}"
+      <ul class="nav flex-column ms-3 collapse {% if current|url_in:'dashboard_monitoramentos,fluxo_monitoramento_setores,relatos_problemas' %}show{% endif %}"
           id="monitoramentosSubmenu">
         <li>
           <a href="{% url 'dashboard_monitoramentos' %}"
@@ -106,7 +107,7 @@
         </li>
         <li>
           <a href="{% url 'fluxo_monitoramento_setores' %}"
-             class="nav-link text-white sidebar-link {% if current == 'gerenciar_monitoramentos' %}active{% endif %}">
+             class="nav-link text-white sidebar-link {% if current == 'fluxo_monitoramento_setores' %}active{% endif %}">
             <i class="fas fa-tasks me-2"></i>Gerenciar Monitoramentos
           </a>
         </li>
@@ -118,6 +119,8 @@
         </li>
       </ul>
     </li>
+  {% endif %}
+{% endwith %}
   
     {# Questionários #}
     <li class="nav-item mt-2">

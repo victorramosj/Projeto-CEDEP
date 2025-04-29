@@ -308,7 +308,7 @@ async function submitForm() {
             tipo_resposta: c.querySelector('.question-type').value,
             ordem: parseInt(c.querySelector('.question-order').value)
         })),
-        escolas: Array.from(escolasSelecionadas),
+        escolas_destino: Array.from(escolasSelecionadas),
         monitoramento: {
             data_limite: document.getElementById('data-limite').value,
             frequencia: document.getElementById('frequencia').value
