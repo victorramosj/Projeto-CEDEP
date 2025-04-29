@@ -137,7 +137,8 @@
                             </select>
                         </div>
                         <div class="col-md-2">
-                            <input type="number" class="form-control question-order" placeholder="Ordem" min="1">
+                          <input type="number" class="form-control question-order" placeholder="Ordem" min="1" value="1">
+
                         </div>
                     </div>
                 </div>
@@ -208,10 +209,18 @@ function selectSetor(card) {
   selectedSetorId = card.dataset.id;
 }
 function addQuestion() {
+  const container = document.getElementById('perguntas-container');
+  const totalPerguntas = container.querySelectorAll('.question-card').length;
+  const novaOrdem = totalPerguntas + 1;
+
   const clone = document.querySelector('.question-card').cloneNode(true);
-  clone.querySelectorAll('input').forEach(i=>i.value='');
-  document.getElementById('perguntas-container').appendChild(clone);
+  clone.querySelector('.question-text').value = '';
+  clone.querySelector('.question-type').value = 'SN';
+  clone.querySelector('.question-order').value = novaOrdem;
+
+  container.appendChild(clone);
 }
+
 function updateCounter() {
   document.getElementById('selected-counter').textContent =
     `${escolasSelecionadas.size} selecionada${escolasSelecionadas.size!==1?'s':''}`;
