@@ -7,11 +7,9 @@
 <div class="container-fluid px-4">
   <div class="d-flex justify-content-between align-items-center mb-4">
     <h1 class="mb-2" style="color: #10295d">Gerenciar Reservas</h1>
-    <div>
-      <a href="{% url 'reserva_form' %}" class="btn btn-success btn-sm me-2">
-        <i class="bi bi-plus-circle"></i> Nova Reserva
-      </a>
-    </div>
+    <a href="{% url 'reserva_form' %}" class="btn btn-success btn-sm">
+      <i class="bi bi-plus-circle"></i> Nova Reserva
+    </a>
   </div>
 
   <!-- Filtro de busca -->
@@ -19,33 +17,30 @@
     <div class="row g-2">
       <div class="col-md-3">
         <select name="filter_by" class="form-select" id="filter-by">
-          <option value="all" {% if filter_by == "all" %}selected{% endif %}>Todos</option>
-          <option value="hospede" {% if filter_by == "hospede" %}selected{% endif %}>Hóspede</option>
-          <option value="status" {% if filter_by == "status" %}selected{% endif %}>Status</option>
+          <option value="all" {% if filter_by == 'all' %}selected{% endif %}>Todos</option>
+          <option value="hospede" {% if filter_by == 'hospede' %}selected{% endif %}>Hóspede</option>
+          <option value="status" {% if filter_by == 'status' %}selected{% endif %}>Status</option>
         </select>
       </div>
       <div class="col-md-9">
         <div class="input-group">
-          <!-- Campo de texto para Hóspede -->
-          <input type="text" 
-                 name="q" 
-                 value="{{ query }}" 
-                 class="form-control" 
-                 id="search-input" 
+          <!-- Campo de texto para Hóspede ou pesquisa geral -->
+          <input type="text"
+                 name="search"
+                 value="{{ search }}"
+                 class="form-control"
+                 id="search-input"
                  placeholder="Pesquisar..."
-                 {% if filter_by == "status" %}style="display: none;"{% endif %}>
-          
+                 {% if filter_by == 'status' %}style="display:none;" disabled{% endif %}>
+
           <!-- Select para Status -->
-          <select name="q" 
-                  class="form-select" 
-                  id="status-select" 
-                  {% if filter_by != "status" %}style="display: none;"{% endif %}>
+          <select name="status" class="form-select" id="status-select" {% if filter_by != 'status' %}style="display:none;" disabled{% endif %}>
             <option value="">Selecione um status...</option>
-            <option value="PENDENTE" {% if query == "PENDENTE" %}selected{% endif %}>Pendente</option>
-            <option value="CONFIRMADA" {% if query == "CONFIRMADA" %}selected{% endif %}>Confirmada</option>
-            <option value="CANCELADA" {% if query == "CANCELADA" %}selected{% endif %}>Cancelada</option>
+            <option value="PENDENTE" {% if status == 'PENDENTE' %}selected{% endif %}>Pendente</option>
+            <option value="CONFIRMADA" {% if status == 'CONFIRMADA' %}selected{% endif %}>Confirmada</option>
+            <option value="CANCELADA" {% if status == 'CANCELADA' %}selected{% endif %}>Cancelada</option>
           </select>
-          
+
           <button class="btn btn-outline-primary" type="submit">
             <i class="bi bi-search"></i> Buscar
           </button>
@@ -54,20 +49,22 @@
     </div>
   </form>
 
-  <!-- Script para alternar entre input e select -->
   <script>
-      document.getElementById('filter-by').addEventListener('change', function() {
-          const searchInput = document.getElementById('search-input');
-          const statusSelect = document.getElementById('status-select');
-          
-          if (this.value === 'status') {
-              searchInput.style.display = 'none';
-              statusSelect.style.display = 'block';
-          } else {
-              searchInput.style.display = 'block';
-              statusSelect.style.display = 'none';
-          }
-      });
+    document.getElementById('filter-by').addEventListener('change', function() {
+      const searchInput = document.getElementById('search-input');
+      const statusSelect = document.getElementById('status-select');
+      if (this.value === 'status') {
+        searchInput.style.display = 'none';
+        searchInput.disabled = true;
+        statusSelect.style.display = 'block';
+        statusSelect.disabled = false;
+      } else {
+        searchInput.style.display = 'block';
+        searchInput.disabled = false;
+        statusSelect.style.display = 'none';
+        statusSelect.disabled = true;
+      }
+    });
   </script>
 
   <!-- Tabela de Reservas -->
@@ -106,7 +103,7 @@
             </tr>
             {% empty %}
             <tr>
-              <td colspan="5" class="text-center">Nenhuma reserva cadastrada.</td>
+              <td colspan="5" class="text-center">Nenhuma reserva encontrada.</td>
             </tr>
             {% endfor %}
           </tbody>
@@ -118,7 +115,7 @@
         <ul class="pagination justify-content-center">
           {% if reservas.has_previous %}
           <li class="page-item">
-            <a class="page-link" href="?page={{ reservas.previous_page_number }}{% if query %}&q={{ query }}{% endif %}{% if filter_by %}&filter_by={{ filter_by }}{% endif %}">Anterior</a>
+            <a class="page-link" href="?page={{ reservas.previous_page_number }}&filter_by={{ filter_by }}{% if search %}&search={{ search }}{% endif %}{% if status %}&status={{ status }}{% endif %}">Anterior</a>
           </li>
           {% else %}
           <li class="page-item disabled">
@@ -128,19 +125,17 @@
 
           {% for num in reservas.paginator.page_range %}
             {% if reservas.number == num %}
-            <li class="page-item active">
-              <span class="page-link">{{ num }}</span>
-            </li>
+            <li class="page-item active"><span class="page-link">{{ num }}</span></li>
             {% elif num > reservas.number|add:'-3' and num < reservas.number|add:'3' %}
             <li class="page-item">
-              <a class="page-link" href="?page={{ num }}{% if query %}&q={{ query }}{% endif %}{% if filter_by %}&filter_by={{ filter_by }}{% endif %}">{{ num }}</a>
+              <a class="page-link" href="?page={{ num }}&filter_by={{ filter_by }}{% if search %}&search={{ search }}{% endif %}{% if status %}&status={{ status }}{% endif %}">{{ num }}</a>
             </li>
             {% endif %}
           {% endfor %}
 
           {% if reservas.has_next %}
           <li class="page-item">
-            <a class="page-link" href="?page={{ reservas.next_page_number }}{% if query %}&q={{ query }}{% endif %}{% if filter_by %}&filter_by={{ filter_by }}{% endif %}">Próximo</a>
+            <a class="page-link" href="?page={{ reservas.next_page_number }}&filter_by={{ filter_by }}{% if search %}&search={{ search }}{% endif %}{% if status %}&status={{ status }}{% endif %}">Próximo</a>
           </li>
           {% else %}
           <li class="page-item disabled">
@@ -153,7 +148,7 @@
   </div>
 </div>
 
-<!-- Modal para confirmação de exclusão de reserva -->
+<!-- Modal de exclusão -->
 <div class="modal fade" id="deleteReservaModal" tabindex="-1" aria-labelledby="deleteReservaModalLabel" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content">
@@ -161,9 +156,7 @@
         <h5 class="modal-title" id="deleteReservaModalLabel">Confirmar Exclusão</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
       </div>
-      <div class="modal-body">
-        Tem certeza que deseja excluir esta reserva?
-      </div>
+      <div class="modal-body">Tem certeza que deseja excluir esta reserva?</div>
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
         <button type="button" class="btn btn-danger" id="confirmDeleteReserva">Excluir</button>
@@ -176,51 +169,21 @@
 {% block scripts %}
 <script>
   let reservaIdToDelete = null;
-  
   function deleteReserva(reservaId) {
     reservaIdToDelete = reservaId;
-    var deleteModal = new bootstrap.Modal(document.getElementById('deleteReservaModal'));
-    deleteModal.show();
+    new bootstrap.Modal(document.getElementById('deleteReservaModal')).show();
   }
-
   document.getElementById('confirmDeleteReserva').addEventListener('click', function() {
     const csrftoken = getCookie('csrftoken');
     fetch(`/reservas/api/reservas/${reservaIdToDelete}/`, {
       method: 'DELETE',
-      headers: {
-        'X-CSRFToken': csrftoken,
-        'Content-Type': 'application/json'
-      }
+      headers: {'X-CSRFToken': csrftoken, 'Content-Type':'application/json'}
     })
-    .then(response => {
-      if (response.status === 204) {
-        alert('Reserva excluída com sucesso.');
-        location.reload();
-      } else {
-        return response.json().then(data => {
-          alert(data.message || 'Erro ao excluir a reserva.');
-        });
-      }
-    })
-    .catch(error => {
-      console.error('Erro:', error);
-      alert('Erro ao excluir a reserva.');
-    });
+    .then(resp => resp.status === 204 ? location.reload() : resp.json().then(data=>alert(data.message||'Erro')))  
+    .catch(()=>alert('Erro ao excluir a reserva.'));
   });
-
   function getCookie(name) {
-      let cookieValue = null;
-      if (document.cookie && document.cookie !== '') {
-          const cookies = document.cookie.split(';');
-          for (let i = 0; i < cookies.length; i++) {
-              const cookie = cookies[i].trim();
-              if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                  cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                  break;
-              }
-          }
-      }
-      return cookieValue;
+    let value=null; if(document.cookie){ document.cookie.split(';').forEach(c=>{ let [k,v]=c.trim().split('='); if(k===name) value=decodeURIComponent(v); }); } return value;
   }
 </script>
 {% endblock %}
