@@ -6,13 +6,13 @@
 {% block content %}
 <div class="container-fluid px-4">
     <h2 class="mt-4">Monitoramento por Setores</h2>
-    
+
     <!-- Botão para o Dashboard -->
-<div class="mt-3">
-    <a href="{% url 'dashboard_monitoramentos' %}" class="btn btn-secondary">
-        <i class="fas fa-arrow-left"></i> Voltar para o Dashboard
-    </a>
-</div>
+    <div class="mt-3">
+        <a href="{% url 'dashboard_monitoramentos' %}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Voltar para o Dashboard
+        </a>
+    </div>
 
 
     <!-- Passo 1: Seleção de Setor -->
@@ -27,24 +27,23 @@
                 <div class="col-md-4">
                     <div class="list-group">
                         {% for setor in setores_permitidos %}
-                            <a href="?setor={{ setor.id }}" 
-                               class="list-group-item list-group-item-action d-flex justify-content-between align-items-center 
+                        <a href="?setor={{ setor.id }}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center 
                                       {% if setor_selecionado.id == setor.id %}active{% endif %}">
-                                {{ setor.hierarquia_completa }}
-                                <span class="badge bg-secondary rounded-pill">{{ setor.questionario_set.count }}</span>
-                            </a>
+                            {{ setor.hierarquia_completa }}
+                            <span class="badge bg-secondary rounded-pill">{{ setor.questionario_set.count }}</span>
+                        </a>
                         {% endfor %}
                     </div>
                 </div>
-                
+
                 <div class="col-md-8">
                     {% if setor_selecionado %}
-                        <h4>{{ setor_selecionado.hierarquia_completa }}</h4>
-                        <p class="text-muted">{{ setor_selecionado.questionario_set.count }} questionários disponíveis</p>
+                    <h4>{{ setor_selecionado.hierarquia_completa }}</h4>
+                    <p class="text-muted">{{ setor_selecionado.questionario_set.count }} questionários disponíveis</p>
                     {% else %}
-                        <div class="alert alert-info">
-                            Selecione um setor à esquerda para ver os questionários disponíveis
-                        </div>
+                    <div class="alert alert-info">
+                        Selecione um setor à esquerda para ver os questionários disponíveis
+                    </div>
                     {% endif %}
                 </div>
             </div>
@@ -63,43 +62,41 @@
             <div class="row">
                 <div class="col-md-8">
                     {% if setor_selecionado.questionario_set.all %}
-                        <div class="list-group">
-                            {% for questionario in setor_selecionado.questionario_set.all %}
-                            <a href="?setor={{ setor_selecionado.id }}&questionario={{ questionario.id }}" 
-                               class="list-group-item list-group-item-action d-flex justify-content-between align-items-center
+                    <div class="list-group">
+                        {% for questionario in setor_selecionado.questionario_set.all %}
+                        <a href="?setor={{ setor_selecionado.id }}&questionario={{ questionario.id }}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center
                                       {% if questionario_selecionado.id == questionario.id %}active{% endif %}">
-                                <div>
-                                    <h6 class="mb-1">{{ questionario.titulo }}</h6>
-                                    <small class="text-muted">{{ questionario.descricao|truncatechars:80 }}</small>
-                                </div>
-                                <span class="badge bg-primary rounded-pill">{{ questionario.escolas_destino.count }}</span>
-                            </a>
-                            {% endfor %}
-                        </div>
+                            <div>
+                                <h6 class="mb-1">{{ questionario.titulo }}</h6>
+                                <small class="text-muted">{{ questionario.descricao|truncatechars:80 }}</small>
+                            </div>
+                            <span class="badge bg-primary rounded-pill">{{ questionario.escolas_destino.count }}</span>
+                        </a>
+                        {% endfor %}
+                    </div>
                     {% else %}
-                        <div class="alert alert-warning">
-                            Nenhum questionário disponível para este setor.
-                            {% if user.is_authenticated and user.is_staff %}
-                                <a href="{% url 'questionarios-add' %}?setor={{ setor_selecionado.id }}" 
-                                   class="alert-link">
-                                    Criar novo questionário
-                                </a>
-                            {% endif %}
-                        </div>
+                    <div class="alert alert-warning">
+                        Nenhum questionário disponível para este setor.
+                        {% if user.is_authenticated and user.is_staff %}
+                        <a href="{% url 'questionarios-add' %}?setor={{ setor_selecionado.id }}" class="alert-link">
+                            Criar novo questionário
+                        </a>
+                        {% endif %}
+                    </div>
                     {% endif %}
                 </div>
-                
+
                 <div class="col-md-4">
                     {% if questionario_selecionado %}
-                        <h5>{{ questionario_selecionado.titulo }}</h5>
-                        <p class="small">{{ questionario_selecionado.descricao }}</p>
-                        <div class="d-grid gap-2">
-                            <a href="{% url 'gerenciar_perguntas' questionario_selecionado.id %}" 
-                               class="btn btn-outline-primary btn-sm">
-                                <i class="fas fa-edit"></i> Gerenciar Perguntas
-                            </a>
-                        </div>
-                        
+                    <h5>{{ questionario_selecionado.titulo }}</h5>
+                    <p class="small">{{ questionario_selecionado.descricao }}</p>
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'gerenciar_perguntas' questionario_selecionado.id %}"
+                            class="btn btn-outline-primary btn-sm">
+                            <i class="fas fa-edit"></i> Gerenciar Perguntas
+                        </a>
+                    </div>
+
                     {% endif %}
                 </div>
             </div>
@@ -121,38 +118,38 @@
                     <h6>Escolas Vinculadas</h6>
                     <div class="list-group mb-4">
                         {% for escola in questionario_selecionado.escolas_destino.all %}
-                            <div class="list-group-item">
-                                <div class="d-flex justify-content-between">
-                                    <span>{{ escola.nome }}</span>
-                                    <span class="badge bg-secondary">{{ escola.inep }}</span>
-                                </div>
+                        <div class="list-group-item">
+                            <div class="d-flex justify-content-between">
+                                <span>{{ escola.nome }}</span>
+                                <span class="badge bg-secondary">{{ escola.inep }}</span>
                             </div>
+                        </div>
                         {% endfor %}
                     </div>
-                    <button class="btn btn-outline-success btn-sm w-100" 
-                            data-bs-toggle="modal" 
-                            data-bs-target="#assignSchoolsModal">
+                    <button class="btn btn-outline-success btn-sm w-100" data-bs-toggle="modal"
+                        data-bs-target="#assignSchoolsModal">
                         <i class="fas fa-plus"></i> Adicionar Escolas
                     </button>
                 </div>
-                
+
                 <div class="col-md-8">
                     <h6>Últimos Monitoramentos</h6>
                     <div class="list-group">
                         {% for monitoramento in monitoramentos %}
-                        <a href="{% url 'detalhe_monitoramento' monitoramento.id %}" 
-                           class="list-group-item list-group-item-action">
+                        <a href="{% url 'detalhe_monitoramento' monitoramento.id %}"
+                            class="list-group-item list-group-item-action">
                             <div class="d-flex justify-content-between align-items-center">
                                 <div>
                                     <h6 class="mb-1">{{ monitoramento.escola.nome }}</h6>
                                     <small class="text-muted">
                                         {{ monitoramento.data_envio|date:"d/m/Y H:i" }}
                                         {% if monitoramento.respondido_por %}
-                                            - {{ monitoramento.respondido_por.nome_completo }}
+                                        - {{ monitoramento.respondido_por.nome_completo }}
                                         {% endif %}
                                     </small>
                                 </div>
-                                <span class="badge bg-{% if monitoramento.status == 'R' %}success{% elif monitoramento.status == 'U' %}danger{% else %}warning{% endif %}">
+                                <span
+                                    class="badge bg-{% if monitoramento.status == 'R' %}success{% elif monitoramento.status == 'U' %}danger{% else %}warning{% endif %}">
                                     {{ monitoramento.get_status_display }}
                                 </span>
                             </div>
@@ -169,130 +166,190 @@
     </div>
     {% endif %}
 </div>
-
 <!-- Modal para Adicionar Escolas -->
 <div class="modal fade" id="assignSchoolsModal" tabindex="-1">
     <div class="modal-dialog modal-lg">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title">Adicionar Escolas ao Questionário</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Adicionar Escolas ao Questionário</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <input type="text" id="search-escolas" class="form-control form-control-sm w-75"
+                        placeholder="Buscar por nome, INEP, endereço ou email...">
+                    <div class="btn-group">
+                        <button class="btn btn-sm btn-outline-secondary" id="prev-page">
+                            <i class="fas fa-chevron-left"></i>
+                        </button>
+                        <span class="px-3" id="current-page">1</span>
+                        <button class="btn btn-sm btn-outline-secondary" id="next-page">
+                            <i class="fas fa-chevron-right"></i>
+                        </button>
+                    </div>
+                </div>
+                <div id="escolas-container" class="row g-3"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Fechar</button>
+                <button type="button" id="saveSchoolsBtn" class="btn btn-primary btn-sm">Salvar</button>
+            </div>
         </div>
-        <div class="modal-body">
-          <!-- Campo de busca -->
-           <!-- Adicione o botão de selecionar todas -->
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <input type="text" id="search-escolas" class="form-control form-control-sm w-75" 
-               placeholder="Buscar por nome, INEP, endereço ou email...">
-        <button type="button" id="select-all-btn" class="btn btn-outline-primary btn-sm">
-            Selecionar Todas
-        </button>
     </div>
-    
-          <!-- Container para as pills -->
-          <div id="escolas-container" class="d-flex flex-wrap gap-2">
-            <p class="text-center text-muted w-100">Carregando escolas...</p>
-          </div>
-          <!-- Contador opcional -->
-          <small id="escolas-counter" class="text-muted"></small>
-        </div>
-        <div class="modal-footer">
-          <button type="button"
-                  class="btn btn-secondary btn-sm"
-                  data-bs-dismiss="modal">Fechar</button>
-          <button type="button"
-                  id="saveSchoolsBtn"
-                  class="btn btn-primary btn-sm">Salvar</button>
-        </div>
-      </div>
-    </div>
-  </div>
-  
-  {% endblock %}
+</div>
+{% endblock %}
 {% block extra_scripts %}
 {% if questionario_selecionado %}
 <script>
-(function(){
-  const modalEl = document.getElementById('assignSchoolsModal');
-  const assignUrl = "{% url 'assign_escolas' questionario_selecionado.id %}";
-  const escolasApiUrl = "{% url 'escolas-list' %}";
-  let escolasSelecionadas = new Set();
-  let currentResponse = null; // Variável para armazenar a resposta atual
+    (function () {
+        const modalEl = document.getElementById('assignSchoolsModal');
+        const assignUrl = "{% url 'assign_escolas' questionario_selecionado.id %}";
+        const escolasApiUrl = "{% url 'escolas-list' %}";
+        console.log('URL da API de escolas:', escolasApiUrl);
+        let escolasSelecionadas = new Set();
+        let currentPage = 1;
+        let totalPages = 1;
+        let currentResponse = null;
 
-  // Elementos
-  const container = modalEl.querySelector('#escolas-container');
-  const searchInput = modalEl.querySelector('#search-escolas');
-  const counterEl = modalEl.querySelector('#escolas-counter');
-  let currentPage = 1;
-  let totalPages = 1;
+        // Elementos
+        const container = modalEl.querySelector('#escolas-container');
+        const searchInput = modalEl.querySelector('#search-escolas');
+        const counterEl = modalEl.querySelector('#escolas-counter');
 
-  // Função para renderizar as escolas
-  function renderEscolas(data) {
-    totalPages = Math.ceil(data.count / 10);
-    document.getElementById('current-page').textContent = `Página ${currentPage} de ${totalPages}`;
-    
-    if (data.results.length === 0) {
-      container.innerHTML = '<p class="text-center text-muted w-100">Nenhuma escola encontrada.</p>';
-      return;
-    }
+        // Funções
+        function updateCounter() {
+            const count = escolasSelecionadas.size;
+            counterEl.textContent = count ? `${count} escola(s) selecionada(s)` : '';
+        }
 
-    container.innerHTML = data.results.map(escola => `
-      <div class="col-md-6">
-        <div class="card escola-card ${escolasSelecionadas.has(escola.id.toString()) ? 'border-primary' : ''}">
-          <div class="row g-0">
-            <div class="col-md-4">
-              <img src="${escola.foto_fachada_url || '/static/img/default-school.png'}" 
-                   class="img-fluid rounded-start" 
-                   style="height: 150px; object-fit: cover;">
-            </div>
+        function renderEscolas(data) {
+            totalPages = Math.ceil(data.count / 10);
+            document.getElementById('current-page').textContent = `Página ${currentPage} de ${totalPages}`;
+
+            if (data.results.length === 0) {
+                container.innerHTML = '<p class="text-center text-muted w-100">Nenhuma escola encontrada.</p>';
+                return;
+            }
+
+            container.innerHTML = data.results.map(escola => `
+            <div class="col-md-6">
+                <div class="card escola-card ${escolasSelecionadas.has(escola.id.toString()) ? 'border-primary' : ''}">
+                    <div class="row g-0">
+                        <div class="col-md-4">
+                            <img src="${escola.foto_fachada_url || '{% static 'img /default -school.png' %}'} " 
+        class="img-fluid rounded-start"
+        style = "height: 150px; object-fit: cover;" >
+                        </div >
             <div class="col-md-8">
-              <div class="card-body">
-                <h6 class="card-title">${escola.nome}</h6>
-                <div class="card-text small">
-                  <div><strong>INEP:</strong> ${escola.inep}</div>
-                  <div class="text-truncate"><strong>Endereço:</strong> ${escola.endereco}</div>
-                  <div><strong>Gestor:</strong> ${escola.nome_gestor}</div>
-                </div>
-                <button onclick="toggleEscola(${escola.id})" 
+                <div class="card-body">
+                    <h6 class="card-title">${escola.nome}</h6>
+                    <div class="card-text small">
+                        <div><strong>INEP:</strong> ${escola.inep}</div>
+                        <div class="text-truncate"><strong>Endereço:</strong> ${escola.endereco}</div>
+                        <div><strong>Gestor:</strong> ${escola.nome_gestor}</div>
+                    </div>
+                    <button onclick="toggleEscola(${escola.id})"
                         class="btn btn-sm ${escolasSelecionadas.has(escola.id.toString()) ? 'btn-primary' : 'btn-outline-primary'} mt-2">
-                  ${escolasSelecionadas.has(escola.id.toString()) ? 'Remover' : 'Adicionar'}
-                </button>
-              </div>
+                        ${escolasSelecionadas.has(escola.id.toString()) ? 'Remover' : 'Adicionar'}
+                    </button>
+                </div>
             </div>
-          </div>
-        </div>
-      </div>
-    `).join('');
-  }
-
-  // Função para carregar as escolas
-  async function loadEscolas(search = '') {
-    try {
-      const res = await fetch(`${escolasApiUrl}?search=${encodeURIComponent(search)}&page=${currentPage}`);
-      const data = await res.json();
-      currentResponse = data;
-      renderEscolas(data);
-    } catch(err) {
-      console.error('Erro ao carregar escolas:', err);
-      container.innerHTML = '<p class="text-center text-danger w-100">Erro ao carregar escolas.</p>';
+                    </div >
+                </div >
+            </div >
+            `).join('');
     }
-  }
 
-  // Event Listeners
-  modalEl.addEventListener('show.bs.modal', async () => {
+   // Modifique a função loadEscolas
+async function loadEscolas(search = '') {
     try {
-      const res = await fetch(assignUrl);
-      const data = await res.json();
-      escolasSelecionadas = new Set(data.escolas.map(e => e.id.toString()));
-      await loadEscolas(searchInput.value);
+        const res = await fetch(`${ escolasApiUrl }?search = ${ encodeURIComponent(search) }& page=${ currentPage } `);
+        
+        if (!res.ok) {
+            throw new Error(`HTTP error! status: ${ res.status } `);
+        }
+        
+        const data = await res.json();
+        
+        // Verificação da estrutura da resposta
+        if (!data || !data.results || !data.count) {
+            throw new Error('Resposta da API em formato incorreto');
+        }
+        
+        currentResponse = data;
+        renderEscolas(data);
+        updateCounter();
     } catch(err) {
-      console.error('Erro:', err);
+        logFetchError(err);
+        container.innerHTML = `
+            < div class="col-12" >
+                <div class="alert alert-danger">
+                    Erro ao carregar escolas: ${err.message}
+                </div>
+            </div >
+        `;
     }
-  });
+}
 
-  // Restante do código permanece igual...
+    // Event Listeners
+    modalEl.addEventListener('show.bs.modal', async () => {
+        try {
+            const res = await fetch(assignUrl);
+            const data = await res.json();
+            escolasSelecionadas = new Set(data.escolas.map(e => e.id.toString()));
+            await loadEscolas();
+        } catch(err) {
+            console.error('Erro:', err);
+        }
+    });
+
+    document.getElementById('next-page').addEventListener('click', () => {
+        if (currentPage < totalPages) {
+            currentPage++;
+            loadEscolas(searchInput.value);
+        }
+    });
+
+    document.getElementById('prev-page').addEventListener('click', () => {
+        if (currentPage > 1) {
+            currentPage--;
+            loadEscolas(searchInput.value);
+        }
+    });
+
+    searchInput.addEventListener('input', e => {
+        currentPage = 1;
+        loadEscolas(e.target.value);
+    });
+
+    window.toggleEscola = function(id) {
+        const strId = id.toString();
+        if (escolasSelecionadas.has(strId)) {
+            escolasSelecionadas.delete(strId);
+        } else {
+            escolasSelecionadas.add(strId);
+        }
+        renderEscolas(currentResponse);
+        updateCounter();
+    };
+
+    document.getElementById('saveSchoolsBtn').addEventListener('click', () => {
+        const payload = { escolas: Array.from(escolasSelecionadas).map(id => parseInt(id, 10)) };
+        fetch(assignUrl, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            body: JSON.stringify(payload)
+        })
+        .then(res => {
+            if (!res.ok) throw new Error('Erro ao salvar');
+            window.location.reload();
+        })
+        .catch(console.error);
+    });
 })();
 </script>
 {% endif %}
 {% endblock %}
-
