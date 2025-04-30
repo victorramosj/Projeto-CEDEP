@@ -23,17 +23,19 @@ class SetorSerializer(serializers.ModelSerializer):
     def get_sub_setores(self, obj):
         return SetorSerializer(obj.sub_setores.all(), many=True).data
 
+# serializers.py
 class EscolaSerializer(serializers.ModelSerializer):
-    user = UserSerializer(required=False, allow_null=True)
-    foto_fachada_url = serializers.ImageField(source='foto_fachada', read_only=True)
-
+    foto_fachada_url = serializers.SerializerMethodField()
+    
     class Meta:
         model = Escola
-        fields = '__all__'
-        extra_kwargs = {
-            'telefone': {'validators': [RegexValidator(regex=r'^\(\d{2}\) \d{5}-\d{4}$')]},
-            'telefone_gestor': {'validators': [RegexValidator(regex=r'^\(\d{2}\) \d{5}-\d{4}$')]}
-        }
+        fields = ['id', 'nome', 'inep', 'endereco', 'foto_fachada_url', 
+                 'nome_gestor', 'email_gestor', 'telefone']
+
+    def get_foto_fachada_url(self, obj):
+        if obj.foto_fachada:
+            return self.context['request'].build_absolute_uri(obj.foto_fachada.url)
+        return None
 
 class GREUserSerializer(serializers.ModelSerializer):
     user = UserSerializer()

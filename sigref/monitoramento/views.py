@@ -44,18 +44,23 @@ def verificar_acesso_setor(setor_requerido):
 
 
 # views.py
-class EscolaViewSet(viewsets.ModelViewSet):
-    queryset = Escola.objects.all().order_by('nome')  # Adicione ordenação
-    serializer_class = EscolaSerializer
-    filter_backends = [filters.SearchFilter]
-    search_fields = ['nome', 'inep']
+from rest_framework.pagination import PageNumberPagination
 
-    @action(detail=True, methods=['get'])
-    def monitoramentos(self, request, pk=None):
-        escola = self.get_object()
-        monitoramentos = Monitoramento.objects.filter(escola=escola)
-        serializer = MonitoramentoSerializer(monitoramentos, many=True)
-        return Response(serializer.data)
+class EscolaPagination(PageNumberPagination):
+    page_size = 10
+    page_size_query_param = 'page_size'
+    max_page_size = 100
+
+# views.py
+class EscolaViewSet(viewsets.ModelViewSet):
+    queryset = Escola.objects.all().order_by('nome')
+    serializer_class = EscolaSerializer
+    pagination_class = EscolaPagination
+    filter_backends = [filters.SearchFilter]
+    search_fields = ['nome', 'inep', 'endereco', 'nome_gestor']
+
+    def get_serializer_context(self):
+        return {'request': self.request}
 
 class SetorViewSet(viewsets.ModelViewSet):
     queryset = Setor.objects.all()

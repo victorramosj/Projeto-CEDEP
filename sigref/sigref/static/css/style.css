@@ -208,3 +208,18 @@ body {
     border-radius: 2px;
 }
 
+
+/* Adicione no seu arquivo CSS */
+.escola-card {
+    transition: transform 0.2s;
+    cursor: pointer;
+}
+
+.escola-card:hover {
+    transform: translateY(-2px);
+}
+
+.escola-card.selected {
+    border: 2px solid #0d6efd;
+    background-color: #f8f9fa;
+}
