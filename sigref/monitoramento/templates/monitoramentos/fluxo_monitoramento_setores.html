@@ -2,7 +2,28 @@
 {% load static custom_tags %}
 
 {% block title %}Fluxo de Monitoramento por Setores{% endblock %}
-
+{% block extra_style %}
+{{ block.super }}
+<style>
+  /* Estilos para os cards de escola */
+  .card[data-id] {
+    cursor: pointer;
+    transition: all 0.2s ease;
+    margin-bottom: 1rem;
+  }
+  .card[data-id]:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+  }
+  .border-primary {
+    border: 2px solid #0d6efd !important;
+  }
+  #escolas-counter {
+    font-weight: 500;
+    color: #0d6efd;
+  }
+</style>
+{% endblock %}
 {% block content %}
 <div class="container-fluid px-4">
     <h2 class="mt-4">Monitoramento por Setores</h2>
@@ -169,187 +190,230 @@
 <!-- Modal para Adicionar Escolas -->
 <div class="modal fade" id="assignSchoolsModal" tabindex="-1">
     <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Adicionar Escolas ao Questionário</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <input type="text" id="search-escolas" class="form-control form-control-sm w-75"
-                        placeholder="Buscar por nome, INEP, endereço ou email...">
-                    <div class="btn-group">
-                        <button class="btn btn-sm btn-outline-secondary" id="prev-page">
-                            <i class="fas fa-chevron-left"></i>
-                        </button>
-                        <span class="px-3" id="current-page">1</span>
-                        <button class="btn btn-sm btn-outline-secondary" id="next-page">
-                            <i class="fas fa-chevron-right"></i>
-                        </button>
-                    </div>
-                </div>
-                <div id="escolas-container" class="row g-3"></div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Fechar</button>
-                <button type="button" id="saveSchoolsBtn" class="btn btn-primary btn-sm">Salvar</button>
-            </div>
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Adicionar Escolas ao Questionário</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
         </div>
+        <div class="modal-body">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <input
+              type="text"
+              id="search-escolas"
+              class="form-control form-control-sm w-75"
+              placeholder="Buscar por nome, INEP, endereço ou email..."
+            >
+            <div class="btn-group">
+              <button class="btn btn-sm btn-outline-secondary" id="prev-page">
+                <i class="fas fa-chevron-left"></i>
+              </button>
+              <span class="px-3" id="current-page">1</span>
+              <button class="btn btn-sm btn-outline-secondary" id="next-page">
+                <i class="fas fa-chevron-right"></i>
+              </button>
+            </div>
+          </div>
+  
+          <!-- contador de selecionadas -->
+          <div id="escolas-counter" class="mb-2 text-muted small"></div>
+  
+          <!-- container onde os cards serão injetados -->
+          <div id="escolas-container" class="row g-3"></div>
+        </div>
+        <div class="modal-footer">
+          <button
+            type="button"
+            class="btn btn-secondary btn-sm"
+            data-bs-dismiss="modal"
+          >Fechar</button>
+          <button
+            type="button"
+            id="saveSchoolsBtn"
+            class="btn btn-primary btn-sm"
+          >Salvar</button>
+        </div>
+      </div>
     </div>
-</div>
+  </div>
+  
 {% endblock %}
-{% block extra_scripts %}
+{% block scripts %}
 {% if questionario_selecionado %}
 <script>
-    (function () {
-        const modalEl = document.getElementById('assignSchoolsModal');
-        const assignUrl = "{% url 'assign_escolas' questionario_selecionado.id %}";
-        const escolasApiUrl = "{% url 'escolas-list' %}";
-        console.log('URL da API de escolas:', escolasApiUrl);
-        let escolasSelecionadas = new Set();
-        let currentPage = 1;
-        let totalPages = 1;
-        let currentResponse = null;
+document.addEventListener('DOMContentLoaded', () => {
+  const modalEl = document.getElementById('assignSchoolsModal');
+  if (!modalEl) {
+    console.error('Modal assignSchoolsModal não encontrado');
+    return;
+  }
 
-        // Elementos
-        const container = modalEl.querySelector('#escolas-container');
-        const searchInput = modalEl.querySelector('#search-escolas');
-        const counterEl = modalEl.querySelector('#escolas-counter');
+  const assignUrl     = "{% url 'assign_escolas' questionario_selecionado.id %}";
+  const escolasApiUrl = "{% url 'escolas-list' %}";
 
-        // Funções
-        function updateCounter() {
-            const count = escolasSelecionadas.size;
-            counterEl.textContent = count ? `${count} escola(s) selecionada(s)` : '';
-        }
+  let escolasSelecionadas = new Set();
+  let currentPage = 1, totalPages = 1;
 
-        function renderEscolas(data) {
-            totalPages = Math.ceil(data.count / 10);
-            document.getElementById('current-page').textContent = `Página ${currentPage} de ${totalPages}`;
+  const container   = modalEl.querySelector('#escolas-container');
+  const searchInput = modalEl.querySelector('#search-escolas');
+  const counterEl   = modalEl.querySelector('#escolas-counter');
+  const prevBtn     = modalEl.querySelector('#prev-page');
+  const nextBtn     = modalEl.querySelector('#next-page');
+  const saveBtn     = document.getElementById('saveSchoolsBtn');
+  const pageLabel   = document.getElementById('current-page');
 
-            if (data.results.length === 0) {
-                container.innerHTML = '<p class="text-center text-muted w-100">Nenhuma escola encontrada.</p>';
-                return;
-            }
+  [container, searchInput, counterEl, prevBtn, nextBtn, saveBtn, pageLabel].forEach(el => {
+    if (!el) console.error('Elemento não encontrado no modal:', el);
+  });
 
-            container.innerHTML = data.results.map(escola => `
-            <div class="col-md-6">
-                <div class="card escola-card ${escolasSelecionadas.has(escola.id.toString()) ? 'border-primary' : ''}">
-                    <div class="row g-0">
-                        <div class="col-md-4">
-                            <img src="${escola.foto_fachada_url || '{% static 'img /default -school.png' %}'} " 
-        class="img-fluid rounded-start"
-        style = "height: 150px; object-fit: cover;" >
-                        </div >
-            <div class="col-md-8">
-                <div class="card-body">
-                    <h6 class="card-title">${escola.nome}</h6>
-                    <div class="card-text small">
-                        <div><strong>INEP:</strong> ${escola.inep}</div>
-                        <div class="text-truncate"><strong>Endereço:</strong> ${escola.endereco}</div>
-                        <div><strong>Gestor:</strong> ${escola.nome_gestor}</div>
-                    </div>
-                    <button onclick="toggleEscola(${escola.id})"
-                        class="btn btn-sm ${escolasSelecionadas.has(escola.id.toString()) ? 'btn-primary' : 'btn-outline-primary'} mt-2">
-                        ${escolasSelecionadas.has(escola.id.toString()) ? 'Remover' : 'Adicionar'}
-                    </button>
-                </div>
-            </div>
-                    </div >
-                </div >
-            </div >
-            `).join('');
-    }
+  function updateCounter() {
+    if (!counterEl) return;
+    const count = escolasSelecionadas.size;
+    counterEl.textContent = count
+      ? `${count} escola(s) selecionada(s)`
+      : '';
+  }
 
-   // Modifique a função loadEscolas
-async function loadEscolas(search = '') {
+  async function fetchEscolas() {
     try {
-        const res = await fetch(`${ escolasApiUrl }?search = ${ encodeURIComponent(search) }& page=${ currentPage } `);
-        
-        if (!res.ok) {
-            throw new Error(`HTTP error! status: ${ res.status } `);
-        }
-        
-        const data = await res.json();
-        
-        // Verificação da estrutura da resposta
-        if (!data || !data.results || !data.count) {
-            throw new Error('Resposta da API em formato incorreto');
-        }
-        
-        currentResponse = data;
-        renderEscolas(data);
-        updateCounter();
-    } catch(err) {
-        logFetchError(err);
-        container.innerHTML = `
-            < div class="col-12" >
-                <div class="alert alert-danger">
-                    Erro ao carregar escolas: ${err.message}
-                </div>
-            </div >
-        `;
+      const q   = encodeURIComponent(searchInput.value);
+      const url = `${escolasApiUrl}?page=${currentPage}&search=${q}`;
+      console.log('Buscando escolas em:', url);
+      const res  = await fetch(url);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      console.log('Dados recebidos:', data);
+      renderEscolas(data);
+    } catch (err) {
+      console.error('Erro no fetchEscolas:', err);
+      container.innerHTML = `
+        <div class="col-12">
+          <div class="alert alert-danger">
+            Erro ao carregar escolas: ${err.message}
+          </div>
+        </div>
+      `;
     }
+  }
+
+  function renderEscolas(data) {
+  // Reset do container
+  container.innerHTML = '';
+  
+  // Tratamento para dados vazios
+  if (!data.results || data.results.length === 0) {
+    container.innerHTML = `
+      <div class="col-12">
+        <div class="alert alert-warning">
+          Nenhuma escola encontrada com o filtro atual
+        </div>
+      </div>
+    `;
+    return;
+  }
+
+  // Renderização dos cards
+  data.results.forEach(escola => {
+    const card = document.createElement('div');
+    card.className = `col-md-6`;
+    card.innerHTML = `
+      <div class="card ${escolasSelecionadas.has(escola.id.toString()) ? 'border-primary' : ''}" 
+           data-id="${escola.id}">
+        <div class="row g-0">
+          <div class="col-md-4">
+            <img src="${escola.foto_fachada_url || '{% static 'images/default-school.jpeg' %}'}" 
+                 class="img-fluid rounded-start" 
+                 style="height: 150px; object-fit: cover;">
+          </div>
+          <div class="col-md-8">
+            <div class="card-body">
+              <h6 class="card-title">${escola.nome}</h6>
+              <p class="card-text small mb-0">INEP: ${escola.inep}</p>
+              <p class="card-text small">${escola.endereco}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+
+    // Adiciona evento de clique
+    card.querySelector('.card').addEventListener('click', () => {
+      const id = escola.id.toString();
+      card.classList.toggle('border-primary');
+      
+      if (escolasSelecionadas.has(id)) {
+        escolasSelecionadas.delete(id);
+      } else {
+        escolasSelecionadas.add(id);
+      }
+      
+      updateCounter();
+    });
+
+    container.appendChild(card);
+  });
+
+  // Atualiza controles de paginação
+  totalPages = Math.ceil(data.count / 10);
+  pageLabel.textContent = `Página ${currentPage} de ${totalPages}`;
+  prevBtn.disabled = currentPage === 1;
+  nextBtn.disabled = currentPage === totalPages;
+  
+  updateCounter();
 }
 
-    // Event Listeners
-    modalEl.addEventListener('show.bs.modal', async () => {
-        try {
-            const res = await fetch(assignUrl);
-            const data = await res.json();
-            escolasSelecionadas = new Set(data.escolas.map(e => e.id.toString()));
-            await loadEscolas();
-        } catch(err) {
-            console.error('Erro:', err);
-        }
-    });
+  // Controle de paginação e busca
+  prevBtn.onclick = () => {
+    if (currentPage > 1) {
+      currentPage--;
+      fetchEscolas();
+    }
+  };
+  nextBtn.onclick = () => {
+    if (currentPage < totalPages) {
+      currentPage++;
+      fetchEscolas();
+    }
+  };
+  searchInput.oninput = () => {
+    currentPage = 1;
+    fetchEscolas();
+  };
 
-    document.getElementById('next-page').addEventListener('click', () => {
-        if (currentPage < totalPages) {
-            currentPage++;
-            loadEscolas(searchInput.value);
-        }
+  // Salvar seleção
+  saveBtn.onclick = () => {
+    fetch(assignUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': '{{ csrf_token }}',
+      },
+      body: JSON.stringify({
+        escolas: Array.from(escolasSelecionadas).map(i => parseInt(i, 10))
+      })
+    })
+    .then(r => {
+      if (r.ok) return location.reload();
+      alert('Erro ao salvar escolas.');
+    })
+    .catch(err => {
+      console.error('Erro ao salvar:', err);
+      alert('Falha na requisição.');
     });
+  };
 
-    document.getElementById('prev-page').addEventListener('click', () => {
-        if (currentPage > 1) {
-            currentPage--;
-            loadEscolas(searchInput.value);
-        }
-    });
-
-    searchInput.addEventListener('input', e => {
-        currentPage = 1;
-        loadEscolas(e.target.value);
-    });
-
-    window.toggleEscola = function(id) {
-        const strId = id.toString();
-        if (escolasSelecionadas.has(strId)) {
-            escolasSelecionadas.delete(strId);
-        } else {
-            escolasSelecionadas.add(strId);
-        }
-        renderEscolas(currentResponse);
-        updateCounter();
-    };
-
-    document.getElementById('saveSchoolsBtn').addEventListener('click', () => {
-        const payload = { escolas: Array.from(escolasSelecionadas).map(id => parseInt(id, 10)) };
-        fetch(assignUrl, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': '{{ csrf_token }}'
-            },
-            body: JSON.stringify(payload)
-        })
-        .then(res => {
-            if (!res.ok) throw new Error('Erro ao salvar');
-            window.location.reload();
-        })
-        .catch(console.error);
-    });
-})();
+  // Ao abrir o modal, buscar IDs já atribuídos + renderizar
+  modalEl.addEventListener('shown.bs.modal', async () => {
+    try {
+      const res  = await fetch(assignUrl);
+      const data = await res.json();
+      escolasSelecionadas = new Set(data.assigned.map(id => id.toString()));
+      await fetchEscolas();
+    } catch (err) {
+      console.error('Erro ao buscar atribuídas:', err);
+    }
+  });
+});
 </script>
 {% endif %}
+
 {% endblock %}

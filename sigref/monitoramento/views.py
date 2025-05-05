@@ -41,7 +41,16 @@ def verificar_acesso_setor(setor_requerido):
         return wrapper
     return decorator
 
+# views.py
+from rest_framework.views import APIView
+from rest_framework.response import Response
 
+class QuestionarioEscolasView(APIView):
+    def get(self, request, pk):
+        questionario = get_object_or_404(Questionario, pk=pk)
+        escolas = questionario.escolas_destino.all()
+        serializer = EscolaSerializer(escolas, many=True)
+        return Response(serializer.data)
 
 # views.py
 from rest_framework.pagination import PageNumberPagination

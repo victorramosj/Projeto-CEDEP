@@ -35,7 +35,7 @@ urlpatterns = [
     path('dashboard/monitoramentos/', views.dashboard_monitoramentos, name='dashboard_monitoramentos'),
     path('relatos/problemas/', views.RelatosProblemasView.as_view(), name='relatos_problemas'),
     path('monitoramentos/<int:pk>/', views.DetalheMonitoramentoView.as_view(), name='detalhe_monitoramento'),
-    path('fluxo/monitoramento-setores/', views.fluxo_monitoramento, name='fluxo_monitoramento_setores'),
+    path('fluxo/', views.fluxo_monitoramento, name='fluxo_monitoramento_setores'),
 
     # Fluxo de Questionários
     path('questionarios/novo/', views.criar_questionario_view, name='criar-questionario'),
@@ -54,13 +54,13 @@ urlpatterns = [
     # -----------------------------
     path('api/questionarios/create/', views.QuestionarioCreateAPI.as_view(), name='questionarios-add'),
     path('api/questionarios/<int:pk>/assign_escolas/', views.AssignEscolasQuestionario.as_view(), name='assign_escolas'),
-
+    path('api/questionarios/<int:pk>/escolas/', views.QuestionarioEscolasView.as_view(), name='questionario-escolas'),
     # -----------------------------
     # DRF: Inclusão automática de rotas
     # -----------------------------
+   
     path('', include(router.urls)),
-    path('', include(questionario_router.urls)),
-    
+    path('', include(questionario_router.urls)),    
     path('', include(monitoramento_router.urls)),
 ]
 
