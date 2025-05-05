@@ -15,9 +15,18 @@
     transform: translateY(-2px);
     box-shadow: 0 3px 10px rgba(0,0,0,0.1);
   }
-  .border-primary {
-    border: 2px solid #0d6efd !important;
+
+  /* Estados de seleção */
+  .card-selected {
+    border: 2px solid #198754 !important; /* verde */
   }
+  .card-to-add {
+    border: 2px solid #0d6efd !important; /* azul */
+  }
+  .card-to-remove {
+    border: 2px solid #dc3545 !important; /* vermelho */
+  }
+
   #escolas-counter {
     font-weight: 500;
     color: #0d6efd;
@@ -314,26 +323,38 @@ document.addEventListener('DOMContentLoaded', () => {
   // Renderização dos cards
   data.results.forEach(escola => {
     const card = document.createElement('div');
+    const idStr    = escola.id.toString();
+      const selected = escolasSelecionadas.has(idStr);
+      const imgUrl   = escola.foto_fachada_url || "{% static 'images/default-school.jpeg' %}";
     card.className = `col-md-6`;
     card.innerHTML = `
-      <div class="card ${escolasSelecionadas.has(escola.id.toString()) ? 'border-primary' : ''}" 
-           data-id="${escola.id}">
-        <div class="row g-0">
-          <div class="col-md-4">
-            <img src="${escola.foto_fachada_url || '{% static 'images/default-school.jpeg' %}'}" 
-                 class="img-fluid rounded-start" 
-                 style="height: 150px; object-fit: cover;">
-          </div>
-          <div class="col-md-8">
-            <div class="card-body">
-              <h6 class="card-title">${escola.nome}</h6>
-              <p class="card-text small mb-0">INEP: ${escola.inep}</p>
-              <p class="card-text small">${escola.endereco}</p>
+    <div class="card ${escolasSelecionadas.has(idStr) ? 'selected' : ''}" 
+         data-id="${escola.id}">
+      <div class="row g-0">
+        <div class="col-md-4 position-relative">
+          <img src="${imgUrl}" 
+               class="img-fluid rounded-start" 
+               style="height: 150px; object-fit: cover;">
+          <span class="badge-estado ${escolasSelecionadas.has(idStr) ? 'bg-success' : 'bg-primary'}">
+            ${escolasSelecionadas.has(idStr) ? 'Vinculada' : 'Disponível'}
+          </span>
+        </div>
+        <div class="col-md-8">
+          <div class="card-body p-3">
+            <h6 class="card-title mb-1">${escola.nome}</h6>
+            <div class="small text-muted mb-2">
+              <div>INEP: ${escola.inep}</div>
+              <div>Endereço: ${escola.endereco}</div>
+              <div class="mt-1">
+                <i class="fas fa-user-tie me-1"></i>
+                ${escola.nome_gestor}
+              </div>
             </div>
           </div>
         </div>
       </div>
-    `;
+    </div>
+  `;
 
     // Adiciona evento de clique
     card.querySelector('.card').addEventListener('click', () => {
