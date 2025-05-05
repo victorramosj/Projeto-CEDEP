@@ -299,33 +299,31 @@ async function loadEscolas(search = '', page = 1) {
     const res = await fetch(escolasApiUrl);
     const data = await res.json();
     
-    // Atualizar paginação
     currentPage = page;
     totalPages = data.total_pages || 1;
     
     const container = document.getElementById('escolas-container');
     container.innerHTML = '';
 
-    list.forEach(escola => {
+    data.results.forEach(escola => {
       const card = document.createElement('div');
       const idStr = escola.id.toString();
       const isSelected = escolasSelecionadas.has(idStr);
       const imgUrl = escola.foto_fachada_url || "{% static 'images/default-school.jpeg' %}";
 
-      const tooltipText = isSelected ? "Clique para remover esta escola" : "Clique para adicionar esta escola";
-      const stateClass = isSelected ? 'state-selected' : '';
-      const badgeText = isSelected ? 'Vinculada ✅' : 'Disponível ➕';
-
       card.className = 'col-md-6 mb-3';
       card.innerHTML = `
-        <div class="card ${stateClass}" data-id="${escola.id}" title="${tooltipText}" style="cursor: pointer;">
+        <div class="card ${isSelected ? 'state-selected' : ''}" 
+             data-id="${idStr}" 
+             title="${isSelected ? 'Clique para remover' : 'Clique para adicionar'}"
+             style="cursor: pointer;">
           <div class="row g-0">
             <div class="col-md-4 position-relative">
               <img src="${imgUrl}" 
                    class="img-fluid rounded-start" 
                    style="height: 150px; object-fit: cover;">
-              <span class="badge-estado" title="${tooltipText}">
-                ${badgeText}
+              <span class="badge-estado">
+                ${isSelected ? 'Vinculada ✕' : 'Disponível ➕'}
               </span>
             </div>
             <div class="col-md-8">
@@ -344,58 +342,50 @@ async function loadEscolas(search = '', page = 1) {
           </div>
         </div>
       `;
-      // Adicionar controles de paginação
-    const pagination = document.createElement('div');
-    pagination.className = 'pagination-controls mt-3';
-    pagination.innerHTML = `
-      <button ${currentPage === 1 ? 'disabled' : ''} onclick="loadEscolas('${search}', ${currentPage - 1})" class="btn btn-sm btn-outline-primary">
-        <i class="fas fa-chevron-left"></i>
-      </button>
-      <span class="mx-2">Página ${currentPage} de ${totalPages}</span>
-      <button ${currentPage >= totalPages ? 'disabled' : ''} onclick="loadEscolas('${search}', ${currentPage + 1})" class="btn btn-sm btn-outline-primary">
-        <i class="fas fa-chevron-right"></i>
-      </button>
-    `;
-    container.appendChild(pagination);
-    updateCounter();
-    
-      // Adiciona evento de clique
+
       card.querySelector('.card').addEventListener('click', () => {
+        const id = idStr;
         const cardElement = card.querySelector('.card');
         const badge = cardElement.querySelector('.badge-estado');
-        const id = escola.id.toString();
 
         if (escolasSelecionadas.has(id)) {
           cardElement.classList.remove('state-selected');
-          cardElement.classList.add('state-removing');
-          badge.innerHTML = 'Clique para remover ✕';
-
-          setTimeout(() => {
-            cardElement.classList.remove('state-removing');
-            escolasSelecionadas.delete(id);
-            updateCounter();
-            refreshCardState(cardElement, id);
-          }, 500);
+          escolasSelecionadas.delete(id);
+          badge.innerHTML = 'Disponível ➕';
         } else {
-          cardElement.classList.add('state-adding');
-          badge.innerHTML = 'Adicionando... ✓';
-
-          setTimeout(() => {
-            cardElement.classList.remove('state-adding');
-            escolasSelecionadas.add(id);
-            updateCounter();
-            refreshCardState(cardElement, id);
-          }, 500);
+          cardElement.classList.add('state-selected');
+          escolasSelecionadas.add(id);
+          badge.innerHTML = 'Vinculada ✕';
         }
+        updateCounter();
       });
 
       container.appendChild(card);
     });
 
+    // Adicionar paginação
+    const pagination = document.createElement('div');
+    pagination.className = 'pagination-controls mt-3';
+    pagination.innerHTML = `
+      <button ${currentPage === 1 ? 'disabled' : ''} 
+              onclick="loadEscolas('${search}', ${currentPage - 1})" 
+              class="btn btn-sm btn-outline-primary">
+        <i class="fas fa-chevron-left"></i>
+      </button>
+      <span class="mx-2">Página ${currentPage} de ${totalPages}</span>
+      <button ${currentPage >= totalPages ? 'disabled' : ''} 
+              onclick="loadEscolas('${search}', ${currentPage + 1})" 
+              class="btn btn-sm btn-outline-primary">
+        <i class="fas fa-chevron-right"></i>
+      </button>
+    `;
+    container.appendChild(pagination);
+
     updateCounter();
 
   } catch (err) {
     console.error('Erro ao carregar escolas:', err);
+    Swal.fire('Erro', 'Não foi possível carregar as escolas', 'error');
   }
 }
 function refreshCardState(cardElement, id) {
@@ -415,34 +405,39 @@ function refreshCardState(cardElement, id) {
 document.getElementById('search-escolas').addEventListener('input', function(e) {
   loadEscolas(e.target.value);
 });
-// Filtro local de busca (se necessário para filtrar os já carregados)
-document.getElementById('search-escolas').addEventListener('input', e => {
-  const term = e.target.value.toLowerCase();
-  document.querySelectorAll('#escolas-container .card').forEach(card =>
-    card.classList.toggle('d-none', !card.textContent.toLowerCase().includes(term))
-  );
-});
+
 
 async function submitForm() {
+    // Convert Set para Array de números
+    const escolasArray = Array.from(escolasSelecionadas).map(Number);
+
     const data = {
         titulo: document.getElementById('titulo').value,
         descricao: document.getElementById('descricao').value,
-        setor: selectedSetorId,
+        setor: Number(selectedSetorId),
         perguntas: Array.from(document.querySelectorAll('.question-card')).map(c => ({
             texto: c.querySelector('.question-text').value,
             tipo_resposta: c.querySelector('.question-type').value,
             ordem: parseInt(c.querySelector('.question-order').value)
         })),
-        escolas_destino: Array.from(escolasSelecionadas),
-        monitoramento: {
-            data_limite: document.getElementById('data-limite').value,
-            frequencia: document.getElementById('frequencia').value
-        }
+        escolas_destino: escolasArray,
+        data_limite: document.getElementById('data-limite').value,
+        frequencia: document.getElementById('frequencia').value
     };
 
-    // Validação básica
-    if (!data.titulo || !data.setor || !data.monitoramento.data_limite) {
-        Swal.fire('Erro!', 'Preencha todos os campos obrigatórios', 'error');
+    // Validação melhorada
+    const errors = [];
+    if (!data.titulo) errors.push('Título é obrigatório');
+    if (!data.setor) errors.push('Setor é obrigatório');
+    if (!data.data_limite) errors.push('Data limite é obrigatória');
+    
+    data.perguntas.forEach((p, i) => {
+        if (!p.texto) errors.push(`Pergunta ${i+1}: Texto é obrigatório`);
+        if (isNaN(p.ordem) || p.ordem < 1) errors.push(`Pergunta ${i+1}: Ordem inválida`);
+    });
+
+    if (errors.length > 0) {
+        Swal.fire('Erro!', errors.join('<br>'), 'error');
         return;
     }
 
@@ -459,10 +454,13 @@ async function submitForm() {
         const result = await resp.json();
         
         if (resp.ok) {
-            Swal.fire({icon: 'success', title: 'Sucesso!', html: `Questionário criado`})
-                .then(() => window.location = `{% url 'gerenciar_perguntas' 0 %}`.replace('0', result.id));
+            Swal.fire({icon: 'success', title: 'Sucesso!', html: 'Questionário criado'})
+                .then(() => {
+                    window.location = `{% url 'gerenciar_perguntas' 0 %}`.replace('0', result.id);
+                });
         } else {
-            Swal.fire('Erro', result.error || 'Falha na criação', 'error');
+            const errors = result.errors ? Object.entries(result.errors).map(([k,v]) => `${k}: ${v}`) : ['Erro desconhecido'];
+            Swal.fire('Erro', errors.join('<br>'), 'error');
         }
     } catch (error) {
         Swal.fire('Erro', 'Falha na comunicação com o servidor', 'error');

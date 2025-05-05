@@ -68,11 +68,14 @@ class PerguntaCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Pergunta
         fields = ['texto', 'tipo_resposta', 'ordem']
-
-# serializers.py
+        extra_kwargs = {
+            'texto': {'required': True},
+            'tipo_resposta': {'required': True},
+            'ordem': {'required': True}
+        }
 
 class QuestionarioSerializer(serializers.ModelSerializer):
-    perguntas = PerguntaSerializer(many=True, read_only=True)
+    perguntas = PerguntaCreateSerializer(many=True, write_only=True)
     escolas_destino = serializers.PrimaryKeyRelatedField(
         many=True,
         queryset=Escola.objects.all(),
@@ -81,9 +84,35 @@ class QuestionarioSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Questionario
-        fields = ['id', 'titulo', 'descricao', 'setor', 'perguntas', 'escolas_destino']
+        fields = ['id', 'titulo', 'descricao', 'setor', 'perguntas', 'escolas_destino', 'criado_por']
+        extra_kwargs = {
+            'setor': {'required': True},
+            'criado_por': {'read_only': True}  # Isso evita que o campo seja exigido no input
+        }
 
-
+    def create(self, validated_data):
+        perguntas_data = validated_data.pop('perguntas')
+        escolas_data = validated_data.pop('escolas_destino')
+        
+        # Remove criado_por se estiver presente (deve vir do context)
+        validated_data.pop('criado_por', None)
+        
+        questionario = Questionario.objects.create(
+            **validated_data,
+            criado_por=self.context['request'].user  # Obtém o usuário do contexto
+        )
+        
+        # Cria as perguntas
+        for pergunta_data in perguntas_data:
+            Pergunta.objects.create(
+                questionario=questionario,
+                **pergunta_data
+            )
+        
+        # Associa as escolas
+        questionario.escolas_destino.set(escolas_data)
+        
+        return questionario
 class RespostaSerializer(serializers.ModelSerializer):
     resposta_formatada = serializers.SerializerMethodField()
     foto_url = serializers.ImageField(source='foto', read_only=True)

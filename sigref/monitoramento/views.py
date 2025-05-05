@@ -292,29 +292,34 @@ def fluxo_monitoramento(request):
 from rest_framework.renderers import TemplateHTMLRenderer
 from rest_framework.response import Response
 from rest_framework.renderers import JSONRenderer  # Importação do JSONRenderer
+# views.py
 class AdicionarQuestionarioView(APIView):
     permission_classes = [IsAuthenticated]
-    template_name = 'monitoramentos/adicionar_questionario.html'  # Caminho do seu template
-    
-    renderer_classes = [TemplateHTMLRenderer, JSONRenderer]  # Adicione esta linha
-
-    def get(self, request):
-        # Renderiza o template HTML diretamente
-        return Response(template_name=self.template_name)
+    renderer_classes = [JSONRenderer]
 
     def post(self, request):
-        serializer = QuestionarioSerializer(data=request.data)
+        serializer = QuestionarioSerializer(
+            data=request.data,
+            context={'request': request}  # Certifique-se de passar o request no contexto
+        )
+        
         if serializer.is_valid():
-            serializer.save(criado_por=request.user)
+            questionario = serializer.save()
             return Response(
-                {'success': True, 'message': 'Questionário criado com sucesso!'},
+                {
+                    'success': True,
+                    'id': questionario.id,
+                    'message': 'Questionário criado com sucesso!'
+                },
                 status=status.HTTP_201_CREATED
             )
         return Response(
-            {'success': False, 'errors': serializer.errors},
+            {
+                'success': False,
+                'errors': serializer.errors
+            },
             status=status.HTTP_400_BAD_REQUEST
         )
-        
 
 
 from django.views.generic import DetailView

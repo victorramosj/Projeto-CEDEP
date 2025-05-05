@@ -178,6 +178,7 @@ class Questionario(models.Model):
     data_criacao = models.DateField(auto_now_add=True)
     setor = models.ForeignKey(Setor, on_delete=models.CASCADE)
     escolas_destino = models.ManyToManyField(Escola, blank=True)
+    criado_por = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)  # Adicione esta linha
     
     def __str__(self):
         return self.titulo
