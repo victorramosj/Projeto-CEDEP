@@ -207,5 +207,24 @@ body {
     background-color: #f5bf26;
     border-radius: 2px;
 }
+.pagination-controls {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
 
+.pagination-controls button {
+    min-width: 40px;
+    padding: 0.25rem 0.5rem;
+    transition: all 0.2s ease;
+}
 
+.pagination-controls button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.pagination-controls button:not(:disabled):hover {
+    background: #0d6efd;
+    color: white;
+}

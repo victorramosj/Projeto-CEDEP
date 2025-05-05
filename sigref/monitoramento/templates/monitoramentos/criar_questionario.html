@@ -176,14 +176,19 @@
                 <span class="selected-counter" id="selected-counter">0 selecionadas</span>
             </div>
             <div id="escolas-container" class="d-flex flex-wrap"></div>
-            <div class="d-flex justify-content-between">
-              <button class="btn btn-secondary" onclick="prevStep()">
-                  <i class="fas fa-arrow-left me-2"></i>Voltar
-              </button>
-              <button class="btn btn-primary" onclick="nextStep()">
-                  Próximo <i class="fas fa-arrow-right ms-2"></i>
-              </button>
-          </div>
+           <!-- Container da paginação entre os botões -->
+    <div class="d-flex justify-content-between align-items-center mt-3">
+      <button class="btn btn-secondary" onclick="prevStep()">
+          <i class="fas fa-arrow-left me-2"></i>Voltar
+      </button>
+      
+      <div id="pagination-container" class="mx-2"></div>
+      
+      <button class="btn btn-primary" onclick="nextStep()">
+          Próximo <i class="fas fa-arrow-right ms-2"></i>
+      </button>
+  </div>
+
         </div>
         <!-- Adicione este novo passo após o passo 3 -->
 <div class="flow-step" data-step="4">
@@ -295,8 +300,14 @@ function toggleEscola(id) {
 
 async function loadEscolas(search = '', page = 1) {
   try {
-    const escolasApiUrl = `{% url 'escolas-list' %}?search=${encodeURIComponent(search)}&page=${page}`;
+    const searchInput = document.getElementById('search-escolas');
+    const currentSearch = searchInput.value;
+    
+    const escolasApiUrl = `{% url 'escolas-list' %}?search=${encodeURIComponent(currentSearch)}&page=${page}`;
     const res = await fetch(escolasApiUrl);
+    
+    if (!res.ok) throw new Error('Erro na resposta da API');
+    
     const data = await res.json();
     
     currentPage = page;
@@ -363,23 +374,29 @@ async function loadEscolas(search = '', page = 1) {
       container.appendChild(card);
     });
 
-    // Adicionar paginação
-    const pagination = document.createElement('div');
-    pagination.className = 'pagination-controls mt-3';
-    pagination.innerHTML = `
-      <button ${currentPage === 1 ? 'disabled' : ''} 
-              onclick="loadEscolas('${search}', ${currentPage - 1})" 
-              class="btn btn-sm btn-outline-primary">
-        <i class="fas fa-chevron-left"></i>
-      </button>
-      <span class="mx-2">Página ${currentPage} de ${totalPages}</span>
-      <button ${currentPage >= totalPages ? 'disabled' : ''} 
-              onclick="loadEscolas('${search}', ${currentPage + 1})" 
-              class="btn btn-sm btn-outline-primary">
-        <i class="fas fa-chevron-right"></i>
-      </button>
+    const paginationContainer = document.getElementById('pagination-container');
+    paginationContainer.innerHTML = `
+      <div class="pagination-controls">
+        <button ${currentPage === 1 ? 'disabled' : ''} 
+                class="btn btn-sm btn-outline-primary prev-page">
+          <i class="fas fa-chevron-left"></i>
+        </button>
+        <span class="mx-2">Página ${currentPage} de ${totalPages}</span>
+        <button ${currentPage >= totalPages ? 'disabled' : ''} 
+                class="btn btn-sm btn-outline-primary next-page">
+          <i class="fas fa-chevron-right"></i>
+        </button>
+      </div>
     `;
-    container.appendChild(pagination);
+
+    // Adicione event listeners corretamente
+    paginationContainer.querySelector('.prev-page').addEventListener('click', () => {
+      loadEscolas(currentSearch, currentPage - 1);
+    });
+    
+    paginationContainer.querySelector('.next-page').addEventListener('click', () => {
+      loadEscolas(currentSearch, currentPage + 1);
+    });
 
     updateCounter();
 
@@ -401,9 +418,8 @@ function refreshCardState(cardElement, id) {
     badge.innerHTML = 'Disponível ➕';
   }
 }
-// Corrigir evento de pesquisa
 document.getElementById('search-escolas').addEventListener('input', function(e) {
-  loadEscolas(e.target.value);
+  loadEscolas(e.target.value, 1); // Sempre volta para a primeira página
 });
 
 

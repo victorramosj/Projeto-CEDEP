@@ -81,25 +81,29 @@ class QuestionarioSerializer(serializers.ModelSerializer):
         queryset=Escola.objects.all(),
         write_only=True
     )
+    data_limite = serializers.DateField(write_only=True)  # Novo campo
+    frequencia = serializers.CharField(write_only=True)    # Novo campo
 
     class Meta:
         model = Questionario
-        fields = ['id', 'titulo', 'descricao', 'setor', 'perguntas', 'escolas_destino', 'criado_por']
+        fields = ['id', 'titulo', 'descricao', 'setor', 'perguntas', 
+                 'escolas_destino', 'criado_por', 'data_limite', 'frequencia']
         extra_kwargs = {
             'setor': {'required': True},
-            'criado_por': {'read_only': True}  # Isso evita que o campo seja exigido no input
+            'criado_por': {'read_only': True}
         }
 
     def create(self, validated_data):
+        # Extrai os dados específicos do monitoramento
+        data_limite = validated_data.pop('data_limite')
+        frequencia = validated_data.pop('frequencia')
         perguntas_data = validated_data.pop('perguntas')
         escolas_data = validated_data.pop('escolas_destino')
         
-        # Remove criado_por se estiver presente (deve vir do context)
-        validated_data.pop('criado_por', None)
-        
+        # Cria o questionário
         questionario = Questionario.objects.create(
             **validated_data,
-            criado_por=self.context['request'].user  # Obtém o usuário do contexto
+            criado_por=self.context['request'].user
         )
         
         # Cria as perguntas
@@ -109,8 +113,17 @@ class QuestionarioSerializer(serializers.ModelSerializer):
                 **pergunta_data
             )
         
-        # Associa as escolas
+        # Associa as escolas e cria os monitoramentos
         questionario.escolas_destino.set(escolas_data)
+        
+        # Cria um monitoramento para cada escola
+        for escola in escolas_data:
+            Monitoramento.objects.create(
+                questionario=questionario,
+                escola=escola,
+                data_limite=data_limite,
+                frequencia=frequencia
+            )
         
         return questionario
 class RespostaSerializer(serializers.ModelSerializer):

@@ -1,4 +1,6 @@
 {% extends 'cedepe/base.html' %}
+{% load static %}
+
 {% block content %}
 <div class="container mt-4">
   <h2>Gerenciar Questionários</h2>
@@ -23,9 +25,7 @@
           <a href="{% url 'gerenciar_perguntas' q.id %}" class="btn btn-sm btn-primary">
             Perguntas
           </a>
-          <button class="btn btn-sm btn-secondary" onclick="abrirModalEscolas({{ q.id }})">
-            Escolas
-          </button>
+          
           
         </td>
       </tr>
@@ -37,39 +37,9 @@
   
   
 </div>
-  <!-- Modal para Adicionar Escolas -->
-  <div class="modal fade" id="assignSchoolsModal" tabindex="-1">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Adicionar Escolas ao Questionário</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <input type="text" id="search-escolas" class="form-control form-control-sm w-75"
-                        placeholder="Buscar por nome, INEP, endereço ou email...">
-                    <div class="btn-group">
-                        <button class="btn btn-sm btn-outline-secondary" id="prev-page">
-                            <i class="fas fa-chevron-left"></i>
-                        </button>
-                        <span class="px-3" id="current-page">1</span>
-                        <button class="btn btn-sm btn-outline-secondary" id="next-page">
-                            <i class="fas fa-chevron-right"></i>
-                        </button>
-                    </div>
-                </div>
-                <div id="escolas-counter" class="mb-2 text-muted small"></div>
-                <div id="escolas-container" class="row g-3"></div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Fechar</button>
-                <button type="button" id="saveSchoolsBtn" class="btn btn-primary btn-sm">Salvar</button>
-            </div>
-        </div>
-    </div>
+
 </div>
-</div>
+{% endblock %}
 {% block scripts %}
 {% if questionario_selecionado %}
 <script>
@@ -113,7 +83,7 @@
                 const card = document.createElement('div');
                 card.className = 'col-md-6';
 
-                const imageUrl = escola.foto_fachada_url || "{% static 'images/default-school.jpeg' %}";
+                const imgUrl = escola.foto_fachada_url || "{% static 'images/default-school.jpeg' %}";
 
                 card.innerHTML = `
                     <div class="card escola-card ${isSelected ? 'border-primary' : ''}" data-id="${escola.id}">

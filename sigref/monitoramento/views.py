@@ -298,18 +298,18 @@ class AdicionarQuestionarioView(APIView):
     renderer_classes = [JSONRenderer]
 
     def post(self, request):
+        # Adiciona o usuário autenticado ao contexto
         serializer = QuestionarioSerializer(
             data=request.data,
-            context={'request': request}  # Certifique-se de passar o request no contexto
+            context={'request': request}
         )
         
         if serializer.is_valid():
-            questionario = serializer.save()
+            serializer.save()
             return Response(
                 {
                     'success': True,
-                    'id': questionario.id,
-                    'message': 'Questionário criado com sucesso!'
+                    'message': 'Questionário e monitoramentos criados com sucesso!'
                 },
                 status=status.HTTP_201_CREATED
             )
@@ -319,7 +319,7 @@ class AdicionarQuestionarioView(APIView):
                 'errors': serializer.errors
             },
             status=status.HTTP_400_BAD_REQUEST
-        )
+        ) 
 
 
 from django.views.generic import DetailView
