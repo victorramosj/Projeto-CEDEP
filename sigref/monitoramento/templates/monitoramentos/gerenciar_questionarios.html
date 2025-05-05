@@ -34,9 +34,8 @@
       {% endfor %}
     </tbody>
   </table>
-  <a href="{% url 'criar-questionario' %}" class="btn btn-success">
-    + Novo Questionário
-  </a>
+  
+  
 </div>
   <!-- Modal para Adicionar Escolas -->
   <div class="modal fade" id="assignSchoolsModal" tabindex="-1">
@@ -114,7 +113,7 @@
                 const card = document.createElement('div');
                 card.className = 'col-md-6';
 
-                const imageUrl = escola.foto_fachada_url || "{% static 'img/default-school.png' %}";
+                const imageUrl = escola.foto_fachada_url || "{% static 'images/default-school.jpeg' %}";
 
                 card.innerHTML = `
                     <div class="card escola-card ${isSelected ? 'border-primary' : ''}" data-id="${escola.id}">

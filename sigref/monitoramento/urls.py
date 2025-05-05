@@ -38,7 +38,9 @@ urlpatterns = [
     path('fluxo/', views.fluxo_monitoramento, name='fluxo_monitoramento_setores'),
 
     # Fluxo de Questionários
-    path('questionarios/novo/', views.criar_questionario_view, name='criar-questionario'),
+    path('questionarios/novo/<int:setor_id>/', 
+        views.criar_questionario_view, 
+        name='criar-questionario'),
     path('questionarios/gerenciar/', views.GerenciarQuestionariosView.as_view(), name='gerenciar_questionarios'),
     path('questionarios/<int:pk>/', views.DetalheMonitoramentoView.as_view(), name='detalhe_questionario'),    
     path('questionarios/<int:pk>/perguntas/frontend/', 

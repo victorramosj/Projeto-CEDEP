@@ -87,7 +87,9 @@
             <div class="row" id="setores-container">
                 {% for setor in setores_permitidos %}
                 <div class="col-md-6">
-                    <div class="setor-card" data-id="{{ setor.id }}" onclick="selectSetor(this)">
+                    <div class="setor-card {% if setor_selecionado and setor.id == setor_selecionado.id %}selected{% endif %}"
+     data-id="{{ setor.id }}"
+     onclick="selectSetor(this)">
                         <h5>{{ setor.nome }}</h5>
                         <div class="setor-hierarchy">
                             {{ setor.hierarquia_completa }}
@@ -96,9 +98,14 @@
                 </div>
                 {% endfor %}
             </div>
-            <button id="btn-next-0" class="btn btn-primary mt-3" onclick="nextStep()">
-                Próximo <i class="fas fa-arrow-right ms-2"></i>
-            </button>
+            <div class="d-flex justify-content-between">
+                <button class="btn btn-secondary" onclick="history.back()">
+                    <i class="fas fa-arrow-left me-2"></i>Voltar
+                </button>
+                <button class="btn btn-primary" onclick="nextStep()">
+                    Próximo <i class="fas fa-arrow-right ms-2"></i>
+                </button>
+            </div>
         </div>
 
         <!-- Passo 1: Detalhes do Questionário -->
@@ -112,12 +119,14 @@
                 <label class="form-label">Descrição</label>
                 <textarea class="form-control" id="descricao" rows="3"></textarea>
             </div>
-            <button id="btn-prev-1" class="btn btn-secondary me-2" onclick="prevStep()">
-                <i class="fas fa-arrow-left me-2"></i>Voltar
-            </button>
-            <button id="btn-next-1" class="btn btn-primary" onclick="nextStep()">
-                Próximo <i class="fas fa-arrow-right ms-2"></i>
-            </button>
+            <div class="d-flex justify-content-between">
+                <button class="btn btn-secondary" onclick="prevStep()">
+                    <i class="fas fa-arrow-left me-2"></i>Voltar
+                </button>
+                <button class="btn btn-primary" onclick="nextStep()">
+                    Próximo <i class="fas fa-arrow-right ms-2"></i>
+                </button>
+            </div>
         </div>
 
         <!-- Passo 2: Perguntas -->
@@ -212,9 +221,10 @@
 
 {% block scripts %}
 {{ block.super }}
+
 <script>
 let currentStep = 0;
-let selectedSetorId = null;
+let selectedSetorId = {{ setor_selecionado.id|default:'null' }};
 const escolasSelecionadas = new Set();
 
 function showStep() {
@@ -256,14 +266,23 @@ function updateCounter() {
   document.getElementById('selected-counter').textContent =
     `${escolasSelecionadas.size} selecionada${escolasSelecionadas.size!==1?'s':''}`;
 }
+
 function selectAllVisible() {
-  document.querySelectorAll('.escola-pill:not(.d-none)').forEach(pill=>{
-    const id = pill.dataset.id;
-    escolasSelecionadas.add(id);
-    pill.classList.add('selected');
+  const cards = document.querySelectorAll('#escolas-container .card:not(.d-none)');
+  cards.forEach(card => {
+    const id = card.dataset.id;
+    if (!escolasSelecionadas.has(id)) {
+      escolasSelecionadas.add(id);
+      card.classList.add('state-selected');
+      const badge = card.querySelector('.badge-estado');
+      badge.innerHTML = 'Vinculada ✕';
+    }
   });
   updateCounter();
 }
+
+let currentPage = 1;
+let totalPages = 1;
 function toggleEscola(id) {
   const pill = document.querySelector(`.escola-pill[data-id="${id}"]`);
   if (escolasSelecionadas.has(id)) {
@@ -274,27 +293,133 @@ function toggleEscola(id) {
   updateCounter();
 }
 
-async function loadEscolas(search='') {
+async function loadEscolas(search = '', page = 1) {
   try {
-    const res = await fetch(`/monitoramento/escolas/?search=${encodeURIComponent(search)}`);
-    const raw = await res.json();
-    // Suporte a paginação: usa raw.results se existir, ou raw se for array
-    const list = Array.isArray(raw) ? raw : raw.results || [];
+    const escolasApiUrl = `{% url 'escolas-list' %}?search=${encodeURIComponent(search)}&page=${page}`;
+    const res = await fetch(escolasApiUrl);
+    const data = await res.json();
+    
+    // Atualizar paginação
+    currentPage = page;
+    totalPages = data.total_pages || 1;
+    
     const container = document.getElementById('escolas-container');
-    container.innerHTML = list.map(e=>
-      `<div class="escola-pill${escolasSelecionadas.has(e.id.toString())?' selected':''}" data-id="${e.id}" onclick="toggleEscola('${e.id}')">${e.nome}</div>`
-    ).join('');
+    container.innerHTML = '';
+
+    list.forEach(escola => {
+      const card = document.createElement('div');
+      const idStr = escola.id.toString();
+      const isSelected = escolasSelecionadas.has(idStr);
+      const imgUrl = escola.foto_fachada_url || "{% static 'images/default-school.jpeg' %}";
+
+      const tooltipText = isSelected ? "Clique para remover esta escola" : "Clique para adicionar esta escola";
+      const stateClass = isSelected ? 'state-selected' : '';
+      const badgeText = isSelected ? 'Vinculada ✅' : 'Disponível ➕';
+
+      card.className = 'col-md-6 mb-3';
+      card.innerHTML = `
+        <div class="card ${stateClass}" data-id="${escola.id}" title="${tooltipText}" style="cursor: pointer;">
+          <div class="row g-0">
+            <div class="col-md-4 position-relative">
+              <img src="${imgUrl}" 
+                   class="img-fluid rounded-start" 
+                   style="height: 150px; object-fit: cover;">
+              <span class="badge-estado" title="${tooltipText}">
+                ${badgeText}
+              </span>
+            </div>
+            <div class="col-md-8">
+              <div class="card-body p-3">
+                <h6 class="card-title mb-1">${escola.nome}</h6>
+                <div class="small text-muted mb-2">
+                  <div>INEP: ${escola.inep}</div>
+                  <div>Endereço: ${escola.endereco}</div>
+                  <div class="mt-1">
+                    <i class="fas fa-user-tie me-1"></i>
+                    ${escola.nome_gestor}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+      // Adicionar controles de paginação
+    const pagination = document.createElement('div');
+    pagination.className = 'pagination-controls mt-3';
+    pagination.innerHTML = `
+      <button ${currentPage === 1 ? 'disabled' : ''} onclick="loadEscolas('${search}', ${currentPage - 1})" class="btn btn-sm btn-outline-primary">
+        <i class="fas fa-chevron-left"></i>
+      </button>
+      <span class="mx-2">Página ${currentPage} de ${totalPages}</span>
+      <button ${currentPage >= totalPages ? 'disabled' : ''} onclick="loadEscolas('${search}', ${currentPage + 1})" class="btn btn-sm btn-outline-primary">
+        <i class="fas fa-chevron-right"></i>
+      </button>
+    `;
+    container.appendChild(pagination);
     updateCounter();
-  } catch(err) {
+    
+      // Adiciona evento de clique
+      card.querySelector('.card').addEventListener('click', () => {
+        const cardElement = card.querySelector('.card');
+        const badge = cardElement.querySelector('.badge-estado');
+        const id = escola.id.toString();
+
+        if (escolasSelecionadas.has(id)) {
+          cardElement.classList.remove('state-selected');
+          cardElement.classList.add('state-removing');
+          badge.innerHTML = 'Clique para remover ✕';
+
+          setTimeout(() => {
+            cardElement.classList.remove('state-removing');
+            escolasSelecionadas.delete(id);
+            updateCounter();
+            refreshCardState(cardElement, id);
+          }, 500);
+        } else {
+          cardElement.classList.add('state-adding');
+          badge.innerHTML = 'Adicionando... ✓';
+
+          setTimeout(() => {
+            cardElement.classList.remove('state-adding');
+            escolasSelecionadas.add(id);
+            updateCounter();
+            refreshCardState(cardElement, id);
+          }, 500);
+        }
+      });
+
+      container.appendChild(card);
+    });
+
+    updateCounter();
+
+  } catch (err) {
     console.error('Erro ao carregar escolas:', err);
   }
 }
+function refreshCardState(cardElement, id) {
+  const badge = cardElement.querySelector('.badge-estado');
+  const isSelected = escolasSelecionadas.has(id);
 
-// filtro local de busca
-document.getElementById('search-escolas').addEventListener('input',e=>{
+  cardElement.classList.remove('state-selected', 'state-removing', 'state-adding');
+
+  if (isSelected) {
+    cardElement.classList.add('state-selected');
+    badge.innerHTML = 'Vinculada ✕';
+  } else {
+    badge.innerHTML = 'Disponível ➕';
+  }
+}
+// Corrigir evento de pesquisa
+document.getElementById('search-escolas').addEventListener('input', function(e) {
+  loadEscolas(e.target.value);
+});
+// Filtro local de busca (se necessário para filtrar os já carregados)
+document.getElementById('search-escolas').addEventListener('input', e => {
   const term = e.target.value.toLowerCase();
-  document.querySelectorAll('.escola-pill').forEach(p=>
-    p.classList.toggle('d-none',!p.textContent.toLowerCase().includes(term))
+  document.querySelectorAll('#escolas-container .card').forEach(card =>
+    card.classList.toggle('d-none', !card.textContent.toLowerCase().includes(term))
   );
 });
 

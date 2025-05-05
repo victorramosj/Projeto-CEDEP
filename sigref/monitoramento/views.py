@@ -341,12 +341,25 @@ class QuestionarioCreateAPI(generics.CreateAPIView):
 
 
     
-# views.py
-def criar_questionario_view(request):
+
+from django.shortcuts import render, get_object_or_404
+
+def criar_questionario_view(request, setor_id=None):
     user = request.user.greuser
+    # busca o objeto Setor (ou 404 se não pertencer ao usuário)
+    setores = user.setores_permitidos()
+    setor_selecionado = None
+    if setor_id:
+        setor_selecionado = get_object_or_404(
+            setores,  # garante que é permitido
+            pk=setor_id
+        )
+
     return render(request, 'monitoramentos/criar_questionario.html', {
-        'setores_permitidos': user.setores_permitidos()
+        'setores_permitidos': setores,
+        'setor_selecionado': setor_selecionado
     })
+
 class AssignEscolasQuestionario(APIView):
     """
     GET: retorna todas as escolas e as já atribuídas ao questionário

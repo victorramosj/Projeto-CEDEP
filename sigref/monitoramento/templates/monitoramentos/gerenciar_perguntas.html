@@ -2,8 +2,20 @@
 {% block content %}
 {% csrf_token %} 
 <div class="container mt-4">
-    <h2>Perguntas do Questionário "{{ questionario.titulo }}"</h2>
-    <button class="btn btn-primary mb-3" id="btn-add">+ Nova Pergunta</button>
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 class="mb-0">Perguntas do Questionário "{{ questionario.titulo }}"</h2>
+        <div class="btn-group">
+          <button class="btn btn-secondary" onclick="history.back()">
+            <i class="fas fa-arrow-left"></i> Voltar
+          </button>
+          <button class="btn btn-primary" id="btn-add">
+            <i class="fas fa-plus"></i> Nova Pergunta
+          </button>
+        </div>
+      </div>
+      
+      
+      
     <table class="table table-striped" id="questions-table">
         <thead>
             <tr>
