@@ -45,17 +45,8 @@
         display: flex;
         gap: 0.5rem;
     }
-    .select-all-btn {
-        background: #198754;
-        color: white;
-        border: none;
-        padding: 0.5rem 1rem;
-        border-radius: 5px;
-        transition: all 0.3s ease;
-    }
-    .select-all-btn:hover {
-        background: #157347;
-    }
+    
+    
     .selected-counter {
         background: #0d6efd;
         color: white;
@@ -79,7 +70,7 @@
 {% endblock %}
 
 {% block content %}
-<div class="container-fluid px-4 mt-4">
+<div class="container-fluid px-1 mt-1">
     <div class="creation-flow">
         <!-- Passo 0: Seleção de Setor -->
         <div class="flow-step" data-step="0">
@@ -99,10 +90,10 @@
                 {% endfor %}
             </div>
             <div class="d-flex justify-content-between">
-                <button class="btn btn-secondary" onclick="history.back()">
+                <button class="btn btn-secondary btn-sm" onclick="history.back()">
                     <i class="fas fa-arrow-left me-2"></i>Voltar
                 </button>
-                <button class="btn btn-primary" onclick="nextStep()">
+                <button class="btn btn-primary btn-sm" onclick="nextStep()">
                     Próximo <i class="fas fa-arrow-right ms-2"></i>
                 </button>
             </div>
@@ -120,76 +111,89 @@
                 <textarea class="form-control" id="descricao" rows="3"></textarea>
             </div>
             <div class="d-flex justify-content-between">
-                <button class="btn btn-secondary" onclick="prevStep()">
+                <button class="btn btn-secondary btn-sm" onclick="prevStep()">
                     <i class="fas fa-arrow-left me-2"></i>Voltar
                 </button>
-                <button class="btn btn-primary" onclick="nextStep()">
+                <button class="btn btn-primary btn-sm" onclick="nextStep()">
                     Próximo <i class="fas fa-arrow-right ms-2"></i>
                 </button>
             </div>
         </div>
 
         <!-- Passo 2: Perguntas -->
-        <div class="flow-step" data-step="2">
-            <h3 class="mb-4"><i class="fas fa-question-circle me-2"></i>Adicionar Perguntas</h3>
-            <div id="perguntas-container">
-                <div class="question-card">
-                    <div class="row g-3">
-                        <div class="col-md-8">
-                            <input type="text" class="form-control question-text" placeholder="Texto da pergunta">
-                        </div>
-                        <div class="col-md-2">
-                            <select class="form-select question-type">
-                                <option value="SN">Sim/Não</option>
-                                <option value="NU">Numérico</option>
-                                <option value="TX">Texto</option>
-                            </select>
-                        </div>
-                        <div class="col-md-2">
-                          <input type="number" class="form-control question-order" placeholder="Ordem" min="1" value="1">
-
-                        </div>
-                    </div>
+<div class="flow-step" data-step="2">
+    <h3 class="mb-4"><i class="fas fa-question-circle me-2"></i>Adicionar Perguntas</h3>
+    <div id="perguntas-container">
+        <div class="question-card">
+            <div class="row g-3">
+                <div class="col-6 col-md-2">
+                    <input type="number" readonly class="form-control question-order" placeholder="Ordem" min="1" value="1">
                 </div>
+                <div class="col-12 col-md-8">
+                    <input type="text" class="form-control question-text" placeholder="Texto da pergunta">
+                </div>
+                <div class="col-6 col-md-2">
+                    <select class="form-select question-type">
+                        <option value="SN">Sim/Não</option>
+                        <option value="NU">Numérico</option>
+                        <option value="TX">Texto</option>
+                    </select>
+                </div>
+               
             </div>
-            <button class="btn btn-outline-primary mb-3" onclick="addQuestion()">
-                <i class="fas fa-plus me-2"></i>Nova Pergunta
+        </div>
+    </div>
+    <button class="btn btn-outline-primary mb-3" onclick="addQuestion()">
+        <i class="fas fa-plus me-2"></i>Nova Pergunta
+    </button>
+    <div class="d-flex flex-wrap justify-content-between">
+        <button class="btn btn-secondary btn-sm" onclick="prevStep()">
+            <i class="fas fa-arrow-left me-2"></i>Voltar
+        </button>
+        <button class="btn btn-primary btn-sm" onclick="nextStep()">
+            Próximo <i class="fas fa-arrow-right ms-2"></i>
+        </button>
+    </div>
+</div>
+
+
+       <!-- Passo 3: Escolas - Modificado -->
+<div class="flow-step" data-step="3">
+    <h3 class="mb-4"><i class="fas fa-school me-2"></i>Selecionar Escolas</h3>
+    <div class="row g-2 mb-3">
+        <!-- Barra de pesquisa -->
+        <div class="col-12 col-md-6">
+            <input type="text" class="form-control form-control-sm" 
+                   id="search-escolas" placeholder="Pesquisar escolas...">
+        </div>
+        
+        <!-- Botões de ação -->
+        <div class="col-12 col-md-6 d-flex flex-wrap gap-2">
+            <button class="btn btn-outline-success btn-sm flex-grow-1" 
+                    onclick="toggleAllVisible()">
+                <i class="fas fa-check-double me-2"></i>Selecionar Todas
             </button>
-            <div class="d-flex justify-content-between">
-                <button class="btn btn-secondary" onclick="prevStep()">
-                    <i class="fas fa-arrow-left me-2"></i>Voltar
-                </button>
-                <button class="btn btn-primary" onclick="nextStep()">
-                    Próximo <i class="fas fa-arrow-right ms-2"></i>
-                </button>
-            </div>
+            <span class="btn btn-sm btn-outline-info flex-grow-1" 
+                  id="selected-counter">0 selecionadas</span>
         </div>
+    </div>
+    
+    <div id="escolas-container" class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-2"></div>
 
-        <!-- Passo 3: Escolas -->
-        <div class="flow-step" data-step="3">
-            <h3 class="mb-4"><i class="fas fa-school me-2"></i>Selecionar Escolas</h3>
-            <div class="selection-actions">
-                <input type="text" class="form-control" id="search-escolas" placeholder="Pesquisar escolas...">
-                <button class="select-all-btn" onclick="selectAllVisible()">
-                    <i class="fas fa-check-double me-2"></i>Selecionar Todas
-                </button>
-                <span class="selected-counter" id="selected-counter">0 selecionadas</span>
-            </div>
-            <div id="escolas-container" class="d-flex flex-wrap"></div>
-           <!-- Container da paginação entre os botões -->
-    <div class="d-flex justify-content-between align-items-center mt-3">
-      <button class="btn btn-secondary" onclick="prevStep()">
-          <i class="fas fa-arrow-left me-2"></i>Voltar
-      </button>
-      
-      <div id="pagination-container" class="mx-2"></div>
-      
-      <button class="btn btn-primary" onclick="nextStep()">
-          Próximo <i class="fas fa-arrow-right ms-2"></i>
-      </button>
-  </div>
+    <!-- Paginação -->
+<div class="d-flex justify-content-between align-items-center mt-3">
+    <button class="btn btn-secondary btn-sm flex-shrink-0" onclick="prevStep()">
+        <i class="fas fa-arrow-left me-2"></i>Voltar
+    </button>
+    <div id="pagination-container" class="mx-2 flex-grow-1 text-center"></div>
+    <button class="btn btn-primary btn-sm flex-shrink-0" onclick="nextStep()">
+        Próximo <i class="fas fa-arrow-right ms-2"></i>
+    </button>
+</div>
 
-        </div>
+</div>
+
+        
         <!-- Adicione este novo passo após o passo 3 -->
 <div class="flow-step" data-step="4">
   <h3 class="mb-4"><i class="fas fa-clipboard-check me-2"></i>Configurar Monitoramento</h3>
@@ -212,15 +216,16 @@
 </div>
   
   <div class="d-flex justify-content-between">
-      <button class="btn btn-secondary" onclick="prevStep()">
+      <button class="btn btn-secondary btn-sm" onclick="prevStep()">
           <i class="fas fa-arrow-left me-2"></i>Voltar
       </button>
-      <button class="btn btn-success" onclick="submitForm()">
+      <button class="btn btn-success btn-sm" onclick="submitForm()">
           Finalizar <i class="fas fa-check ms-2"></i>
       </button>
   </div>
 </div>
     </div>
+</div>
 </div>
 {% endblock %}
 
@@ -272,18 +277,30 @@ function updateCounter() {
     `${escolasSelecionadas.size} selecionada${escolasSelecionadas.size!==1?'s':''}`;
 }
 
-function selectAllVisible() {
-  const cards = document.querySelectorAll('#escolas-container .card:not(.d-none)');
-  cards.forEach(card => {
-    const id = card.dataset.id;
-    if (!escolasSelecionadas.has(id)) {
-      escolasSelecionadas.add(id);
-      card.classList.add('state-selected');
-      const badge = card.querySelector('.badge-estado');
-      badge.innerHTML = 'Vinculada ✕';
-    }
-  });
-  updateCounter();
+function toggleAllVisible() {
+    const cards = document.querySelectorAll('#escolas-container .card:not(.d-none)');
+    const allSelected = Array.from(cards).every(card => 
+        escolasSelecionadas.has(card.dataset.id)
+    );
+
+    cards.forEach(card => {
+        const id = card.dataset.id;
+        const badge = card.querySelector('.badge-estado');
+        
+        if (allSelected) {
+            escolasSelecionadas.delete(id);
+            card.classList.remove('state-selected');
+            badge.innerHTML = 'Disponível ➕';
+        } else {
+            if (!escolasSelecionadas.has(id)) {
+                escolasSelecionadas.add(id);
+                card.classList.add('state-selected');
+                badge.innerHTML = 'Vinculada ✕';
+            }
+        }
+    });
+    
+    updateCounter();
 }
 
 let currentPage = 1;
