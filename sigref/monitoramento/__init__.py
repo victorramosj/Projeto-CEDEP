@@ -5,7 +5,7 @@
 #python manage.py makemigrations
 #python manage.py migrate
 #python manage.py test
-
+#python manage.py collectstatic
 #pip freeze > requirements.txt
 #pip install -r requirements.txt
 
