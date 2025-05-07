@@ -283,231 +283,183 @@
 {% block scripts %}
 {% if questionario_selecionado %}
 <script>
-    document.addEventListener('DOMContentLoaded', () => {
-        const modalEl = document.getElementById('assignSchoolsModal');
-        if (!modalEl) {
-            console.error('Modal assignSchoolsModal não encontrado');
+document.addEventListener('DOMContentLoaded', () => {
+    const modalEl = document.getElementById('assignSchoolsModal');
+    if (!modalEl) return console.error('Modal assignSchoolsModal não encontrado');
+
+    const assignUrl    = "{% url 'assign_escolas' questionario_selecionado.id %}";
+    const escolasApiUrl= "{% url 'escolas-list' %}";
+
+    let escolasSelecionadas = new Set();
+    let currentPage = 1, totalPages = 1;
+    let lastFetchedSchools = []; // guarda os resultados da última página
+
+    // Referências iniciais
+    const container    = modalEl.querySelector('#escolas-container');
+    const searchInput  = modalEl.querySelector('#search-escolas');
+    const counterEl    = modalEl.querySelector('#escolas-counter');
+    const prevBtn      = modalEl.querySelector('#prev-page');
+    const nextBtn      = modalEl.querySelector('#next-page');
+    const saveBtn      = modalEl.querySelector('#saveSchoolsBtn');
+    const pageLabel    = modalEl.querySelector('#current-page');
+
+    // --- Criar botões extras ---
+    const controlsRow = searchInput.closest('.d-flex');
+    const selectAllBtn = document.createElement('button');
+    selectAllBtn.type = 'button';
+    selectAllBtn.className = 'btn btn-sm btn-outline-success ms-2';
+    selectAllBtn.textContent = 'Selecionar Todas';
+    controlsRow.appendChild(selectAllBtn);
+
+    selectAllBtn.addEventListener('click', () => {
+        // se todas as visíveis já estiverem selecionadas, desseleciona; senão, seleciona todas
+        const allIds = lastFetchedSchools.map(s => s.id.toString());
+        const allSelected = allIds.every(id => escolasSelecionadas.has(id));
+        if (allSelected) {
+            allIds.forEach(id => escolasSelecionadas.delete(id));
+        } else {
+            allIds.forEach(id => escolasSelecionadas.add(id));
+        }
+        updateCounter();
+        // atualiza visual de cada card
+        modalEl.querySelectorAll('.card').forEach(card => {
+            const id = card.dataset.id;
+            const badge = card.querySelector('.badge-estado');
+            if (escolasSelecionadas.has(id)) {
+                card.classList.add('state-selected');
+                badge.textContent = 'Vinculada ✕';
+            } else {
+                card.classList.remove('state-selected');
+                badge.textContent = 'Disponível ➕';
+            }
+        });
+    });
+    // --------------------------------
+
+    function updateCounter() {
+        const count = escolasSelecionadas.size;
+        counterEl.textContent = count
+            ? `${count} escola(s) selecionada(s)`
+            : '';
+    }
+
+    async function fetchEscolas() {
+        try {
+            const q   = encodeURIComponent(searchInput.value);
+            const url = `${escolasApiUrl}?page=${currentPage}&search=${q}`;
+            const res = await fetch(url);
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            const data = await res.json();
+            lastFetchedSchools = data.results;
+            renderEscolas(data);
+        } catch (err) {
+            console.error('Erro no fetchEscolas:', err);
+            container.innerHTML = `
+                <div class="col-12">
+                  <div class="alert alert-danger">
+                    Erro ao carregar escolas: ${err.message}
+                  </div>
+                </div>`;
+        }
+    }
+
+    function renderEscolas(data) {
+        container.innerHTML = '';
+        if (!data.results.length) {
+            container.innerHTML = `
+            <div class="col-12">
+              <div class="alert alert-warning">
+                Nenhuma escola encontrada com o filtro atual
+              </div>
+            </div>`;
             return;
         }
 
-        const assignUrl = "{% url 'assign_escolas' questionario_selecionado.id %}";
-        const escolasApiUrl = "{% url 'escolas-list' %}";
+        totalPages = Math.ceil(data.count / 10);
+        pageLabel.textContent = `Página ${currentPage} de ${totalPages}`;
+        prevBtn.disabled = currentPage === 1;
+        nextBtn.disabled = currentPage === totalPages;
 
-        let escolasSelecionadas = new Set();
-        let currentPage = 1, totalPages = 1;
-
-        const container = modalEl.querySelector('#escolas-container');
-        const searchInput = modalEl.querySelector('#search-escolas');
-        const counterEl = modalEl.querySelector('#escolas-counter');
-        const prevBtn = modalEl.querySelector('#prev-page');
-        const nextBtn = modalEl.querySelector('#next-page');
-        const saveBtn = document.getElementById('saveSchoolsBtn');
-        const pageLabel = document.getElementById('current-page');
-
-        [container, searchInput, counterEl, prevBtn, nextBtn, saveBtn, pageLabel].forEach(el => {
-            if (!el) console.error('Elemento não encontrado no modal:', el);
-        });
-
-        function updateCounter() {
-            if (!counterEl) return;
-            const count = escolasSelecionadas.size;
-            counterEl.textContent = count
-                ? `${count} escola(s) selecionada(s)`
-                : '';
-        }
-
-        async function fetchEscolas() {
-            try {
-                const q = encodeURIComponent(searchInput.value);
-                const url = `${escolasApiUrl}?page=${currentPage}&search=${q}`;
-                console.log('Buscando escolas em:', url);
-                const res = await fetch(url);
-                if (!res.ok) throw new Error(`HTTP ${res.status}`);
-                const data = await res.json();
-                console.log('Dados recebidos:', data);
-                renderEscolas(data);
-            } catch (err) {
-                console.error('Erro no fetchEscolas:', err);
-                container.innerHTML = `
-        <div class="col-12">
-          <div class="alert alert-danger">
-            Erro ao carregar escolas: ${err.message}
-          </div>
-        </div>
-      `;
-            }
-        }
-
-        function renderEscolas(data) {
-            // Reset do container
-            container.innerHTML = '';
-
-            // Tratamento para dados vazios
-            if (!data.results || data.results.length === 0) {
-                container.innerHTML = `
-      <div class="col-12">
-        <div class="alert alert-warning">
-          Nenhuma escola encontrada com o filtro atual
-        </div>
-      </div>
-    `;
-                return;
-            }
-
-            // Renderização dos cards
-            data.results.forEach(escola => {
-                const card = document.createElement('div');
-                const idStr = escola.id.toString();
-                const isSelected = escolasSelecionadas.has(idStr);
-                const imgUrl = escola.foto_fachada_url || "{% static 'images/default-school.jpeg' %}";
-
-                // Determinar o estado inicial
-                const tooltipText = isSelected ? "Clique para remover esta escola" : "Clique para adicionar esta escola";
-                const stateClass = isSelected ? 'state-selected' : '';
-                const badgeText = isSelected ? 'Vinculada ✅' : 'Disponível ➕';
-
-                card.className = 'col-md-6';
-                card.innerHTML = `
-<div class="card ${stateClass}" data-id="${escola.id}" title="${tooltipText}" style="cursor: pointer;">
+        data.results.forEach(escola => {
+            const idStr      = escola.id.toString();
+            const isSelected = escolasSelecionadas.has(idStr);
+            const imgUrl     = escola.foto_fachada_url || "{% static 'images/default-school.jpeg' %}";
+            const card       = document.createElement('div');
+            card.className   = 'col-md-6 mb-3';
+            card.innerHTML   = `
+    <div class="card ${isSelected?'state-selected':''}" data-id="${escola.id}" style="cursor:pointer;">
       <div class="row g-0">
-        <div class="col-md-4 position-relative " >
-          <img src="${imgUrl}" 
-               class="img-fluid rounded-start" 
-               style="height: 150px; object-fit: cover;">
-          <span class="badge-estado" title="${tooltipText}">
-            ${badgeText}
-          </span>
+        <div class="col-md-4 position-relative">
+          <img src="${imgUrl}" class="img-fluid rounded-start" style="height:150px;object-fit:cover;">
+          <span class="badge-estado">${isSelected?'Vinculada ✕':'Disponível ➕'}</span>
         </div>
         <div class="col-md-8">
           <div class="card-body p-3">
             <h6 class="card-title mb-1">${escola.nome}</h6>
-            <div class="small text-muted mb-2" title="clique para adicionar">
+            <div class="small text-muted">
               <div>INEP: ${escola.inep}</div>
               <div>Endereço: ${escola.endereco}</div>
-              <div class="mt-1">
-                <i class="fas fa-user-tie me-1"></i>
-                ${escola.nome_gestor}
-              </div>
+              <div class="mt-1"><i class="fas fa-user-tie me-1"></i>${escola.nome_gestor}</div>
             </div>
           </div>
         </div>
       </div>
-    </div>
-  `;
-
-                // Adiciona evento de clique
-                card.querySelector('.card').addEventListener('click', () => {
-                    const cardElement = card.querySelector('.card');
-                    const badge = cardElement.querySelector('.badge-estado');
-                    const id = escola.id.toString();
-
-                    if (escolasSelecionadas.has(id)) {
-                        // Estado de remoção
-                        cardElement.classList.remove('state-selected');
-                        cardElement.classList.add('state-removing');
-                        badge.innerHTML = 'Clique para remover ✕';
-
-                        // Delay para permitir feedback visual
-                        setTimeout(() => {
-                            cardElement.classList.remove('state-removing');
-                            escolasSelecionadas.delete(id);
-                            updateCounter();
-                            refreshCardState(cardElement, id);
-                        }, 500);
-
-                    } else {
-                        // Estado de adição
-                        cardElement.classList.add('state-adding');
-                        badge.innerHTML = 'Adicionando... ✓';
-
-                        setTimeout(() => {
-                            cardElement.classList.remove('state-adding');
-                            escolasSelecionadas.add(id);
-                            updateCounter();
-                            refreshCardState(cardElement, id);
-                        }, 500);
-                    }
-                });
-
-                container.appendChild(card);
-            });
-
-            // Função para atualizar o estado do card
-            function refreshCardState(cardElement, id) {
-                const badge = cardElement.querySelector('.badge-estado');
-                const isSelected = escolasSelecionadas.has(id);
-
-                cardElement.classList.remove('state-selected', 'state-removing', 'state-adding');
-
-                if (isSelected) {
-                    cardElement.classList.add('state-selected');
-                    badge.innerHTML = 'Vinculada ✕';
+    </div>`;
+            // clique para (des)selecionar
+            const inner = card.querySelector('.card');
+            inner.addEventListener('click', () => {
+                const badge = inner.querySelector('.badge-estado');
+                if (escolasSelecionadas.has(idStr)) {
+                    escolasSelecionadas.delete(idStr);
+                    inner.classList.remove('state-selected');
+                    badge.textContent = 'Disponível ➕';
                 } else {
-                    badge.innerHTML = 'Disponível ➕';
+                    escolasSelecionadas.add(idStr);
+                    inner.classList.add('state-selected');
+                    badge.textContent = 'Vinculada ✕';
                 }
-            }
-            // Atualiza controles de paginação
-            totalPages = Math.ceil(data.count / 10);
-            pageLabel.textContent = `Página ${currentPage} de ${totalPages}`;
-            prevBtn.disabled = currentPage === 1;
-            nextBtn.disabled = currentPage === totalPages;
-
-            updateCounter();
-        }
-
-        // Controle de paginação e busca
-        prevBtn.onclick = () => {
-            if (currentPage > 1) {
-                currentPage--;
-                fetchEscolas();
-            }
-        };
-        nextBtn.onclick = () => {
-            if (currentPage < totalPages) {
-                currentPage++;
-                fetchEscolas();
-            }
-        };
-        searchInput.oninput = () => {
-            currentPage = 1;
-            fetchEscolas();
-        };
-
-        // Salvar seleção
-        saveBtn.onclick = () => {
-            fetch(assignUrl, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': '{{ csrf_token }}',
-                },
-                body: JSON.stringify({
-                    escolas: Array.from(escolasSelecionadas).map(i => parseInt(i, 10))
-                })
-            })
-                .then(r => {
-                    if (r.ok) return location.reload();
-                    alert('Erro ao salvar escolas.');
-                })
-                .catch(err => {
-                    console.error('Erro ao salvar:', err);
-                    alert('Falha na requisição.');
-                });
-        };
-
-        // Ao abrir o modal, buscar IDs já atribuídos + renderizar
-        modalEl.addEventListener('shown.bs.modal', async () => {
-            try {
-                const res = await fetch(assignUrl);
-                const data = await res.json();
-                escolasSelecionadas = new Set(data.assigned.map(id => id.toString()));
-                await fetchEscolas();
-            } catch (err) {
-                console.error('Erro ao buscar atribuídas:', err);
-            }
+                updateCounter();
+            });
+            container.appendChild(card);
         });
+    }
+
+    // paginação
+    prevBtn.addEventListener('click', () => {
+        if (currentPage>1) { currentPage--; fetchEscolas(); }
     });
+    nextBtn.addEventListener('click', () => {
+        if (currentPage<totalPages) { currentPage++; fetchEscolas(); }
+    });
+    searchInput.addEventListener('input', () => {
+        currentPage = 1;
+        fetchEscolas();
+    });
+
+    // salvar seleção
+    saveBtn.addEventListener('click', () => {
+        fetch(assignUrl, {
+            method: 'POST',
+            headers: {
+                'Content-Type':'application/json',
+                'X-CSRFToken':'{{ csrf_token }}'
+            },
+            body: JSON.stringify({
+                escolas: Array.from(escolasSelecionadas).map(id=>parseInt(id,10))
+            })
+        })
+        .then(r => r.ok ? location.reload() : alert('Erro ao salvar escolas.'))
+        .catch(() => alert('Falha na requisição.'));
+    });
+
+    // ao abrir modal, carrega atribuídas e primeira página
+    modalEl.addEventListener('shown.bs.modal', async () => {
+        const res  = await fetch(assignUrl);
+        const data = await res.json();
+        escolasSelecionadas = new Set(data.assigned.map(id=>id.toString()));
+        fetchEscolas();
+    });
+});
 </script>
 {% endif %}
-
 {% endblock %}

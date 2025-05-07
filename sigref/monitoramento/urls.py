@@ -50,6 +50,11 @@ urlpatterns = [
     # Dashboard e relatórios da Escola
     path('escola/dashboard/', views.EscolaDashboardView.as_view(), name='escola_dashboard'),
     path('escola/relatar-problema/', views.RelatoProblemaCreateView.as_view(), name='relatar_problema'),
+    #respostas
+    path('responder/', views.MinhasPendenciasView.as_view(), name='minhas_pendencias'),
+     path('responder/<int:monitoramento_pk>/', 
+         views.ResponderMonitoramentoView.as_view(), 
+         name='responder_monitoramento'),
 
     # -----------------------------
     # Endpoints AJAX / API customizados

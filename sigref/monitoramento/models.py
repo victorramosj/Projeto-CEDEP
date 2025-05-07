@@ -160,14 +160,39 @@ class GREUser(models.Model):
         return self.setor == setor
     
     def setores_permitidos(self):
-        """Retorna todos os setores sob responsabilidade"""
-        if self.is_admin() or self.is_coordenador():
+        """Retorna todos os setores sob responsabilidade considerando a hierarquia completa"""
+        from django.db import models
+        
+        def get_hierarchy(setor):
+            """Obtém recursivamente todos os subsetores usando parent"""
+            q_objects = models.Q(id=setor.id)  # Inclui o próprio setor
+            
+            # Primeiro nível de subsetores
+            direct_children = models.Q(parent=setor)
+            q_objects |= direct_children
+            
+            # Subsetores dos subsetores (recursivo)
+            current_level = Setor.objects.filter(direct_children)
+            while current_level.exists():
+                next_level = models.Q()
+                for child in current_level:
+                    next_level |= models.Q(parent=child)
+                q_objects |= next_level
+                current_level = Setor.objects.filter(next_level)
+            
+            return Setor.objects.filter(q_objects).distinct()
+
+        if self.is_admin():
             return Setor.objects.all()
+        
+        if self.is_coordenador() and self.setor:
+            # Coordenador vê toda a hierarquia do setor principal
+            return get_hierarchy(self.setor)
+        
         if self.is_chefe_setor() and self.setor:
-            return Setor.objects.filter(
-                models.Q(id=self.setor.id) | 
-                models.Q(parent=self.setor)
-            )
+            # Chefe vê seu setor e TODOS os subsetores (níveis abaixo)
+            return get_hierarchy(self.setor)
+        
         return Setor.objects.none()
     
     # Novas propriedades para templates
@@ -175,8 +200,8 @@ class GREUser(models.Model):
     def nivel_acesso(self):
         """Classifica o nível de acesso para exibição"""
         if self.is_admin(): return "Nível Máximo"
-        if self.is_coordenador(): return "Nível Estratégico"
-        if self.is_chefe_setor(): return "Nível Gerencial"
+        if self.is_coordenador(): return "Nível Gerencial"
+        if self.is_chefe_setor(): return "Nível Estratégico"
         return "Nível Operacional"
 
 class Questionario(models.Model):

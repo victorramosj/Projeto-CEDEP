@@ -40,9 +40,9 @@ def user_login(request):
                     elif gre_user.is_coordenador():
                         return redirect('coordenador_home')
                     elif gre_user.is_chefe_setor():
-                        return redirect('setor_home')
+                        return redirect('home')
                     elif gre_user.is_monitor():
-                        return redirect('monitor_home')
+                        return redirect('home')
                     elif gre_user.is_escola():
                         return redirect('escola_dashboard')
                     else:

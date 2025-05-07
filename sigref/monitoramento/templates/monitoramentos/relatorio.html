@@ -1,0 +1,13 @@
+<!— cabecalho com logo, título, escola —>
+<h1>{{ monitoramento.questionario.titulo }}</h1>
+<p>Escola: {{ monitoramento.escola.nome }}</p>
+<p>Data envio: {{ monitoramento.data_envio }}</p>
+<hr>
+<ol>
+{% for r in monitoramento.respostas.all %}
+  <li>
+    {{ r.pergunta.texto }}  
+    — Resposta: {{ r.resposta_formatada }}
+  </li>
+{% endfor %}
+</ol>

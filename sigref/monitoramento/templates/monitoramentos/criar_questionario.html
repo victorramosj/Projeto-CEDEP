@@ -229,6 +229,8 @@
 </div>
 {% endblock %}
 
+
+
 {% block scripts %}
 {{ block.super }}
 
@@ -236,270 +238,246 @@
 let currentStep = 0;
 let selectedSetorId = {{ setor_selecionado.id|default:'null' }};
 const escolasSelecionadas = new Set();
+let currentPage = 1;
+let totalPages = 1;
+let searchQuery = '';
+let isLoading = false;
 
+// Mostra o passo atual
 function showStep() {
   document.querySelectorAll('.flow-step').forEach(el => el.classList.remove('active'));
   document.querySelector(`.flow-step[data-step="${currentStep}"]`).classList.add('active');
 }
-// Aumente o número máximo de passos para 4
+
+// Avança para o próximo passo
 function nextStep() {
-    if (currentStep === 0 && !selectedSetorId) {
-        Swal.fire('Atenção!','Selecione um setor','warning'); return;
-    }
-    if (currentStep < 4) currentStep++;  // Alterado de 3 para 4
-    showStep();
-    if (currentStep === 3) loadEscolas(); // Mantém a carga de escolas no passo 3
+  if (currentStep === 0 && !selectedSetorId) {
+    Swal.fire('Atenção!','Selecione um setor','warning');
+    return;
+  }
+  if (currentStep < 4) currentStep++;
+  showStep();
+  if (currentStep === 3) {
+    searchQuery = '';
+    loadEscolas(1);
+  }
 }
+
+// Volta para o passo anterior
 function prevStep() {
   if (currentStep > 0) currentStep--;
   showStep();
 }
+
+// Seleciona um setor
 function selectSetor(card) {
-  document.querySelectorAll('.setor-card').forEach(c=>c.classList.remove('selected'));
+  document.querySelectorAll('.setor-card').forEach(c => c.classList.remove('selected'));
   card.classList.add('selected');
   selectedSetorId = card.dataset.id;
 }
+
+// Adiciona uma nova pergunta
 function addQuestion() {
   const container = document.getElementById('perguntas-container');
-  const totalPerguntas = container.querySelectorAll('.question-card').length;
-  const novaOrdem = totalPerguntas + 1;
-
-  const clone = document.querySelector('.question-card').cloneNode(true);
+  const total = container.querySelectorAll('.question-card').length;
+  const clone = container.querySelector('.question-card').cloneNode(true);
   clone.querySelector('.question-text').value = '';
   clone.querySelector('.question-type').value = 'SN';
-  clone.querySelector('.question-order').value = novaOrdem;
-
+  clone.querySelector('.question-order').value = total + 1;
   container.appendChild(clone);
 }
 
+// Atualiza o contador de escolas selecionadas
 function updateCounter() {
   document.getElementById('selected-counter').textContent =
-    `${escolasSelecionadas.size} selecionada${escolasSelecionadas.size!==1?'s':''}`;
+    `${escolasSelecionadas.size} selecionada${escolasSelecionadas.size !== 1 ? 's' : ''}`;
 }
 
-function toggleAllVisible() {
-    const cards = document.querySelectorAll('#escolas-container .card:not(.d-none)');
-    const allSelected = Array.from(cards).every(card => 
-        escolasSelecionadas.has(card.dataset.id)
-    );
+// Função principal para carregar escolas com paginação
+async function loadEscolas(page = 1) {
+  if (isLoading) return;
+  isLoading = true;
 
-    cards.forEach(card => {
-        const id = card.dataset.id;
-        const badge = card.querySelector('.badge-estado');
-        
-        if (allSelected) {
-            escolasSelecionadas.delete(id);
-            card.classList.remove('state-selected');
-            badge.innerHTML = 'Disponível ➕';
-        } else {
-            if (!escolasSelecionadas.has(id)) {
-                escolasSelecionadas.add(id);
-                card.classList.add('state-selected');
-                badge.innerHTML = 'Vinculada ✕';
-            }
-        }
-    });
-    
-    updateCounter();
-}
+  const container = document.getElementById('escolas-container');
+  container.innerHTML = `
+    <div class="col-12 text-center my-4">
+      <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Carregando...</span>
+      </div>
+    </div>`;
 
-let currentPage = 1;
-let totalPages = 1;
-function toggleEscola(id) {
-  const pill = document.querySelector(`.escola-pill[data-id="${id}"]`);
-  if (escolasSelecionadas.has(id)) {
-    escolasSelecionadas.delete(id); pill.classList.remove('selected');
-  } else {
-    escolasSelecionadas.add(id); pill.classList.add('selected');
-  }
-  updateCounter();
-}
-
-async function loadEscolas(search = '', page = 1) {
   try {
-    const searchInput = document.getElementById('search-escolas');
-    const currentSearch = searchInput.value;
-    
-    const escolasApiUrl = `{% url 'escolas-list' %}?search=${encodeURIComponent(currentSearch)}&page=${page}`;
-    const res = await fetch(escolasApiUrl);
-    
-    if (!res.ok) throw new Error('Erro na resposta da API');
-    
+    const url = `{% url 'escolas-list' %}?search=${encodeURIComponent(searchQuery)}&page=${page}`;
+    const res = await fetch(url);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const data = await res.json();
-    
+
     currentPage = page;
-    totalPages = data.total_pages || 1;
-    
-    const container = document.getElementById('escolas-container');
+    totalPages = Math.ceil(data.count / 10);
+
     container.innerHTML = '';
+    data.results.forEach(escola => container.appendChild(createEscolaCard(escola)));
 
-    data.results.forEach(escola => {
-      const card = document.createElement('div');
-      const idStr = escola.id.toString();
-      const isSelected = escolasSelecionadas.has(idStr);
-      const imgUrl = escola.foto_fachada_url || "{% static 'images/default-school.jpeg' %}";
+    updatePaginationControls();
+    updateCounter();
+  } catch (err) {
+    console.error(err);
+    Swal.fire('Erro', 'Não foi possível carregar as escolas', 'error');
+  } finally {
+    isLoading = false;
+  }
+}
 
-      card.className = 'col-md-6 mb-3';
-      card.innerHTML = `
-        <div class="card ${isSelected ? 'state-selected' : ''}" 
-             data-id="${idStr}" 
-             title="${isSelected ? 'Clique para remover' : 'Clique para adicionar'}"
-             style="cursor: pointer;">
-          <div class="row g-0">
-            <div class="col-md-4 position-relative">
-              <img src="${imgUrl}" 
-                   class="img-fluid rounded-start" 
-                   style="height: 150px; object-fit: cover;">
-              <span class="badge-estado">
-                ${isSelected ? 'Vinculada ✕' : 'Disponível ➕'}
-              </span>
-            </div>
-            <div class="col-md-8">
-              <div class="card-body p-3">
-                <h6 class="card-title mb-1">${escola.nome}</h6>
-                <div class="small text-muted mb-2">
-                  <div>INEP: ${escola.inep}</div>
-                  <div>Endereço: ${escola.endereco}</div>
-                  <div class="mt-1">
-                    <i class="fas fa-user-tie me-1"></i>
-                    ${escola.nome_gestor}
-                  </div>
-                </div>
-              </div>
+// Cria o card de cada escola e seu clique de seleção
+function createEscolaCard(escola) {
+  const cardWrapper = document.createElement('div');
+  const idStr = String(escola.id);
+  const isSelected = escolasSelecionadas.has(idStr);
+  const imgUrl = escola.foto_fachada_url || "{% static 'images/default-school.jpeg' %}";
+
+  cardWrapper.className = 'col-md-6 mb-3';
+  cardWrapper.innerHTML = `
+    <div class="card ${isSelected ? 'state-selected' : ''}" data-id="${idStr}" style="cursor:pointer;">
+      <div class="row g-0">
+        <div class="col-md-4 position-relative">
+          <img src="${imgUrl}" class="img-fluid rounded-start" style="height:150px;object-fit:cover;">
+          <span class="badge-estado">${isSelected ? 'Vinculada ✕' : 'Disponível ➕'}</span>
+        </div>
+        <div class="col-md-8">
+          <div class="card-body p-3">
+            <h6 class="card-title mb-1">${escola.nome}</h6>
+            <div class="small text-muted">
+              <div>INEP: ${escola.inep}</div>
+              <div>Endereço: ${escola.endereco}</div>
+              <div class="mt-1"><i class="fas fa-user-tie me-1"></i>${escola.nome_gestor}</div>
             </div>
           </div>
         </div>
-      `;
-
-      card.querySelector('.card').addEventListener('click', () => {
-        const id = idStr;
-        const cardElement = card.querySelector('.card');
-        const badge = cardElement.querySelector('.badge-estado');
-
-        if (escolasSelecionadas.has(id)) {
-          cardElement.classList.remove('state-selected');
-          escolasSelecionadas.delete(id);
-          badge.innerHTML = 'Disponível ➕';
-        } else {
-          cardElement.classList.add('state-selected');
-          escolasSelecionadas.add(id);
-          badge.innerHTML = 'Vinculada ✕';
-        }
-        updateCounter();
-      });
-
-      container.appendChild(card);
-    });
-
-    const paginationContainer = document.getElementById('pagination-container');
-    paginationContainer.innerHTML = `
-      <div class="pagination-controls">
-        <button ${currentPage === 1 ? 'disabled' : ''} 
-                class="btn btn-sm btn-outline-primary prev-page">
-          <i class="fas fa-chevron-left"></i>
-        </button>
-        <span class="mx-2">Página ${currentPage} de ${totalPages}</span>
-        <button ${currentPage >= totalPages ? 'disabled' : ''} 
-                class="btn btn-sm btn-outline-primary next-page">
-          <i class="fas fa-chevron-right"></i>
-        </button>
       </div>
-    `;
+    </div>`;
 
-    // Adicione event listeners corretamente
-    paginationContainer.querySelector('.prev-page').addEventListener('click', () => {
-      loadEscolas(currentSearch, currentPage - 1);
-    });
-    
-    paginationContainer.querySelector('.next-page').addEventListener('click', () => {
-      loadEscolas(currentSearch, currentPage + 1);
-    });
-
+  const card = cardWrapper.querySelector('.card');
+  card.addEventListener('click', () => {
+    const badge = card.querySelector('.badge-estado');
+    if (escolasSelecionadas.has(idStr)) {
+      escolasSelecionadas.delete(idStr);
+      card.classList.remove('state-selected');
+      badge.textContent = 'Disponível ➕';
+    } else {
+      escolasSelecionadas.add(idStr);
+      card.classList.add('state-selected');
+      badge.textContent = 'Vinculada ✕';
+    }
     updateCounter();
+  });
 
-  } catch (err) {
-    console.error('Erro ao carregar escolas:', err);
-    Swal.fire('Erro', 'Não foi possível carregar as escolas', 'error');
-  }
+  return cardWrapper;
 }
-function refreshCardState(cardElement, id) {
-  const badge = cardElement.querySelector('.badge-estado');
-  const isSelected = escolasSelecionadas.has(id);
 
-  cardElement.classList.remove('state-selected', 'state-removing', 'state-adding');
+// Renderiza os controles de paginação
+function updatePaginationControls() {
+  const pc = document.getElementById('pagination-container');
+  pc.innerHTML = `
+    <div class="d-flex justify-content-center align-items-center gap-2">
+      <button class="btn btn-sm btn-outline-primary prev-page" ${currentPage===1?'disabled':''}>
+        <i class="fas fa-chevron-left"></i>
+      </button>
+      <span>Página ${currentPage} de ${totalPages}</span>
+      <button class="btn btn-sm btn-outline-primary next-page" ${currentPage>=totalPages?'disabled':''}>
+        <i class="fas fa-chevron-right"></i>
+      </button>
+    </div>`;
 
-  if (isSelected) {
-    cardElement.classList.add('state-selected');
-    badge.innerHTML = 'Vinculada ✕';
-  } else {
-    badge.innerHTML = 'Disponível ➕';
-  }
+  pc.querySelector('.prev-page').onclick = () => loadEscolas(currentPage - 1);
+  pc.querySelector('.next-page').onclick = () => loadEscolas(currentPage + 1);
 }
-document.getElementById('search-escolas').addEventListener('input', function(e) {
-  loadEscolas(e.target.value, 1); // Sempre volta para a primeira página
+
+// Debounce para pesquisa
+let debounceTimeout;
+document.getElementById('search-escolas').addEventListener('input', e => {
+  clearTimeout(debounceTimeout);
+  searchQuery = e.target.value;
+  debounceTimeout = setTimeout(() => {
+    currentPage = 1;
+    loadEscolas(1);
+  }, 300);
 });
 
-
-async function submitForm() {
-    // Convert Set para Array de números
-    const escolasArray = Array.from(escolasSelecionadas).map(Number);
-
-    const data = {
-        titulo: document.getElementById('titulo').value,
-        descricao: document.getElementById('descricao').value,
-        setor: Number(selectedSetorId),
-        perguntas: Array.from(document.querySelectorAll('.question-card')).map(c => ({
-            texto: c.querySelector('.question-text').value,
-            tipo_resposta: c.querySelector('.question-type').value,
-            ordem: parseInt(c.querySelector('.question-order').value)
-        })),
-        escolas_destino: escolasArray,
-        data_limite: document.getElementById('data-limite').value,
-        frequencia: document.getElementById('frequencia').value
-    };
-
-    // Validação melhorada
-    const errors = [];
-    if (!data.titulo) errors.push('Título é obrigatório');
-    if (!data.setor) errors.push('Setor é obrigatório');
-    if (!data.data_limite) errors.push('Data limite é obrigatória');
-    
-    data.perguntas.forEach((p, i) => {
-        if (!p.texto) errors.push(`Pergunta ${i+1}: Texto é obrigatório`);
-        if (isNaN(p.ordem) || p.ordem < 1) errors.push(`Pergunta ${i+1}: Ordem inválida`);
-    });
-
-    if (errors.length > 0) {
-        Swal.fire('Erro!', errors.join('<br>'), 'error');
-        return;
+// Alterna seleção de todas as escolas visíveis
+function toggleAllVisible() {
+  document.querySelectorAll('#escolas-container .card').forEach(card => {
+    const id = card.dataset.id;
+    const badge = card.querySelector('.badge-estado');
+    if (escolasSelecionadas.has(id)) {
+      escolasSelecionadas.delete(id);
+      card.classList.remove('state-selected');
+      badge.textContent = 'Disponível ➕';
+    } else {
+      escolasSelecionadas.add(id);
+      card.classList.add('state-selected');
+      badge.textContent = 'Vinculada ✕';
     }
-
-    try {
-        const resp = await fetch('{% url "questionarios-add" %}', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': '{{ csrf_token }}'
-            },
-            body: JSON.stringify(data)
-        });
-
-        const result = await resp.json();
-        
-        if (resp.ok) {
-            Swal.fire({icon: 'success', title: 'Sucesso!', html: 'Questionário criado'})
-                .then(() => {
-                    window.location = `{% url 'gerenciar_perguntas' 0 %}`.replace('0', result.id);
-                });
-        } else {
-            const errors = result.errors ? Object.entries(result.errors).map(([k,v]) => `${k}: ${v}`) : ['Erro desconhecido'];
-            Swal.fire('Erro', errors.join('<br>'), 'error');
-        }
-    } catch (error) {
-        Swal.fire('Erro', 'Falha na comunicação com o servidor', 'error');
-    }
+  });
+  updateCounter();
 }
 
-document.addEventListener('DOMContentLoaded',showStep);
+// Submete o formulário final criando o questionário + monitoramentos
+async function submitForm() {
+  const perguntas = Array.from(document.querySelectorAll('.question-card')).map((c, i) => ({
+    texto: c.querySelector('.question-text').value,
+    tipo_resposta: c.querySelector('.question-type').value,
+    ordem: parseInt(c.querySelector('.question-order').value,10)
+  }));
+
+  const payload = {
+    titulo: document.getElementById('titulo').value,
+    descricao: document.getElementById('descricao').value,
+    setor: Number(selectedSetorId),
+    perguntas,
+    escolas_destino: Array.from(escolasSelecionadas).map(Number),
+    data_limite: document.getElementById('data-limite').value,
+    frequencia: document.getElementById('frequencia').value
+  };
+
+  // Validações simples
+  const errs = [];
+  if (!payload.titulo) errs.push('Título é obrigatório');
+  if (!payload.setor) errs.push('Setor é obrigatório');
+  if (!payload.data_limite) errs.push('Data limite é obrigatória');
+  perguntas.forEach((p, i) => {
+    if (!p.texto) errs.push(`Pergunta ${i+1}: texto é obrigatório`);
+  });
+  if (errs.length) {
+    Swal.fire('Erro', errs.join('<br>'), 'error');
+    return;
+  }
+
+  try {
+    const res = await fetch('{% url "questionarios-add" %}', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': '{{ csrf_token }}'
+      },
+      body: JSON.stringify(payload)
+    });
+    const data = await res.json();
+    if (res.ok) {
+      Swal.fire('Sucesso','Questionário criado','success')
+        .then(() => window.location.href = `{% url 'gerenciar_perguntas' 0 %}`.replace('0',data.id));
+    } else {
+      const messages = data.errors
+        ? Object.entries(data.errors).map(([k,v])=>`${k}: ${v}`)
+        : ['Erro desconhecido'];
+      Swal.fire('Erro', messages.join('<br>'), 'error');
+    }
+  } catch {
+    Swal.fire('Erro','Falha de comunicação','error');
+  }
+}
+
+// Inicializa o fluxo
+document.addEventListener('DOMContentLoaded', showStep);
 </script>
+
 {% endblock %}
