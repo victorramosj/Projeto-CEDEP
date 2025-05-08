@@ -180,54 +180,39 @@ from django.contrib.auth.decorators import login_required
 from django.shortcuts import render
 from django.utils import timezone
 from django.db.models import Count
-from .models import Monitoramento, RelatoProblema
+
+# monitoramento/views.py
+
+from django.shortcuts import render
+from .models import Questionario, Escola
 
 def dashboard_monitoramentos(request):
     user = request.user.greuser
-    context = {'section': 'dashboard_monitoramentos'}
-
-    # Filtros baseados no tipo de usuário
+    # 1. Carrega só escolas que o usuário pode acessar
     if user.is_admin() or user.is_coordenador():
-        monitoramentos = Monitoramento.objects.all()
-        problemas      = RelatoProblema.objects.all()
-
+        escolas = Escola.objects.all()
     elif user.is_chefe_setor():
-        # pega todos os setores que esse chefe gerencia (incluindo subsetores)
-        setores_ids = user.setores_permitidos().values_list('id', flat=True)
-        monitoramentos = Monitoramento.objects.filter(
-            questionario__setor__in=setores_ids
-        )
-        problemas = RelatoProblema.objects.filter(
-            tipo_problema__setor__in=setores_ids
-        )
-
+        # no seu modelo GREUser não há ligação direta escola–setor
+        escolas = Escola.objects.filter(
+            monitoramentos__questionario__setor__in=user.setores_permitidos()
+        ).distinct()
     else:
-        monitoramentos = Monitoramento.objects.filter(
-            escola__in=user.escolas.all()
-        )
-        problemas = RelatoProblema.objects.filter(gestor=user)
-
-    # Estatísticas
-    total_monitoramentos   = monitoramentos.count()
-    monitoramentos_pendentes = monitoramentos.filter(status='P').count()
-    problemas_urgentes     = problemas.filter(prioridade='U').count()
-
-    # Dados para gráfico de status
-    status_data   = monitoramentos.values('status').annotate(total=Count('status'))
-    status_labels = [dict(Monitoramento.STATUS_CHOICES).get(item['status']) for item in status_data]
-    status_values = [item['total'] for item in status_data]
-
-    context.update({
-        'total_monitoramentos':   total_monitoramentos,
-        'monitoramentos_pendentes': monitoramentos_pendentes,
-        'problemas_urgentes':     problemas_urgentes,
-        'status_labels':          status_labels,
-        'status_values':          status_values,
-        'upcoming_monitoramentos': monitoramentos.order_by('-data_envio')[:5],
-        'problemas_recentes':     problemas.order_by('-data_relato')[:5],
-    })
-
+        escolas = user.escolas.all()
+    
+    # 2. Se veio school_id, pega apenas questionários desta escola
+    school_id = request.GET.get('school_id')
+    questionarios = Questionario.objects.none()
+    if school_id:
+        escola = get_object_or_404(Escola, pk=school_id)
+        questionarios = Questionario.objects.filter(escolas_destino=escola)
+    
+    context = {
+        'escolas': escolas,
+        'questionarios': questionarios,
+        'selected_school': int(school_id) if school_id else None,
+    }
     return render(request, 'monitoramentos/dashboard_monitoramentos.html', context)
+
 
 
 
@@ -288,9 +273,9 @@ def fluxo_monitoramento(request):
     monitoramentos = []
     if questionario_selecionado:
         monitoramentos = (
-            Monitoramento.objects
-            .filter(questionario=questionario_selecionado)
-            .order_by('-data_envio')[:10]
+           Monitoramento.objects
+           .filter(questionario=questionario_selecionado)
+           .order_by('-criado_em')[:10]
         )
 
     return render(request, 'monitoramentos/fluxo_monitoramento_setores.html', {
@@ -452,93 +437,103 @@ class RelatoProblemaCreateView(LoginRequiredMixin, CreateView):
         form.instance.gestor = self.request.user.greuser
         return super().form_valid(form)
 
-# monitoramento/views.py
+class QuestionariosEscolaView(LoginRequiredMixin, View):
+    def get(self, request, escola_id):
+        escola = get_object_or_404(Escola, id=escola_id)
+        if not request.user.greuser.pode_acessar_escola(escola):
+            raise PermissionDenied()
 
-from django.shortcuts import render, get_object_or_404, redirect
-from django.views import View
-from django.contrib.auth.mixins import LoginRequiredMixin
-from .models import Monitoramento, Resposta, Pergunta
-from .forms import RespostaFormSet
+        questionarios = Questionario.objects.filter(
+            escolas_destino=escola
+        ).annotate(
+            total_respostas=Count('monitoramentos'),
+        ).prefetch_related('monitoramentos')
 
-class MinhasPendenciasView(LoginRequiredMixin, View):
-    def get(self, request):
-        gre = request.user.greuser
-        # listar todas as escolas que o GRE pode acessar, e seus monitoramentos pendentes
-        pend = Monitoramento.objects.filter(
-            respondido_por__isnull=True,
-            status='P',
-            escola__in=gre.escolas.all()
-        ).select_related('escola','questionario').order_by('escola','data_limite')
-        # agrupar por escola
-        escolas = {}
-        for m in pend:
-            escolas.setdefault(m.escola, []).append(m)
-        return render(request, 'monitoramentos/minhas_pendencias.html', {
-            'escolas_monitor': escolas
+        hoje = timezone.now().date()
+        total_hoje = 0
+        ultima_resposta_geral = None
+        
+        for q in questionarios:
+            q.respostas_hoje = Monitoramento.contagem_hoje(escola, q)
+            total_hoje += q.respostas_hoje
+            ultima = q.monitoramentos.order_by('-criado_em').first()
+            if ultima and (not ultima_resposta_geral or ultima.criado_em > ultima_resposta_geral):
+                ultima_resposta_geral = ultima.criado_em
+
+        return render(request, 'monitoramentos/questionarios_escola.html', {
+            'escola': escola,
+            'questionarios': questionarios,
+            'total_hoje': total_hoje,
+            'total_geral': sum(q.total_respostas for q in questionarios),
+            'ultima_resposta_geral': ultima_resposta_geral
         })
-
-from django.shortcuts import render, get_object_or_404, redirect
-from django.utils import timezone
-from django.views import View
+from django.shortcuts      import render, get_object_or_404, redirect
+from django.views          import View
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.core.exceptions import PermissionDenied
+from .models               import Escola, Questionario, Pergunta, Monitoramento
+from .forms                import RespostaFormSet
 
-from .models import Monitoramento, Pergunta, Resposta
-from .forms import RespostaFormSet  # certifique-se de ter atualizado conforme instruído
+class ResponderQuestionarioView(LoginRequiredMixin, View):
+    template_name = 'monitoramentos/responder_questionario.html'
 
-class ResponderMonitoramentoView(LoginRequiredMixin, View):
-    template_name = 'monitoramentos/responder.html'
+    def get(self, request, escola_id, questionario_id):
+        escola      = get_object_or_404(Escola, id=escola_id)
+        questionario = get_object_or_404(Questionario, id=questionario_id)
+        perguntas   = Pergunta.objects.filter(questionario=questionario).order_by('ordem')
 
-    def dispatch(self, request, *args, **kwargs):
-        # Antes de qualquer método, verifica se o monitoramento existe e se o usuário pode acessá-lo
-        self.monitoramento = get_object_or_404(Monitoramento, pk=kwargs['monitoramento_pk'])
-        # só GREUsers podem responder, e só se tiverem acesso à escola
-        if not request.user.greuser.pode_acessar_escola(self.monitoramento.escola):
-            raise PermissionDenied("Você não tem permissão para responder esse monitoramento.")
-        return super().dispatch(request, *args, **kwargs)
+        formset = RespostaFormSet(
+            perguntas=perguntas
+        )
 
-    def get(self, request, monitoramento_pk):
-        # Perguntas do questionário
-        perguntas = Pergunta.objects.filter(
-            questionario=self.monitoramento.questionario
-        ).order_by('ordem')
-        # Formset vazio (somente initial)
-        formset = RespostaFormSet(data=None, files=None, perguntas=perguntas)
         return render(request, self.template_name, {
-            'monitoramento': self.monitoramento,
+            'escola': escola,
+            'questionario': questionario,
             'formset': formset,
+            'hoje': timezone.now().date()  # Adicione esta linha
         })
 
-    def post(self, request, monitoramento_pk):
-        perguntas = Pergunta.objects.filter(
-            questionario=self.monitoramento.questionario
-        ).order_by('ordem')
-        # Passa data, files e perguntas via keywords
+    def post(self, request, escola_id, questionario_id):
+        escola      = get_object_or_404(Escola, id=escola_id)
+        questionario = get_object_or_404(Questionario, id=questionario_id)
+        perguntas   = Pergunta.objects.filter(questionario=questionario).order_by('ordem')
+
         formset = RespostaFormSet(
             data=request.POST,
             files=request.FILES,
             perguntas=perguntas
         )
 
-        # Valida todos os forms
-        all_valid = all(f.is_valid() for f in formset)
-        if all_valid:
-            # Salva cada resposta
+        if all(f.is_valid() for f in formset):
+            foto = request.FILES.get('foto_comprovante')
+            monitoramento = Monitoramento.objects.create(
+                questionario=questionario,
+                escola=escola,
+                respondido_por=request.user,
+                foto_comprovante=foto
+            )
             for f in formset:
-                resp = f.save(commit=False)
-                resp.monitoramento = self.monitoramento
-                resp.respondido_por = request.user.greuser
-                resp.save()
+                resposta = f.save(commit=False)
+                resposta.monitoramento = monitoramento
+                resposta.save()
+            return redirect('questionarios_escola', escola_id=escola_id)
 
-            # Atualiza o monitoramento
-            self.monitoramento.status = 'R'
-            self.monitoramento.data_resposta = timezone.now()
-            self.monitoramento.save()
-
-            return redirect('minhas_pendencias')
-
-        # Se alguma invalid, reexibe o formset com erros
+        # se houver erros, volta pro form
+       # Em caso de erro
         return render(request, self.template_name, {
-            'monitoramento': self.monitoramento,
+            'escola': escola,
+            'questionario': questionario,
             'formset': formset,
+            'hoje': timezone.now().date(),  # Adicione esta linha
+            'erro': 'Verifique os campos destacados'
         })
+
+# views.py
+from django.views.generic import ListView
+
+class SelecionarEscolaView(LoginRequiredMixin, ListView):
+    model = Escola
+    template_name = 'monitoramentos/selecionar_escola.html'
+    context_object_name = 'escolas'
+
+    def get_queryset(self):
+        return self.request.user.greuser.escolas.all()

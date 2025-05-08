@@ -44,7 +44,8 @@ INSTALLED_APPS = [
     'eventos',
     'monitoramento',
     'rest_framework',
-    'rest_framework.authtoken',  # Se for usar autenticação por token
+    'rest_framework.authtoken', 
+    'django.contrib.humanize',
 ]
 
 MIDDLEWARE = [
@@ -94,6 +95,9 @@ SECRET_KEY = env("SECRET_KEY", default="chave_secreta_fallback")
 DEBUG = env.bool("DEBUG", default=True)
 
 
+# Em bytes: 10 MB para toda a requisição, por exemplo
+DATA_UPLOAD_MAX_MEMORY_SIZE = 10 * 1024 * 1024
+FILE_UPLOAD_MAX_MEMORY_SIZE = 5 * 1024 * 1024
 
 # Proteção CSRF (se usar formulários)
 CSRF_TRUSTED_ORIGINS = [

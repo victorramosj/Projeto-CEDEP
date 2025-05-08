@@ -7,20 +7,23 @@
     .creation-flow {
         background: #f8f9fa;
         border-radius: 15px;
-        box-shadow: 0 0 15px rgba(0,0,0,0.1);
+        box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
         padding: 1rem;
     }
+
     .flow-step {
         display: none;
         padding: 2rem;
         border-bottom: 2px solid #dee2e6;
         transition: all 0.3s ease;
     }
+
     .flow-step.active {
         display: block;
         background: white;
         border-color: #0d6efd;
     }
+
     .question-card {
         background: white;
         border: 1px solid #dee2e6;
@@ -28,6 +31,7 @@
         margin-bottom: 1rem;
         padding: 1.5rem;
     }
+
     .escola-pill {
         background: #e9ecef;
         border-radius: 20px;
@@ -36,17 +40,19 @@
         cursor: pointer;
         transition: all 0.2s ease;
     }
+
     .escola-pill.selected {
         background: #0d6efd;
         color: white;
     }
+
     .selection-actions {
         margin-bottom: 1rem;
         display: flex;
         gap: 0.5rem;
     }
-    
-    
+
+
     .selected-counter {
         background: #0d6efd;
         color: white;
@@ -54,6 +60,7 @@
         border-radius: 20px;
         font-size: 0.9em;
     }
+
     .setor-card {
         border: 1px solid #dee2e6;
         border-radius: 10px;
@@ -62,6 +69,7 @@
         cursor: pointer;
         transition: all 0.2s ease;
     }
+
     .setor-card.selected {
         border: 2px solid #0d6efd;
         background-color: #e9f1ff;
@@ -79,8 +87,7 @@
                 {% for setor in setores_permitidos %}
                 <div class="col-md-6">
                     <div class="setor-card {% if setor_selecionado and setor.id == setor_selecionado.id %}selected{% endif %}"
-     data-id="{{ setor.id }}"
-     onclick="selectSetor(this)">
+                        data-id="{{ setor.id }}" onclick="selectSetor(this)">
                         <h5>{{ setor.nome }}</h5>
                         <div class="setor-hierarchy">
                             {{ setor.hierarquia_completa }}
@@ -121,109 +128,77 @@
         </div>
 
         <!-- Passo 2: Perguntas -->
-<div class="flow-step" data-step="2">
-    <h3 class="mb-4"><i class="fas fa-question-circle me-2"></i>Adicionar Perguntas</h3>
-    <div id="perguntas-container">
-        <div class="question-card">
-            <div class="row g-3">
-                <div class="col-6 col-md-2">
-                    <input type="number" readonly class="form-control question-order" placeholder="Ordem" min="1" value="1">
+        <div class="flow-step" data-step="2">
+            <h3 class="mb-4"><i class="fas fa-question-circle me-2"></i>Adicionar Perguntas</h3>
+            <div id="perguntas-container">
+                <div class="question-card">
+                    <div class="row g-3">
+                        <div class="col-6 col-md-2">
+                            <input type="number" readonly class="form-control question-order" placeholder="Ordem"
+                                min="1" value="1">
+                        </div>
+                        <div class="col-12 col-md-8">
+                            <input type="text" class="form-control question-text" placeholder="Texto da pergunta">
+                        </div>
+                        <div class="col-6 col-md-2">
+                            <select class="form-select question-type">
+                                <option value="SN">Sim/Não</option>
+                                <option value="NU">Numérico</option>
+                                <option value="TX">Texto</option>
+                            </select>
+                        </div>
+
+                    </div>
                 </div>
-                <div class="col-12 col-md-8">
-                    <input type="text" class="form-control question-text" placeholder="Texto da pergunta">
-                </div>
-                <div class="col-6 col-md-2">
-                    <select class="form-select question-type">
-                        <option value="SN">Sim/Não</option>
-                        <option value="NU">Numérico</option>
-                        <option value="TX">Texto</option>
-                    </select>
-                </div>
-               
+            </div>
+            <button class="btn btn-outline-primary mb-3" onclick="addQuestion()">
+                <i class="fas fa-plus me-2"></i>Nova Pergunta
+            </button>
+            <div class="d-flex flex-wrap justify-content-between">
+                <button class="btn btn-secondary btn-sm" onclick="prevStep()">
+                    <i class="fas fa-arrow-left me-2"></i>Voltar
+                </button>
+                <button class="btn btn-primary btn-sm" onclick="nextStep()">
+                    Próximo <i class="fas fa-arrow-right ms-2"></i>
+                </button>
             </div>
         </div>
-    </div>
-    <button class="btn btn-outline-primary mb-3" onclick="addQuestion()">
-        <i class="fas fa-plus me-2"></i>Nova Pergunta
-    </button>
-    <div class="d-flex flex-wrap justify-content-between">
-        <button class="btn btn-secondary btn-sm" onclick="prevStep()">
-            <i class="fas fa-arrow-left me-2"></i>Voltar
-        </button>
-        <button class="btn btn-primary btn-sm" onclick="nextStep()">
-            Próximo <i class="fas fa-arrow-right ms-2"></i>
-        </button>
-    </div>
-</div>
 
 
-       <!-- Passo 3: Escolas - Modificado -->
-<div class="flow-step" data-step="3">
-    <h3 class="mb-4"><i class="fas fa-school me-2"></i>Selecionar Escolas</h3>
-    <div class="row g-2 mb-3">
-        <!-- Barra de pesquisa -->
-        <div class="col-12 col-md-6">
-            <input type="text" class="form-control form-control-sm" 
-                   id="search-escolas" placeholder="Pesquisar escolas...">
+        <!-- Passo 3: Escolas - Modificado -->
+        <div class="flow-step" data-step="3">
+            <h3 class="mb-4"><i class="fas fa-school me-2"></i>Selecionar Escolas</h3>
+            <div class="row g-2 mb-3">
+                <!-- Barra de pesquisa -->
+                <div class="col-12 col-md-6">
+                    <input type="text" class="form-control form-control-sm" id="search-escolas"
+                        placeholder="Pesquisar escolas...">
+                </div>
+
+                <!-- Botões de ação -->
+                <div class="col-12 col-md-6 d-flex flex-wrap gap-2">
+                    <button class="btn btn-outline-success btn-sm flex-grow-1" onclick="toggleAllVisible()">
+                        <i class="fas fa-check-double me-2"></i>Selecionar Todas
+                    </button>
+                    <span class="btn btn-sm btn-outline-info flex-grow-1" id="selected-counter">0 selecionadas</span>
+                </div>
+            </div>
+
+            <div id="escolas-container" class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-2"></div>
+
+            <!-- Paginação -->
+            <div class="d-flex justify-content-between align-items-center mt-3">
+                <button class="btn btn-secondary btn-sm flex-shrink-0" onclick="prevStep()">
+                    <i class="fas fa-arrow-left me-2"></i>Voltar
+                </button>
+                <div id="pagination-container" class="mx-2 flex-grow-1 text-center"></div>
+                <button class="btn btn-success btn-sm flex-shrink-0" onclick="submitForm()">
+                    Finalizar <i class="fas fa-check ms-2"></i>
+                </button>
+            </div>
+
         </div>
-        
-        <!-- Botões de ação -->
-        <div class="col-12 col-md-6 d-flex flex-wrap gap-2">
-            <button class="btn btn-outline-success btn-sm flex-grow-1" 
-                    onclick="toggleAllVisible()">
-                <i class="fas fa-check-double me-2"></i>Selecionar Todas
-            </button>
-            <span class="btn btn-sm btn-outline-info flex-grow-1" 
-                  id="selected-counter">0 selecionadas</span>
-        </div>
-    </div>
-    
-    <div id="escolas-container" class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-2"></div>
 
-    <!-- Paginação -->
-<div class="d-flex justify-content-between align-items-center mt-3">
-    <button class="btn btn-secondary btn-sm flex-shrink-0" onclick="prevStep()">
-        <i class="fas fa-arrow-left me-2"></i>Voltar
-    </button>
-    <div id="pagination-container" class="mx-2 flex-grow-1 text-center"></div>
-    <button class="btn btn-primary btn-sm flex-shrink-0" onclick="nextStep()">
-        Próximo <i class="fas fa-arrow-right ms-2"></i>
-    </button>
-</div>
-
-</div>
-
-        
-        <!-- Adicione este novo passo após o passo 3 -->
-<div class="flow-step" data-step="4">
-  <h3 class="mb-4"><i class="fas fa-clipboard-check me-2"></i>Configurar Monitoramento</h3>
-  
-  <div class="mb-4">
-      <label class="form-label">Data Limite</label>
-      <input type="date" class="form-control" id="data-limite" required>
-  </div>
-  
-  <div class="mb-4">
-    <label class="form-label">Frequência de Envio</label>
-    <select class="form-select" id="frequencia">
-        <option value="D">Diário</option>
-        <option value="S">Semanal</option>
-        <option value="Q">Quinzenal</option>
-        <option value="M">Mensal</option>
-        <option value="6">Semestral</option>  <!-- Novo -->
-        <option value="A">Anual</option>      <!-- Novo -->
-    </select>
-</div>
-  
-  <div class="d-flex justify-content-between">
-      <button class="btn btn-secondary btn-sm" onclick="prevStep()">
-          <i class="fas fa-arrow-left me-2"></i>Voltar
-      </button>
-      <button class="btn btn-success btn-sm" onclick="submitForm()">
-          Finalizar <i class="fas fa-check ms-2"></i>
-      </button>
-  </div>
-</div>
     </div>
 </div>
 </div>
@@ -235,108 +210,134 @@
 {{ block.super }}
 
 <script>
-let currentStep = 0;
-let selectedSetorId = {{ setor_selecionado.id|default:'null' }};
-const escolasSelecionadas = new Set();
-let currentPage = 1;
-let totalPages = 1;
-let searchQuery = '';
-let isLoading = false;
+    let currentStep = 0;
+    let selectedSetorId = {{ setor_selecionado.id }};
+    const escolasSelecionadas = new Set();
+    let currentPage = 1;
+    let totalPages = 1;
+    let searchQuery = '';
+    let isLoading = false;
 
-// Mostra o passo atual
-function showStep() {
-  document.querySelectorAll('.flow-step').forEach(el => el.classList.remove('active'));
-  document.querySelector(`.flow-step[data-step="${currentStep}"]`).classList.add('active');
-}
+    // Mostra o passo atual
+    function showStep() {
+        document.querySelectorAll('.flow-step').forEach(el => el.classList.remove('active'));
+        document.querySelector(`.flow-step[data-step="${currentStep}"]`).classList.add('active');
+    }
 
-// Avança para o próximo passo
-function nextStep() {
-  if (currentStep === 0 && !selectedSetorId) {
-    Swal.fire('Atenção!','Selecione um setor','warning');
-    return;
-  }
-  if (currentStep < 4) currentStep++;
-  showStep();
-  if (currentStep === 3) {
-    searchQuery = '';
-    loadEscolas(1);
-  }
-}
+    // Avança para o próximo passo
+    function nextStep() {
+        // Validação do passo 0
+        if (currentStep === 0 && !selectedSetorId) {
+            Swal.fire('Atenção!', 'Selecione um setor', 'warning');
+            return;
+        }
 
-// Volta para o passo anterior
-function prevStep() {
-  if (currentStep > 0) currentStep--;
-  showStep();
-}
+        // Validação do passo 1
+        if (currentStep === 1) {
+            const titulo = document.getElementById('titulo').value;
+            if (!titulo.trim()) {
+                Swal.fire('Atenção!', 'Preencha o título do questionário', 'warning');
+                return;
+            }
+        }
 
-// Seleciona um setor
-function selectSetor(card) {
-  document.querySelectorAll('.setor-card').forEach(c => c.classList.remove('selected'));
-  card.classList.add('selected');
-  selectedSetorId = card.dataset.id;
-}
+        // Validação do passo 2
+        if (currentStep === 2) {
+            const perguntas = document.querySelectorAll('.question-text');
+            let hasEmpty = false;
+            perguntas.forEach(p => {
+                if (!p.value.trim()) hasEmpty = true;
+            });
 
-// Adiciona uma nova pergunta
-function addQuestion() {
-  const container = document.getElementById('perguntas-container');
-  const total = container.querySelectorAll('.question-card').length;
-  const clone = container.querySelector('.question-card').cloneNode(true);
-  clone.querySelector('.question-text').value = '';
-  clone.querySelector('.question-type').value = 'SN';
-  clone.querySelector('.question-order').value = total + 1;
-  container.appendChild(clone);
-}
+            if (hasEmpty) {
+                Swal.fire('Atenção!', 'Todas as perguntas devem ter texto', 'warning');
+                return;
+            }
+        }
 
-// Atualiza o contador de escolas selecionadas
-function updateCounter() {
-  document.getElementById('selected-counter').textContent =
-    `${escolasSelecionadas.size} selecionada${escolasSelecionadas.size !== 1 ? 's' : ''}`;
-}
+        if (currentStep < 3) currentStep++;
+        showStep();
 
-// Função principal para carregar escolas com paginação
-async function loadEscolas(page = 1) {
-  if (isLoading) return;
-  isLoading = true;
+        if (currentStep === 3) {
+            searchQuery = '';
+            loadEscolas(1);
+        }
+    }
 
-  const container = document.getElementById('escolas-container');
-  container.innerHTML = `
+    // Volta para o passo anterior
+    function prevStep() {
+        if (currentStep > 0) currentStep--;
+        showStep();
+    }
+
+    // Seleciona um setor
+    function selectSetor(card) {
+        document.querySelectorAll('.setor-card').forEach(c => c.classList.remove('selected'));
+        card.classList.add('selected');
+        selectedSetorId = card.dataset.id;
+    }
+
+    // Adiciona uma nova pergunta
+    function addQuestion() {
+        const container = document.getElementById('perguntas-container');
+        const total = container.querySelectorAll('.question-card').length;
+        const clone = container.querySelector('.question-card').cloneNode(true);
+        clone.querySelector('.question-text').value = '';
+        clone.querySelector('.question-type').value = 'SN';
+        clone.querySelector('.question-order').value = total + 1;
+        container.appendChild(clone);
+    }
+
+    // Atualiza o contador de escolas selecionadas
+    function updateCounter() {
+        document.getElementById('selected-counter').textContent =
+            `${escolasSelecionadas.size} selecionada${escolasSelecionadas.size !== 1 ? 's' : ''}`;
+    }
+
+    // Função principal para carregar escolas com paginação
+    async function loadEscolas(page = 1) {
+        if (isLoading) return;
+        isLoading = true;
+
+        const container = document.getElementById('escolas-container');
+        container.innerHTML = `
     <div class="col-12 text-center my-4">
       <div class="spinner-border text-primary" role="status">
         <span class="visually-hidden">Carregando...</span>
       </div>
     </div>`;
 
-  try {
-    const url = `{% url 'escolas-list' %}?search=${encodeURIComponent(searchQuery)}&page=${page}`;
-    const res = await fetch(url);
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const data = await res.json();
+        try {
+            const url = `{% url 'escolas-list' %}?search=${encodeURIComponent(searchQuery)}&page=${page}`;
+            const res = await fetch(url);
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            const data = await res.json();
 
-    currentPage = page;
-    totalPages = Math.ceil(data.count / 10);
+            currentPage = page;
+            totalPages = Math.ceil(data.count / 10);
 
-    container.innerHTML = '';
-    data.results.forEach(escola => container.appendChild(createEscolaCard(escola)));
+            container.innerHTML = '';
+            data.results.forEach(escola => container.appendChild(createEscolaCard(escola)));
 
-    updatePaginationControls();
-    updateCounter();
-  } catch (err) {
-    console.error(err);
-    Swal.fire('Erro', 'Não foi possível carregar as escolas', 'error');
-  } finally {
-    isLoading = false;
-  }
-}
+            updatePaginationControls();
+            updateCounter();
+        } catch (err) {
+            console.error(err);
+            Swal.fire('Erro', 'Não foi possível carregar as escolas', 'error');
+        } finally {
+            isLoading = false;
+        }
+    }
 
-// Cria o card de cada escola e seu clique de seleção
-function createEscolaCard(escola) {
-  const cardWrapper = document.createElement('div');
-  const idStr = String(escola.id);
-  const isSelected = escolasSelecionadas.has(idStr);
-  const imgUrl = escola.foto_fachada_url || "{% static 'images/default-school.jpeg' %}";
+    // Cria o card de cada escola e seu clique de seleção
+    function createEscolaCard(escola) {
+        const cardWrapper = document.createElement('div');
+        const idStr = String(escola.id);
+        const isSelected = escolasSelecionadas.has(idStr);
+        const imgUrl = escola.foto_fachada_url || "{% static 'images/default-school.jpeg' %}";
 
-  cardWrapper.className = 'col-md-6 mb-3';
-  cardWrapper.innerHTML = `
+        cardWrapper.className = 'col-md-6 mb-3';
+        cardWrapper.innerHTML = `
     <div class="card ${isSelected ? 'state-selected' : ''}" data-id="${idStr}" style="cursor:pointer;">
       <div class="row g-0">
         <div class="col-md-4 position-relative">
@@ -356,128 +357,130 @@ function createEscolaCard(escola) {
       </div>
     </div>`;
 
-  const card = cardWrapper.querySelector('.card');
-  card.addEventListener('click', () => {
-    const badge = card.querySelector('.badge-estado');
-    if (escolasSelecionadas.has(idStr)) {
-      escolasSelecionadas.delete(idStr);
-      card.classList.remove('state-selected');
-      badge.textContent = 'Disponível ➕';
-    } else {
-      escolasSelecionadas.add(idStr);
-      card.classList.add('state-selected');
-      badge.textContent = 'Vinculada ✕';
+        const card = cardWrapper.querySelector('.card');
+        card.addEventListener('click', () => {
+            const badge = card.querySelector('.badge-estado');
+            if (escolasSelecionadas.has(idStr)) {
+                escolasSelecionadas.delete(idStr);
+                card.classList.remove('state-selected');
+                badge.textContent = 'Disponível ➕';
+            } else {
+                escolasSelecionadas.add(idStr);
+                card.classList.add('state-selected');
+                badge.textContent = 'Vinculada ✕';
+            }
+            updateCounter();
+        });
+
+        return cardWrapper;
     }
-    updateCounter();
-  });
 
-  return cardWrapper;
-}
-
-// Renderiza os controles de paginação
-function updatePaginationControls() {
-  const pc = document.getElementById('pagination-container');
-  pc.innerHTML = `
+    // Renderiza os controles de paginação
+    function updatePaginationControls() {
+        const pc = document.getElementById('pagination-container');
+        pc.innerHTML = `
     <div class="d-flex justify-content-center align-items-center gap-2">
-      <button class="btn btn-sm btn-outline-primary prev-page" ${currentPage===1?'disabled':''}>
+      <button class="btn btn-sm btn-outline-primary prev-page" ${currentPage === 1 ? 'disabled' : ''}>
         <i class="fas fa-chevron-left"></i>
       </button>
       <span>Página ${currentPage} de ${totalPages}</span>
-      <button class="btn btn-sm btn-outline-primary next-page" ${currentPage>=totalPages?'disabled':''}>
+      <button class="btn btn-sm btn-outline-primary next-page" ${currentPage >= totalPages ? 'disabled' : ''}>
         <i class="fas fa-chevron-right"></i>
       </button>
     </div>`;
 
-  pc.querySelector('.prev-page').onclick = () => loadEscolas(currentPage - 1);
-  pc.querySelector('.next-page').onclick = () => loadEscolas(currentPage + 1);
-}
-
-// Debounce para pesquisa
-let debounceTimeout;
-document.getElementById('search-escolas').addEventListener('input', e => {
-  clearTimeout(debounceTimeout);
-  searchQuery = e.target.value;
-  debounceTimeout = setTimeout(() => {
-    currentPage = 1;
-    loadEscolas(1);
-  }, 300);
-});
-
-// Alterna seleção de todas as escolas visíveis
-function toggleAllVisible() {
-  document.querySelectorAll('#escolas-container .card').forEach(card => {
-    const id = card.dataset.id;
-    const badge = card.querySelector('.badge-estado');
-    if (escolasSelecionadas.has(id)) {
-      escolasSelecionadas.delete(id);
-      card.classList.remove('state-selected');
-      badge.textContent = 'Disponível ➕';
-    } else {
-      escolasSelecionadas.add(id);
-      card.classList.add('state-selected');
-      badge.textContent = 'Vinculada ✕';
+        pc.querySelector('.prev-page').onclick = () => loadEscolas(currentPage - 1);
+        pc.querySelector('.next-page').onclick = () => loadEscolas(currentPage + 1);
     }
-  });
-  updateCounter();
-}
 
-// Submete o formulário final criando o questionário + monitoramentos
-async function submitForm() {
-  const perguntas = Array.from(document.querySelectorAll('.question-card')).map((c, i) => ({
-    texto: c.querySelector('.question-text').value,
-    tipo_resposta: c.querySelector('.question-type').value,
-    ordem: parseInt(c.querySelector('.question-order').value,10)
-  }));
-
-  const payload = {
-    titulo: document.getElementById('titulo').value,
-    descricao: document.getElementById('descricao').value,
-    setor: Number(selectedSetorId),
-    perguntas,
-    escolas_destino: Array.from(escolasSelecionadas).map(Number),
-    data_limite: document.getElementById('data-limite').value,
-    frequencia: document.getElementById('frequencia').value
-  };
-
-  // Validações simples
-  const errs = [];
-  if (!payload.titulo) errs.push('Título é obrigatório');
-  if (!payload.setor) errs.push('Setor é obrigatório');
-  if (!payload.data_limite) errs.push('Data limite é obrigatória');
-  perguntas.forEach((p, i) => {
-    if (!p.texto) errs.push(`Pergunta ${i+1}: texto é obrigatório`);
-  });
-  if (errs.length) {
-    Swal.fire('Erro', errs.join('<br>'), 'error');
-    return;
-  }
-
-  try {
-    const res = await fetch('{% url "questionarios-add" %}', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-CSRFToken': '{{ csrf_token }}'
-      },
-      body: JSON.stringify(payload)
+    // Debounce para pesquisa
+    let debounceTimeout;
+    document.getElementById('search-escolas').addEventListener('input', e => {
+        clearTimeout(debounceTimeout);
+        searchQuery = e.target.value;
+        debounceTimeout = setTimeout(() => {
+            currentPage = 1;
+            loadEscolas(1);
+        }, 300);
     });
-    const data = await res.json();
-    if (res.ok) {
-      Swal.fire('Sucesso','Questionário criado','success')
-        .then(() => window.location.href = `{% url 'gerenciar_perguntas' 0 %}`.replace('0',data.id));
-    } else {
-      const messages = data.errors
-        ? Object.entries(data.errors).map(([k,v])=>`${k}: ${v}`)
-        : ['Erro desconhecido'];
-      Swal.fire('Erro', messages.join('<br>'), 'error');
-    }
-  } catch {
-    Swal.fire('Erro','Falha de comunicação','error');
-  }
-}
 
-// Inicializa o fluxo
-document.addEventListener('DOMContentLoaded', showStep);
+    // Alterna seleção de todas as escolas visíveis
+    function toggleAllVisible() {
+        document.querySelectorAll('#escolas-container .card').forEach(card => {
+            const id = card.dataset.id;
+            const badge = card.querySelector('.badge-estado');
+            if (escolasSelecionadas.has(id)) {
+                escolasSelecionadas.delete(id);
+                card.classList.remove('state-selected');
+                badge.textContent = 'Disponível ➕';
+            } else {
+                escolasSelecionadas.add(id);
+                card.classList.add('state-selected');
+                badge.textContent = 'Vinculada ✕';
+            }
+        });
+        updateCounter();
+    }
+
+    // Modifique a função submitForm para enviar apenas dados do questionário
+    async function submitForm() {
+        const perguntas = Array.from(document.querySelectorAll('.question-card')).map((c, i) => ({
+            texto: c.querySelector('.question-text').value,
+            tipo_resposta: c.querySelector('.question-type').value,
+            ordem: i + 1
+        }));
+
+        const payload = {
+            titulo: document.getElementById('titulo').value,
+            descricao: document.getElementById('descricao').value,
+            setor: Number(selectedSetorId),
+            perguntas,
+            escolas_destino: Array.from(escolasSelecionadas).map(Number)
+        };
+
+        // Validações
+        const errs = [];
+        if (!payload.titulo) errs.push('Título é obrigatório');
+        if (!payload.setor) errs.push('Setor é obrigatório');
+        perguntas.forEach((p, i) => {
+            if (!p.texto) errs.push(`Pergunta ${i + 1}: texto é obrigatório`);
+        });
+
+        if (errs.length) {
+            Swal.fire('Erro', errs.join('<br>'), 'error');
+            return;
+        }
+
+        try {
+            const res = await fetch('{% url "questionarios-add" %}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify(payload)
+            });
+
+            const data = await res.json();
+
+            if (res.ok) {
+                Swal.fire({
+                    title: 'Sucesso!',
+                    text: 'Questionário criado com sucesso',
+                    icon: 'success'
+                }).then(() => {
+                    window.location.href = `{% url 'gerenciar_perguntas' 0 %}`.replace('0', data.id);
+                });
+            } else {
+                throw new Error(data.error || 'Erro desconhecido');
+            }
+        } catch (error) {
+            Swal.fire('Erro', error.message, 'error');
+        }
+    }
+
+    // Inicializa o fluxo
+    document.addEventListener('DOMContentLoaded', showStep);
 </script>
 
 {% endblock %}

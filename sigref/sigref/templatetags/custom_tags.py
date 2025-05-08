@@ -16,3 +16,10 @@ def days_until(value):
         delta = value - date.today()
         return delta.days
     return 0
+
+@register.filter
+def get_by_id(escolas, school_id):
+    for e in escolas:
+        if e.id == school_id:
+            return e
+    return None

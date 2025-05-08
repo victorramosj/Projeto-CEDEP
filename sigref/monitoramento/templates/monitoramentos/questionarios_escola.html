@@ -1,0 +1,115 @@
+{% extends 'cedepe/base.html' %}
+{% load static humanize %}
+
+{% block content %}
+<div class="container-fluid px-3 px-md-4">
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-4">
+        <div class="mb-3 mb-md-0">
+            <h2 class="h4 mb-1">
+                <i class="fas fa-clipboard-list me-2"></i>
+                {{ escola.nome }}
+            </h2>
+            <p class="mb-0 text-muted small">Questionários disponíveis</p>
+        </div>
+        <a href="{% url 'selecionar_escola' %}" class="btn btn-secondary btn-sm">
+            <i class="fas fa-arrow-left me-2"></i>Voltar
+        </a>
+    </div>
+
+    <!-- Card de Resumo -->
+    <div class="card mb-4 shadow-sm">
+        <div class="card-body py-2">
+            <div class="row g-2 text-center">
+                <div class="col-6 col-md">
+                    <div class="text-primary fw-bold">{{ total_hoje }}</div>
+                    <div class="text-muted small">Hoje</div>
+                </div>
+                <div class="col-6 col-md">
+                    <div class="text-primary fw-bold">{{ total_geral }}</div>
+                    <div class="text-muted small">Total</div>
+                </div>
+                <div class="col-12 col-md">
+                    <div class="text-primary fw-bold">
+                        {% if ultima_resposta_geral %}
+                            {{ ultima_resposta_geral|date:"d/m/Y H:i" }}
+                        {% else %}
+                            --
+                        {% endif %}
+                    </div>
+                    <div class="text-muted small">Último registro</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Listagem de Questionários -->
+    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+        {% for questionario in questionarios %}
+        <div class="col">
+            <div class="card h-100 shadow-sm">
+                <div class="card-header bg-primary text-white py-2">
+                    <h5 class="card-title mb-0 small">{{ questionario.titulo|truncatechars:40 }}</h5>
+                </div>
+                
+                <div class="card-body pb-0">
+                    <p class="card-text small text-muted">
+                        {{ questionario.descricao|truncatechars:100|default:"Sem descrição" }}
+                    </p>
+                    
+                    <div class="d-flex justify-content-between small mb-3">
+                        <div>
+                            <span class="badge bg-info">Hoje: {{ questionario.respostas_hoje }}</span>
+                        </div>
+                        <div>
+                            <span class="badge bg-secondary">Total: {{ questionario.total_respostas }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card-footer bg-transparent border-top-0 pt-0">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div class="text-muted small">
+                            {% if questionario.monitoramentos.latest %}
+                                <i class="fas fa-clock me-1"></i>
+                                {{ questionario.monitoramentos.latest.criado_em|timesince }}
+                            {% endif %}
+                        </div>
+                        <a href="{% url 'responder_questionario' escola.id questionario.id %}" 
+                           class="btn btn-success btn-sm">
+                            <i class="fas fa-edit"></i>
+                            <span class="d-none d-md-inline">Responder</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12">
+            <div class="alert alert-info mb-0">
+                Nenhum questionário disponível para esta escola
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
+
+{% block styles %}
+<style>
+    .card-header {
+        min-height: 3rem;
+    }
+    @media (max-width: 768px) {
+        .card-title {
+            font-size: 0.9rem;
+        }
+        .btn-sm {
+            padding: 0.25rem 0.5rem;
+            font-size: 0.8rem;
+        }
+        .badge {
+            font-size: 0.75rem;
+        }
+    }
+</style>
+{% endblock %}

@@ -46,15 +46,18 @@ urlpatterns = [
     path('questionarios/<int:pk>/perguntas/frontend/', 
      views.GerenciarPerguntasView.as_view(), 
      name='gerenciar_perguntas'),
-
+    #respostas Monitoramentos
+    path('escolas/', views.SelecionarEscolaView.as_view(), name='selecionar_escola'),
+    path('escola/<int:escola_id>/questionarios/', views.QuestionariosEscolaView.as_view(), name='questionarios_escola'),
+    path(
+        'escola/<int:escola_id>/questionario/<int:questionario_id>/responder/',
+        views.ResponderQuestionarioView.as_view(),
+        name='responder_questionario'
+    ),
     # Dashboard e relatórios da Escola
     path('escola/dashboard/', views.EscolaDashboardView.as_view(), name='escola_dashboard'),
     path('escola/relatar-problema/', views.RelatoProblemaCreateView.as_view(), name='relatar_problema'),
-    #respostas
-    path('responder/', views.MinhasPendenciasView.as_view(), name='minhas_pendencias'),
-     path('responder/<int:monitoramento_pk>/', 
-         views.ResponderMonitoramentoView.as_view(), 
-         name='responder_monitoramento'),
+    
 
     # -----------------------------
     # Endpoints AJAX / API customizados
@@ -62,6 +65,8 @@ urlpatterns = [
     path('api/questionarios/create/', views.QuestionarioCreateAPI.as_view(), name='questionarios-add'),
     path('api/questionarios/<int:pk>/assign_escolas/', views.AssignEscolasQuestionario.as_view(), name='assign_escolas'),
     path('api/questionarios/<int:pk>/escolas/', views.QuestionarioEscolasView.as_view(), name='questionario-escolas'),
+
+
     # -----------------------------
     # DRF: Inclusão automática de rotas
     # -----------------------------

@@ -73,7 +73,6 @@ class PerguntaCreateSerializer(serializers.ModelSerializer):
             'tipo_resposta': {'required': True},
             'ordem': {'required': True}
         }
-
 class QuestionarioSerializer(serializers.ModelSerializer):
     perguntas = PerguntaCreateSerializer(many=True, write_only=True)
     escolas_destino = serializers.PrimaryKeyRelatedField(
@@ -81,53 +80,40 @@ class QuestionarioSerializer(serializers.ModelSerializer):
         queryset=Escola.objects.all(),
         write_only=True
     )
-    data_limite = serializers.DateField(write_only=True)  # Novo campo
-    frequencia = serializers.CharField(write_only=True)    # Novo campo
 
     class Meta:
         model = Questionario
-        fields = ['id', 'titulo', 'descricao', 'setor', 'perguntas', 
-                 'escolas_destino', 'criado_por', 'data_limite', 'frequencia']
+        fields = ['id', 'titulo', 'descricao', 'setor', 'perguntas', 'escolas_destino', 'criado_por']
         extra_kwargs = {
             'setor': {'required': True},
             'criado_por': {'read_only': True}
         }
 
     def create(self, validated_data):
-        # Extrai os dados específicos do monitoramento
-        data_limite = validated_data.pop('data_limite')
-        frequencia = validated_data.pop('frequencia')
         perguntas_data = validated_data.pop('perguntas')
-        escolas_data = validated_data.pop('escolas_destino')
+        escolas_data = validated_data.pop('escolas_destino', [])
         
-        # Cria o questionário
         questionario = Questionario.objects.create(
             **validated_data,
             criado_por=self.context['request'].user
         )
         
-        # Cria as perguntas
         for pergunta_data in perguntas_data:
             Pergunta.objects.create(
                 questionario=questionario,
                 **pergunta_data
             )
         
-        # Associa as escolas e cria os monitoramentos
         questionario.escolas_destino.set(escolas_data)
-        
-        # Cria um monitoramento para cada escola
-        for escola in escolas_data:
-            Monitoramento.objects.create(
-                questionario=questionario,
-                escola=escola,
-                data_limite=data_limite,
-                frequencia=frequencia
-            )
-        
         return questionario
+from rest_framework import serializers
+from django.core.exceptions import ValidationError
+
+MAX_IMAGE_SIZE_MB = 2
+
 class RespostaSerializer(serializers.ModelSerializer):
     resposta_formatada = serializers.SerializerMethodField()
+    foto = serializers.ImageField(write_only=True, required=False)
     foto_url = serializers.ImageField(source='foto', read_only=True)
 
     class Meta:
@@ -135,17 +121,40 @@ class RespostaSerializer(serializers.ModelSerializer):
         fields = '__all__'
         read_only_fields = ['monitoramento']
 
+    def validate_foto(self, file):
+        max_bytes = MAX_IMAGE_SIZE_MB * 1024 * 1024
+        if file.size > max_bytes:
+            raise ValidationError(f'Imagem muito grande: tamanho máximo de {MAX_IMAGE_SIZE_MB} MB.')
+        return file
+
     def get_resposta_formatada(self, obj):
         return obj.resposta_formatada()
 
+    def create(self, validated_data):
+        # aqui tratamos a reutilização do arquivo, mas o storage customizado já faz tudo
+        return super().create(validated_data)
+
+
 class MonitoramentoSerializer(serializers.ModelSerializer):
     status_display = serializers.CharField(source='get_status_display', read_only=True)
-    frequencia_display = serializers.CharField(source='get_frequencia_display', read_only=True)
-    respostas = RespostaSerializer(many=True, read_only=True)
+    respostas = RespostaSerializer(many=True, required=False)
 
     class Meta:
         model = Monitoramento
         fields = '__all__'
+
+    def create(self, validated_data):
+        respostas_data = validated_data.pop('respostas', [])
+        monitoramento = Monitoramento.objects.create(**validated_data)
+        
+        # Cria respostas associadas
+        for resposta_data in respostas_data:
+            Resposta.objects.create(
+                monitoramento=monitoramento,
+                **resposta_data
+            )
+        
+        return monitoramento
 
 class TipoProblemaSerializer(serializers.ModelSerializer):
     class Meta:

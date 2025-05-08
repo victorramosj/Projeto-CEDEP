@@ -1,0 +1,38 @@
+{% extends 'cedepe/base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container-fluid px-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="mb-0"><i class="fas fa-school me-2"></i>Selecione uma Escola</h2>
+    </div>
+
+    <div class="row row-cols-1 row-cols-md-3 g-4">
+        {% for escola in escolas %}
+        <div class="col">
+            <a href="{% url 'questionarios_escola' escola.id %}" class="text-decoration-none">
+                <div class="card shadow h-100 hover-effect">
+                    <div class="card-body">
+                        <h5 class="card-title">{{ escola.nome }}</h5>
+                        <div class="text-muted small">
+                            <div>INEP: {{ escola.inep }}</div>
+                            <div>Gestor: {{ escola.nome_gestor }}</div>
+                        </div>
+                    </div>
+                </div>
+            </a>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<style>
+    .hover-effect {
+        transition: transform 0.2s;
+    }
+    .hover-effect:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    }
+</style>
+{% endblock %}

@@ -169,23 +169,29 @@ class PerguntaAdmin(admin.ModelAdmin):
     search_fields = ('texto',)
     ordering = ('questionario', 'ordem')
 
+# monitoramento/admin.py
+
 @admin.register(Monitoramento)
 class MonitoramentoAdmin(admin.ModelAdmin):
-    list_display = ('questionario', 'escola', 'status', 'data_envio', 'respondido_por')
-    list_filter = ('questionario__setor', 'status', 'escola')
+    list_display = (
+        'questionario',
+        'escola',
+        'foto_comprovante',
+        'criado_em',
+        'respondido_por',
+    )
+    list_filter = (
+        'questionario__setor',
+        'escola',
+        # se quiser filtrar por ter ou não foto do comprovante:
+        ('foto_comprovante', admin.EmptyFieldListFilter),
+    )
     search_fields = ('escola__nome', 'questionario__titulo')
-    date_hierarchy = 'data_envio'
+    date_hierarchy = 'criado_em'
     inlines = [RespostaInline]
-    readonly_fields = ('data_envio', 'data_resposta')
-    actions = ['marcar_como_resolvido', 'marcar_como_urgente']
+    readonly_fields = ('criado_em', 'atualizado_em')
 
-    def marcar_como_resolvido(self, request, queryset):
-        queryset.update(status='R', data_resposta=timezone.now())
-    marcar_como_resolvido.short_description = "Marcar como Resolvido"
 
-    def marcar_como_urgente(self, request, queryset):
-        queryset.update(status='U')
-    marcar_como_urgente.short_description = "Marcar como Urgente"
 
 @admin.register(Resposta)
 class RespostaAdmin(admin.ModelAdmin):

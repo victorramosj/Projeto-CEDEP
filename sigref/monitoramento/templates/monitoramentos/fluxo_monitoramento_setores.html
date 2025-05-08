@@ -183,64 +183,68 @@
     <!-- Passo 3: Escolas e Monitoramentos -->
     {% if questionario_selecionado %}
     <div class="card shadow mb-4">
-        <div class="card-header bg-success text-white">
-            <h5 class="card-title mb-0">
-                <i class="fas fa-school me-2"></i>Escolas e Monitoramentos
-            </h5>
-        </div>
-        <div class="card-body">
-            <div class="row">
-                <div class="col-md-4">
-                    <h6>Escolas Vinculadas</h6>
-                    <div class="list-group mb-4">
-                        {% for escola in questionario_selecionado.escolas_destino.all %}
-                        <div class="list-group-item">
-                            <div class="d-flex justify-content-between">
-                                <span>{{ escola.nome }}</span>
-                                <span class="badge bg-secondary">{{ escola.inep }}</span>
-                            </div>
-                        </div>
-                        {% endfor %}
-                    </div>
-                    <button class="btn btn-outline-success btn-sm w-100" data-bs-toggle="modal"
-                        data-bs-target="#assignSchoolsModal">
-                        <i class="fas fa-plus"></i> Adicionar Escolas
-                    </button>
+      <div class="card-header bg-success text-white">
+        <h5 class="card-title mb-0">
+          <i class="fas fa-school me-2"></i>Escolas e Monitoramentos
+        </h5>
+      </div>
+      <div class="card-body">
+        <div class="row">
+          <!-- Coluna da esquerda: escolas vinculadas -->
+          <div class="col-md-4">
+            <h6>Escolas Vinculadas</h6>
+            <div class="list-group mb-3">
+              {% for escola in questionario_selecionado.escolas_destino.all %}
+                <div class="list-group-item">
+                  <div class="d-flex justify-content-between">
+                    <span>{{ escola.nome }}</span>
+                    <span class="badge bg-secondary">{{ escola.inep }}</span>
+                  </div>
                 </div>
-
-                <div class="col-md-8">
-                    <h6>Últimos Monitoramentos</h6>
-                    <div class="list-group">
-                        {% for monitoramento in monitoramentos %}
-                        <a href="{% url 'detalhe_monitoramento' monitoramento.id %}"
-                            class="list-group-item list-group-item-action">
-                            <div class="d-flex justify-content-between align-items-center">
-                                <div>
-                                    <h6 class="mb-1">{{ monitoramento.escola.nome }}</h6>
-                                    <small class="text-muted">
-                                        {{ monitoramento.data_envio|date:"d/m/Y H:i" }}
-                                        {% if monitoramento.respondido_por %}
-                                        - {{ monitoramento.respondido_por.nome_completo }}
-                                        {% endif %}
-                                    </small>
-                                </div>
-                                <span
-                                    class="badge bg-{% if monitoramento.status == 'R' %}success{% elif monitoramento.status == 'U' %}danger{% else %}warning{% endif %}">
-                                    {{ monitoramento.get_status_display }}
-                                </span>
-                            </div>
-                        </a>
-                        {% empty %}
-                        <div class="list-group-item text-muted">
-                            Nenhum monitoramento registrado para este questionário
-                        </div>
-                        {% endfor %}
-                    </div>
-                </div>
+              {% endfor %}
             </div>
+            <button class="btn btn-outline-success btn-sm w-100"
+                    data-bs-toggle="modal"
+                    data-bs-target="#assignSchoolsModal">
+              <i class="fas fa-plus"></i> Adicionar Escolas
+            </button>
+          </div>
+    
+          <!-- Coluna da direita: últimos monitoramentos -->
+          <div class="col-md-8">
+            <h6>Últimos Monitoramentos</h6>
+            <div class="list-group">
+              {% for monitoramento in monitoramentos %}
+                <a href="{% url 'detalhe_monitoramento' monitoramento.id %}"
+                   class="list-group-item list-group-item-action">
+                  <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                      <h6 class="mb-1">{{ monitoramento.escola.nome }}</h6>
+                      <small class="text-muted">
+                        {{ monitoramento.criado_em|date:"d/m/Y H:i" }}
+                        {% if monitoramento.respondido_por %}
+                          – {{ monitoramento.respondido_por.nome_completo }}
+                        {% endif %}
+                      </small>
+                    </div>
+                    {% if monitoramento.foto_comprovante %}
+                      <span class="badge bg-info">Com comprovante</span>
+                    {% endif %}
+                  </div>
+                </a>
+              {% empty %}
+                <div class="list-group-item text-muted">
+                  Nenhum monitoramento registrado para este questionário.
+                </div>
+              {% endfor %}
+            </div>
+          </div>
         </div>
+      </div>
     </div>
     {% endif %}
+    
+
 </div>
 <!-- Modal para Adicionar Escolas -->
 <div class="modal fade" id="assignSchoolsModal" tabindex="-1">

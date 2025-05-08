@@ -5,9 +5,10 @@
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h2 class="mb-0">Perguntas do Questionário "{{ questionario.titulo }}"</h2>
         <div class="btn-group">
-          <button class="btn btn-secondary" onclick="history.back()">
-            <i class="fas fa-arrow-left"></i> Voltar
-          </button>
+            <a href="{% url 'fluxo_monitoramento_setores' %}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Voltar
+              </a>
+              
           <button class="btn btn-primary" id="btn-add">
             <i class="fas fa-plus"></i> Nova Pergunta
           </button>

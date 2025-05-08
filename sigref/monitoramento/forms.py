@@ -4,23 +4,20 @@ from .models import Resposta, Pergunta
 class RespostaForm(forms.ModelForm):
     class Meta:
         model = Resposta
-        fields = ['pergunta', 'resposta_sn', 'resposta_num', 'resposta_texto', 'foto']
+        fields = ['pergunta', 'resposta_sn', 'resposta_num', 'resposta_texto']
         widgets = {
             'pergunta': forms.HiddenInput(),
             'resposta_sn': forms.RadioSelect(choices=[(True, 'Sim'), (False, 'Não')]),
             'resposta_num': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
-            'resposta_texto': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
-            'foto': forms.ClearableFileInput(attrs={'class': 'form-control', 'accept': 'image/*'})
+            'resposta_texto': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),            
         }
         labels = {
             'resposta_sn': 'Resposta',
             'resposta_num': 'Valor',
             'resposta_texto': 'Descrição',
-            'foto': 'Anexar foto'
+            
         }
-        help_texts = {
-            'foto': 'Formatos suportados: JPG, PNG (máx. 5MB)'
-        }
+        
 
 def RespostaFormSet(data=None, files=None, perguntas=None):
     """

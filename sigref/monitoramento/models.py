@@ -229,82 +229,89 @@ class Pergunta(models.Model):
     
     def __str__(self):
         return f"{self.ordem} - {self.texto[:50]}"
+from django.db import models
+from django.utils import timezone
+from django.contrib.auth import get_user_model
+from dateutil.relativedelta import relativedelta
+
+User = get_user_model()
 
 class Monitoramento(models.Model):
-    STATUS_CHOICES = [
-        ('P', 'Pendente'),
-        ('R', 'Resolvido'),
-        ('U', 'Urgente'),
-    ]
-    FREQUENCIA_CHOICES = [
-        ('D', 'Diário'),
-        ('S', 'Semanal'),
-        ('Q', 'Quinzenal'),
-        ('M', 'Mensal'),
-        ('6', 'Semestral'),
-        ('A', 'Anual'),
-    ]
-    
-    questionario = models.ForeignKey(Questionario, on_delete=models.CASCADE)
-    escola = models.ForeignKey(Escola, on_delete=models.CASCADE)
-    data_envio = models.DateTimeField(auto_now_add=True)
-    data_limite = models.DateField(default=timezone.now)  # Adicione default
-    frequencia = models.CharField(
-        max_length=1, 
-        choices=FREQUENCIA_CHOICES, 
-        default='S',
-        verbose_name="Periodicidade"
+    questionario = models.ForeignKey(
+        'Questionario', 
+        on_delete=models.CASCADE,
+        related_name='monitoramentos'
     )
-    data_resposta = models.DateTimeField(null=True, blank=True)
-    status = models.CharField(max_length=1, choices=STATUS_CHOICES, default='P')
-    respondido_por = models.ForeignKey(GREUser, on_delete=models.SET_NULL, null=True, blank=True)
-    criado_em = models.DateTimeField(auto_now_add=True)  # Novo campo para controle
-    atualizado_em = models.DateTimeField(auto_now=True)  # Novo campo para controle
+    escola = models.ForeignKey(
+        'Escola', 
+        on_delete=models.CASCADE,
+        related_name='monitoramentos'
+    )
+    respondido_por = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='monitoramentos'
+    )
+    criado_em = models.DateTimeField(auto_now_add=True)
+    atualizado_em = models.DateTimeField(auto_now=True)
+    foto_comprovante = models.ImageField(
+        upload_to='monitoramentos/comprovantes/',
+        blank=True,
+        null=True,
+        verbose_name="Foto Comprobatória"
+    )
+    @classmethod
+    def contagem_hoje(cls, escola, questionario):
+        hoje = timezone.now().date()
+        return cls.objects.filter(
+            escola=escola,
+            questionario=questionario,
+            criado_em__date=hoje
+        ).count()
     
     class Meta:
         verbose_name_plural = "Monitoramentos"
-        ordering = ['data_limite']
-    
-    @classmethod
-    def calcular_proxima_data(cls, frequencia, data_base=None):
-        if data_base is None:
-            data_base = timezone.now().date()
-            
-        if frequencia == 'D':
-            return data_base + relativedelta(days=1)
-        elif frequencia == 'S':
-            return data_base + relativedelta(weeks=1)
-        elif frequencia == 'Q':
-            return data_base + relativedelta(weeks=2)
-        elif frequencia == 'M':
-            return data_base + relativedelta(months=1)
-        elif frequencia == '6':
-            return data_base + relativedelta(months=6)
-        elif frequencia == 'A':
-            return data_base + relativedelta(years=1)
-        return data_base
-    
-    def save(self, *args, **kwargs):
-        if not self.data_limite:  # Só calcula se não tiver data definida
-            self.data_limite = self.calcular_proxima_data(self.frequencia)
-        super().save(*args, **kwargs)
+        ordering = ['-criado_em']  # Ordena do mais recente para o mais antigo
+        get_latest_by = 'criado_em'
 
-        
+    def __str__(self):
+        return f"{self.escola} - {self.questionario} ({self.criado_em:%d/%m/%Y %H:%M})"
+    
+
+
 class Resposta(models.Model):
-    monitoramento = models.ForeignKey(Monitoramento, on_delete=models.CASCADE, related_name='respostas')
-    pergunta = models.ForeignKey(Pergunta, on_delete=models.CASCADE)
-    resposta_sn = models.CharField(max_length=3, choices=[('Sim', 'Sim'), ('Nao', 'Não')], blank=True, null=True)
+    monitoramento = models.ForeignKey(
+        Monitoramento,
+        on_delete=models.CASCADE,
+        related_name='respostas'
+    )
+    pergunta = models.ForeignKey(
+        'Pergunta',
+        on_delete=models.CASCADE,
+        related_name='respostas'
+    )
+    resposta_sn = models.CharField(
+        max_length=3, 
+        choices=[('Sim', 'Sim'), ('Nao', 'Não')], 
+        blank=True, 
+        null=True
+    )
     resposta_num = models.FloatField(blank=True, null=True)
     resposta_texto = models.TextField(blank=True)
-    foto = models.ImageField(upload_to='respostas_fotos/', blank=True, null=True)
-    
+    criado_em = models.DateTimeField(auto_now_add=True)
+
     def resposta_formatada(self):
         if self.pergunta.tipo_resposta == 'SN':
             return self.resposta_sn
         elif self.pergunta.tipo_resposta == 'NU':
             return str(self.resposta_num)
         return self.resposta_texto
-    
+
+    class Meta:
+        unique_together = ('monitoramento', 'pergunta')
+
     def __str__(self):
         return f"{self.pergunta} - {self.resposta_formatada()}"
 
