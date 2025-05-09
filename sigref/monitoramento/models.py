@@ -344,6 +344,8 @@ class RelatoProblema(models.Model):
     foto = models.ImageField(upload_to='relatos_fotos/', blank=True, null=True)
     responsavel = models.ForeignKey(GREUser, on_delete=models.SET_NULL, null=True, blank=True, related_name='problemas_responsavel')
     solucao_aplicada = models.TextField(blank=True, null=True, verbose_name="Solução Aplicada")
+    escola = models.ForeignKey(Escola, on_delete=models.CASCADE)  # Adicione este campo
     
     def __str__(self):
-        return f"{self.tipo_problema} - {self.gestor.escola.nome if self.gestor.escola else 'Sem escola'}"
+        return f"{self.tipo_problema} - {self.escola.nome}"  # Corrigido para usar o campo escola
+    

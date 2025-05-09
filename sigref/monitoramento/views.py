@@ -181,40 +181,57 @@ from django.shortcuts import render
 from django.utils import timezone
 from django.db.models import Count
 
-# monitoramento/views.py
-
-from django.shortcuts import render
-from .models import Questionario, Escola
+from django.shortcuts import render, get_object_or_404
+from django.db.models import Count
+from .models import Questionario, Escola, Monitoramento, RelatoProblema  # Modelo correto
 
 def dashboard_monitoramentos(request):
     user = request.user.greuser
-    # 1. Carrega só escolas que o usuário pode acessar
+
+    # Escolas acessíveis
     if user.is_admin() or user.is_coordenador():
         escolas = Escola.objects.all()
     elif user.is_chefe_setor():
-        # no seu modelo GREUser não há ligação direta escola–setor
         escolas = Escola.objects.filter(
-            monitoramentos__questionario__setor__in=user.setores_permitidos()
+            questionario__setor__in=user.setores_permitidos()
         ).distinct()
     else:
         escolas = user.escolas.all()
-    
-    # 2. Se veio school_id, pega apenas questionários desta escola
+
+    # Filtro por escola
     school_id = request.GET.get('school_id')
     questionarios = Questionario.objects.none()
     if school_id:
         escola = get_object_or_404(Escola, pk=school_id)
         questionarios = Questionario.objects.filter(escolas_destino=escola)
-    
+
+    # Estatísticas
+    monitoramentos = Monitoramento.objects.filter(escola__in=escolas)
+    total_monitoramentos = monitoramentos.count()
+
+    # Contar monitoramentos sem respostas
+    monitoramentos_pendentes = monitoramentos.annotate(
+        num_respostas=Count('respostas')
+    ).filter(num_respostas=0).count()
+
+    # Últimos monitoramentos
+    upcoming_monitoramentos = monitoramentos.order_by('-id')[:5]
+
     context = {
         'escolas': escolas,
         'questionarios': questionarios,
         'selected_school': int(school_id) if school_id else None,
+        'total_monitoramentos': total_monitoramentos,
+        'monitoramentos_pendentes': monitoramentos_pendentes,
+        'upcoming_monitoramentos': upcoming_monitoramentos,
+        'status_labels': ['Respondidos', 'Pendentes'],
+        'status_values': [
+            total_monitoramentos - monitoramentos_pendentes,
+            monitoramentos_pendentes
+        ]
     }
+
     return render(request, 'monitoramentos/dashboard_monitoramentos.html', context)
-
-
-
 
 class RelatosProblemasView(View):
     @method_decorator(login_required)
@@ -235,18 +252,48 @@ class RelatosProblemasView(View):
             'section': 'relatos_problemas'
         })
 
-class DetalheMonitoramentoView(View):
-    @method_decorator(login_required)
-    def get(self, request, pk):
-        monitoramento = get_object_or_404(Monitoramento, pk=pk)
-        if not request.user.greuser.pode_acessar_escola(monitoramento.escola):
-            raise PermissionDenied
+# monitoramento/views.py
+from django.views.generic import DetailView
+from django.core.exceptions import PermissionDenied
+from .models import Monitoramento, Resposta
 
-        return render(request, 'monitoramentos/detalhe.html', {
-            'monitoramento': monitoramento,
-            'respostas': monitoramento.respostas.all(),
-            'status_choices': dict(Monitoramento.STATUS_CHOICES)
-        })
+class DetalheMonitoramentoView(DetailView):
+    model = Monitoramento
+    template_name = 'monitoramentos/detalhe_monitoramento.html'
+    context_object_name = 'monitoramento'
+
+    def get_queryset(self):
+        user = self.request.user.greuser
+        queryset = super().get_queryset()
+        
+        if user.is_admin() or user.is_coordenador():
+            return queryset
+        elif user.is_chefe_setor():
+            return queryset.filter(questionario__setor__in=user.setores_permitidos())
+        else:
+            return queryset.none()
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        monitoramento = self.get_object()
+        
+        # Obter todas as respostas ordenadas pela ordem das perguntas
+        respostas = Resposta.objects.filter(
+            monitoramento=monitoramento
+        ).select_related('pergunta').order_by('pergunta__ordem')
+        
+        context['respostas'] = respostas
+        return context
+
+    def dispatch(self, request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            return self.handle_no_permission()
+            
+        user = request.user.greuser
+        if not (user.is_admin() or user.is_coordenador() or user.is_chefe_setor()):
+            raise PermissionDenied
+            
+        return super().dispatch(request, *args, **kwargs)
     
 from django.shortcuts import render, get_object_or_404
 from django.contrib.auth.decorators import login_required
