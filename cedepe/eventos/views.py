@@ -181,7 +181,7 @@ class AgendamentoViewSet(viewsets.ModelViewSet):
     queryset = Agendamento.objects.all()
     serializer_class = AgendamentoSerializer
     filter_backends = [DjangoFilterBackend, filters.SearchFilter]
-    filterset_fields = ['sala', 'evento']
+    filterset_fields = ['salas', 'evento']
     search_fields = ['evento__descricao']
 
     def create(self, request, *args, **kwargs):
