@@ -574,8 +574,8 @@ class ResponderQuestionarioView(LoginRequiredMixin, View):
             'erro': 'Verifique os campos destacados'
         })
 
-# views.py
 from django.views.generic import ListView
+from django.db.models import Q
 
 class SelecionarEscolaView(LoginRequiredMixin, ListView):
     model = Escola
@@ -583,4 +583,20 @@ class SelecionarEscolaView(LoginRequiredMixin, ListView):
     context_object_name = 'escolas'
 
     def get_queryset(self):
-        return self.request.user.greuser.escolas.all()
+        # pega só as que o monitor tem acesso
+        qs = self.request.user.greuser.escolas.all()
+        # busca via GET ?q=
+        q = self.request.GET.get('q', '').strip()
+        if q:
+            qs = qs.filter(
+                Q(nome__icontains=q) |
+                Q(inep__icontains=q) |
+                Q(nome_gestor__icontains=q)
+            )
+        return qs
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        # manter valor da busca no input
+        ctx['q'] = self.request.GET.get('q', '')
+        return ctx
