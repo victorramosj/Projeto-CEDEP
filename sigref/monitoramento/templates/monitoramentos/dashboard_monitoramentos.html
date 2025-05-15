@@ -24,7 +24,7 @@
         <div class="d-flex gap-2 management-buttons">
             {% if user.greuser.is_admin or user.greuser.is_coordenador %}
             <div class="dropdown">
-                <button class="btn btn-primary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                <button class="btn btn-lignt btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown">
                     <i class="fas fa-tools me-2"></i>
                 </button>
                 <ul class="dropdown-menu dropdown-menu-end">
@@ -39,12 +39,14 @@
                    
                 </ul>
             </div>
-            {% endif %}
-            
-            <a href="{% url 'selecionar_escola' %}" 
-               class="btn btn-success btn-lg">
+            {% else %}
+             <a href="{% url 'selecionar_escola' %}" 
+               class="btn btn-success ">
                 <i class="fas fa-pencil-alt me-2"></i>Novo Monitoramento
             </a>
+            {% endif %}
+            
+           
         </div>
     </div>
 
