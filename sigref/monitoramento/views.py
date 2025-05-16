@@ -1,86 +1,40 @@
-from rest_framework import viewsets, permissions, filters
+# REST Framework
+from rest_framework import viewsets, permissions, filters, status, generics
 from rest_framework.response import Response
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
-from rest_framework import status
+from rest_framework.views import APIView
+from rest_framework.pagination import PageNumberPagination
+from rest_framework.renderers import JSONRenderer  # Importação do JSONRenderer
+
+
+# Django
 from django.contrib.auth.models import User
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.views.generic import TemplateView, DetailView, View, CreateView
+from django.shortcuts import render, get_object_or_404
+from django.core.exceptions import PermissionDenied
+from django.utils.decorators import method_decorator
+from django.utils import timezone
+from django.db.models import Count
+
+
+# App interno
 from .models import *
 from .serializers import *
-from django.contrib.auth.decorators import login_required
-from django.core.exceptions import PermissionDenied
-from django.contrib.auth.mixins import LoginRequiredMixin
-from django.views.generic import TemplateView
 
 
-def verificar_acesso_monitor(view_func):
-    """Decorator para verificar se usuário é monitor"""
-    @login_required
-    def wrapper(request, *args, **kwargs):
-        if not request.user.greuser.is_monitor():
-            raise PermissionDenied
-        return view_func(request, *args, **kwargs)
-    return wrapper
 
-def verificar_acesso_gestor(view_func):
-    """Decorator para verificar se usuário é gestor"""
-    @login_required
-    def wrapper(request, *args, **kwargs):
-        if not request.user.greuser.is_gestor():
-            raise PermissionDenied
-        return view_func(request, *args, **kwargs)
-    return wrapper
-
-def verificar_acesso_setor(setor_requerido):
-    """Decorator para verificar acesso a um setor específico"""
-    def decorator(view_func):
-        @login_required
-        def wrapper(request, *args, **kwargs):
-            if not request.user.greuser.is_tecnico_gre() or not request.user.greuser.pode_acessar_setor(setor_requerido):
-                raise PermissionDenied
-            return view_func(request, *args, **kwargs)
-        return wrapper
-    return decorator
-
-# views.py
-from rest_framework.views import APIView
-from rest_framework.response import Response
-
+# View auxiliar que retorna as escolas relacionadas a um questionário específico
 class QuestionarioEscolasView(APIView):
     def get(self, request, pk):
         questionario = get_object_or_404(Questionario, pk=pk)
         escolas = questionario.escolas_destino.all()
         serializer = EscolaSerializer(escolas, many=True)
         return Response(serializer.data)
-
-# views.py
-from rest_framework.pagination import PageNumberPagination
-
-class EscolaPagination(PageNumberPagination):
-    page_size = 10
-    page_size_query_param = 'page_size'
-    max_page_size = 100
-
-# views.py
-class EscolaViewSet(viewsets.ModelViewSet):
-    queryset = Escola.objects.all().order_by('nome')
-    serializer_class = EscolaSerializer
-    pagination_class = EscolaPagination
-    filter_backends = [filters.SearchFilter]
-    search_fields = ['nome', 'inep', 'endereco', 'nome_gestor']
-
-    def get_serializer_context(self):
-        return {'request': self.request}
-
-class SetorViewSet(viewsets.ModelViewSet):
-    queryset = Setor.objects.all()
-    serializer_class = SetorSerializer
-    permission_classes = [permissions.IsAuthenticated]
-
-class GREUserViewSet(viewsets.ModelViewSet):
-    queryset = GREUser.objects.all()
-    serializer_class = GREUserSerializer
-    permission_classes = [permissions.IsAdminUser]
-
+    
+# View auxiliar que retorna os questionários e perguntas
 class QuestionarioViewSet(viewsets.ModelViewSet):
     queryset = Questionario.objects.all()
     serializer_class = QuestionarioSerializer
@@ -88,7 +42,6 @@ class QuestionarioViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save(setor=self.request.user.greuser.setor)
-from rest_framework import filters
 
 
 class PerguntaViewSet(viewsets.ModelViewSet):
@@ -107,6 +60,36 @@ class PerguntaViewSet(viewsets.ModelViewSet):
         )
         
 
+# Paginação personalizada para escolas
+class EscolaPagination(PageNumberPagination):
+    page_size = 10
+    page_size_query_param = 'page_size'
+    max_page_size = 100
+
+#Escolas, Setores e Usuários GRE
+class EscolaViewSet(viewsets.ModelViewSet):
+    queryset = Escola.objects.all().order_by('nome')
+    serializer_class = EscolaSerializer
+    pagination_class = EscolaPagination
+    filter_backends = [filters.SearchFilter]
+    search_fields = ['nome', 'inep', 'endereco', 'nome_gestor']
+
+    def get_serializer_context(self):
+        return {'request': self.request}
+
+
+class SetorViewSet(viewsets.ModelViewSet):
+    queryset = Setor.objects.all()
+    serializer_class = SetorSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+class GREUserViewSet(viewsets.ModelViewSet):
+    queryset = GREUser.objects.all()
+    serializer_class = GREUserSerializer
+    permission_classes = [permissions.IsAdminUser]
+
+
+#Monitoramentos e respostas
 class MonitoramentoViewSet(viewsets.ModelViewSet):
     queryset = Monitoramento.objects.all()
     serializer_class = MonitoramentoSerializer
@@ -125,6 +108,7 @@ class MonitoramentoViewSet(viewsets.ModelViewSet):
             )
         
         return queryset.filter(escola__in=user.escolas.all())
+    
 class RespostaViewSet(viewsets.ModelViewSet):
     serializer_class = RespostaSerializer
     permission_classes = [permissions.IsAuthenticated]
@@ -141,50 +125,50 @@ class RespostaViewSet(viewsets.ModelViewSet):
             respondido_por=self.request.user.greuser
         )
 
-class TipoProblemaViewSet(viewsets.ModelViewSet):
-    queryset = TipoProblema.objects.all()
-    serializer_class = TipoProblemaSerializer
-    permission_classes = [permissions.IsAuthenticated]
 
-class RelatoProblemaViewSet(viewsets.ModelViewSet):
-    serializer_class = RelatoProblemaSerializer
-    permission_classes = [permissions.IsAuthenticated]
-    
-    # Adicione esta linha para resolver o erro
-    queryset = RelatoProblema.objects.none()  # Valor inicial vazio
-    
+
+
+class DetalheMonitoramentoView(DetailView):
+    model = Monitoramento
+    template_name = 'monitoramentos/detalhe_monitoramento.html'
+    context_object_name = 'monitoramento'
+
     def get_queryset(self):
-        # Sobrescreve o queryset padrão
-        return RelatoProblema.objects.filter(gestor=self.request.user.greuser)
+        user = self.request.user.greuser
+        queryset = super().get_queryset()
+        
+        if user.is_admin() or user.is_coordenador():
+            return queryset
+        elif user.is_chefe_setor():
+            return queryset.filter(questionario__setor__in=user.setores_permitidos())
+        else:
+            return queryset.none()
 
-    def perform_create(self, serializer):
-        serializer.save(gestor=self.request.user.greuser)
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        monitoramento = self.get_object()
+        
+        # Obter todas as respostas ordenadas pela ordem das perguntas
+        respostas = Resposta.objects.filter(
+            monitoramento=monitoramento
+        ).select_related('pergunta').order_by('pergunta__ordem')
+        
+        context['respostas'] = respostas
+        return context
 
-from rest_framework.views import APIView
-from rest_framework.response import Response
-
-class MinhasEscolasView(APIView):
-    permission_classes = [permissions.IsAuthenticated]
-
-    def get(self, request):
+    def dispatch(self, request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            return self.handle_no_permission()
+            
         user = request.user.greuser
-        escolas = user.escolas.all()
-        serializer = EscolaSerializer(escolas, many=True)
-        return Response(serializer.data)
-    
-from django.shortcuts import render, get_object_or_404
-from django.views import View
-from django.utils.decorators import method_decorator
-from django.contrib.auth.decorators import login_required
+        if not (user.is_admin() or user.is_coordenador() or user.is_chefe_setor()):
+            raise PermissionDenied
+            
+        return super().dispatch(request, *args, **kwargs)
 
-from django.shortcuts import render
-from django.utils import timezone
-from django.db.models import Count
 
-from django.shortcuts import render, get_object_or_404
-from django.db.models import Count
-from .models import Questionario, Escola, Monitoramento, RelatoProblema  # Modelo correto
 
+#Dashboard
 def dashboard_monitoramentos(request):
     user = request.user.greuser
 
@@ -233,6 +217,27 @@ def dashboard_monitoramentos(request):
 
     return render(request, 'monitoramentos/dashboard_monitoramentos.html', context)
 
+
+
+# Views relacionadas a problemas e escolas
+
+class TipoProblemaViewSet(viewsets.ModelViewSet):
+    queryset = TipoProblema.objects.all()
+    serializer_class = TipoProblemaSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+class RelatoProblemaViewSet(viewsets.ModelViewSet):
+    serializer_class = RelatoProblemaSerializer
+    permission_classes = [permissions.IsAuthenticated]    
+    
+    queryset = RelatoProblema.objects.none()  # Valor inicial vazio
+    
+    def get_queryset(self):
+        # Sobrescreve o queryset padrão
+        return RelatoProblema.objects.filter(gestor=self.request.user.greuser)
+
+    def perform_create(self, serializer):
+        serializer.save(gestor=self.request.user.greuser)
 class RelatosProblemasView(View):
     @method_decorator(login_required)
     def get(self, request):
@@ -252,52 +257,19 @@ class RelatosProblemasView(View):
             'section': 'relatos_problemas'
         })
 
-# monitoramento/views.py
-from django.views.generic import DetailView
-from django.core.exceptions import PermissionDenied
-from .models import Monitoramento, Resposta
 
-class DetalheMonitoramentoView(DetailView):
-    model = Monitoramento
-    template_name = 'monitoramentos/detalhe_monitoramento.html'
-    context_object_name = 'monitoramento'
+from rest_framework.views import APIView
+from rest_framework.response import Response
 
-    def get_queryset(self):
-        user = self.request.user.greuser
-        queryset = super().get_queryset()
-        
-        if user.is_admin() or user.is_coordenador():
-            return queryset
-        elif user.is_chefe_setor():
-            return queryset.filter(questionario__setor__in=user.setores_permitidos())
-        else:
-            return queryset.none()
+class MinhasEscolasView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        monitoramento = self.get_object()
-        
-        # Obter todas as respostas ordenadas pela ordem das perguntas
-        respostas = Resposta.objects.filter(
-            monitoramento=monitoramento
-        ).select_related('pergunta').order_by('pergunta__ordem')
-        
-        context['respostas'] = respostas
-        return context
-
-    def dispatch(self, request, *args, **kwargs):
-        if not request.user.is_authenticated:
-            return self.handle_no_permission()
-            
+    def get(self, request):
         user = request.user.greuser
-        if not (user.is_admin() or user.is_coordenador() or user.is_chefe_setor()):
-            raise PermissionDenied
-            
-        return super().dispatch(request, *args, **kwargs)
+        escolas = user.escolas.all()
+        serializer = EscolaSerializer(escolas, many=True)
+        return Response(serializer.data)
     
-from django.shortcuts import render, get_object_or_404
-from django.contrib.auth.decorators import login_required
-from .models import Setor, Questionario, Monitoramento
 
 @login_required
 def fluxo_monitoramento(request):
@@ -332,10 +304,7 @@ def fluxo_monitoramento(request):
         'monitoramentos': monitoramentos,
     })
 
-from rest_framework.renderers import TemplateHTMLRenderer
-from rest_framework.response import Response
-from rest_framework.renderers import JSONRenderer  # Importação do JSONRenderer
-# views.py
+
 class AdicionarQuestionarioView(APIView):
     permission_classes = [IsAuthenticated]
     renderer_classes = [JSONRenderer]
@@ -380,15 +349,39 @@ class GerenciarPerguntasView(DetailView):
         )
         return context
 
-from rest_framework import generics, permissions
+
 from .serializers import QuestionarioSerializer
 
 class QuestionarioCreateAPI(generics.CreateAPIView):
     permission_classes = [permissions.IsAuthenticated]
     serializer_class = QuestionarioSerializer
 
+from django.views.generic import ListView
+from django.db.models import Q
+from django.contrib.auth.mixins import LoginRequiredMixin
 
-    
+class SelecionarEscolaView(LoginRequiredMixin, ListView):
+    model = Escola
+    template_name = 'monitoramentos/selecionar_escola.html'
+    context_object_name = 'escolas'
+    paginate_by = 15  # ← Limita a 15 itens por página
+
+    def get_queryset(self):
+        qs = self.request.user.greuser.escolas.all()
+        q = self.request.GET.get('q', '').strip()
+        if q:
+            qs = qs.filter(
+                Q(nome__icontains=q) |
+                Q(inep__icontains=q) |
+                Q(nome_gestor__icontains=q)
+            )
+        return qs
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx['q'] = self.request.GET.get('q', '')
+        return ctx
+
 
 from django.shortcuts import render, get_object_or_404
 
@@ -449,7 +442,7 @@ class GerenciarQuestionariosView(LoginRequiredMixin, TemplateView):
         return context
     
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.views.generic import TemplateView, CreateView
+
 from django.urls import reverse_lazy
 from .models import Monitoramento, RelatoProblema, TipoProblema
 
@@ -514,7 +507,7 @@ class QuestionariosEscolaView(LoginRequiredMixin, View):
             'total_geral': sum(q.total_respostas for q in questionarios),
             'ultima_resposta_geral': ultima_resposta_geral
         })
-from django.shortcuts      import render, get_object_or_404, redirect
+from django.shortcuts      import render, get_object_or_404
 from django.views          import View
 from django.contrib.auth.mixins import LoginRequiredMixin
 from .models               import Escola, Questionario, Pergunta, Monitoramento
@@ -574,29 +567,3 @@ class ResponderQuestionarioView(LoginRequiredMixin, View):
             'erro': 'Verifique os campos destacados'
         })
 
-from django.views.generic import ListView
-from django.db.models import Q
-
-class SelecionarEscolaView(LoginRequiredMixin, ListView):
-    model = Escola
-    template_name = 'monitoramentos/selecionar_escola.html'
-    context_object_name = 'escolas'
-
-    def get_queryset(self):
-        # pega só as que o monitor tem acesso
-        qs = self.request.user.greuser.escolas.all()
-        # busca via GET ?q=
-        q = self.request.GET.get('q', '').strip()
-        if q:
-            qs = qs.filter(
-                Q(nome__icontains=q) |
-                Q(inep__icontains=q) |
-                Q(nome_gestor__icontains=q)
-            )
-        return qs
-
-    def get_context_data(self, **kwargs):
-        ctx = super().get_context_data(**kwargs)
-        # manter valor da busca no input
-        ctx['q'] = self.request.GET.get('q', '')
-        return ctx
