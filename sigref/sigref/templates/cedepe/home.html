@@ -2,38 +2,213 @@
 {% block title %}Início{% endblock %}
 
 {% block content %}
-<div class="container d-flex justify-content-center align-items-center min-vh-100">
-  <div class="text-center">
-    {% if user.is_authenticated %}
-      {% with gre_user=user.greuser %}
-        <h1 class="fw-bold mb-4 typing-effect">
-          <span class="typing-text">
-            Olá! Bem-vindo,{{ gre_user.nome_completo }}!
-          </span>
+<div class="container py-5">
+  {% if user.is_authenticated %}
+    {% with gre=user.greuser %}
+      <div class="text-center mb-5 animate__animated animate__fadeIn">
+        <h1 class="fw-bold display-5 mb-3">
+          <span class="typing-text">Olá, {{ gre.nome_completo }}!</span>
+          <span class="typing-cursor">|</span>
         </h1>
-      {% endwith %}
-    {% else %}
-      <h1 class="fw-bold mb-4 typing-effect">
-        <span class="typing-text">
-          Bem-vindo ao Sistema de Gestão de Hospedagens!📊
-        </span>
-      </h1>
-    {% endif %}
+        <p class="lead text-muted">Selecione uma opção para começar:</p>
+      </div>
 
-    {% if user.is_authenticated %}
-      <p class="lead text-muted">Gerencie seus recursos com facilidade e eficiência.</p>
-      <a href="{% url 'dashboard_hospedagens' %}" class="btn btn-outline-info btn-lg mt-3">
-        <i class="fas fa-tachometer-alt fa-spin"></i> Acessar Dashboard
-      </a>
-      <a href="{% url 'logout' %}" class="btn btn-outline-danger btn-lg mt-3">
-        <i class="bi bi-box-arrow-right me-2"></i> Sair
-      </a>
-    {% else %}
-      <p class="lead text-muted">Acesse sua conta ou registre-se para começar.</p>
-      <a href="{% url 'login' %}" class="btn btn-outline-success btn-lg mt-3">
-        <i class="bi bi-box-arrow-in-right me-2"></i> Entrar
-      </a>
-    {% endif %}
-  </div>
+      <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+        {# Todos os perfis #}
+        <div class="col">
+          <div class="card h-100 shadow-sm border-0">
+            <div class="card-body text-center">
+              <a href="{% url 'dashboard_eventos' %}" class="stretched-link text-decoration-none">
+                <div class="mb-3">
+                  <i class="fas fa-calendar-alt fa-3x text-primary"></i>
+                </div>
+                <h5 class="card-title text-dark">Eventos</h5>
+              </a>
+            </div>
+          </div>
+        </div>
+
+        {# CEDEPE: só eventos e hospedagens #}
+        {% if gre.is_cedepes %}
+          <div class="col">
+            <div class="card h-100 shadow-sm border-0">
+              <div class="card-body text-center">
+                <a href="{% url 'dashboard_hospedagens' %}" class="stretched-link text-decoration-none">
+                  <div class="mb-3">
+                    <i class="fas fa-bed fa-3x text-warning"></i>
+                  </div>
+                  <h5 class="card-title text-dark">Hospedagens</h5>
+                </a>
+              </div>
+            </div>
+          </div>
+        {% endif %}
+
+        {# Chefes de setor e coordenadores #}
+        {% if gre.is_chefe_setor or gre.is_coordenador %}
+          <div class="col">
+            <div class="card h-100 shadow-sm border-0">
+              <div class="card-body text-center">
+                <a href="{% url 'minhas-escolas' %}" class="stretched-link text-decoration-none">
+                  <div class="mb-3">
+                    <i class="fas fa-school fa-3x text-success"></i>
+                  </div>
+                  <h5 class="card-title text-dark">Minhas Escolas</h5>
+                </a>
+              </div>
+            </div>
+          </div>
+        {% endif %}
+
+        {# Monitores e escolas #}
+        {% if gre.is_escola or gre.is_monitor %}
+          <div class="col">
+            <div class="card h-100 shadow-sm border-0">
+              <div class="card-body text-center">
+                <a href="{% url 'dashboard_monitoramentos' %}" class="stretched-link text-decoration-none">
+                  <div class="mb-3">
+                    <i class="fas fa-chart-bar fa-3x text-info"></i>
+                  </div>
+                  <h5 class="card-title text-dark">Monitoramentos</h5>
+                </a>
+              </div>
+            </div>
+          </div>
+        {% endif %}
+
+        {# Logout #}
+        <div class="col">
+          <div class="card h-100 shadow-sm border-0">
+            <div class="card-body text-center">
+              <a href="{% url 'logout' %}" class="stretched-link text-decoration-none">
+                <div class="mb-3">
+                  <i class="bi bi-box-arrow-right fa-3x text-danger"></i>
+                </div>
+                <h5 class="card-title text-dark">Sair</h5>
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    {% endwith %}
+   {% else %}
+    <div class="text-center vh-100 d-flex flex-column justify-content-center">
+      <div class="animate__animated animate__fadeInUp">
+        <h1 class="fw-bold display-4 mb-4">
+          {# coloco o texto inicial já no HTML #}
+          <span class="typing-text">Bem-vindo ao SIGREF!</span>
+          <span class="typing-cursor">|</span>
+        </h1>
+        <p class="lead text-muted mb-5">Faça login ou registre-se para acessar o sistema</p>
+        <div class="d-grid gap-3 d-sm-block">
+          <a href="{% url 'login' %}" class="btn btn-lg btn-success px-5 py-3 me-sm-3 mb-3 shadow">
+            <i class="fas fa-sign-in-alt me-2"></i>Entrar
+          </a>
+          <a href="{% url 'register' %}" class="btn btn-lg btn-outline-primary px-5 py-3 mb-3 shadow">
+            <i class="fas fa-user-plus me-2"></i>Registrar
+          </a>
+        </div>
+      </div>
+    </div>
+  {% endif %}
+
 </div>
 {% endblock %}
+
+<style>
+/* Efeito de digitação */
+.typing-text {
+  display: inline-block;
+  overflow: hidden;
+  white-space: nowrap;
+  /* já começa com width:0 e depois expande */
+  width: 0;
+  animation: typing 2s steps(18, end) forwards;
+}
+
+.typing-cursor {
+  display: inline-block;
+  margin-left: 2px;
+  animation: blink 1s infinite;
+  /* sempre visível, piscando */
+  opacity: 1;
+}
+
+@keyframes typing {
+  from { width: 0; }
+  to   { width: 100%; }
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 0; }
+  50%       { opacity: 1; }
+}
+
+
+/* Responsividade */
+@media (max-width: 768px) {
+  .typing-text {
+    animation: typing 2s steps(20, end) forwards;
+  }
+  .display-4 {
+    font-size: 2.5rem;
+  }
+}
+
+@media (max-width: 576px) {
+  .typing-text {
+    animation: typing 1.5s steps(15, end) forwards;
+  }
+  .display-4 {
+    font-size: 2rem;
+  }
+  .btn-lg {
+    width: 100%;
+  }
+}
+
+/* Cards hover effect */
+.card {
+  transition: transform 0.2s, box-shadow 0.2s;
+  border-radius: 15px;
+}
+
+.card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 20px rgba(0,0,0,0.12);
+}
+</style>
+
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const typingText = document.querySelector('.typing-text');
+  const typingCursor = document.querySelector('.typing-cursor');
+  
+  if(typingText && !{{ user.is_authenticated|yesno:"true,false" }}) {
+    const texts = ["Bem-vindo ao SIGREF!"];
+    let index = 0;
+    let currentText = texts[0];
+    
+    if(currentText.length > 0) {
+      typingCursor.style.display = 'inline-block';
+      
+      function type() {
+        typingText.textContent = currentText.slice(0, ++index);
+        
+        if(index === currentText.length) {
+          typingCursor.style.animation = 'none';
+          typingCursor.style.opacity = '0';
+          return;
+        }
+        setTimeout(type, 150);
+      }
+      
+      type();
+    } else {
+      typingText.style.display = 'none';
+      typingCursor.style.display = 'none';
+    }
+  }
+});
+</script>

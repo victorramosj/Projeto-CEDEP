@@ -72,6 +72,9 @@ class EscolaAdmin(admin.ModelAdmin):
     user_display.short_description = 'Usuário Vinculado'
 
 
+from django.contrib import admin
+from django.contrib.auth.models import User
+from .models import GREUser
 
 @admin.register(GREUser)
 class GREUserAdmin(admin.ModelAdmin):
@@ -95,9 +98,46 @@ class GREUserAdmin(admin.ModelAdmin):
         }),
     )
 
+    actions = [
+        'marcar_como_staff',
+        'desmarcar_como_staff',
+    ]
+
     def escolas_vinculadas(self, obj):
         return ", ".join(e.nome for e in obj.escolas.all())
     escolas_vinculadas.short_description = 'Escolas'
+
+    def marcar_como_staff(self, request, queryset):
+        """
+        Marca todos os GREUsers selecionados como staff no User associado.
+        """
+        count = 0
+        for gre in queryset:
+            user = gre.user
+            if not user.is_staff:
+                user.is_staff = True
+                user.save()
+                count += 1
+        self.message_user(request,
+            f"{count} usuário(s) marcado(s) como staff.")
+    marcar_como_staff.short_description = "Transformar selecionados em Staff"
+
+    def desmarcar_como_staff(self, request, queryset):
+        """
+        Remove a flag de staff dos Users dos GREUsers selecionados.
+        """
+        count = 0
+        for gre in queryset:
+            user = gre.user
+            if user.is_staff:
+                user.is_staff = False
+                user.save()
+                count += 1
+        self.message_user(request,
+            f"{count} usuário(s) desmarcado(s) como staff.")
+    desmarcar_como_staff.short_description = "Remover flag de Staff dos selecionados"
+
+
 
 
 @admin.register(Questionario)
