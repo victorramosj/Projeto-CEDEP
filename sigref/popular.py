@@ -49,10 +49,8 @@ def criar_superadmin():
 def criar_setores():
     print("🌳 Criando setores…")
     estrutura = {
-        "CGGR": [],
-        "CGAF": ["UDP", "NAS", "NAE", "FINANCEIRO"],
-        "CGIP": [],
-        "CGDE": ["PSICOLOGIA", "UJC", "NEEI", "EDUCACAO"],
+        "CGGR": [], "CGAF": ["UDP", "NAS", "NAE", "FINANCEIRO"],
+        "CGIP": [], "CGDE": ["PSICOLOGIA", "UJC", "NEEI", "EDUCACAO"],
         "CGPA": [], "NOB": [], "CTI": [], "GABINETE": [],
     }
     setores = {}
@@ -76,40 +74,56 @@ def importar_usuarios():
             tipo_csv = row['tipo_usuario'].strip().upper()
             tipo     = TIPO_MAP.get(tipo_csv, 'MONITOR')
 
-            user, created = User.objects.get_or_create(username=username)
-            if created:
+            user, user_created = User.objects.get_or_create(username=username)
+            if user_created:
                 user.set_password(senha)
                 user.save()
 
-            gre, _ = GREUser.objects.update_or_create(
+            greuser, gre_created = GREUser.objects.get_or_create(
                 user=user,
                 defaults={
                     'nome_completo': nome,
                     'tipo_usuario': tipo
                 }
             )
-            print(f"• Usuário: {gre.nome_completo} [{gre.tipo_usuario}]")
+
+            if not gre_created:
+                greuser.nome_completo = nome
+                greuser.tipo_usuario = tipo
+                greuser.save()
+
+            print(f"• Usuário: {greuser.nome_completo} [{greuser.tipo_usuario}]")
+
+import os
+import csv
+from django.conf import settings
+from monitoramento.models import Escola, GREUser
 
 def importar_escolas():
-    path = os.path.join(settings.BASE_DIR,  'escolas.csv')
+    path = os.path.join(settings.BASE_DIR, 'escolas.csv')
     print(f"📥 Importando escolas de {path}…")
+
+    duplicados = []  # Armazena nomes com múltiplos usuários
+
     with open(path, newline='', encoding='utf-8') as f:
         reader = csv.DictReader(f, delimiter=',')
         for row in reader:
             nome   = row['nome'].strip()
             inep   = row['inep'].strip()
+
             escola, created = Escola.objects.update_or_create(
                 inep=inep,
                 defaults={
                     'nome':            nome,
                     'email_escola':    row['email_escola'].strip(),
-                    'endereco':        row.get('endereco','').strip(),
-                    'foto_fachada':    row.get('foto_fachada','').strip() or None,
+                    'endereco':        row.get('endereco', '').strip(),
+                    'foto_fachada':    row.get('foto_fachada', '').strip() or None,
                     'nome_gestor':     row['nome_gestor'].strip(),
                     'telefone_gestor': row['telefone_gestor'].strip(),
                     'email_gestor':    row['email_gestor'].strip(),
                 }
             )
+
             try:
                 gre = GREUser.objects.get(nome_completo__iexact=nome)
                 escola.user = gre.user
@@ -117,9 +131,21 @@ def importar_escolas():
                 gre.escolas.add(escola)
                 print(f"→ Associada '{escola.nome}' ao usuário '{gre.user.username}'")
             except GREUser.DoesNotExist:
-                pass
+                print(f"⚠️ Nenhum usuário encontrado com nome: {nome}")
+            except GREUser.MultipleObjectsReturned:
+                print(f"⚠️ Múltiplos usuários encontrados com nome: {nome}")
+                duplicados.append(nome)
 
             print(f"• Escola: {escola.nome} (INEP {escola.inep})")
+
+    # Exibe duplicatas no final
+    if duplicados:
+        print("\n❗ Usuários com nomes duplicados encontrados:")
+        for nome in set(duplicados):
+            print(f" - {nome}")
+    else:
+        print("\n✅ Nenhuma duplicata de usuário encontrada.")
+
 
 def criar_questionarios_exemplo(setores):
     print("📝 Criando questionários de exemplo…")
@@ -137,10 +163,8 @@ def criar_questionarios_exemplo(setores):
             setor=setor,
             criado_por=admin_user
         )
-        # adiciona até 5 escolas ao questionário
         for e in random.sample(escolas, min(5, len(escolas))):
             q.escolas_destino.add(e)
-        # cria 3 perguntas de exemplo
         for ordem in range(1, 4):
             Pergunta.objects.create(
                 questionario=q,
@@ -154,7 +178,7 @@ def criar_questionarios_exemplo(setores):
 
 def criar_monitoramentos_exemplo(qs):
     print("📊 Criando monitoramentos de exemplo…")
-    candidatos = GREUser.objects.filter(tipo_usuario__in=['MONITOR','ESCOLA'])
+    candidatos = GREUser.objects.filter(tipo_usuario__in=['MONITOR', 'ESCOLA'])
     if not candidatos.exists():
         print("⚠️ Sem usuários MONITOR/ESCOLA: não foram criados monitoramentos.")
         return

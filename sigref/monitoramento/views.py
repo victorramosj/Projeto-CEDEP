@@ -238,6 +238,7 @@ class RelatoProblemaViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save(gestor=self.request.user.greuser)
+
 class RelatosProblemasView(View):
     @method_decorator(login_required)
     def get(self, request):
@@ -256,8 +257,21 @@ class RelatosProblemasView(View):
             'prioridade_choices': dict(RelatoProblema.PRIORIDADE_CHOICES),
             'section': 'relatos_problemas'
         })
+from django.views.generic import CreateView
+from django.urls import reverse_lazy
 
+class RelatoProblemaCreateView(LoginRequiredMixin, CreateView):
+    model = RelatoProblema
+    fields = ['tipo_problema', 'descricao_adicional', 'prioridade', 'foto']
+    template_name = 'escolas/relatar_problema.html'
+    success_url = reverse_lazy('escola_dashboard')
 
+    def form_valid(self, form):
+        escola = self.request.user.greuser.escolas.first()
+        form.instance.escola = escola
+        form.instance.gestor = self.request.user.greuser
+        return super().form_valid(form)
+    
 from rest_framework.views import APIView
 from rest_framework.response import Response
 
@@ -443,39 +457,23 @@ class GerenciarQuestionariosView(LoginRequiredMixin, TemplateView):
     
 from django.contrib.auth.mixins import LoginRequiredMixin
 
-from django.urls import reverse_lazy
-from .models import Monitoramento, RelatoProblema, TipoProblema
+from django.views.generic import TemplateView
+from django.contrib.auth.mixins import LoginRequiredMixin
 
 class EscolaDashboardView(LoginRequiredMixin, TemplateView):
-    template_name = 'escolas/escola_dashboard.html'
-
+    template_name = 'escolas/dashboard.html'
+    
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        greuser = self.request.user.greuser
-        # pega a primeira escola associada (caso haja mais, escolher lógica similar)
-        escola = greuser.escolas.first()
-        pend_monitor = Monitoramento.objects.filter(escola=escola, status='P')
-        pend_relatos = RelatoProblema.objects.filter(gestor=greuser, status='P')
-
-        context.update({
-            'escola': escola,
-            'pendentes_monitoramentos': pend_monitor.count(),
-            'pendentes_relatos': pend_relatos.count(),
-            # listas para link “ver detalhes”
-            'monitoramentos_list': pend_monitor,
-            'relatos_list': pend_relatos,
-        })
+        user = self.request.user.greuser
+        context['escola'] = user.escolas.first()
+        context['relatos'] = RelatoProblema.objects.filter(
+            escola=context['escola']
+        ).order_by('-data_relato')[:5]
         return context
 
-class RelatoProblemaCreateView(LoginRequiredMixin, CreateView):
-    model = RelatoProblema
-    fields = ['tipo_problema', 'descricao_adicional', 'foto']
-    template_name = 'escolas/relatar_problema.html'
-    success_url = reverse_lazy('escola_dashboard')
 
-    def form_valid(self, form):
-        form.instance.gestor = self.request.user.greuser
-        return super().form_valid(form)
+
 
 class QuestionariosEscolaView(LoginRequiredMixin, View):
     def get(self, request, escola_id):

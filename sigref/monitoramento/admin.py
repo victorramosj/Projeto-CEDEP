@@ -72,21 +72,21 @@ class EscolaAdmin(admin.ModelAdmin):
     user_display.short_description = 'Usuário Vinculado'
 
 
-from django.contrib import admin
-from django.contrib.auth.models import User
-from .models import GREUser
+
+from .models import GREUser, Escola  # Certifique-se de importar Escola
 
 @admin.register(GREUser)
 class GREUserAdmin(admin.ModelAdmin):
-    list_display      = (
+    list_display = (
         'nome_completo', 'tipo_usuario', 'nivel_acesso',
-        'setor', 'escolas_vinculadas', 'cpf', 'celular'
+        'setor', 'escolas_vinculadas', 'cpf', 'celular', 'is_staff_user'
     )
-    list_filter       = ('tipo_usuario', 'setor')
-    search_fields     = (
+    list_filter = ('tipo_usuario', 'setor')
+    search_fields = (
         'nome_completo', 'user__username', 'cpf', 'celular'
     )
     filter_horizontal = ('escolas',)
+
     fieldsets = (
         ('Dados Pessoais', {
             'fields': (
@@ -101,16 +101,24 @@ class GREUserAdmin(admin.ModelAdmin):
     actions = [
         'marcar_como_staff',
         'desmarcar_como_staff',
+        'atribuir_todas_as_escolas',
     ]
 
     def escolas_vinculadas(self, obj):
-        return ", ".join(e.nome for e in obj.escolas.all())
+        escolas = obj.escolas.all()
+        limite = 3
+        nomes = [e.nome for e in escolas[:limite]]
+        if escolas.count() > limite:
+            nomes.append(f"... (+{escolas.count() - limite})")
+        return ", ".join(nomes)
     escolas_vinculadas.short_description = 'Escolas'
 
+    def is_staff_user(self, obj):
+        return obj.user.is_staff
+    is_staff_user.boolean = True
+    is_staff_user.short_description = 'Staff'
+
     def marcar_como_staff(self, request, queryset):
-        """
-        Marca todos os GREUsers selecionados como staff no User associado.
-        """
         count = 0
         for gre in queryset:
             user = gre.user
@@ -118,14 +126,10 @@ class GREUserAdmin(admin.ModelAdmin):
                 user.is_staff = True
                 user.save()
                 count += 1
-        self.message_user(request,
-            f"{count} usuário(s) marcado(s) como staff.")
+        self.message_user(request, f"{count} usuário(s) marcado(s) como staff.")
     marcar_como_staff.short_description = "Transformar selecionados em Staff"
 
     def desmarcar_como_staff(self, request, queryset):
-        """
-        Remove a flag de staff dos Users dos GREUsers selecionados.
-        """
         count = 0
         for gre in queryset:
             user = gre.user
@@ -133,9 +137,22 @@ class GREUserAdmin(admin.ModelAdmin):
                 user.is_staff = False
                 user.save()
                 count += 1
-        self.message_user(request,
-            f"{count} usuário(s) desmarcado(s) como staff.")
+        self.message_user(request, f"{count} usuário(s) desmarcado(s) como staff.")
     desmarcar_como_staff.short_description = "Remover flag de Staff dos selecionados"
+
+    def atribuir_todas_as_escolas(self, request, queryset):
+        escolas = Escola.objects.all()
+        count = 0
+        for gre_user in queryset:
+            gre_user.escolas.set(escolas)
+            gre_user.save()
+            count += 1
+        self.message_user(
+            request,
+            f"Todas as escolas foram atribuídas a {count} usuário(s) com sucesso."
+        )
+    atribuir_todas_as_escolas.short_description = "Atribuir todas as escolas aos selecionados"
+
 
 
 

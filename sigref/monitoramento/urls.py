@@ -34,7 +34,7 @@ urlpatterns = [
     # Views baseadas em templates (front-end)
     # -----------------------------------------
     path('minhas-escolas/', views.MinhasEscolasView.as_view(), name='minhas-escolas'),
-    path('dashboard/monitoramentos/', views.dashboard_monitoramentos, name='dashboard_monitoramentos'),
+    path('dashboard/', views.dashboard_monitoramentos, name='dashboard_monitoramentos'),
     path('relatos/problemas/', views.RelatosProblemasView.as_view(), name='relatos_problemas'),
     path('monitoramentos/<int:pk>/', views.DetalheMonitoramentoView.as_view(), name='detalhe_monitoramento'),
     path('fluxo/', views.fluxo_monitoramento, name='fluxo_monitoramento_setores'),
@@ -46,7 +46,7 @@ urlpatterns = [
     path('questionarios/<int:pk>/perguntas/frontend/', views.GerenciarPerguntasView.as_view(), name='gerenciar_perguntas'),
 
     # Escolas e respostas
-    path('escolas/', views.SelecionarEscolaView.as_view(), name='selecionar_escola'),
+    path('selecionar_escola/', views.SelecionarEscolaView.as_view(), name='selecionar_escola'),
     path('escola/<int:escola_id>/questionarios/', views.QuestionariosEscolaView.as_view(), name='questionarios_escola'),
     path('escola/<int:escola_id>/questionario/<int:questionario_id>/responder/', views.ResponderQuestionarioView.as_view(), name='responder_questionario'),
 

@@ -1,168 +1,185 @@
-{% extends 'cedepe/base.html' %}
+{% extends "cedepe/base.html" %}
 {% load static %}
 
-{% block content %}
-<div class="container mt-4">
-  <h2>Gerenciar Questionários</h2>
-  <table class="table table-hover mt-3">
-    <thead>
-      <tr>
-        <th>#</th>
-        <th>Título</th>
-        <th>Descrição</th>
-        <th>Data</th>
-        <th>Ações</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for q in questionarios %}
-      <tr>
-        <td>{{ forloop.counter }}</td>
-        <td>{{ q.titulo }}</td>
-        <td>{{ q.descricao|truncatechars:50 }}</td>
-        <td>{{ q.data_criacao }}</td>
-        <td>
-          <a href="{% url 'gerenciar_perguntas' q.id %}" class="btn btn-sm btn-primary">
-            Perguntas
-          </a>
-          
-          
-        </td>
-      </tr>
-      {% empty %}
-      <tr><td colspan="5">Nenhum questionário encontrado.</td></tr>
-      {% endfor %}
-    </tbody>
-  </table>
-  
-  
-</div>
+{% block title %}Gerenciar Questionários{% endblock %}
 
+{% block content %}
+<div class="container-fluid px-4">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="mb-2" style="color: #10295d">Gerenciar Questionários</h1>
+    <div>
+      <a href="{% url 'fluxo_monitoramento_setores' %}" class="btn btn-success btn-sm">
+        <i class="bi bi-plus-circle"></i> Novo Questionário
+      </a>
+    </div>
+  </div>
+
+  <div class="card shadow-sm">
+    <div class="card-body">
+      <div class="table-responsive">
+        <table class="table table-hover table-bordered">
+          <thead class="table-light">
+            <tr>
+              <th style="width: 5%;">#</th>
+              <th style="width: 35%;">Título</th>
+              <th style="width: 40%;">Descrição</th>
+              <th style="width: 10%;">Data</th>
+              <th style="width: 10%;">Ações</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for q in questionarios %}
+            <tr>
+              <td>{{ forloop.counter }}</td>
+              <td>{{ q.titulo }}</td>
+              <td>{{ q.descricao|truncatechars:50 }}</td>
+              <td>{{ q.data_criacao|date:"d/m/Y" }}</td>
+              <td>
+                <a href="{% url 'gerenciar_perguntas' q.id %}" class="btn btn-sm btn-primary">
+                  <i class="bi bi-list-ul"></i> Perguntas
+                </a>
+              </td>
+            </tr>
+            {% empty %}
+            <tr>
+              <td colspan="5" class="text-center">Nenhum questionário encontrado.</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      {% if is_paginated %}
+      <nav>
+        <ul class="pagination justify-content-center">
+          {% if page_obj.has_previous %}
+          <li class="page-item">
+            <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Anterior</a>
+          </li>
+          {% else %}
+          <li class="page-item disabled"><span class="page-link">Anterior</span></li>
+          {% endif %}
+
+          {% for num in paginator.page_range %}
+            {% if page_obj.number == num %}
+            <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+            {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+            <li class="page-item">
+              <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+            </li>
+            {% endif %}
+          {% endfor %}
+
+          {% if page_obj.has_next %}
+          <li class="page-item">
+            <a class="page-link" href="?page={{ page_obj.next_page_number }}">Próximo</a>
+          </li>
+          {% else %}
+          <li class="page-item disabled"><span class="page-link">Próximo</span></li>
+          {% endif %}
+        </ul>
+      </nav>
+      {% endif %}
+
+    </div>
+  </div>
 </div>
 {% endblock %}
+
 {% block scripts %}
 {% if questionario_selecionado %}
 <script>
-    (function () {
-        const modalEl = document.getElementById('assignSchoolsModal');
-        const assignUrl = "{% url 'assign_escolas' questionario_selecionado.id %}";
-        const escolasApiUrl = "{% url 'escolas-list' %}";
-        let escolasSelecionadas = new Set();
-        let currentPage = 1;
-        let totalPages = 1;
+  (function () {
+    const modalEl = document.getElementById('assignSchoolsModal');
+    const assignUrl = "{% url 'assign_escolas' questionario_selecionado.id %}";
+    const escolasApiUrl = "{% url 'escolas-list' %}";
+    let escolasSelecionadas = new Set();
+    let currentPage = 1;
+    let totalPages = 1;
 
-        const container = modalEl.querySelector('#escolas-container');
-        const searchInput = modalEl.querySelector('#search-escolas');
-        const counterEl = modalEl.querySelector('#escolas-counter');
+    const container = modalEl.querySelector('#escolas-container');
+    const searchInput = modalEl.querySelector('#search-escolas');
+    const counterEl = modalEl.querySelector('#escolas-counter');
 
-        function updateCounter() {
-            const count = escolasSelecionadas.size;
-            counterEl.textContent = count ? `${count} escola(s) selecionada(s)` : '';
-        }
+    function updateCounter() {
+      counterEl.textContent = escolasSelecionadas.size
+        ? `${escolasSelecionadas.size} escola(s) selecionada(s)`
+        : '';
+    }
 
-        function fetchEscolas() {
-            const query = searchInput.value;
-            const url = `${escolasApiUrl}?page=${currentPage}&search=${encodeURIComponent(query)}`;
-            fetch(url)
-                .then(res => res.json())
-                .then(data => renderEscolas(data));
-        }
+    function fetchEscolas() {
+      const query = searchInput.value;
+      fetch(`${escolasApiUrl}?page=${currentPage}&search=${encodeURIComponent(query)}`)
+        .then(res => res.json())
+        .then(data => renderEscolas(data));
+    }
 
-        function renderEscolas(data) {
-            totalPages = Math.ceil(data.count / 10);
-            document.getElementById('current-page').textContent = `Página ${currentPage} de ${totalPages}`;
+    function renderEscolas(data) {
+      totalPages = Math.ceil(data.count / 10);
+      modalEl.querySelector('#current-page').textContent = `Página ${currentPage} de ${totalPages}`;
 
-            if (!data.results.length) {
-                container.innerHTML = '<p class="text-center text-muted w-100">Nenhuma escola encontrada.</p>';
-                return;
-            }
-
-            container.innerHTML = '';
-            data.results.forEach(escola => {
-                const isSelected = escolasSelecionadas.has(escola.id.toString());
-                const card = document.createElement('div');
-                card.className = 'col-md-6';
-
-                const imgUrl = escola.foto_fachada_url || "{% static 'images/default-school.jpeg' %}";
-
-                card.innerHTML = `
-                    <div class="card escola-card ${isSelected ? 'border-primary' : ''}" data-id="${escola.id}">
-                        <div class="row g-0">
-                            <div class="col-md-4">
-                                <img src="${imageUrl}" class="img-fluid rounded-start" style="height: 150px; object-fit: cover;">
-                            </div>
-                            <div class="col-md-8">
-                                <div class="card-body">
-                                    <h6 class="card-title mb-1">${escola.nome}</h6>
-                                    <p class="mb-1 small text-muted">INEP: ${escola.inep}</p>
-                                    <p class="mb-0 small">${escola.endereco || ''}</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                `;
-
-                card.querySelector('.card').addEventListener('click', function () {
-                    const escolaId = escola.id.toString();
-                    if (escolasSelecionadas.has(escolaId)) {
-                        escolasSelecionadas.delete(escolaId);
-                        this.classList.remove('border-primary');
-                    } else {
-                        escolasSelecionadas.add(escolaId);
-                        this.classList.add('border-primary');
-                    }
-                    updateCounter();
-                });
-
-                container.appendChild(card);
-            });
-
-            updateCounter();
-        }
-
-        document.getElementById('prev-page').addEventListener('click', () => {
-            if (currentPage > 1) {
-                currentPage--;
-                fetchEscolas();
-            }
+      if (!data.results.length) {
+        container.innerHTML = '<p class="text-center text-muted w-100">Nenhuma escola encontrada.</p>';
+        return;
+      }
+      container.innerHTML = '';
+      data.results.forEach(escola => {
+        const isSelected = escolasSelecionadas.has(escola.id.toString());
+        const card = document.createElement('div');
+        card.className = 'col-md-6 mb-3';
+        const imgUrl = escola.foto_fachada_url || "{% static 'images/default-school.jpeg' %}";
+        card.innerHTML = `
+          <div class="card escola-card ${isSelected ? 'border-primary' : ''}" data-id="${escola.id}">
+            <div class="row g-0">
+              <div class="col-4">
+                <img src="${imgUrl}" class="img-fluid rounded-start" style="height: 100px; object-fit: cover;">
+              </div>
+              <div class="col-8">
+                <div class="card-body p-2">
+                  <h6 class="card-title mb-1">${escola.nome}</h6>
+                  <p class="mb-1 small text-muted">INEP: ${escola.inep}</p>
+                  <p class="mb-0 small">${escola.endereco || ''}</p>
+                </div>
+              </div>
+            </div>
+          </div>`;
+        card.querySelector('.card').addEventListener('click', function () {
+          const id = escola.id.toString();
+          if (escolasSelecionadas.has(id)) {
+            escolasSelecionadas.delete(id);
+            this.classList.remove('border-primary');
+          } else {
+            escolasSelecionadas.add(id);
+            this.classList.add('border-primary');
+          }
+          updateCounter();
         });
+        container.appendChild(card);
+      });
+      updateCounter();
+    }
 
-        document.getElementById('next-page').addEventListener('click', () => {
-            if (currentPage < totalPages) {
-                currentPage++;
-                fetchEscolas();
-            }
-        });
-
-        searchInput.addEventListener('input', () => {
-            currentPage = 1;
-            fetchEscolas();
-        });
-
-        document.getElementById('saveSchoolsBtn').addEventListener('click', () => {
-            fetch(assignUrl, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': '{{ csrf_token }}',
-                },
-                body: JSON.stringify({ escolas: Array.from(escolasSelecionadas) })
-            })
-                .then(res => {
-                    if (res.ok) {
-                        location.reload();
-                    } else {
-                        alert('Erro ao salvar as escolas selecionadas.');
-                    }
-                })
-                .catch(err => {
-                    console.error('Erro ao enviar:', err);
-                    alert('Erro na requisição.');
-                });
-        });
-
-        modalEl.addEventListener('shown.bs.modal', fetchEscolas);
-    })();
+    modalEl.addEventListener('shown.bs.modal', fetchEscolas);
+    document.getElementById('prev-page').onclick = () => {
+      if (currentPage > 1) { currentPage--; fetchEscolas(); }
+    };
+    document.getElementById('next-page').onclick = () => {
+      if (currentPage < totalPages) { currentPage++; fetchEscolas(); }
+    };
+    searchInput.oninput = () => { currentPage = 1; fetchEscolas(); };
+    document.getElementById('saveSchoolsBtn').onclick = () => {
+      fetch(assignUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': '{{ csrf_token }}',
+        },
+        body: JSON.stringify({ escolas: Array.from(escolasSelecionadas) })
+      })
+      .then(res => res.ok ? location.reload() : alert('Erro ao salvar.'))
+      .catch(() => alert('Erro na requisição.'));
+    };
+  })();
 </script>
 {% endif %}
 {% endblock %}
