@@ -219,70 +219,6 @@ def dashboard_monitoramentos(request):
 
 
 
-# Views relacionadas a problemas e escolas
-
-class TipoProblemaViewSet(viewsets.ModelViewSet):
-    queryset = TipoProblema.objects.all()
-    serializer_class = TipoProblemaSerializer
-    permission_classes = [permissions.IsAuthenticated]
-
-class RelatoProblemaViewSet(viewsets.ModelViewSet):
-    serializer_class = RelatoProblemaSerializer
-    permission_classes = [permissions.IsAuthenticated]    
-    
-    queryset = RelatoProblema.objects.none()  # Valor inicial vazio
-    
-    def get_queryset(self):
-        # Sobrescreve o queryset padrão
-        return RelatoProblema.objects.filter(gestor=self.request.user.greuser)
-
-    def perform_create(self, serializer):
-        serializer.save(gestor=self.request.user.greuser)
-
-class RelatosProblemasView(View):
-    @method_decorator(login_required)
-    def get(self, request):
-        user = request.user.greuser
-        problemas = RelatoProblema.objects.all()
-
-        if user.is_admin() or user.is_coordenador():
-            problemas = problemas
-        elif user.is_chefe_setor():
-            problemas = problemas.filter(tipo_problema__setor=user.setor)
-        else:
-            problemas = problemas.filter(gestor=user)
-
-        return render(request, 'monitoramentos/relatos.html', {
-            'problemas': problemas.order_by('-data_relato'),
-            'prioridade_choices': dict(RelatoProblema.PRIORIDADE_CHOICES),
-            'section': 'relatos_problemas'
-        })
-from django.views.generic import CreateView
-from django.urls import reverse_lazy
-
-class RelatoProblemaCreateView(LoginRequiredMixin, CreateView):
-    model = RelatoProblema
-    fields = ['tipo_problema', 'descricao_adicional', 'prioridade', 'foto']
-    template_name = 'escolas/relatar_problema.html'
-    success_url = reverse_lazy('escola_dashboard')
-
-    def form_valid(self, form):
-        escola = self.request.user.greuser.escolas.first()
-        form.instance.escola = escola
-        form.instance.gestor = self.request.user.greuser
-        return super().form_valid(form)
-    
-from rest_framework.views import APIView
-from rest_framework.response import Response
-
-class MinhasEscolasView(APIView):
-    permission_classes = [permissions.IsAuthenticated]
-
-    def get(self, request):
-        user = request.user.greuser
-        escolas = user.escolas.all()
-        serializer = EscolaSerializer(escolas, many=True)
-        return Response(serializer.data)
     
 
 @login_required
@@ -455,22 +391,7 @@ class GerenciarQuestionariosView(LoginRequiredMixin, TemplateView):
         ).order_by('-data_criacao')
         return context
     
-from django.contrib.auth.mixins import LoginRequiredMixin
 
-from django.views.generic import TemplateView
-from django.contrib.auth.mixins import LoginRequiredMixin
-
-class EscolaDashboardView(LoginRequiredMixin, TemplateView):
-    template_name = 'escolas/dashboard.html'
-    
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        user = self.request.user.greuser
-        context['escola'] = user.escolas.first()
-        context['relatos'] = RelatoProblema.objects.filter(
-            escola=context['escola']
-        ).order_by('-data_relato')[:5]
-        return context
 
 
 
@@ -565,3 +486,85 @@ class ResponderQuestionarioView(LoginRequiredMixin, View):
             'erro': 'Verifique os campos destacados'
         })
 
+
+# Views relacionadas a problemas e escolas
+
+class TipoProblemaViewSet(viewsets.ModelViewSet):
+    queryset = TipoProblema.objects.all()
+    serializer_class = TipoProblemaSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+class RelatoProblemaViewSet(viewsets.ModelViewSet):
+    serializer_class = RelatoProblemaSerializer
+    permission_classes = [permissions.IsAuthenticated]    
+    
+    queryset = RelatoProblema.objects.none()  # Valor inicial vazio
+    
+    def get_queryset(self):
+        # Sobrescreve o queryset padrão
+        return RelatoProblema.objects.filter(gestor=self.request.user.greuser)
+
+    def perform_create(self, serializer):
+        serializer.save(gestor=self.request.user.greuser)
+
+class RelatosProblemasView(View):
+    @method_decorator(login_required)
+    def get(self, request):
+        user = request.user.greuser
+        problemas = RelatoProblema.objects.all()
+
+        if user.is_admin() or user.is_coordenador():
+            problemas = problemas
+        elif user.is_chefe_setor():
+            problemas = problemas.filter(tipo_problema__setor=user.setor)
+        else:
+            problemas = problemas.filter(gestor=user)
+
+        return render(request, 'monitoramentos/relatos.html', {
+            'problemas': problemas.order_by('-data_relato'),
+            'prioridade_choices': dict(RelatoProblema.PRIORIDADE_CHOICES),
+            'section': 'relatos_problemas'
+        })
+from django.views.generic import CreateView
+from django.urls import reverse_lazy
+
+class RelatoProblemaCreateView(LoginRequiredMixin, CreateView):
+    model = RelatoProblema
+    fields = ['tipo_problema', 'descricao_adicional', 'prioridade', 'foto']
+    template_name = 'escolas/relatar_problema.html'
+    success_url = reverse_lazy('escola_dashboard')
+
+    def form_valid(self, form):
+        escola = self.request.user.greuser.escolas.first()
+        form.instance.escola = escola
+        form.instance.gestor = self.request.user.greuser
+        return super().form_valid(form)
+    
+from rest_framework.views import APIView
+from rest_framework.response import Response
+
+class MinhasEscolasView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        user = request.user.greuser
+        escolas = user.escolas.all()
+        serializer = EscolaSerializer(escolas, many=True)
+        return Response(serializer.data)
+    
+    from django.contrib.auth.mixins import LoginRequiredMixin
+
+from django.views.generic import TemplateView
+from django.contrib.auth.mixins import LoginRequiredMixin
+
+class EscolaDashboardView(LoginRequiredMixin, TemplateView):
+    template_name = 'escolas/escola_dashboard.html'
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        user = self.request.user.greuser
+        context['escola'] = user.escolas.first()
+        context['relatos'] = RelatoProblema.objects.filter(
+            escola=context['escola']
+        ).order_by('-data_relato')[:5]
+        return context
