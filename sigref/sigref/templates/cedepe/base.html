@@ -64,7 +64,7 @@
   <div class="sidebar d-flex flex-column flex-shrink-0 p-3 bg-cedepe text-white">
     <div class="logo-section">
       <div class="bg-white p-3 shadow-sm border border-success rounded-3 logo-container">
-        <a href="{% url 'home' %}" class="d-flex flex-column align-items-center text-dark text-decoration-none">
+        <a href="{% if request.user.greuser.is_escola %}{% url 'escola_dashboard' %}{% else %}{% url 'home' %}{% endif %}" class="d-flex flex-column align-items-center text-dark text-decoration-none">
           <img src="{% static 'images/SIGREF.png' %}" alt="Logo GRE">        
         </a>
       </div>
@@ -76,7 +76,7 @@
 <ul class="nav nav-pills flex-column mb-auto">
   <!-- Link para Início -->
   <li class="nav-item">
-    <a href="{% url 'home' %}" class="nav-link text-white sidebar-link {% if request.resolver_match.url_name == 'home' %}active{% endif %}">
+    <a href="{% if request.user.greuser.is_escola %}{% url 'escola_dashboard' %}{% else %}{% url 'home' %}{% endif %}" class="nav-link text-white sidebar-link {% if request.resolver_match.url_name == 'home' %}active{% endif %}">
       <i class="fas fa-home me-2"></i>
       Início
     </a>
