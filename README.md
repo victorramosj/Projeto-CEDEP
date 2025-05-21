@@ -84,6 +84,27 @@ Todas as configurações principais estão em `sigref/settings.py`:
 * `/api/monitoramentos/` – Monitoramentos.
 * **Futuro**: `/api/lacunas/` e `/api/problemas-usuario/` no app `problemas`.
 
+## 📂 Scripts de População de Dados
+
+Na pasta `sigref/scripts/`, você encontra scripts para popular o banco de dados com dados de exemplo (sem necessidade de senha):
+
+* **popular.py**: limpa tabelas e importa setores, usuários, escolas, questionários e monitoramentos de exemplo.
+* **populate\_db.py**: executa fluxo similar, garantindo a criação de um novo superusuário e populações de Hospedagens.
+
+### Como executar
+
+1. Certifique-se de estar no ambiente virtual e na raiz do projeto (`Projeto-CEDEP/sigref`).
+2. Rode o script desejado com Python:
+
+   ```bash
+   python sigref/scripts/popular.py
+   # ou
+   python sigref/scripts/populate_db.py
+   ```
+3. Cada execução **limpa** os dados existentes (exceto superusuários) e recria tudo do zero.
+
+> ⚠️ Não é necessário configurar senha de banco: os scripts usam a configuração padrão do Django (SQLite) e sempre recriam as tabelas.
+
 ## 🛠️ Contribuição
 
 1. Crie uma *branch* para sua feature: `git checkout -b feature/nome-da-feature`
