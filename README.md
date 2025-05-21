@@ -1,6 +1,6 @@
 # Sigref / Cedepe
 
-Este repositório contém o sistema **Sigref** (Sistema de Gestão do CEDEP), desenvolvido em Django 5.1, que provê funcionalidades de:
+Este repositório contém o sistema **Sigref** (Sistema de Gestão do GRE Floresta), desenvolvido em Django 5.1, que provê funcionalidades de:
 
 * Gerenciamento de escolas, setores e usuários (GREUser).
 * Fluxo de monitoramento e questionários.
