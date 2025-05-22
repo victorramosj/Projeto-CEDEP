@@ -1,3 +1,4 @@
+<<<<<<< Updated upstream:sigref/requirements.txt
 altgraph==0.17.4
 asgiref==3.8.1
 dj-database-url==2.3.0
@@ -31,3 +32,5 @@ swapper==1.4.0
 typing_extensions==4.13.0
 tzdata==2025.1
 whitenoise==6.9.0
+=======
+>>>>>>> Stashed changes:cedepe/requirements.txt
