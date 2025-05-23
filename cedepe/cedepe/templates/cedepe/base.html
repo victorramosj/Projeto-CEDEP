@@ -78,7 +78,14 @@
           <i class="fas fa-home me-2"></i>
           Início
         </a>
+        {% if not user.is_authenticated%}
+        <li>
+            <a href="{% url 'dashboard_eventos' %}" class="nav-link text-white sidebar-link {% if request.resolver_match.url_name == 'dashboard_eventos' %}active{% endif %}">
+              <i class="fas fa-chart-line me-2"></i>Eventos
+            </a>
+          </li>
       </li>
+      {% endif %}
 
       {% if user.is_authenticated and user.is_staff %}
       <!-- Menu de Hospedagens -->

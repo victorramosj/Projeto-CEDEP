@@ -131,7 +131,7 @@
             </div>
         </div>
     </div>
-
+    {% if user.is_authenticated and user.is_staff %}
     <div class="row g-3 mb-4">
         <div class="col-md-4">
             <a href="{% url 'evento_form' %}" class="btn btn-primary w-100 btn-md hover-scale">
@@ -151,7 +151,7 @@
             </a>
         </div>
     </div>
-
+   {% endif %}
     <!-- Calendário e Tabela -->
     <div class="row g-4 mt-4">
         <!-- Calendário FullCalendar -->
