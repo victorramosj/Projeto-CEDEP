@@ -83,7 +83,7 @@
   </li>
   {# --- Monitoramentos --- #}
 {% with current=request.resolver_match.url_name gre=user.greuser %}
-  {% if user.is_authenticated and gre.is_monitor or gre.is_escola %}
+  {% if user.is_authenticated and gre.is_monitor %}
     {# Usuários “monitores” veem apenas o link direto #}
     <li class="nav-item">
       <a href="{% url 'dashboard_monitoramentos' %}"
