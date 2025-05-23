@@ -392,10 +392,6 @@ class GerenciarQuestionariosView(LoginRequiredMixin, TemplateView):
         return context
     
 
-
-
-
-
 class QuestionariosEscolaView(LoginRequiredMixin, View):
     def get(self, request, escola_id):
         escola = get_object_or_404(Escola, id=escola_id)
