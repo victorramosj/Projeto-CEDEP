@@ -282,6 +282,10 @@ from .models import Evento, Agendamento
 from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.units import cm
+from reportlab.lib.colors import HexColor
+from reportlab.lib.styles import ParagraphStyle
+from reportlab.platypus import Paragraph  # Import corrigido aqui
+
 
 
 def eventos_report_pdf(request):
@@ -307,29 +311,92 @@ def eventos_report_pdf(request):
         response = HttpResponse(content_type='application/pdf')
         response['Content-Disposition'] = f'attachment; filename="relatorio_eventos_{datetime.now().date()}.pdf"'
 
+        styles = {
+            'title': ParagraphStyle(
+                name='Title',
+                fontSize=16,
+                leading=18,
+                textColor=HexColor('#2c3e50'),
+                fontName='Helvetica-Bold',
+                spaceAfter=12
+            ),
+            'header': ParagraphStyle(
+                name='Header',
+                fontSize=10,
+                textColor=HexColor('#7f8c8d'),
+                fontName='Helvetica',
+                spaceAfter=15
+            ),
+            'event_title': ParagraphStyle(
+                name='EventTitle',
+                fontSize=12,
+                textColor=HexColor('#2c3e50'),
+                fontName='Helvetica-Bold',
+                spaceAfter=6
+            ),
+            'detail': ParagraphStyle(
+                name='Detail',
+                fontSize=10,
+                textColor=HexColor('#34495e'),
+                fontName='Helvetica',
+                leading=12,
+                spaceAfter=8
+            )
+        }
+
         p = canvas.Canvas(response, pagesize=A4)
         width, height = A4
+        margin = 2 * cm
+        line_height = 0.7 * cm
+        max_width = width - 2 * margin
 
-        p.setFont("Helvetica-Bold", 16)
-        p.drawString(2 * cm, height - 2 * cm, "Relatório de Eventos e Agendamentos")
+        # Cabeçalho
+        title = Paragraph("Relatório de Eventos e Agendamentos", styles['title'])
+        title.wrapOn(p, width, height)
+        title.drawOn(p, margin, height - margin)
 
-        p.setFont("Helvetica", 10)
-        p.drawString(2 * cm, height - 2.7 * cm, f"Período: {data_inicio.strftime('%d/%m/%Y')} a {data_fim.strftime('%d/%m/%Y')}")
+        period_text = f"Período: {data_inicio.strftime('%d/%m/%Y')} a {data_fim.strftime('%d/%m/%Y')}"
+        period = Paragraph(period_text, styles['header'])
+        period.wrapOn(p, width, height)
+        period.drawOn(p, margin, height - margin - 1.2*cm)
 
-        y = height - 4 * cm
+        y = height - margin - 3*cm
         for agendamento in agendamentos:
-            if y < 3 * cm:
+            if y < 3 * cm:  # Verifica espaço na página
                 p.showPage()
-                y = height - 2 * cm
+                y = height - margin
+                # Redesenha cabeçalho nas novas páginas
+                title.drawOn(p, margin, height - margin)
+                period.drawOn(p, margin, height - margin - 1.2*cm)
+                y -= 2*cm
+
             evento = agendamento.evento
-            p.drawString(2 * cm, y, f"Evento: {evento.titulo}")
-            y -= 0.5 * cm
-            p.drawString(2.5 * cm, y, f"Início: {agendamento.inicio.strftime('%d/%m/%Y %H:%M')} | Fim: {agendamento.fim.strftime('%d/%m/%Y %H:%M')}")
-            y -= 0.5 * cm
-            p.drawString(2.5 * cm, y, f"Organizador: {evento.organizador} | Participantes: {agendamento.participantes or 'N/A'}")
-            y -= 0.5 * cm
-            p.drawString(2.5 * cm, y, f"Salas: {', '.join([s.nome for s in agendamento.salas.all()])}")
-            y -= 0.8 * cm
+            
+            # Título do evento
+            event_title = Paragraph(f"<b>Evento:</b> {evento.titulo}", styles['event_title'])
+            event_title.wrapOn(p, max_width, line_height)
+            event_title.drawOn(p, margin, y)
+            y -= line_height
+
+            # Detalhes do agendamento
+            details = [
+                f"<b>Início:</b> {agendamento.inicio.strftime('%d/%m/%Y %H:%M')} | ",
+                f"<b>Fim:</b> {agendamento.fim.strftime('%d/%m/%Y %H:%M')}",
+                f"<b>Organizador:</b> {evento.organizador} | ",
+                f"<b>Participantes:</b> {agendamento.participantes or 'N/A'}",
+                f"<b>Salas:</b> {', '.join([s.nome for s in agendamento.salas.all()])}"
+            ]
+
+            for detail in details:
+                text = Paragraph(detail, styles['detail'])
+                text.wrapOn(p, max_width, line_height)
+                text.drawOn(p, margin + 0.5*cm, y)
+                y -= line_height
+
+            # Linha separadora
+            p.setStrokeColor(HexColor('#bdc3c7'))
+            p.line(margin, y, width - margin, y)
+            y -= line_height * 1.5
 
         p.save()
         return response
