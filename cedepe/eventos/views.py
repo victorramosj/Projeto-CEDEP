@@ -273,3 +273,80 @@ class FullCalendarEventsView(APIView):
             }
         } for agendamento in agendamentos]
         return Response(events)
+    
+from django.db.models.functions import ExtractYear    
+from django.shortcuts import render
+from django.http import HttpResponse
+from datetime import datetime
+from .models import Evento, Agendamento
+from reportlab.pdfgen import canvas
+from reportlab.lib.pagesizes import A4
+from reportlab.lib.units import cm
+
+
+def eventos_report_pdf(request):
+    if request.method == 'POST':
+        tipo_filtro = request.POST.get('tipo_filtro')
+        data_inicio = data_fim = None
+
+        if tipo_filtro == 'mes':
+            mes = int(request.POST.get('mes'))
+            ano = int(request.POST.get('ano'))
+            data_inicio = datetime(ano, mes, 1)
+            if mes == 12:
+                data_fim = datetime(ano + 1, 1, 1)
+            else:
+                data_fim = datetime(ano, mes + 1, 1)
+        elif tipo_filtro == 'periodo':
+            data_inicio = datetime.strptime(request.POST.get('data_inicio'), '%Y-%m-%d')
+            data_fim = datetime.strptime(request.POST.get('data_fim'), '%Y-%m-%d')
+
+        agendamentos = Agendamento.objects.filter(inicio__gte=data_inicio, fim__lte=data_fim).order_by('inicio')
+
+        # Geração do PDF
+        response = HttpResponse(content_type='application/pdf')
+        response['Content-Disposition'] = f'attachment; filename="relatorio_eventos_{datetime.now().date()}.pdf"'
+
+        p = canvas.Canvas(response, pagesize=A4)
+        width, height = A4
+
+        p.setFont("Helvetica-Bold", 16)
+        p.drawString(2 * cm, height - 2 * cm, "Relatório de Eventos e Agendamentos")
+
+        p.setFont("Helvetica", 10)
+        p.drawString(2 * cm, height - 2.7 * cm, f"Período: {data_inicio.strftime('%d/%m/%Y')} a {data_fim.strftime('%d/%m/%Y')}")
+
+        y = height - 4 * cm
+        for agendamento in agendamentos:
+            if y < 3 * cm:
+                p.showPage()
+                y = height - 2 * cm
+            evento = agendamento.evento
+            p.drawString(2 * cm, y, f"Evento: {evento.titulo}")
+            y -= 0.5 * cm
+            p.drawString(2.5 * cm, y, f"Início: {agendamento.inicio.strftime('%d/%m/%Y %H:%M')} | Fim: {agendamento.fim.strftime('%d/%m/%Y %H:%M')}")
+            y -= 0.5 * cm
+            p.drawString(2.5 * cm, y, f"Organizador: {evento.organizador} | Participantes: {agendamento.participantes or 'N/A'}")
+            y -= 0.5 * cm
+            p.drawString(2.5 * cm, y, f"Salas: {', '.join([s.nome for s in agendamento.salas.all()])}")
+            y -= 0.8 * cm
+
+        p.save()
+        return response
+
+    # Gera lista de meses
+    meses = [
+        'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+        'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
+    ]
+
+    # Obtém anos distintos a partir dos agendamentos
+    anos_inicio = Agendamento.objects.annotate(ano=ExtractYear('inicio')).values_list('ano', flat=True)
+    anos_fim = Agendamento.objects.annotate(ano=ExtractYear('fim')).values_list('ano', flat=True)
+    anos = sorted(set(anos_inicio).union(anos_fim))
+
+    return render(request, 'relatorios/filtro_eventos.html', {
+        'meses': meses,
+        'anos': anos,
+    })
+

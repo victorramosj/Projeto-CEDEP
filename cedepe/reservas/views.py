@@ -480,3 +480,138 @@ def mapa_interativo(request):
         'hospedes': hospedes
     }
     return render(request, 'reservas/mapa_interativo.html', context)
+
+from django.db.models.functions import ExtractYear, ExtractMonth
+from django.shortcuts import render
+from django.http import HttpResponse
+from datetime import datetime
+from reportlab.pdfgen import canvas
+from reportlab.lib.pagesizes import A4
+from reportlab.lib.units import cm
+from .models import Reserva, Ocupacao
+
+def gerar_contexto_comum():
+    meses = [
+        'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+        'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
+    ]
+    # Retorna lista de tuplas: [(1, 'Janeiro'), (2, 'Fevereiro'), ...]
+    meses_com_indices = list(enumerate(meses, start=1))
+    return {
+        'meses': meses_com_indices,
+        'now': datetime.now()
+    }
+
+def reservas_report_pdf(request):
+    if request.method == 'POST':
+        tipo_filtro = request.POST.get('tipo_filtro')
+        data_inicio = data_fim = None
+
+        if tipo_filtro == 'mes':
+            mes = int(request.POST.get('mes'))
+            ano = int(request.POST.get('ano'))
+            data_inicio = datetime(ano, mes, 1)
+            data_fim = datetime(ano + (1 if mes == 12 else 0), (mes % 12) + 1, 1)
+        elif tipo_filtro == 'periodo':
+            data_inicio = datetime.strptime(request.POST.get('data_inicio'), '%Y-%m-%d')
+            data_fim = datetime.strptime(request.POST.get('data_fim'), '%Y-%m-%d')
+
+        reservas = Reserva.objects.filter(
+            data_checkin__gte=data_inicio, 
+            data_checkout__lte=data_fim
+        ).order_by('data_checkin')
+
+        response = HttpResponse(content_type='application/pdf')
+        response['Content-Disposition'] = f'attachment; filename="relatorio_reservas_{datetime.now().date()}.pdf"'
+
+        p = canvas.Canvas(response, pagesize=A4)
+        width, height = A4
+
+        p.setFont("Helvetica-Bold", 16)
+        p.drawString(2 * cm, height - 2 * cm, "Relatório de Reservas")
+        
+        criar_cabecalho(p, height, data_inicio, data_fim)
+        criar_corpo_reservas(p, reservas, height)
+        
+        p.save()
+        return response
+
+    context = gerar_contexto_comum()
+    return render(request, 'relatorios/filtro_reservas.html', context)
+
+
+def ocupacoes_report_pdf(request):
+    if request.method == 'POST':
+        tipo_filtro = request.POST.get('tipo_filtro')
+        data_inicio = data_fim = None
+
+        if tipo_filtro == 'mes':
+            mes = int(request.POST.get('mes'))
+            ano = int(request.POST.get('ano'))
+            data_inicio = datetime(ano, mes, 1)
+            data_fim = datetime(ano + (1 if mes == 12 else 0), (mes % 12) + 1, 1)
+        elif tipo_filtro == 'periodo':
+            data_inicio = datetime.strptime(request.POST.get('data_inicio'), '%Y-%m-%d')
+            data_fim = datetime.strptime(request.POST.get('data_fim'), '%Y-%m-%d')
+
+        ocupacoes = Ocupacao.objects.filter(
+            data_checkin__gte=data_inicio, 
+            data_checkout__lte=data_fim
+        ).order_by('data_checkin')
+
+        response = HttpResponse(content_type='application/pdf')
+        response['Content-Disposition'] = f'attachment; filename="relatorio_ocupacoes_{datetime.now().date()}.pdf"'
+
+        p = canvas.Canvas(response, pagesize=A4)
+        width, height = A4
+
+        p.setFont("Helvetica-Bold", 16)
+        p.drawString(2 * cm, height - 2 * cm, "Relatório de Ocupações")
+        
+        criar_cabecalho(p, height, data_inicio, data_fim)
+        criar_corpo_ocupacoes(p, ocupacoes, height)
+        
+        p.save()
+        return response
+
+    context = gerar_contexto_comum()
+    return render(request, 'relatorios/filtro_ocupacoes.html', context)
+
+
+# Métodos auxiliares para geração de PDF
+def criar_cabecalho(p, height, data_inicio, data_fim):
+    p.setFont("Helvetica", 10)
+    p.drawString(2 * cm, height - 2.7 * cm, 
+                f"Período: {data_inicio.strftime('%d/%m/%Y')} a {data_fim.strftime('%d/%m/%Y')}")
+
+def criar_corpo_reservas(p, reservas, height):
+    y = height - 4 * cm
+    for reserva in reservas:
+        if y < 3 * cm:
+            p.showPage()
+            y = height - 2 * cm
+        p.drawString(2 * cm, y, f"Hóspede: {reserva.hospede.nome}")
+        y -= 0.5 * cm
+        p.drawString(2.5 * cm, y, f"Check-in: {reserva.data_checkin.strftime('%d/%m/%Y')}")
+        y -= 0.5 * cm
+        p.drawString(2.5 * cm, y, f"Check-out: {reserva.data_checkout.strftime('%d/%m/%Y')}")
+        y -= 0.5 * cm
+        p.drawString(2.5 * cm, y, f"Status: {reserva.get_status_display()}")
+        y -= 0.8 * cm
+
+def criar_corpo_ocupacoes(p, ocupacoes, height):
+    y = height - 4 * cm
+    for ocupacao in ocupacoes:
+        if y < 3 * cm:
+            p.showPage()
+            y = height - 2 * cm
+        p.drawString(2 * cm, y, f"Hóspede: {ocupacao.hospede.nome}")
+        y -= 0.5 * cm
+        p.drawString(2.5 * cm, y, f"Cama: {ocupacao.cama.identificacao}")
+        y -= 0.5 * cm
+        p.drawString(2.5 * cm, y, f"Check-in: {ocupacao.data_checkin.strftime('%d/%m/%Y')}")
+        y -= 0.5 * cm
+        p.drawString(2.5 * cm, y, f"Check-out: {ocupacao.data_checkout.strftime('%d/%m/%Y')}")
+        y -= 0.5 * cm
+        p.drawString(2.5 * cm, y, f"Status: {ocupacao.get_status_display()}")
+        y -= 0.8 * cm

@@ -11,76 +11,66 @@
         min-height: 600px;
         background: white;
         box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
-        /* Estilo elegante com sombra */
         border-radius: 8px;
-        /* Arredondamento nas bordas */
     }
 
     .fc-daygrid-day-number {
         font-weight: bold;
         text-decoration: none;
-        /* Remove sublinhado das datas */
         color: #333;
-        /* Cor mais escura para melhor legibilidade */
     }
 
-    
     .fc-event-main-frame {
-    display: flex;
-    align-items: center;
-    flex-wrap: wrap;
-    max-width: 100%;
-}
-
-.fc-event-title {
-    font-size: 0.9em;
-    font-weight: bold;
-    color: #333;
-    white-space: normal; /* Permite quebra de linha */
-    word-wrap: break-word;
-}
-
-.fc-event-horario {
-    font-size: 0.8em;
-    display: flex;
-    align-items: center;
-    white-space: nowrap; /* Mantém o horário em uma única linha */
-}
-
-.fc-event-sala {
-    font-size: 0.75em;
-    color: #666;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: normal; /* Permite quebra de linha */
-}
-
-@media (max-width: 768px) {
-    .fc-event-main-frame {
-        flex-direction: column;
-        align-items: flex-start;
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        max-width: 100%;
     }
-
     .fc-event-title {
-        font-size: 0.85em;
+        font-size: 0.9em;
+        font-weight: bold;
+        color: #333;
+        white-space: normal;
+        word-wrap: break-word;
     }
-
     .fc-event-horario {
+        font-size: 0.8em;
+        display: flex;
+        align-items: center;
+        white-space: nowrap;
+    }
+    .fc-event-sala {
         font-size: 0.75em;
+        color: #666;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: normal;
     }
 
-    .fc-event-sala {
-        font-size: 0.7em;
+    @media (max-width: 768px) {
+        .fc-event-main-frame { flex-direction: column; align-items: flex-start; }
+        .fc-event-title    { font-size: 0.85em; }
+        .fc-event-horario  { font-size: 0.75em; }
+        .fc-event-sala     { font-size: 0.7em; }
     }
-}
+
+    @media (max-width: 576px) {
+        #calendar { min-height: 400px; width: 95%; margin: 0 auto; }
+        .card      { margin: 0.5rem 0; }
+        .card-body { padding: 0.75rem; }
+        .btn       { font-size: 0.9rem; padding: 0.4rem 0.6rem; }
+        .fc-event-main-frame .w-100 { width: 90%; }
+        .fc-event-title   { font-size: 0.8em; }
+        .fc-event-horario { font-size: 0.7em; }
+        .fc-event-sala    { font-size: 0.65em; }
+        .table-responsive td,
+        .table-responsive th { padding: 0.4rem 0.6rem; }
+    }
 </style>
 {% endblock extra_style %}
 
-
 {% block content %}
 <div class="container-fluid px-4">
-    
-
     <!-- Cards de Resumo -->
     <div class="row g-4 my-2">
         <div class="col-12 col-md-4">
@@ -98,7 +88,6 @@
                 </div>
             </div>
         </div>
-
         <div class="col-12 col-md-4">
             <div class="card shadow border-start-success h-100 hover-scale">
                 <div class="card-body">
@@ -114,7 +103,6 @@
                 </div>
             </div>
         </div>
-
         <div class="col-12 col-md-4">
             <div class="card shadow border-start-info h-100 hover-scale">
                 <div class="card-body">
@@ -131,31 +119,37 @@
             </div>
         </div>
     </div>
+
     {% if user.is_authenticated and user.is_staff %}
-    <div class="row g-3 mb-4">
-        <div class="col-md-4">
-            <a href="{% url 'evento_form' %}" class="btn btn-primary w-100 btn-md hover-scale">
-                <i class="bi bi-calendar-plus me-2"></i>Novo Evento
-            </a>
-        </div>
-
-        <div class="col-md-4">
-            <a href="{% url 'agendamento_form' %}" class="btn btn-success w-100 btn-md hover-scale">
-                <i class="bi bi-clock-history me-2"></i>Novo Agendamento
-            </a>
-        </div>
-
-        <div class="col-md-4">
-            <a href="{% url 'sala_form' %}" class="btn btn-info w-100 btn-md hover-scale">
-                <i class="bi bi-door-open me-2"></i>Nova Sala
-            </a>
-        </div>
+<div class="row g-3 mb-4">
+    <div class="col-md-4">
+        <a href="{% url 'evento_form' %}" class="btn btn-primary w-100 btn-md hover-scale">
+            <i class="bi bi-calendar-plus me-2"></i>Novo Evento
+        </a>
     </div>
-   {% endif %}
-    <!-- Calendário e Tabela -->
+    <div class="col-md-2">
+        <a href="{% url 'agendamento_form' %}" class="btn btn-success w-100 btn-md hover-scale">
+            <i class="bi bi-clock-history me-2"></i>Novo Agendamento
+        </a>
+    </div>
+    <div class="col-md-2">
+        <a href="{% url 'eventos_report_pdf' %}" class="btn btn-warning w-100 btn-md hover-scale">
+            <i class="bi bi-file-earmark-bar-graph me-2"></i>Gerar Relatório
+        </a>
+    </div>
+    <div class="col-md-4">
+        <a href="{% url 'sala_form' %}" class="btn btn-info w-100 btn-md hover-scale">
+            <i class="bi bi-door-open me-2"></i>Nova Sala
+        </a>
+    </div>
+    
+</div>
+{% endif %}
+
+
     <div class="row g-4 mt-4">
         <!-- Calendário FullCalendar -->
-        <div class="col-12 col-xl-12">
+        <div class="col-12">
             <div class="card shadow h-100">
                 <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
                     <h5 class="card-title mb-0">
@@ -173,7 +167,7 @@
         </div>
 
         <!-- Tabela de Agendamentos -->
-        <div class="col-12 col-xl-12">
+        <div class="col-12">
             <div class="card shadow h-100">
                 <div class="card-header bg-success text-white">
                     <h5 class="card-title mb-0">
@@ -194,15 +188,11 @@
                                 {% for agendamento in upcoming_agendamentos %}
                                 <tr class="clickable-row" data-href="{% url 'editar_agendamento' agendamento.id %}">
                                     <td>{{ agendamento.evento.titulo }}</td>
+                                    <td>{{ agendamento.salas.all|join:", " }}</td>
                                     <td>
-                                        {{ agendamento.salas.all|join:", " }}  <!-- Corrected 'sala' to 'salas' -->
-                                    </td>
-                                    <td>
-                                        <div class="text-nowrap">
-                                            <small class="text-muted">
-                                                {{ agendamento.inicio|date:"d/m H:i" }} - {{ agendamento.fim|date:"H:i"}}
-                                            </small>
-                                        </div>
+                                        <small class="text-muted">
+                                            {{ agendamento.inicio|date:"d/m H:i" }} - {{ agendamento.fim|date:"H:i" }}
+                                        </small>
                                     </td>
                                 </tr>
                                 {% empty %}
@@ -222,89 +212,84 @@
 </div>
 {% endblock content %}
 
-
-
 {% block scripts %}
 {{ block.super }}
 <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js'></script>
 <script type="module">
-    document.addEventListener('DOMContentLoaded', function () {
-        const getCookie = name => {
-            const cookies = document.cookie.split(';');
-            for (let cookie of cookies) {
-                cookie = cookie.trim();
-                if (cookie.startsWith(name + '=')) {
-                    return decodeURIComponent(cookie.substring(name.length + 1));
-                }
-            }
-            return null;
-        };
+document.addEventListener('DOMContentLoaded', () => {
+  const isMobile = window.matchMedia('(max-width: 576px)').matches;
+  const calendarEl = document.getElementById('calendar');
+  calendarEl.style.height = 'auto';
 
-        const calendarEl = document.getElementById('calendar');
-        calendarEl.style.height = '650px';
-        
+  const calendar = new FullCalendar.Calendar(calendarEl, {
+    locale: 'pt-br',
+    timeZone: 'America/Sao_Paulo',
 
-        const calendar = new FullCalendar.Calendar(calendarEl, {
-        locale: 'pt-br',
-        timeZone: 'America/Sao_Paulo',
-        // Exibe o header com o título (nome do mês) e botões de navegação:
-        headerToolbar: {
-          left:'',
-          center: 'title',
-          right: 'timeGridDay,timeGridWeek,dayGridMonth' 
-        },
-        buttonText: { // Personaliza os textos dos botões
+    initialView: isMobile ? 'listWeek' : 'dayGridMonth',
+    headerToolbar: isMobile
+      ? { left:'', center:'title', right:'listDay,listWeek' }
+      : { left:'', center:'title', right:'timeGridDay,timeGridWeek,dayGridMonth' },
+
+    buttonText: {
       day: 'Diário',
       week: 'Semanal',
-      month: 'Mensal'
+      month: 'Mensal',
+      listDay: 'Lista Dia',
+      listWeek: 'Lista Semana'
     },
-        initialView: 'dayGridMonth',
-        fixedWeekCount: false,
-        contentHeight: 'auto',
-        events: async (fetchInfo, successCallback, failureCallback) => {
-          try {
-            const response = await fetch('/eventos/api/fullcalendar/', {
-              method: 'GET',
-              credentials: 'same-origin',
-              headers: {
-                'X-CSRFToken': getCookie('csrftoken'),
-                'Accept': 'application/json'
-              }
-            });
-            if (!response.ok) throw new Error(`Erro ${response.status}`);
-            const events = await response.json();
-            successCallback(events);
-          } catch (error) {
-            console.error('Falha ao carregar eventos:', error);
-            failureCallback(error);
-          }
-        },
-        eventContent: function(arg) {
-    return {
-        html: `
-            <div class="fc-event-main-frame d-flex align-items-center">
-                <div class="w-100">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div class="fc-event-title text-dark fw-bold me-1">${arg.event.title}</div>
-                        <small class="fc-event-horario text-dark "> 
-                            <i class="bi  bi-clock-history text-dark me 1"></i>${arg.event.extendedProps.horario}
-                        </small>
-                    </div>
-                    <div class="fc-event-sala text-dark small">
-                        ${arg.event.extendedProps.salas.join(', ')} <!-- Corrected 'sala' to 'salas' and removed .map -->
-                    </div>
-                </div>
-            </div> 
-        `
-    };
-}
 
+    fixedWeekCount: false,
+    contentHeight: 'auto',
+
+    events: async (fetchInfo, successCallback, failureCallback) => {
+      try {
+        const csrftoken = document.cookie.split('; ')
+          .find(row => row.startsWith('csrftoken='))
+          .split('=')[1];
+        const resp = await fetch('/eventos/api/fullcalendar/', {
+          credentials: 'same-origin',
+          headers: { 'X-CSRFToken': csrftoken, 'Accept': 'application/json' }
         });
+        if (!resp.ok) throw new Error(`Erro ${resp.status}`);
+        const events = await resp.json();
+        successCallback(events);
+      } catch (err) {
+        console.error('Falha ao carregar eventos:', err);
+        failureCallback(err);
+      }
+    },
 
-        document.getElementById('prev-btn').addEventListener('click', () => calendar.prev());
-        document.getElementById('next-btn').addEventListener('click', () => calendar.next());
+    eventContent: arg => ({
+      html: `
+        <div class="fc-event-main-frame d-flex align-items-center">
+          <div class="w-100">
+            <div class="d-flex justify-content-between align-items-center">
+              <div class="fc-event-title">${arg.event.title}</div>
+              <small class="fc-event-horario">
+                <i class="bi bi-clock-history me-1"></i>${arg.event.extendedProps.horario}
+              </small>
+            </div>
+            <div class="fc-event-sala small">
+              ${arg.event.extendedProps.salas.join(', ')}
+            </div>
+          </div>
+        </div>`
+    })
+  });
 
-        calendar.render();
-    });
+  calendar.render();
+
+  // se redimensionar, alterna view
+  window.addEventListener('resize', () => {
+    const nowMobile = window.matchMedia('(max-width: 576px)').matches;
+    const newView = nowMobile ? 'listWeek' : 'dayGridMonth';
+    if (calendar.view.type !== newView) {
+      calendar.changeView(newView);
+    }
+  });
+
+  document.getElementById('prev-btn').addEventListener('click', () => calendar.prev());
+  document.getElementById('next-btn').addEventListener('click', () => calendar.next());
+});
 </script>
 {% endblock scripts %}

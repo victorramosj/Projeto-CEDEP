@@ -39,6 +39,9 @@ urlpatterns = [
     path('ocupacoes/form/', views.ocupacao_form, name='ocupacao_form'),
     path('ocupacoes/form/<int:pk>/', views.ocupacao_form, name='editar_ocupacao'),
 
+    path('relatorio/reservas/', views.reservas_report_pdf, name='reservas_report_pdf'),
+    path('relatorio/ocupacoes/', views.ocupacoes_report_pdf, name='ocupacoes_report_pdf'),
+
     path('dashboard_hospedagens/', views.dashboard, name='dashboard_hospedagens'),
     path('mapa-interativo/', views.mapa_interativo, name='mapa_interativo'),
 ]
