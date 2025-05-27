@@ -48,7 +48,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',    
-    'whitenoise.middleware.WhiteNoiseMiddleware',  # ADICIONE ESTA LINHA
+    'whitenoise.middleware.WhiteNoiseMiddleware',  
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',    
     'django.middleware.csrf.CsrfViewMiddleware',    
@@ -97,13 +97,20 @@ DEBUG = env.bool("DEBUG", default=False)
 # Proteção CSRF (se usar formulários)
 CSRF_TRUSTED_ORIGINS = [
     'https://projeto-cedep-production.up.railway.app',
-    'https://cedepegrefloresta.com.br'
+    'https://cedepegrefloresta.com.br',
+    'http://localhost:8000',
+    'http://127.0.0.1:8000',
+    'http://127.0.0.1',  
 ]
-# Configurações de HTTPS (obrigatório para produção)
-SECURE_SSL_REDIRECT = True
-SESSION_COOKIE_SECURE = True
-CSRF_COOKIE_SECURE = True
-SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')  # Para proxies como Railway
+if DEBUG:
+    SECURE_SSL_REDIRECT = False
+    SESSION_COOKIE_SECURE = False
+    CSRF_COOKIE_SECURE = False
+else:
+    SECURE_SSL_REDIRECT = True
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+
 
 # Arquivos estáticos (se aplicável)
 STATIC_URL = '/static/'
@@ -151,6 +158,7 @@ REST_FRAMEWORK = {
     'DEFAULT_RENDERER_CLASSES': (
         'rest_framework.renderers.JSONRenderer',
         'rest_framework.renderers.BrowsableAPIRenderer',
+        'rest_framework.permissions.AllowAny',
     ),
 }
 
@@ -180,4 +188,3 @@ STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-CSRF_TRUSTED_ORIGINS = ['https://projeto-cedep-production.up.railway.app']

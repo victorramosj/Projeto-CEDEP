@@ -105,6 +105,8 @@ def evento_form(request, pk=None):
     })
     
 
+from django.db.models import Q
+
 # Views para Agendamentos
 def gerenciar_agendamentos(request):
     query = request.GET.get('q', '')
@@ -116,8 +118,8 @@ def gerenciar_agendamentos(request):
     if query:
         agendamentos_list = agendamentos_list.filter(
             Q(evento__titulo__icontains=query) |
-            Q(sala__nome__icontains=query)
-        )
+            Q(salas__nome__icontains=query)  # <-- Correção aqui
+        ).distinct()
     
     paginator = Paginator(agendamentos_list, ITENS_POR_PAGINA)
     
@@ -134,6 +136,7 @@ def gerenciar_agendamentos(request):
         'filter_by': filter_by,
     }
     return render(request, 'eventos/gerenciar_agendamentos.html', context)
+
 
 from django.shortcuts import get_object_or_404, redirect, render
 from django.contrib import messages
@@ -250,26 +253,27 @@ def dashboard(request):
     
     return render(request, 'eventos/dashboard.html', context)
 
-# views.py
+
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from .models import Agendamento
 from rest_framework import permissions
+from django.utils import timezone
+from .models import Agendamento
 
 class FullCalendarEventsView(APIView):
-    permission_classes = [permissions.AllowAny]
+    permission_classes = [permissions.AllowAny]    
 
     def get(self, request, format=None):
         agendamentos = Agendamento.objects.all()
         events = [{
             'id': agendamento.id,
             'title': agendamento.evento.titulo,
-            'start': timezone.localtime(agendamento.inicio).isoformat(),
-            'end': timezone.localtime(agendamento.fim).isoformat(),
+            'start': agendamento.inicio.isoformat(),
+            'end': agendamento.fim.isoformat(),
             'extendedProps': {
                 'salas': [sala.nome for sala in agendamento.salas.all()],
                 'descricao': agendamento.evento.descricao,
-                'horario': f"{timezone.localtime(agendamento.inicio).strftime('%H:%M')} - {timezone.localtime(agendamento.fim).strftime('%H:%M')}"
+                'horario': f"{agendamento.inicio.strftime('%H:%M')} - {agendamento.fim.strftime('%H:%M')}"
             }
         } for agendamento in agendamentos]
         return Response(events)
