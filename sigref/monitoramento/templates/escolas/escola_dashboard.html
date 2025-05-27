@@ -44,36 +44,33 @@
 
 
         <!-- Relatar Problema e Histórico -->
-        <div class="col-lg-8">
-            <div class="card shadow-sm mb-4">
-                <div class="card-header bg-warning text-dark">
-                    <h5 class="mb-0"><i class="fas fa-exclamation-triangle me-2"></i>Relatar Problema</h5>
-                </div>
-                <div class="card-body">
-                    <form method="post" enctype="multipart/form-data">
-                        {% csrf_token %}
-                        <div class="mb-3">
-                            <label class="form-label">Tipo de Problema</label>
-                            {{ form.tipo_problema }}
+        <div class="container">
+            <div class="col">
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <div class="card text-center shadow-sm p-3 rounded h-100">
+                            <p class="fw-bold text-uppercase text-secondary mb-1">Quantidade de Lacunas Existentes</p>
+                            <h1 class="fw-bold mb-3">01</h1>
+                            <button class="btn btn-primary w-100">Relatar Lacuna</button>
                         </div>
-                        <div class="mb-3">
-                            <label class="form-label">Descrição Detalhada</label>
-                            {{ form.descricao_adicional }}
+                    </div>
+
+                    <div class="col-md-4 mb-3">
+                        <div class="card text-center shadow-sm p-3 rounded h-100">
+                            <p class="fw-bold text-uppercase text-secondary mb-1">Quantidade de Problemas Existentes</p>
+                            <h1 class="fw-bold mb-3">09</h1>
+                            <button class="btn btn-primary w-100">Relatar Problema</button>
                         </div>
-                        <div class="row mb-3">
-                            <div class="col-md-6">
-                                <label class="form-label">Prioridade</label>
-                                {{ form.prioridade }}
+                    </div>
+
+                    <div class="col-md-4 mb-3">
+                        <div class="card shadow-sm p-3 rounded h-100">
+                            <div class="d-flex align-items-center mb-2">
+                                <strong class="text-uppercase text-muted small">Avisos Importantes</strong>
                             </div>
-                            <div class="col-md-6">
-                                <label class="form-label">Anexar Foto</label>
-                                {{ form.foto }}
-                            </div>
+                            <p class="text-muted mb-0">Nenhum aviso no momento.</p>
                         </div>
-                        <button type="submit" class="btn btn-primary w-100">
-                            <i class="fas fa-paper-plane me-2"></i>Enviar Relato
-                        </button>
-                    </form>
+                    </div>
                 </div>
             </div>
 
@@ -104,16 +101,8 @@
                         <div class="alert alert-info mb-0">Nenhum relato registrado recentemente.</div>
                     {% endif %}
                 </div>
-         </div>
-         
-
-         
-
-
-
-
+            </div>
             
-
         </div>
     </div>
 </div>
