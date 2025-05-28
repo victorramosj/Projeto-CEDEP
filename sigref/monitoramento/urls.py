@@ -67,6 +67,7 @@ urlpatterns = [
     path('', include(router.urls)),
     path('', include(questionario_router.urls)),
     path('', include(monitoramento_router.urls)),
+    path('', include('problemas.urls')),
 ]
 
 # -----------------------------------------

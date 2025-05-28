@@ -9,6 +9,7 @@ urlpatterns = [
     path('reservas/', include('reservas.urls')),  # Inclui as URLs do app reservas
     path('eventos/', include('eventos.urls')),  # Inclui as URLs do app reservas
     path('monitoramento/', include('monitoramento.urls')), 
+    path('problemas/', include('problemas.urls')),
     path('', views.dashboard, name='home'),  # View principal
     # Rotas de autenticação
     path('login/', views.user_login, name='login'),
@@ -20,7 +21,12 @@ urlpatterns = [
     path('password_reset_done/', auth_views.PasswordResetDoneView.as_view(template_name='sigref/password_reset_done.html'), name='password_reset_done'),
     path('password_reset_confirm/<uidb64>/<token>/', auth_views.PasswordResetConfirmView.as_view(template_name='sigref/password_reset_confirm.html'), name='password_reset_confirm'),
     path('password_reset_complete/', auth_views.PasswordResetCompleteView.as_view(template_name='sigref/password_reset_complete.html'), name='password_reset_complete'),
+    path('api/', include('problemas.urls')),
+    
 ]
 # Servir arquivos de mídia em DEBUG
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+
+
+
