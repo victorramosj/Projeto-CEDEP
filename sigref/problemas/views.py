@@ -1,6 +1,12 @@
 from rest_framework import viewsets, permissions
 from .models import Lacuna, ProblemaUsuario
 from .serializers import LacunaSerializer, ProblemaUsuarioSerializer
+from .forms import ProblemaUsuarioForm
+from django.shortcuts import render, redirect
+
+
+def escola_dashboard(request):
+    return render(request, "escola_dashboard.html" )
 
 class LacunaViewSet(viewsets.ModelViewSet):
     serializer_class = LacunaSerializer
@@ -30,7 +36,17 @@ class ProblemaUsuarioViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         serializer.save(usuario=self.request.user.greuser)
 
-from django.shortcuts import render
-
 def problema_dashboard_view(request):
-    return render(request, 'escolas/escola_dashboard.html')
+    return render(request, 'escolas/escola_dashboard.html', {'form': form}) # type: ignore
+
+def relatar_problema_view(request):
+    if request.method == 'POST':
+        form = ProblemaUsuarioForm(request.POST, request.FILES)
+        if form.is_valid():
+            problema = form.save(commit=False)
+            problema.usuario = request.user.greuser  # associa ao usuário logado
+            problema.save()
+            return redirect('dashboard')  # redireciona após salvar
+    else:
+        form = ProblemaUsuarioForm()
+    return render(request, 'escolas/relatar_problema.html', {'form': form})

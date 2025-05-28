@@ -71,68 +71,111 @@
 </div>
 
 <!-- Modal RELATAR LACUNA -->
+<!-- Modal Relatar Lacuna -->
 <div class="modal fade" id="modalRelatarLacuna" tabindex="-1" aria-labelledby="modalLacunaLabel" aria-hidden="true">
-<div class="modal-dialog">
-    <div class="modal-content">
-    <form method="post" enctype="multipart/form-data">
-        {% csrf_token %}
-        <div class="modal-header">
-        <h5 class="modal-title" id="modalLacunaLabel">Relatar Lacuna</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+
+            <!-- Cabeçalho do Modal -->
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="modalLacunaLabel">
+                    <i class="fas fa-plus-circle me-2"></i>Nova Lacuna
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
+            </div>
+
+            <!-- Corpo do Modal -->
+            <div class="modal-body">
+
+                <!--DISCIPLINA-->
+                <div class="mb-3">
+                    <label class="form-label">
+                    <i class="fas fa-book-open me-2"></i>Disciplina
+                    </label>
+                    <input type="text" name="disciplina" class="form-control" placeholder="Informe a disciplina" required>
+                </div>
+                <!--DISCIPLINA-->
+                <div class="mb-3">
+                    <label class="form-label">
+                        <i class="fas fa-clock me-2"></i>Carga Horária
+                    </label>
+                    <select name="carga_horaria" class="form-select" required>
+                        <option value="" selected disabled>Selecione a carga horária</option>
+                        <option value="150h">150 horas</option>
+                        <option value="200h">200 horas</option>
+                    </select>
+                </div>
+            </div>
+
+                <!-- Rodapé do Modal -->
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Relatar Lacuna</button>
+                </div>
+
+            </form>
         </div>
-        <div class="modal-body">
-        <div class="mb-3">
-            <label class="form-label">Descrição da Lacuna</label>
-            <textarea name="descricao_lacuna" class="form-control" required></textarea>
-        </div>
-        <div class="mb-3">
-            <label class="form-label">Foto (opcional)</label>
-            <input type="file" name="foto_lacuna" class="form-control">
-        </div>
-        </div>
-        <div class="modal-footer">
-        <button type="submit" class="btn btn-primary">Enviar</button>
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-        </div>
-    </form>
     </div>
 </div>
-</div>
+
 
 <!-- Modal RELATAR PROBLEMA -->
 <div class="modal fade" id="modalRelatarProblema" tabindex="-1" aria-labelledby="modalProblemaLabel" aria-hidden="true">
-<div class="modal-dialog">
-    <div class="modal-content">
-    <form method="post" enctype="multipart/form-data">
-        {% csrf_token %}
-        <div class="modal-header">
-        <h5 class="modal-title" id="modalProblemaLabel">Relatar Problema</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="post" enctype="multipart/form-data" action="{% url 'relatar_problema' %}">
+                {% csrf_token %}
+                <!-- Cabeçalho -->
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title" id="modalProblemaLabel">
+                        <i class="bi bi-plus-circle me-2"></i> Novo Problema
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                </div>
+
+                <!-- Corpo -->
+                <div class="modal-body">
+                    <p class="text-end text-danger small">Obs. Campos com <span class="fw-bold">*</span> são obrigatórios</p>
+
+                    <!-- Problema -->
+                    <div class="mb-3">                        
+                        <i class="bi bi-exclamation-circle me-2"></i>Descrição Detalhada <span class="text-danger">*</span>
+                        </label>
+                        {{ form.descricao }}
+                    </div>
+
+                    <!-- Setor e Anexo lado a lado -->
+                    <div class="row">
+
+                        <!-- Setor -->
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">
+                                <i class="bi bi-diagram-3 me-2"></i>Setor <span class="text-danger">*</span>
+                            </label>
+                            {{ form.setor }}
+                        </div>
+                        
+                        <!-- Anexo -->
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">
+                                <i class="bi bi-paperclip me-2"></i>Anexo
+                            </label>
+                            <input type="file" name="anexo" class="form-control" placeholder="Anexe aqui...">
+                        </div>
+
+                    </div>
+                </div>
+                
+
+                <!-- Rodapé do Modal -->
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Relatar Problema</button>
+                </div>
+            </form>
         </div>
-        <div class="modal-body">
-        <div class="mb-3">
-            <label class="form-label">Tipo de Problema</label>
-            {{ form.tipo_problema }}
-        </div>
-        <div class="mb-3">
-            <label class="form-label">Descrição Detalhada</label>
-            {{ form.descricao_adicional }}
-        </div>
-        <div class="mb-3">
-            <label class="form-label">Prioridade</label>
-            {{ form.prioridade }}
-        </div>
-        <div class="mb-3">
-            <label class="form-label">Foto (opcional)</label>
-            {{ form.foto }}
-        </div>
-        </div>
-        <div class="modal-footer">
-        <button type="submit" class="btn btn-primary">Enviar</button>
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-        </div>
-    </form>
     </div>
-</div>
 </div>
 {% endblock %}

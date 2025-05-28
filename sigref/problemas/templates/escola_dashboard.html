@@ -3,72 +3,11 @@
 
 {% block title %}Dashboard da Escola{% endblock %}
 
-{% block content %}
-<style>
+{% block extra_style %}
+<link rel="stylesheet" href="{% static 'css/escola.css' %}">
+{% endblock %}
 
-body {
-background-color: #F0F4F8;
-font-family: sans-serif;
-}
-.card-indicador {
-    background: white;
-    text-align: center;
-    padding: 20px;
-    border-radius: 8px;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-    margin-bottom: 20px;
-}
-.card-indicador p {
-    color: #37474F;
-}
-.card-indicador h1 {
-    font-size: 3rem;
-    font-weight: bold;
-    color: #263238;
-}
-.btn-relatar {
-    width: 100%;
-    font-weight: bold;
-    background-color: #26326D;
-    border-color: #26326D;
-    color: white;
-}
-.avisos-importantes {
-    background: white;
-    border-top: 5px solid #E53935;
-    border-radius: 8px;
-    padding: 20px;
-    height: 100%;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-}
-.avisos-importantes h5 {
-    color: #E53935;
-    font-weight: bold;
-}
-.titulo-secao {
-    color: #37474F;
-    font-weight: bold;
-}
-.card-status {
-    background: white;
-    padding: 15px;
-    text-align: center;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-}
-.card-status .numero {
-    font-size: 2.5rem;
-    font-weight: bold;
-    color: #263238;
-}
-.card-status .descricao {
-    font-size: 0.9rem;
-}
-.resolvidos { border-left: 5px solid #43A047; }
-.pendentes { border-left: 5px solid #E53935; }
-.em-andamento { border-left: 5px solid #FFB300; }
-.este-mes { border-left: 5px solid #039BE5; }
-</style>
+{% block content %}
 
 <div class="container mt-4">
 <div class="header-escola">
@@ -84,7 +23,7 @@ font-family: sans-serif;
     {% if escola.foto_fachada %}
         <img src="{{ escola.foto_fachada.url }}" alt="Foto da Escola" />
     {% else %}
-        <img src="{% static 'img/placeholder.jpg' %}" alt="Foto não disponível" />
+        <img src="{% static 'images\default-school.jpeg' %}" alt="Foto não disponível" />
     {% endif %}
     </div>
 </div>
@@ -132,68 +71,111 @@ font-family: sans-serif;
 </div>
 
 <!-- Modal RELATAR LACUNA -->
+<!-- Modal Relatar Lacuna -->
 <div class="modal fade" id="modalRelatarLacuna" tabindex="-1" aria-labelledby="modalLacunaLabel" aria-hidden="true">
-<div class="modal-dialog">
-    <div class="modal-content">
-    <form method="post" enctype="multipart/form-data">
-        {% csrf_token %}
-        <div class="modal-header">
-        <h5 class="modal-title" id="modalLacunaLabel">Relatar Lacuna</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+
+            <!-- Cabeçalho do Modal -->
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="modalLacunaLabel">
+                    <i class="fas fa-plus-circle me-2"></i>Nova Lacuna
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
+            </div>
+
+            <!-- Corpo do Modal -->
+            <div class="modal-body">
+
+                <!--DISCIPLINA-->
+                <div class="mb-3">
+                    <label class="form-label">
+                    <i class="fas fa-book-open me-2"></i>Disciplina
+                    </label>
+                    <input type="text" name="disciplina" class="form-control" placeholder="Informe a disciplina" required>
+                </div>
+                <!--DISCIPLINA-->
+                <div class="mb-3">
+                    <label class="form-label">
+                        <i class="fas fa-clock me-2"></i>Carga Horária
+                    </label>
+                    <select name="carga_horaria" class="form-select" required>
+                        <option value="" selected disabled>Selecione a carga horária</option>
+                        <option value="150h">150 horas</option>
+                        <option value="200h">200 horas</option>
+                    </select>
+                </div>
+            </div>
+
+                <!-- Rodapé do Modal -->
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Relatar Lacuna</button>
+                </div>
+
+            </form>
         </div>
-        <div class="modal-body">
-        <div class="mb-3">
-            <label class="form-label">Descrição da Lacuna</label>
-            <textarea name="descricao_lacuna" class="form-control" required></textarea>
-        </div>
-        <div class="mb-3">
-            <label class="form-label">Foto (opcional)</label>
-            <input type="file" name="foto_lacuna" class="form-control">
-        </div>
-        </div>
-        <div class="modal-footer">
-        <button type="submit" class="btn btn-primary">Enviar</button>
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-        </div>
-    </form>
     </div>
 </div>
-</div>
+
 
 <!-- Modal RELATAR PROBLEMA -->
 <div class="modal fade" id="modalRelatarProblema" tabindex="-1" aria-labelledby="modalProblemaLabel" aria-hidden="true">
-<div class="modal-dialog">
-    <div class="modal-content">
-    <form method="post" enctype="multipart/form-data">
-        {% csrf_token %}
-        <div class="modal-header">
-        <h5 class="modal-title" id="modalProblemaLabel">Relatar Problema</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="post" enctype="multipart/form-data" action="{% url 'relatar_problema' %}">
+                {% csrf_token %}
+                <!-- Cabeçalho -->
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title" id="modalProblemaLabel">
+                        <i class="bi bi-plus-circle me-2"></i> Novo Problema
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                </div>
+
+                <!-- Corpo -->
+                <div class="modal-body">
+                    <p class="text-end text-danger small">Obs. Campos com <span class="fw-bold">*</span> são obrigatórios</p>
+
+                    <!-- Problema -->
+                    <div class="mb-3">                        
+                        <i class="bi bi-exclamation-circle me-2"></i>Descrição Detalhada <span class="text-danger">*</span>
+                        </label>
+                        {{ form.descricao }}
+                    </div>
+
+                    <!-- Setor e Anexo lado a lado -->
+                    <div class="row">
+
+                        <!-- Setor -->
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">
+                                <i class="bi bi-diagram-3 me-2"></i>Setor <span class="text-danger">*</span>
+                            </label>
+                            {{ form.setor }}
+                        </div>
+                        
+                        <!-- Anexo -->
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">
+                                <i class="bi bi-paperclip me-2"></i>Anexo
+                            </label>
+                            <input type="file" name="anexo" class="form-control" placeholder="Anexe aqui...">
+                        </div>
+
+                    </div>
+                </div>
+                
+
+                <!-- Rodapé do Modal -->
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Relatar Problema</button>
+                </div>
+            </form>
         </div>
-        <div class="modal-body">
-        <div class="mb-3">
-            <label class="form-label">Tipo de Problema</label>
-            {{ form.tipo_problema }}
-        </div>
-        <div class="mb-3">
-            <label class="form-label">Descrição Detalhada</label>
-            {{ form.descricao_adicional }}
-        </div>
-        <div class="mb-3">
-            <label class="form-label">Prioridade</label>
-            {{ form.prioridade }}
-        </div>
-        <div class="mb-3">
-            <label class="form-label">Foto (opcional)</label>
-            {{ form.foto }}
-        </div>
-        </div>
-        <div class="modal-footer">
-        <button type="submit" class="btn btn-primary">Enviar</button>
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-        </div>
-    </form>
     </div>
-</div>
 </div>
 {% endblock %}
