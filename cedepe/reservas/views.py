@@ -528,7 +528,7 @@ def reservas_report_pdf(request):
         width, height = A4
 
         p.setFont("Helvetica-Bold", 16)
-        p.drawString(2 * cm, height - 2 * cm, "Relatório de Reservas")
+        p.drawString(2 * cm, height - 2 * cm, "Relatório de Reservas - CEDEPE GRE Floresta")
         
         criar_cabecalho(p, height, data_inicio, data_fim)
         criar_corpo_reservas(p, reservas, height)
@@ -566,7 +566,7 @@ def ocupacoes_report_pdf(request):
         width, height = A4
 
         p.setFont("Helvetica-Bold", 16)
-        p.drawString(2 * cm, height - 2 * cm, "Relatório de Ocupações")
+        p.drawString(2 * cm, height - 2 * cm, "Relatório de Ocupações - CEDEPE GRE Floresta")
         
         criar_cabecalho(p, height, data_inicio, data_fim)
         criar_corpo_ocupacoes(p, ocupacoes, height)
@@ -578,34 +578,66 @@ def ocupacoes_report_pdf(request):
     return render(request, 'relatorios/filtro_ocupacoes.html', context)
 
 
-# Métodos auxiliares para geração de PDF
 def criar_cabecalho(p, height, data_inicio, data_fim):
-    p.setFont("Helvetica", 10)
-    p.drawString(2 * cm, height - 2.7 * cm, 
-                f"Período: {data_inicio.strftime('%d/%m/%Y')} a {data_fim.strftime('%d/%m/%Y')}")
+    p.setFont("Helvetica-Bold", 12)
+    p.drawString(2 * cm, height - 2.7 * cm, f"Período: {data_inicio.strftime('%d/%m/%Y')} a {data_fim.strftime('%d/%m/%Y')}")
+    p.setStrokeColorRGB(0.2, 0.2, 0.2)
+    p.setLineWidth(0.5)
+    p.line(2 * cm, height - 2.9 * cm, 19 * cm, height - 2.9 * cm)
 
 def criar_corpo_reservas(p, reservas, height):
     y = height - 4 * cm
-    for reserva in reservas:
-        if y < 3 * cm:
+    page_num = 1
+    for i, reserva in enumerate(reservas, start=1):
+        if y < 4 * cm:
+            p.setFont("Helvetica", 9)
+            p.drawString(2 * cm, 2 * cm, f"Página {page_num}")
             p.showPage()
-            y = height - 2 * cm
-        p.drawString(2 * cm, y, f"Hóspede: {reserva.hospede.nome}")
+            page_num += 1
+            criar_cabecalho(p, height, reserva.data_checkin, reserva.data_checkout)
+            y = height - 4 * cm
+
+        p.setFont("Helvetica-Bold", 10)
+        p.drawString(2 * cm, y, f"Hóspede: {reserva.hospede.nome} ")
+        y -= 0.5 * cm
+        p.setFont("Helvetica-Bold", 8)
+        p.drawString(2 * cm, y, f"Innstituicao: {reserva.hospede.instituicao}")
+        p.setFont("Helvetica", 10)
         y -= 0.5 * cm
         p.drawString(2.5 * cm, y, f"Check-in: {reserva.data_checkin.strftime('%d/%m/%Y')}")
         y -= 0.5 * cm
         p.drawString(2.5 * cm, y, f"Check-out: {reserva.data_checkout.strftime('%d/%m/%Y')}")
         y -= 0.5 * cm
         p.drawString(2.5 * cm, y, f"Status: {reserva.get_status_display()}")
-        y -= 0.8 * cm
+
+        y -= 0.4 * cm
+        p.setStrokeColorRGB(0.8, 0.8, 0.8)
+        p.setLineWidth(0.2)
+        p.line(2 * cm, y, 19 * cm, y)
+        y -= 0.4 * cm
+
+    p.setFont("Helvetica", 9)
+    p.drawString(2 * cm, 2 * cm, f"Página {page_num}")
+
 
 def criar_corpo_ocupacoes(p, ocupacoes, height):
     y = height - 4 * cm
-    for ocupacao in ocupacoes:
-        if y < 3 * cm:
+    page_num = 1
+    for i, ocupacao in enumerate(ocupacoes, start=1):
+        if y < 4 * cm:
+            p.setFont("Helvetica", 9)
+            p.drawString(2 * cm, 2 * cm, f"Página {page_num}")
             p.showPage()
-            y = height - 2 * cm
+            page_num += 1
+            criar_cabecalho(p, height, ocupacao.data_checkin, ocupacao.data_checkout)
+            y = height - 4 * cm
+
+        p.setFont("Helvetica-Bold", 10)
         p.drawString(2 * cm, y, f"Hóspede: {ocupacao.hospede.nome}")
+        y -= 0.5 * cm
+        p.setFont("Helvetica-Bold", 8)
+        p.drawString(2 * cm, y, f"Instituição:  {ocupacao.hospede.instituicao}")
+        p.setFont("Helvetica", 10)
         y -= 0.5 * cm
         p.drawString(2.5 * cm, y, f"Cama: {ocupacao.cama.identificacao}")
         y -= 0.5 * cm
@@ -614,4 +646,12 @@ def criar_corpo_ocupacoes(p, ocupacoes, height):
         p.drawString(2.5 * cm, y, f"Check-out: {ocupacao.data_checkout.strftime('%d/%m/%Y')}")
         y -= 0.5 * cm
         p.drawString(2.5 * cm, y, f"Status: {ocupacao.get_status_display()}")
-        y -= 0.8 * cm
+
+        y -= 0.4 * cm
+        p.setStrokeColorRGB(0.8, 0.8, 0.8)
+        p.setLineWidth(0.2)
+        p.line(2 * cm, y, 19 * cm, y)
+        y -= 0.4 * cm
+
+    p.setFont("Helvetica", 9)
+    p.drawString(2 * cm, 2 * cm, f"Página {page_num}")

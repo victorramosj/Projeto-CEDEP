@@ -366,41 +366,52 @@ def eventos_report_pdf(request):
 
         y = height - margin - 3*cm
         for agendamento in agendamentos:
-            if y < 3 * cm:  # Verifica espaço na página
+            if y < 6 * cm:  # Mais espaço reservado para "card"
                 p.showPage()
                 y = height - margin
-                # Redesenha cabeçalho nas novas páginas
                 title.drawOn(p, margin, height - margin)
                 period.drawOn(p, margin, height - margin - 1.2*cm)
                 y -= 2*cm
 
             evento = agendamento.evento
-            
-            # Título do evento
+
+            # Define cor de fundo com base na hora
+            hora_inicio = agendamento.inicio.hour
+            if hora_inicio < 12:
+                bg_color = HexColor('#dff9fb')  # manhã
+            elif hora_inicio < 18:
+                bg_color = HexColor('#f6e58d')  # tarde
+            else:
+                bg_color = HexColor('#ffbe76')  # noite
+
+            card_height = 5 * cm
+            card_width = max_width
+
+            # Desenha o retângulo (card)
+            p.setFillColor(bg_color)
+            p.roundRect(margin, y - card_height, card_width, card_height, 10, fill=True, stroke=False)
+
+            # Adiciona título do evento
             event_title = Paragraph(f"<b>Evento:</b> {evento.titulo}", styles['event_title'])
-            event_title.wrapOn(p, max_width, line_height)
-            event_title.drawOn(p, margin, y)
-            y -= line_height
+            event_title.wrapOn(p, card_width - 1*cm, line_height)
+            event_title.drawOn(p, margin + 0.5*cm, y - 0.8*cm)
 
             # Detalhes do agendamento
             details = [
-                f"<b>Início:</b> {agendamento.inicio.strftime('%d/%m/%Y %H:%M')} | ",
-                f"<b>Fim:</b> {agendamento.fim.strftime('%d/%m/%Y %H:%M')}",
-                f"<b>Organizador:</b> {evento.organizador} | ",
-                f"<b>Participantes:</b> {agendamento.participantes or 'N/A'}",
-                f"<b>Salas:</b> {', '.join([s.nome for s in agendamento.salas.all()])}"
-            ]
+            f"<b>Início:</b> {agendamento.inicio.strftime('%d/%m/%Y %H:%M')} | Fim:</b> {agendamento.fim.strftime('%d/%m/%Y %H:%M')}",
+            f"<b>Organizador:</b> {evento.organizador} | ",
+            f"<b>Participantes:</b> {agendamento.participantes or 'Não informado'}",
+            f"<b>Salas:</b> {', '.join([s.nome for s in agendamento.salas.all()])}"
+        ]
 
+            text_y = y - 1.6*cm
             for detail in details:
                 text = Paragraph(detail, styles['detail'])
-                text.wrapOn(p, max_width, line_height)
-                text.drawOn(p, margin + 0.5*cm, y)
-                y -= line_height
+                text.wrapOn(p, card_width - 1.5*cm, line_height)
+                text.drawOn(p, margin + 0.7*cm, text_y)
+                text_y -= line_height
 
-            # Linha separadora
-            p.setStrokeColor(HexColor('#bdc3c7'))
-            p.line(margin, y, width - margin, y)
-            y -= line_height * 1.5
+            y -= card_height + 0.5*cm
 
         p.save()
         return response

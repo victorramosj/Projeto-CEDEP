@@ -7,12 +7,22 @@
 {{ block.super }}
 <link href='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/main.min.css' rel='stylesheet' />
 <style>
+    .table-responsive {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        width: 100%;
+    }
+
     #calendar {
-        min-height: 600px;
+        min-height: 885px;
+        width: 100%;
+        min-width: 550px;
+        /* ou outro valor fixo se necessário */
         background: white;
         box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
         border-radius: 8px;
     }
+
 
     .fc-daygrid-day-number {
         font-weight: bold;
@@ -23,16 +33,18 @@
     .fc-event-main-frame {
         display: flex;
         align-items: center;
-        flex-wrap: wrap;
+        gap: 8px;
         max-width: 100%;
+        padding: 4px 8px;
     }
 
     .fc-event-title {
         font-size: 0.9em;
         font-weight: bold;
-        color: #333;
-        white-space: normal;
-        word-wrap: break-word;
+        color: #333;        
+         white-space: normal !important; /* quebra de linha permitida */
+    overflow-wrap: break-word;      /* força quebra em palavras longas */
+    word-break: break-word;
     }
 
     .fc-event-horario {
@@ -45,15 +57,32 @@
     .fc-event-sala {
         font-size: 0.75em;
         color: #666;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: normal;
+        white-space: normal !important; /* quebra de linha permitida */
+    overflow-wrap: break-word;      /* força quebra em palavras longas */
+    word-break: break-word;
+    }
+
+    /* Ajustes para scroll responsivo */
+    .table-responsive {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .fc-theme-standard td,
+    .fc-theme-standard th {
+        border: 1px solid #ddd;
+    }
+
+    .fc-daygrid-event {
+        border: 1px solid rgba(0, 0, 0, 0.1);
+        border-radius: 4px;
+        margin: 2px 0;
     }
 
     @media (max-width: 768px) {
         .fc-event-main-frame {
-            flex-direction: column;
-            align-items: flex-start;
+            flex-wrap: nowrap;
+            padding: 3px 6px;
         }
 
         .fc-event-title {
@@ -71,43 +100,35 @@
 
     @media (max-width: 576px) {
         #calendar {
-            min-height: 400px;
-            width: 95%;
-            margin: 0 auto;
+            min-height: 550px;
+            width: 100%;
+            margin: 0;
+            border-radius: 0;
         }
 
         .card {
             margin: 0.5rem 0;
+            box-shadow: none;
         }
 
         .card-body {
-            padding: 0.75rem;
+            padding: 0.5rem !important;
         }
 
-        .btn {
-            font-size: 0.9rem;
-            padding: 0.4rem 0.6rem;
-        }
-
-        .fc-event-main-frame .w-100 {
-            width: 90%;
+        .fc-event-main-frame {
+            gap: 6px;
+            min-width: max-content;
         }
 
         .fc-event-title {
             font-size: 0.8em;
+            max-width: 200px;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
-        .fc-event-horario {
-            font-size: 0.7em;
-        }
-
-        .fc-event-sala {
-            font-size: 0.65em;
-        }
-
-        .table-responsive td,
-        .table-responsive th {
-            padding: 0.4rem 0.6rem;
+        .fc-daygrid-event {
+            border-width: 0.5px;
         }
     }
 </style>
@@ -204,8 +225,11 @@
                         <button class="btn btn-sm btn-light" id="next-btn"><i class="bi bi-chevron-right"></i></button>
                     </div>
                 </div>
+
                 <div class="card-body">
-                    <div id="calendar"></div>
+                    <div class="table-responsive">
+                        <div id="calendar"></div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -263,18 +287,21 @@
 
 <script type="module">
     document.addEventListener('DOMContentLoaded', () => {
-        const isMobile = window.matchMedia('(max-width: 576px)').matches;
         const calendarEl = document.getElementById('calendar');
-        calendarEl.style.height = 'auto';
+        let currentView = null;
 
+        // Configuração do calendário
         const calendar = new FullCalendar.Calendar(calendarEl, {
             locale: 'pt-br',
             timeZone: 'America/Sao_Paulo',
-
-            initialView: isMobile ? 'listWeek' : 'dayGridMonth',
-            headerToolbar: isMobile
-                ? { left: '', center: 'title', right: 'listDay,listWeek' }
-                : { left: '', center: 'title', right: 'timeGridDay,timeGridWeek,dayGridMonth' },
+            
+            initialView: window.matchMedia('(max-width: 576px)').matches ? 'listWeek' : 'dayGridMonth',
+            
+            headerToolbar: {
+                left: '',
+                center: 'title',
+                right: 'dayGridMonth,timeGridWeek,timeGridDay,listWeek'
+            },
 
             buttonText: {
                 day: 'Diário',
@@ -284,24 +311,26 @@
                 listWeek: 'Lista Semana'
             },
 
+            allDayText: 'Dia Todo',
             fixedWeekCount: false,
-            contentHeight: 'auto',
+            height: 'parent',
+            expandRows: true,
 
             events: async (fetchInfo, successCallback, failureCallback) => {
                 try {
-                    let csrftoken = document.cookie.split('; ')
-                        .find(row => row.startsWith('csrftoken='));
-                    csrftoken = csrftoken ? csrftoken.split('=')[1] : null;
-
-                    const headers = { 'Accept': 'application/json' };
-                    if (csrftoken) {
-                        headers['X-CSRFToken'] = csrftoken;
-                    }
+                    const csrftoken = document.cookie.split('; ')
+                        .find(row => row.startsWith('csrftoken='))?.split('=')[1];
+                    
+                    const headers = {
+                        'Accept': 'application/json',
+                        ...(csrftoken && {'X-CSRFToken': csrftoken})
+                    };
 
                     const resp = await fetch('/eventos/api/fullcalendar/', {
                         credentials: 'same-origin',
                         headers: headers
                     });
+                    
                     if (!resp.ok) throw new Error(`Erro ${resp.status}`);
                     const events = await resp.json();
                     successCallback(events);
@@ -313,35 +342,44 @@
 
             eventContent: arg => ({
                 html: `
-        <div class="fc-event-main-frame d-flex align-items-center">
-          <div class="w-100">
-            <div class="d-flex justify-content-between align-items-center">
-              <div class="fc-event-title">${arg.event.title}</div>
-              <small class="fc-event-horario">
-                <i class="bi bi-clock-history me-1"></i>${arg.event.extendedProps.horario}
-              </small>
-            </div>
-            <div class="fc-event-sala small">
-              ${arg.event.extendedProps.salas.join(', ')}
-            </div>
-          </div>
-        </div>`
-            })
+                    <div class="fc-event-main-frame d-flex align-items-center">
+                        <div class="w-100">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div class="fc-event-title">${arg.event.title}</div>
+                                <small class="fc-event-horario">
+                                    <i class="bi bi-clock-history me-1"></i>${arg.event.extendedProps.horario}
+                                </small>
+                            </div>
+                            <div class="fc-event-sala small">
+                                ${arg.event.extendedProps.salas.join(', ')}
+                            </div>
+                        </div>
+                    </div>`
+            }),
+
+            viewDidMount: (view) => {
+                currentView = view.type;
+            }
         });
 
         calendar.render();
 
-        // se redimensionar, alterna view
-        window.addEventListener('resize', () => {
-            const nowMobile = window.matchMedia('(max-width: 576px)').matches;
-            const newView = nowMobile ? 'listWeek' : 'dayGridMonth';
-            if (calendar.view.type !== newView) {
-                calendar.changeView(newView);
-            }
-        });
-
+        // Controles de navegação
         document.getElementById('prev-btn').addEventListener('click', () => calendar.prev());
         document.getElementById('next-btn').addEventListener('click', () => calendar.next());
+
+        // Atualização responsiva
+        window.addEventListener('resize', () => {
+            const isNowMobile = window.matchMedia('(max-width: 576px)').matches;
+            const mobileViews = ['listWeek', 'listDay'];
+            const desktopViews = ['dayGridMonth', 'timeGridWeek'];
+            
+            if (isNowMobile && !mobileViews.includes(currentView)) {
+                calendar.changeView('listWeek');
+            } else if (!isNowMobile && !desktopViews.includes(currentView)) {
+                calendar.changeView('dayGridMonth');
+            }
+        });
     });
 </script>
 {% endblock scripts %}
