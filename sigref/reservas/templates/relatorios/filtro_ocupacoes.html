@@ -1,0 +1,79 @@
+{% extends "cedepe/base.html" %}
+{% block content %}
+<div class="container mt-5">
+  <div class="card shadow">
+    <div class="card-header bg-primary text-white">
+      <h4 class="mb-0"><i class="fas fa-file-pdf"></i> Relatório de Reservas</h4>
+    </div>
+
+    <div class="card-body">
+      <form method="post" novalidate>
+        {% csrf_token %}
+
+        <!-- Seção de Filtros -->
+        <div class="mb-4">
+          <h5 class="text-muted mb-3"><i class="fas fa-filter"></i> Filtros do Relatório</h5>
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label">Tipo de Filtro</label>
+              <select name="tipo_filtro" class="form-select" id="tipo_filtro" required>
+                <option value="">Selecione o tipo de filtro...</option>
+                <option value="mes">Por Mês</option>
+                <option value="periodo">Por Intervalo de Datas</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Filtro por Mês -->
+          <div class="row g-3 mt-3" id="filtro_mes" style="display: none;">
+            <div class="col-md-6">
+              <label class="form-label">Mês</label>
+              <select name="mes" class="form-select">
+                {% for numero, nome in meses %}
+                <option value="{{ numero }}">{{ nome }}</option>
+                {% endfor %}
+              </select>
+
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Ano</label>
+              <input type="number" name="ano" class="form-control" min="2000" max="2100" value="{{ now.year }}">
+            </div>
+          </div>
+
+          <!-- Filtro por Intervalo -->
+          <div class="row g-3 mt-3" id="filtro_periodo" style="display: none;">
+            <div class="col-md-6">
+              <label class="form-label">Data Início</label>
+              <input type="date" name="data_inicio" class="form-control">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Data Fim</label>
+              <input type="date" name="data_fim" class="form-control">
+            </div>
+          </div>
+        </div>
+
+        
+        <!-- Botões de Ação -->
+        <div class="d-flex justify-content-between mt-4">
+          <a href="{% url 'dashboard_hospedagens' %}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Voltar ao Dashboard
+          </a>
+          <button type="submit" class="btn btn-primary">
+            <i class="fas fa-file-pdf"></i> Gerar Relatório
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+  document.getElementById("tipo_filtro").addEventListener("change", function () {
+    const tipo = this.value;
+    document.getElementById("filtro_mes").style.display = tipo === "mes" ? "flex" : "none";
+    document.getElementById("filtro_periodo").style.display = tipo === "periodo" ? "flex" : "none";
+  });
+</script>
+{% endblock %}

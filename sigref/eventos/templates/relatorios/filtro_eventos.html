@@ -1,0 +1,159 @@
+{% extends "cedepe/base.html" %}
+{% block content %}
+<div class="container mt-5">
+  <div class="card shadow">
+    <div class="card-header bg-primary text-white">
+      <h4 class="mb-0"><i class="fas fa-file-pdf"></i> Gerar Relatório de Eventos</h4>
+    </div>
+
+    <div class="card-body">
+      <form method="post" id="relatorioForm" novalidate>
+        {% csrf_token %}
+
+        <!-- Seção de Filtros -->
+        <div class="mb-4">
+          <h5 class="text-muted mb-3"><i class="fas fa-filter"></i> Filtros do Relatório</h5>
+          <div class="row g-3">
+            <div class="col-md-12">
+              <label class="form-label">Tipo de Filtro</label>
+              <select name="tipo_filtro" class="form-select" id="tipo_filtro" required>
+                <option value="">Selecione o tipo de filtro...</option>
+                <option value="mes">Por mês</option>
+                <option value="periodo">Por intervalo de datas</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Filtro por Mês -->
+        <div id="filtro_mes" class="mb-4" style="display: none;">
+          <h6 class="text-muted mb-3"><i class="fas fa-calendar-alt"></i> Filtro por Mês</h6>
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label">Mês</label>
+              <select name="mes" class="form-select" id="selectMes">
+                {% for mes in meses %}
+                <option value="{{ forloop.counter }}" {% if forloop.counter == now.month %}selected{% endif %}>
+                  {{ mes }}
+                </option>
+                {% endfor %}
+
+              </select>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Ano</label>
+              <select name="ano" class="form-select" id="selectAno">
+                {% for ano in anos %}
+                <option value="{{ ano }}" {% if ano == now.year %}selected{% endif %}>{{ ano }}</option>
+                {% endfor %}
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Filtro por Período -->
+        <div id="filtro_periodo" class="mb-4" style="display: none;">
+          <h6 class="text-muted mb-3"><i class="fas fa-calendar-day"></i> Filtro por Período</h6>
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label">Data Início</label>
+              <input type="date" name="data_inicio" class="form-control" id="dataInicio" min="2025-01-01">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Data Fim</label>
+              <input type="date" name="data_fim" class="form-control" id="dataFim" min="2025-01-01">
+            </div>
+          </div>
+        </div>
+
+        <!-- Botões de Ação -->
+        <div class="d-flex justify-content-between mt-4">
+          <a href="{% url 'dashboard_eventos' %}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Voltar ao Dashboard
+          </a>
+          <button type="submit" class="btn btn-primary">
+            <i class="fas fa-file-pdf"></i> Gerar PDF
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    const tipoFiltro = document.getElementById('tipo_filtro');
+    const form = document.getElementById('relatorioForm');
+    const dataInicio = document.getElementById('dataInicio');
+    const dataFim = document.getElementById('dataFim');
+    const currentYear = new Date().getFullYear();
+
+    // Configurar datas mínimas
+    dataInicio.min = dataFim.min = '2025-01-01';
+
+    // Controle de exibição dos filtros
+    tipoFiltro.addEventListener('change', function () {
+      const tipo = this.value;
+      document.getElementById('filtro_mes').style.display = tipo === 'mes' ? 'block' : 'none';
+      document.getElementById('filtro_periodo').style.display = tipo === 'periodo' ? 'block' : 'none';
+    });
+
+    // Validação de datas
+    dataInicio.addEventListener('change', function () {
+      dataFim.min = this.value;
+      if (new Date(dataFim.value) < new Date(this.value)) {
+        dataFim.value = this.value;
+      }
+    });
+
+    dataFim.addEventListener('change', function () {
+      dataInicio.max = this.value;
+      if (new Date(dataInicio.value) > new Date(this.value)) {
+        dataInicio.value = this.value;
+      }
+    });
+
+    // Validação do formulário
+    form.addEventListener('submit', function (e) {
+      let isValid = true;
+      const tipo = tipoFiltro.value;
+
+      if (tipo === '') {
+        alert('Selecione um tipo de filtro');
+        isValid = false;
+      }
+      else if (tipo === 'mes') {
+        const ano = parseInt(document.getElementById('selectAno').value);
+        if (ano < 2025) {
+          alert('O ano mínimo permitido é 2025');
+          isValid = false;
+        }
+      }
+      else if (tipo === 'periodo') {
+        if (!dataInicio.value || !dataFim.value) {
+          alert('Preencha ambas as datas do período');
+          isValid = false;
+        }
+        else {
+          const inicio = new Date(dataInicio.value);
+          const fim = new Date(dataFim.value);
+
+          if (inicio < new Date('2025-01-01')) {
+            alert('A data inicial não pode ser anterior a 2025');
+            isValid = false;
+          }
+          if (fim < inicio) {
+            alert('A data final não pode ser anterior à data inicial');
+            isValid = false;
+          }
+        }
+      }
+
+      if (!isValid) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+    });
+  });
+</script>
+{% endblock %}
