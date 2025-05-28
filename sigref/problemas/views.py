@@ -30,3 +30,7 @@ class ProblemaUsuarioViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         serializer.save(usuario=self.request.user.greuser)
 
+from django.shortcuts import render
+
+def problema_dashboard_view(request):
+    return render(request, 'escolas/escola_dashboard.html')

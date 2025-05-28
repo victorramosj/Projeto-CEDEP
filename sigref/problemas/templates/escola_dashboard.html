@@ -1,0 +1,199 @@
+{% extends "cedepe/base.html" %}
+{% load static %}
+
+{% block title %}Dashboard da Escola{% endblock %}
+
+{% block content %}
+<style>
+
+body {
+background-color: #F0F4F8;
+font-family: sans-serif;
+}
+.card-indicador {
+    background: white;
+    text-align: center;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    margin-bottom: 20px;
+}
+.card-indicador p {
+    color: #37474F;
+}
+.card-indicador h1 {
+    font-size: 3rem;
+    font-weight: bold;
+    color: #263238;
+}
+.btn-relatar {
+    width: 100%;
+    font-weight: bold;
+    background-color: #26326D;
+    border-color: #26326D;
+    color: white;
+}
+.avisos-importantes {
+    background: white;
+    border-top: 5px solid #E53935;
+    border-radius: 8px;
+    padding: 20px;
+    height: 100%;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+.avisos-importantes h5 {
+    color: #E53935;
+    font-weight: bold;
+}
+.titulo-secao {
+    color: #37474F;
+    font-weight: bold;
+}
+.card-status {
+    background: white;
+    padding: 15px;
+    text-align: center;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+.card-status .numero {
+    font-size: 2.5rem;
+    font-weight: bold;
+    color: #263238;
+}
+.card-status .descricao {
+    font-size: 0.9rem;
+}
+.resolvidos { border-left: 5px solid #43A047; }
+.pendentes { border-left: 5px solid #E53935; }
+.em-andamento { border-left: 5px solid #FFB300; }
+.este-mes { border-left: 5px solid #039BE5; }
+</style>
+
+<div class="container mt-4">
+<div class="header-escola">
+    <div class="info-escola">
+    <h4><i class="fas fa-school"></i> {{ escola.nome }}</h4>
+    <div class="info-escola-detalhes">
+        <p><i class="fas fa-map-marker-alt"></i> {{ escola.endereco|default:"Endereço não cadastrado" }}</p>
+        <p><i class="fas fa-phone-alt"></i> {{ escola.telefone|default:"Telefone não cadastrado" }}</p>
+        <p><i class="fas fa-user-shield"></i> Gestor: {{ escola.nome_gestor }}</p>
+    </div>
+    </div>
+    <div class="imagem-escola">
+    {% if escola.foto_fachada %}
+        <img src="{{ escola.foto_fachada.url }}" alt="Foto da Escola" />
+    {% else %}
+        <img src="{% static 'img/placeholder.jpg' %}" alt="Foto não disponível" />
+    {% endif %}
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+    <div class="row">
+        <div class="col-md-6">
+        <div class="card-indicador">
+            <p>QUANTIDADE DE LACUNAS EXISTENTES</p>
+            <h1>{{ total_lacunas }}</h1>
+            <button class="btn btn-relatar" data-bs-toggle="modal" data-bs-target="#modalRelatarLacuna">RELATAR LACUNA</button>
+        </div>
+        </div>
+        <div class="col-md-6">
+        <div class="card-indicador">
+            <p>QUANTIDADE DE PROBLEMAS EXISTENTES</p>
+            <h1>{{ total_problemas }}</h1>
+            <button class="btn btn-relatar" data-bs-toggle="modal" data-bs-target="#modalRelatarProblema">RELATAR PROBLEMA</button>
+        </div>
+        </div>
+    </div>
+    </div>
+    <div class="col-md-4">
+    <div class="avisos-importantes">
+        <h5><i class="fas fa-exclamation-triangle"></i> AVISOS IMPORTANTES</h5>
+        {% if avisos %}
+        {% for aviso in avisos %}<p class="text-muted">{{ aviso }}</p>{% endfor %}
+        {% else %}
+        <p class="text-muted">Nenhum aviso no momento.</p>
+        {% endif %}
+    </div>
+    </div>
+</div>
+
+<div class="mt-4">
+    <h5 class="mb-3 titulo-secao">HISTÓRICO DE PROBLEMAS</h5>
+    <div class="row">
+    <div class="col-md-3 col-sm-6 mb-3"><div class="card-status resolvidos"><div class="numero">{{ total_resolvidos }}</div><div class="descricao"><i class="fas fa-check-circle"></i> Resolvidos</div></div></div>
+    <div class="col-md-3 col-sm-6 mb-3"><div class="card-status pendentes"><div class="numero">{{ total_pendentes }}</div><div class="descricao"><i class="fas fa-exclamation-circle"></i> Pendentes</div></div></div>
+    <div class="col-md-3 col-sm-6 mb-3"><div class="card-status em-andamento"><div class="numero">{{ total_andamento }}</div><div class="descricao"><i class="fas fa-spinner"></i> Em Andamento</div></div></div>
+    <div class="col-md-3 col-sm-6 mb-3"><div class="card-status este-mes"><div class="numero">{{ total_mes }}</div><div class="descricao"><i class="fas fa-calendar-alt"></i> Este Mês</div></div></div>
+    </div>
+</div>
+</div>
+
+<!-- Modal RELATAR LACUNA -->
+<div class="modal fade" id="modalRelatarLacuna" tabindex="-1" aria-labelledby="modalLacunaLabel" aria-hidden="true">
+<div class="modal-dialog">
+    <div class="modal-content">
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        <div class="modal-header">
+        <h5 class="modal-title" id="modalLacunaLabel">Relatar Lacuna</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+        </div>
+        <div class="modal-body">
+        <div class="mb-3">
+            <label class="form-label">Descrição da Lacuna</label>
+            <textarea name="descricao_lacuna" class="form-control" required></textarea>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Foto (opcional)</label>
+            <input type="file" name="foto_lacuna" class="form-control">
+        </div>
+        </div>
+        <div class="modal-footer">
+        <button type="submit" class="btn btn-primary">Enviar</button>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+        </div>
+    </form>
+    </div>
+</div>
+</div>
+
+<!-- Modal RELATAR PROBLEMA -->
+<div class="modal fade" id="modalRelatarProblema" tabindex="-1" aria-labelledby="modalProblemaLabel" aria-hidden="true">
+<div class="modal-dialog">
+    <div class="modal-content">
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        <div class="modal-header">
+        <h5 class="modal-title" id="modalProblemaLabel">Relatar Problema</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+        </div>
+        <div class="modal-body">
+        <div class="mb-3">
+            <label class="form-label">Tipo de Problema</label>
+            {{ form.tipo_problema }}
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Descrição Detalhada</label>
+            {{ form.descricao_adicional }}
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Prioridade</label>
+            {{ form.prioridade }}
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Foto (opcional)</label>
+            {{ form.foto }}
+        </div>
+        </div>
+        <div class="modal-footer">
+        <button type="submit" class="btn btn-primary">Enviar</button>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+        </div>
+    </form>
+    </div>
+</div>
+</div>
+{% endblock %}
