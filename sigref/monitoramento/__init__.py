@@ -11,3 +11,16 @@
 
 #pip install pyinstaller
 #pyinstaller --onefile manage.py
+
+
+# Passo a passo
+# 1- python -m venv venv
+# 2- .\venv\scripts\activate
+# 3- cd sigref
+# 4- pip install -r requirements.txt
+# 5- python manage.py migrate
+# 6- python manage.py runserver
+
+
+
+# python popular.py
