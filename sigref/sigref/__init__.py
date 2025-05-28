@@ -11,3 +11,5 @@
 
 #pip install pyinstaller
 #pyinstaller --onefile manage.py
+
+#UPDATE
