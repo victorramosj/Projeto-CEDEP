@@ -3,169 +3,136 @@
 
 {% block title %}Dashboard da Escola{% endblock %}
 
+{% block extra_style %}
+<link rel="stylesheet" href="{% static 'css/escola.css' %}">
+{% endblock %}
+
 {% block content %}
 
+<div class="container mt-4">
+<div class="header-escola">
+    <div class="info-escola">
+    <h4><i class="fas fa-school"></i> {{ escola.nome }}</h4>
+    <div class="info-escola-detalhes">
+        <p><i class="fas fa-map-marker-alt"></i> {{ escola.endereco|default:"Endereço não cadastrado" }}</p>
+        <p><i class="fas fa-phone-alt"></i> {{ escola.telefone|default:"Telefone não cadastrado" }}</p>
+        <p><i class="fas fa-user-shield"></i> Gestor: {{ escola.nome_gestor }}</p>
+    </div>
+    </div>
+    <div class="imagem-escola">
+    {% if escola.foto_fachada %}
+        <img src="{{ escola.foto_fachada.url }}" alt="Foto da Escola" />
+    {% else %}
+        <img src="{% static 'images\default-school.jpeg' %}" alt="Foto não disponível" />
+    {% endif %}
+    </div>
+</div>
 
-
-<div class="container py-5">
+<div class="row">
+    <div class="col-md-8">
     <div class="row">
-        <!-- Informações da Escola -->
-        <div class="col-lg-4 mb-4">
-            <div class="card shadow-sm">
-                <div class="card-header bg-primary text-white">
-                    <h5 class="mb-0"><i class="fas fa-school me-2"></i>{{ escola.nome }}</h5>
-                </div>
-                <div class="card-body">
-                    <div class="text-center mb-3">
-                        {% if escola.foto_fachada %}
-                            <img src="{{ escola.foto_fachada.url }}" class="img-fluid rounded mb-3" alt="Fachada da escola" style="max-height: 200px;">
-                        {% endif %}
-                    </div>
-                    <ul class="list-group list-group-flush">
-                        <li class="list-group-item">
-                            <i class="fas fa-map-marker-alt me-2"></i>
-                            {{ escola.endereco|default:"Endereço não cadastrado" }}
-                        </li>
-                        <li class="list-group-item">
-                            <i class="fas fa-phone me-2"></i>
-                            {{ escola.telefone|default:"Telefone não cadastrado" }}
-                        </li>
-                        <li class="list-group-item">
-                            <i class="fas fa-user-tie me-2"></i>
-                            Gestor: {{ escola.nome_gestor }}
-                        </li>
-                    </ul>
-                </div>
-            </div>
+        <div class="col-md-6">
+        <div class="card-indicador">
+            <p>QUANTIDADE DE LACUNAS EXISTENTES</p>
+            <h1>{{ total_lacunas }}</h1>
+            <button class="btn btn-relatar" data-bs-toggle="modal" data-bs-target="#modalRelatarLacuna">RELATAR LACUNA</button>
         </div>
-
-
-        <!-- Relatar Problema e Histórico -->
-        <div class="col-lg-8">
-            <div class="card shadow-sm mb-4">
-                <div class="card-header bg-warning text-dark">
-                    <h5 class="mb-0"><i class="fas fa-exclamation-triangle me-2"></i>Relatar Problema</h5>
-                </div>
-                <div class="card-body">
-                    <form method="post" enctype="multipart/form-data">
-                        {% csrf_token %}
-                        <div class="mb-3">
-                            <label class="form-label">Tipo de Problema</label>
-                            {{ form.tipo_problema }}
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Descrição Detalhada</label>
-                            {{ form.descricao_adicional }}
-                        </div>
-                        <div class="row mb-3">
-                            <div class="col-md-6">
-                                <label class="form-label">Prioridade</label>
-                                {{ form.prioridade }}
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label">Anexar Foto</label>
-                                {{ form.foto }}
-                            </div>
-                        </div>
-                        <button type="submit" class="btn btn-primary w-100">
-                            <i class="fas fa-paper-plane me-2"></i>Enviar Relato
-                        </button>
-                    </form>
-                </div>
-            </div>
-
-            <!-- Histórico de Relatos -->
-            <div class="card shadow-sm">
-                <div class="card-header bg-info text-white">
-                    <h5 class="mb-0"><i class="fas fa-history me-2"></i>Últimos Relatos</h5>
-                </div>
-                <div class="card-body">
-                    {% if relatos %}
-                        <div class="list-group">
-                            {% for relato in relatos %}
-                                <div class="list-group-item list-group-item-action">
-                                    <div class="d-flex w-100 justify-content-between">
-                                        <h6 class="mb-1">{{ relato.tipo_problema.descricao }}</h6>
-                                        <small class="text-muted">{{ relato.data_relato|date:"d/m/Y H:i" }}</small>
-                                    </div>
-                                    <p class="mb-1">{{ relato.descricao_adicional|truncatechars:100 }}</p>
-                                    <small>Status: 
-                                        <span class="badge bg-{% if relato.status == 'R' %}success{% elif relato.status == 'U' %}danger{% else %}warning{% endif %}">
-                                            {{ relato.get_status_display }}
-                                        </span>
-                                    </small>
-                                </div>
-                            {% endfor %}
-                        </div>
-                    {% else %}
-                        <div class="alert alert-info mb-0">Nenhum relato registrado recentemente.</div>
-                    {% endif %}
-                </div>
-         </div>
-
-                 <div class="row g-3 mb-4">
-            <!-- Resolvidos -->
-            <div class="col-6 col-md-3">
-                <div class="card shadow-sm border-start border-success border-4">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between">
-                    <div>
-                        <small class="text-muted"><i class="fas fa-check-circle me-1 text-success"></i>Resolvidos</small>
-                        <h4 class="text-success mt-2">{{ total_resolvidos }}</h4>
-                    </div>
-                    </div>
-                </div>
-                </div>
-            </div>
-
-            <!-- Em andamento -->
-            <div class="col-6 col-md-3">
-                <div class="card shadow-sm border-start border-warning border-4">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between">
-                    <div>
-                        <small class="text-muted"><i class="fas fa-spinner me-1 text-warning"></i>Em Andamento</small>
-                        <h4 class="text-warning mt-2">{{ total_andamento }}</h4>
-                    </div>
-                    </div>
-                </div>
-                </div>
-            </div>
-
-            <!-- Pendentes -->
-            <div class="col-6 col-md-3">
-                <div class="card shadow-sm border-start border-danger border-4">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between">
-                    <div>
-                        <small class="text-muted"><i class="fas fa-exclamation-circle me-1 text-danger"></i>Pendentes</small>
-                        <h4 class="text-danger mt-2">{{ total_pendentes }}</h4>
-                    </div>
-                    </div>
-                </div>
-                </div>
-            </div>
-
-            <!-- Total do mês -->
-            <div class="col-6 col-md-3">
-                <div class="card shadow-sm border-start border-primary border-4">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between">
-                    <div>
-                        <small class="text-muted"><i class="fas fa-calendar-alt me-1 text-primary"></i>Este Mês</small>
-                        <h4 class="text-primary mt-2">{{ total_mes }}</h4>
-                    </div>
-                    </div>
-                </div>
-                </div>
-            </div>
         </div>
-
-
-
-            
-
+        <div class="col-md-6">
+        <div class="card-indicador">
+            <p>QUANTIDADE DE PROBLEMAS EXISTENTES</p>
+            <h1>{{ total_problemas }}</h1>
+            <button class="btn btn-relatar" data-bs-toggle="modal" data-bs-target="#modalRelatarProblema">RELATAR PROBLEMA</button>
+        </div>
         </div>
     </div>
+    </div>
+    <div class="col-md-4">
+    <div class="avisos-importantes">
+        <h5><i class="fas fa-exclamation-triangle"></i> AVISOS IMPORTANTES</h5>
+        {% if avisos %}
+        {% for aviso in avisos %}<p class="text-muted">{{ aviso }}</p>{% endfor %}
+        {% else %}
+        <p class="text-muted">Nenhum aviso no momento.</p>
+        {% endif %}
+    </div>
+    </div>
+</div>
+
+<div class="mt-4">
+    <h5 class="mb-3 titulo-secao">HISTÓRICO DE PROBLEMAS</h5>
+    <div class="row">
+    <div class="col-md-3 col-sm-6 mb-3"><div class="card-status resolvidos"><div class="numero">{{ total_resolvidos }}</div><div class="descricao"><i class="fas fa-check-circle"></i> Resolvidos</div></div></div>
+    <div class="col-md-3 col-sm-6 mb-3"><div class="card-status pendentes"><div class="numero">{{ total_pendentes }}</div><div class="descricao"><i class="fas fa-exclamation-circle"></i> Pendentes</div></div></div>
+    <div class="col-md-3 col-sm-6 mb-3"><div class="card-status em-andamento"><div class="numero">{{ total_andamento }}</div><div class="descricao"><i class="fas fa-spinner"></i> Em Andamento</div></div></div>
+    <div class="col-md-3 col-sm-6 mb-3"><div class="card-status este-mes"><div class="numero">{{ total_mes }}</div><div class="descricao"><i class="fas fa-calendar-alt"></i> Este Mês</div></div></div>
+    </div>
+</div>
+</div>
+
+<!-- Modal RELATAR LACUNA -->
+<div class="modal fade" id="modalRelatarLacuna" tabindex="-1" aria-labelledby="modalLacunaLabel" aria-hidden="true">
+<div class="modal-dialog">
+    <div class="modal-content">
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        <div class="modal-header">
+        <h5 class="modal-title" id="modalLacunaLabel">Relatar Lacuna</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+        </div>
+        <div class="modal-body">
+        <div class="mb-3">
+            <label class="form-label">Descrição da Lacuna</label>
+            <textarea name="descricao_lacuna" class="form-control" required></textarea>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Foto (opcional)</label>
+            <input type="file" name="foto_lacuna" class="form-control">
+        </div>
+        </div>
+        <div class="modal-footer">
+        <button type="submit" class="btn btn-primary">Enviar</button>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+        </div>
+    </form>
+    </div>
+</div>
+</div>
+
+<!-- Modal RELATAR PROBLEMA -->
+<div class="modal fade" id="modalRelatarProblema" tabindex="-1" aria-labelledby="modalProblemaLabel" aria-hidden="true">
+<div class="modal-dialog">
+    <div class="modal-content">
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        <div class="modal-header">
+        <h5 class="modal-title" id="modalProblemaLabel">Relatar Problema</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+        </div>
+        <div class="modal-body">
+        <div class="mb-3">
+            <label class="form-label">Tipo de Problema</label>
+            {{ form.tipo_problema }}
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Descrição Detalhada</label>
+            {{ form.descricao_adicional }}
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Prioridade</label>
+            {{ form.prioridade }}
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Foto (opcional)</label>
+            {{ form.foto }}
+        </div>
+        </div>
+        <div class="modal-footer">
+        <button type="submit" class="btn btn-primary">Enviar</button>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+        </div>
+    </form>
+    </div>
+</div>
 </div>
 {% endblock %}
