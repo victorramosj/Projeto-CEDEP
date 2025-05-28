@@ -5,9 +5,11 @@ border-radius: 12px;
 padding: 0;
 overflow: hidden;
 display: flex;
+flex-wrap: wrap;
 align-items: stretch;
 margin-bottom: 30px;
 }
+
 .info-escola {
 background-color: white;
 padding: 20px;
@@ -18,31 +20,37 @@ border-bottom-left-radius: 12px;
 display: flex;
 flex-direction: column;
 }
+
 .info-escola h4 {
 color: #26326D;
 font-weight: bold;
 margin-bottom: 15px;
 }
+
 .info-escola-detalhes {
 flex-grow: 1;
 display: flex;
 flex-direction: column;
 justify-content: center;
 }
+
 .info-escola p {
 color: #546E7A;
 margin-bottom: 12px;
 font-size: 0.9rem;
 }
+
 .info-escola i {
 margin-right: 8px;
 color: #26326D;
 }
+
 .imagem-escola {
 width: 516px;
 height: 279px;
 flex-shrink: 0;
 }
+
 .imagem-escola img {
 width: 100%;
 height: 100%;
@@ -51,66 +59,161 @@ border-top-right-radius: 12px;
 border-bottom-right-radius: 12px;
 }
 
+/* Cartões e outros elementos */
 .card-indicador {
-    background: white;
-    text-align: center;
-    padding: 20px;
-    border-radius: 8px;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-    margin-bottom: 20px;
+background: white;
+text-align: center;
+padding: 20px;
+border-radius: 8px;
+box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+margin-bottom: 20px;
 }
 .card-indicador p {
-    color: #37474F;
+color: #37474F;
 }
 .card-indicador h1 {
-    font-size: 3rem;
-    font-weight: bold;
-    color: #263238;
+font-size: 3rem;
+font-weight: bold;
+color: #263238;
 }
 .btn-relatar {
-    width: 100%;
-    font-weight: bold;
-    background-color: #26326D;
-    border-color: #26326D;
-    color: white;
+width: 100%;
+font-weight: bold;
+background-color: #26326D;
+border-color: #26326D;
+color: white;
 }
 .avisos-importantes {
-    background: white;
-    border-top: 5px solid #E53935;
-    border-radius: 8px;
-    padding: 20px;
-    height: 100%;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+background: white;
+border-top: 5px solid #E53935;
+border-radius: 8px;
+padding: 20px;
+height: 100%;
+box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 .avisos-importantes h5 {
-    color: #E53935;
-    font-weight: bold;
+color: #E53935;
+font-weight: bold;
 }
 .titulo-secao {
-    color: #37474F;
-    font-weight: bold;
+color: #37474F;
+font-weight: bold;
 }
 .card-status {
-    background: white;
-    padding: 15px;
-    text-align: center;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+background: white;
+padding: 15px;
+text-align: center;
+border-radius: 8px;
+box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 .card-status .numero {
-    font-size: 2.5rem;
-    font-weight: bold;
-    color: #263238;
+font-size: 2.5rem;
+font-weight: bold;
+color: #263238;
 }
 .card-status .descricao {
+font-size: 0.9rem;
+}
+.resolvidos {
+border-left: 5px solid #43A047;
+}
+.pendentes {
+border-left: 5px solid #E53935;
+}
+.em-andamento {
+border-left: 5px solid #FFB300;
+}
+.este-mes {
+border-left: 5px solid #039BE5;
+}
+
+/* Telas muito grandes (monitores acima de 1400px) */
+@media (min-width: 1400px) {
+.imagem-escola {
+    width: 600px;
+    height: 300px;
+}
+}
+
+/* Telas grandes (entre 992px e 1199px - notebooks/tablets horizontais) */
+@media (min-width: 992px) and (max-width: 1199px) {
+.imagem-escola {
+    width: 450px;
+    height: auto;
+}
+}
+
+/* Tablets (768px a 991px) */
+@media (min-width: 768px) and (max-width: 991px) {
+.header-escola {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 20px;
+}
+
+.info-escola {
+    width: 100%;
+    border-radius: 12px 12px 0 0;
+    padding: 15px;
+    align-items: center;
+}
+
+.info-escola h4 {
+    font-size: 1.2rem;
+    margin-bottom: 10px;
+}
+
+.info-escola p {
     font-size: 0.9rem;
 }
-.resolvidos { border-left: 5px solid #43A047; }
-.pendentes { border-left: 5px solid #E53935; }
-.em-andamento { border-left: 5px solid #FFB300; }
-.este-mes { border-left: 5px solid #039BE5; }
 
-@media (max-width: 768px) {
+.imagem-escola {
+    width: 100%;
+    height: auto;
+    margin-top: 10px;
+}
+
+.imagem-escola img {
+    width: 100%;
+    height: auto;
+    object-fit: cover;
+    border-radius: 0 0 12px 12px;
+}
+
+.row {
+    flex-direction: column;
+    gap: 15px;
+}
+
+.col-md-6,
+.col-md-8,
+.col-md-4,
+.col-sm-6 {
+    width: 100%;
+    max-width: 100%;
+}
+
+.card-indicador {
+    padding: 15px;
+    margin-bottom: 15px;
+}
+
+.avisos-importantes {
+    margin-top: 10px;
+}
+
+.card-status .numero {
+    font-size: 2rem;
+}
+
+.card-status .descricao {
+    font-size: 0.85rem;
+}
+}
+
+/* Celulares médios e pequenos (até 767px) */
+@media (max-width: 767px) {
 .header-escola {
     flex-direction: column;
     align-items: stretch;
@@ -118,6 +221,15 @@ border-bottom-right-radius: 12px;
 
 .info-escola {
     border-radius: 12px 12px 0 0;
+    padding: 12px;
+}
+
+.info-escola h4 {
+    font-size: 1rem;
+}
+
+.info-escola p {
+    font-size: 0.85rem;
 }
 
 .imagem-escola {
@@ -126,9 +238,52 @@ border-bottom-right-radius: 12px;
 }
 
 .imagem-escola img {
-    border-radius: 0 0 12px 12px;
-    object-fit: cover;
     width: 100%;
     height: auto;
+    object-fit: cover;
+    border-radius: 0 0 12px 12px;
+}
+
+.card-indicador {
+    padding: 12px;
+}
+
+.card-indicador h1 {
+    font-size: 2rem;
+}
+
+.card-status .numero {
+    font-size: 1.8rem;
+}
+}
+
+/* Celulares muito pequenos (até 400px) */
+@media (max-width: 400px) {
+.info-escola {
+    padding: 10px;
+}
+
+.info-escola h4 {
+    font-size: 0.95rem;
+}
+
+.info-escola p {
+    font-size: 0.8rem;
+}
+
+.imagem-escola {
+    height: auto;
+}
+
+.card-indicador h1 {
+    font-size: 1.6rem;
+}
+
+.btn-relatar {
+    font-size: 0.9rem;
+}
+
+.avisos-importantes {
+    padding: 15px;
 }
 }
