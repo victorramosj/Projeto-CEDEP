@@ -2,7 +2,11 @@ from rest_framework import viewsets, permissions
 from .models import Lacuna, ProblemaUsuario
 from .serializers import LacunaSerializer, ProblemaUsuarioSerializer
 from .forms import ProblemaUsuarioForm
+from django.shortcuts import render, redirect
 
+
+def escola_dashboard(request):
+    return render(request, "escola_dashboard.html" )
 
 class LacunaViewSet(viewsets.ModelViewSet):
     serializer_class = LacunaSerializer
@@ -31,8 +35,6 @@ class ProblemaUsuarioViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save(usuario=self.request.user.greuser)
-
-from django.shortcuts import render, redirect
 
 def problema_dashboard_view(request):
     return render(request, 'escolas/escola_dashboard.html', {'form': form}) # type: ignore

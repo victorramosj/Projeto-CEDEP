@@ -44,7 +44,7 @@ def user_login(request):
                     elif gre_user.is_monitor():
                         return redirect('home')
                     elif gre_user.is_escola():
-                        return redirect('escola_dashboard')
+                        return redirect('problemas_dashboard')
                     else:
                         return redirect('home')  # fallback padrão
 
