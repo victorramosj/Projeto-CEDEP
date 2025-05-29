@@ -53,15 +53,27 @@
     </div>
     </div>
     <div class="col-md-4">
-    <div class="avisos-importantes">
-        <h5><i class="fas fa-exclamation-triangle"></i> AVISOS IMPORTANTES</h5>
-        {% if avisos %}
-        {% for aviso in avisos %}<p class="text-muted">{{ aviso }}</p>{% endfor %}
-        {% else %}
-        <p class="text-muted">Nenhum aviso no momento.</p>
-        {% endif %}
+        <div class="avisos-importantes">
+            <h5>
+                <i class="fas fa-exclamation-triangle"></i> AVISOS IMPORTANTES
+            </h5>
+
+            {% if avisos %}
+                <div>
+                    <p class="text-muted mb-2">
+                        <strong>{{ avisos.0.titulo|upper }}</strong>:
+                        {{ avisos.0.mensagem|truncatechars:70 }}
+                    </p>
+                    <button class="btn btn-sm btn-outline-danger w-100" data-bs-toggle="modal" data-bs-target="#modalAvisos">
+                        Ver todos os avisos
+                    </button>
+                </div>
+            {% else %}
+                <p class="text-muted">Nenhum aviso no momento.</p>
+            {% endif %}
+        </div>
     </div>
-    </div>
+
 </div>
 
 
@@ -186,4 +198,35 @@
         </div>
     </div>
 </div>
+
+
+
+
+<div class="modal fade" id="modalAvisos" tabindex="-1" aria-labelledby="modalAvisosLabel" aria-hidden="true">
+<div class="modal-dialog modal-dialog-scrollable">
+    <div class="modal-content">
+
+    <div class="modal-header bg-danger text-white">
+        <h5 class="modal-title" id="modalAvisosLabel"><i class="fas fa-bullhorn me-2"></i>Todos os Avisos</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
+    </div>
+
+    <div class="modal-body">
+        {% for aviso in avisos %}
+        <div class="mb-3">
+            <p class="mb-1"><strong>{{ aviso.titulo|upper }}</strong></p>
+            <p class="text-muted">{{ aviso.mensagem }}</p>
+            <hr>
+        </div>
+        {% endfor %}
+    </div>
+
+    <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+    </div>
+
+    </div>
+</div>
+</div>
+
 {% endblock %}

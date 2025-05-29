@@ -1,0 +1,47 @@
+{% extends "cedepe/base.html" %}
+
+{% block title %}Criar Aviso{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h3 class="mb-4">Novo Aviso Importante</h3>
+    <form method="post">
+        {% csrf_token %}
+        <div class="mb-3">
+            <label for="titulo" class="form-label">Título</label>
+            <input type="text" name="titulo" id="titulo" class="form-control" required>
+        </div>
+
+        <div class="mb-3">
+            <label for="mensagem" class="form-label">Mensagem</label>
+            <textarea name="mensagem" id="mensagem" class="form-control" rows="4" required></textarea>
+        </div>
+
+        <div class="mb-3">
+            <label for="escola" class="form-label">Escola</label>
+            <select name="escola_id" id="escola" class="form-select" required>
+                {% for escola in escolas %}
+                    <option value="{{ escola.id }}">{{ escola.nome }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="mb-3">
+            <label for="prioridade" class="form-label">Prioridade</label>
+            <select name="prioridade" id="prioridade" class="form-select">
+                <option value="baixa">Baixa</option>
+                <option value="normal" selected>Normal</option>
+                <option value="alta">Alta</option>
+            </select>
+        </div>
+
+        <button type="submit" class="btn btn-primary">Publicar Aviso</button>
+    </form>
+</div>
+{% endblock %}
+
+
+<!-- codigo para ace
+    
+<a href="{% url 'criar_aviso' %}" class="btn btn-outline-danger btn-sm mt-2 w-100">Criar Aviso Importante</a>
+-->
