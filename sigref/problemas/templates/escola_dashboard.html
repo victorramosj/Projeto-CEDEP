@@ -17,10 +17,10 @@
             <div class="info-escola-detalhes">
                 <p><i class="fas fa-map-marker-alt"></i> {{ escola.endereco|default:"Endereço não cadastrado" }}</p><!--Endereço-->
                 <p><i class="fas fa-phone-alt"></i> {{ escola.telefone|default:"Telefone não cadastrado" }}</p><!--Telefone-->
-                <p><i class="fas fa-envelope me-2"></i> Email da Escola: {{ escola.email_escola }}</p><!--Email da escola-->
-                <p><i class="fas fa-user-shield"></i> Gestor: {{ escola.nome_gestor }}</p><!--Gestor-->
-                <p><i class="fas fa-phone-alt"></i> Telefone do Gestor: {{ escola.telefone_gestor|default:"Telefone não cadastrado" }}</p> <!--Telefone do gestor-->
-                <p><i class="fas fa-envelope me-2"></i> Email do Gestor: {{ escola.email_gestor|default:"Email não cadastrado" }}</p> <!--Email do gestor-->
+                <p><i class="fas fa-envelope me-2"></i> <strong>Email da Escola:</strong> {{ escola.email_escola }}</p><!--Email da escola-->
+                <p><i class="fas fa-user-shield"></i><strong>Gestor:</strong> {{ escola.nome_gestor }}</p><!--Gestor-->
+                <p><i class="fas fa-phone-alt"></i> <strong>Telefone do Gestor:</strong> {{ escola.telefone_gestor|default:"Telefone não cadastrado" }}</p> <!--Telefone do gestor-->
+                <p><i class="fas fa-envelope me-2"></i> <strong>Email do Gestor:</strong> {{ escola.email_gestor|default:"Email não cadastrado" }}</p> <!--Email do gestor-->
             </div>
         </div>
         
