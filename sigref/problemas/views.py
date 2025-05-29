@@ -1,6 +1,26 @@
 from rest_framework import viewsets, permissions
 from .models import Lacuna, ProblemaUsuario
 from .serializers import LacunaSerializer, ProblemaUsuarioSerializer
+from .forms import ProblemaUsuarioForm
+from django.shortcuts import render, redirect
+
+
+from django.views.generic import TemplateView
+from django.contrib.auth.mixins import LoginRequiredMixin
+from monitoramento.models import GREUser, Escola  # ajuste o import conforme sua estrutura
+
+class EscolaDashboardView(LoginRequiredMixin, TemplateView):
+    template_name = 'escola_dashboard.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        gre_user = self.request.user.greuser  # Supondo que todo usuário tenha um GREUser associado
+        escola = gre_user.escolas.first()  # Assumindo que GREUser está relacionado a uma ou mais escolas
+
+        context['gre_user'] = gre_user
+        context['escola'] = escola
+        return context
+
 
 class LacunaViewSet(viewsets.ModelViewSet):
     serializer_class = LacunaSerializer
@@ -30,3 +50,17 @@ class ProblemaUsuarioViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         serializer.save(usuario=self.request.user.greuser)
 
+def problema_dashboard_view(request):
+    return render(request, 'escolas/escola_dashboard.html', {'form': form}) # type: ignore
+
+def relatar_problema_view(request):
+    if request.method == 'POST':
+        form = ProblemaUsuarioForm(request.POST, request.FILES)
+        if form.is_valid():
+            problema = form.save(commit=False)
+            problema.usuario = request.user.greuser  # associa ao usuário logado
+            problema.save()
+            return redirect('dashboard')  # redireciona após salvar
+    else:
+        form = ProblemaUsuarioForm()
+    return render(request, 'escolas/relatar_problema.html', {'form': form})
