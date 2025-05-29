@@ -5,8 +5,22 @@ from .forms import ProblemaUsuarioForm
 from django.shortcuts import render, redirect
 
 
-def escola_dashboard(request):
-    return render(request, "escola_dashboard.html" )
+from django.views.generic import TemplateView
+from django.contrib.auth.mixins import LoginRequiredMixin
+from monitoramento.models import GREUser, Escola  # ajuste o import conforme sua estrutura
+
+class EscolaDashboardView(LoginRequiredMixin, TemplateView):
+    template_name = 'escola_dashboard.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        gre_user = self.request.user.greuser  # Supondo que todo usuário tenha um GREUser associado
+        escola = gre_user.escolas.first()  # Assumindo que GREUser está relacionado a uma ou mais escolas
+
+        context['gre_user'] = gre_user
+        context['escola'] = escola
+        return context
+
 
 class LacunaViewSet(viewsets.ModelViewSet):
     serializer_class = LacunaSerializer

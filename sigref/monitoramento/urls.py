@@ -51,7 +51,7 @@ urlpatterns = [
     path('escola/<int:escola_id>/questionario/<int:questionario_id>/responder/', views.ResponderQuestionarioView.as_view(), name='responder_questionario'),
 
     # Dashboard da escola
-    path('escola/dashboard/', views.EscolaDashboardView.as_view(), name='escola_dashboard'),
+    
     path('escola/relatar-problema/', views.RelatoProblemaCreateView.as_view(), name='relatar_problema'),
 
     # -----------------------------------------

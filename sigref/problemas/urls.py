@@ -12,7 +12,7 @@ from django.urls import path
 from . import views
 
 urlpatterns = [
-    path('', views.escola_dashboard, name='problemas_dashboard'),
+    path('escola/dashboard/', views.EscolaDashboardView.as_view(), name='escola_dashboard'),
     path('dashboard/', views.problema_dashboard_view, name='problemas'),
     path('relatar-problema/', views.relatar_problema_view, name='relatar_problema'),
 ]
