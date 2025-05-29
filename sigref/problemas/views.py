@@ -10,7 +10,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from monitoramento.models import GREUser, Escola  # ajuste o import conforme sua estrutura
 
 class EscolaDashboardView(LoginRequiredMixin, TemplateView):
-    template_name = 'escolas/escola_dashboard.html'
+    template_name = 'escola_dashboard.html'
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)

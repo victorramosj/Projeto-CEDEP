@@ -550,17 +550,3 @@ class MinhasEscolasView(APIView):
     
     from django.contrib.auth.mixins import LoginRequiredMixin
 
-from django.views.generic import TemplateView
-from django.contrib.auth.mixins import LoginRequiredMixin
-
-class EscolaDashboardView(LoginRequiredMixin, TemplateView):
-    template_name = 'escolas/escola_dashboard.html'
-    
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        user = self.request.user.greuser
-        context['escola'] = user.escolas.first()
-        context['relatos'] = RelatoProblema.objects.filter(
-            escola=context['escola']
-        ).order_by('-data_relato')[:5]
-        return context
