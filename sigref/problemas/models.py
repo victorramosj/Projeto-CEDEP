@@ -49,3 +49,4 @@ class ProblemaUsuario(models.Model):
         setor_nome = self.setor.hierarquia_completa if self.setor else "Geral"
         return f"{self.usuario.user.username} → {setor_nome}"
 
+    
