@@ -51,6 +51,7 @@ class ProblemaUsuarioViewSet(viewsets.ModelViewSet):
         serializer.save(usuario=self.request.user.greuser)
 
 def problema_dashboard_view(request):
+    form = ProblemaUsuarioForm()
     return render(request, 'escolas/escola_dashboard.html', {'form': form}) # type: ignore
 
 def relatar_problema_view(request):
