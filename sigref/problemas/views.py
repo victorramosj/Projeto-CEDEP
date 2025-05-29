@@ -4,22 +4,41 @@ from .serializers import LacunaSerializer, ProblemaUsuarioSerializer
 from .forms import ProblemaUsuarioForm
 from django.shortcuts import render, redirect
 
+from .models import AvisoImportante
+from django.utils import timezone
+from django.db.models import Q
+
+
 
 from django.views.generic import TemplateView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from monitoramento.models import GREUser, Escola  # ajuste o import conforme sua estrutura
+
+from .models import AvisoImportante  # Adicione no topo do arquivo
+from django.utils import timezone
+from django.db.models import Q
 
 class EscolaDashboardView(LoginRequiredMixin, TemplateView):
     template_name = 'escola_dashboard.html'
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        gre_user = self.request.user.greuser  # Supondo que todo usuário tenha um GREUser associado
-        escola = gre_user.escolas.first()  # Assumindo que GREUser está relacionado a uma ou mais escolas
+        gre_user = self.request.user.greuser
+        escola = gre_user.escolas.first()
+
+        # 🔥 Buscar avisos válidos da escola
+        avisos = AvisoImportante.objects.filter(
+            escola=escola,
+            ativo=True
+        ).filter(
+            Q(data_expiracao__isnull=True) | Q(data_expiracao__gte=timezone.now())
+        ).order_by('-prioridade', '-data_criacao')
 
         context['gre_user'] = gre_user
         context['escola'] = escola
+        context['avisos'] = avisos  # 👈 essa linha envia os avisos pro template
         return context
+
 
 
 class LacunaViewSet(viewsets.ModelViewSet):
@@ -64,3 +83,36 @@ def relatar_problema_view(request):
     else:
         form = ProblemaUsuarioForm()
     return render(request, 'escolas/relatar_problema.html', {'form': form})
+
+
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import render, redirect
+from .models import AvisoImportante
+from monitoramento.models import Escola
+
+@login_required
+def criar_aviso_view(request):
+    gre_user = request.user.greuser
+
+    # ❌ Bloqueia se for escola
+    if gre_user.is_escola():
+        return redirect('dashboard')  # ou renderizar uma página de erro
+
+    if request.method == 'POST':
+        titulo = request.POST.get('titulo')
+        mensagem = request.POST.get('mensagem')
+        escola_id = request.POST.get('escola_id')
+        prioridade = request.POST.get('prioridade', 'normal')
+
+        aviso = AvisoImportante.objects.create(
+            titulo=titulo,
+            mensagem=mensagem,
+            prioridade=prioridade,
+            escola=Escola.objects.get(id=escola_id),
+            criado_por=gre_user,
+            ativo=True
+        )
+        return redirect('dashboard')  # ou mensagem de sucesso
+
+    escolas = Escola.objects.all()
+    return render(request, 'avisos/criar_aviso.html', {'escolas': escolas})
