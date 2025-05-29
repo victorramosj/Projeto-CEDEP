@@ -4,46 +4,51 @@
 {% block title %}Dashboard da Escola{% endblock %}
 
 {% block extra_style %}
-<link rel="stylesheet" href="{% static 'css/escola.css' %}">
+    <link rel="stylesheet" href="{% static 'css/escola.css' %}">
 {% endblock %}
 
 {% block content %}
 
 <div class="container mt-4">
-<div class="header-escola">
-    <div class="info-escola">
-    <h4><i class="fas fa-school"></i> {{ escola.nome }}</h4>
-    <div class="info-escola-detalhes">
-        <p><i class="fas fa-map-marker-alt"></i> {{ escola.endereco|default:"Endereço não cadastrado" }}</p>
-        <p><i class="fas fa-phone-alt"></i> {{ escola.telefone|default:"Telefone não cadastrado" }}</p>
-        <p><i class="fas fa-user-shield"></i> Gestor: {{ escola.nome_gestor }}</p>
+    <div class="header-escola">
+        <div class="info-escola">
+            <h4><i class="fas fa-school"></i> {{ escola.nome }} - {{ escola.inep }}</h4>
+
+            <div class="info-escola-detalhes">
+                <p><i class="fas fa-map-marker-alt"></i> {{ escola.endereco|default:"Endereço não cadastrado" }}</p><!--Endereço-->
+                <p><i class="fas fa-phone-alt"></i> {{ escola.telefone|default:"Telefone não cadastrado" }}</p><!--Telefone-->
+                <p><i class="fas fa-envelope me-2"></i> Email da Escola: {{ escola.email_escola }}</p><!--Email da escola-->
+                <p><i class="fas fa-user-shield"></i> Gestor: {{ escola.nome_gestor }}</p><!--Gestor-->
+                <p><i class="fas fa-phone-alt"></i> Telefone do Gestor: {{ escola.telefone_gestor|default:"Telefone não cadastrado" }}</p> <!--Telefone do gestor-->
+                <p><i class="fas fa-envelope me-2"></i> Email do Gestor: {{ escola.email_gestor|default:"Email não cadastrado" }}</p> <!--Email do gestor-->
+            </div>
+        </div>
+        
+        <div class="imagem-escola">
+            {% if escola.foto_fachada %}
+                <img src="{{ escola.foto_fachada }}" alt="Foto da Escola" />
+            {% else %}
+                <img src="{% static 'images\default-school.jpeg' %}" alt="Foto não disponível" />
+            {% endif %}
+        </div>
     </div>
-    </div>
-    <div class="imagem-escola">
-    {% if escola.foto_fachada %}
-        <img src="{{ escola.foto_fachada.url }}" alt="Foto da Escola" />
-    {% else %}
-        <img src="{% static 'images\default-school.jpeg' %}" alt="Foto não disponível" />
-    {% endif %}
-    </div>
-</div>
 
 <div class="row">
     <div class="col-md-8">
     <div class="row">
         <div class="col-md-6">
-        <div class="card-indicador">
-            <p>QUANTIDADE DE LACUNAS EXISTENTES</p>
-            <h1>{{ total_lacunas }}</h1>
-            <button class="btn btn-relatar" data-bs-toggle="modal" data-bs-target="#modalRelatarLacuna">RELATAR LACUNA</button>
-        </div>
+            <div class="card-indicador">
+                <p>QUANTIDADE DE LACUNAS EXISTENTES</p>
+                <h1>{{ total_lacunas }}</h1>
+                <button class="btn btn-relatar" data-bs-toggle="modal" data-bs-target="#modalRelatarLacuna">RELATAR LACUNA</button>
+            </div>
         </div>
         <div class="col-md-6">
-        <div class="card-indicador">
-            <p>QUANTIDADE DE PROBLEMAS EXISTENTES</p>
-            <h1>{{ total_problemas }}</h1>
-            <button class="btn btn-relatar" data-bs-toggle="modal" data-bs-target="#modalRelatarProblema">RELATAR PROBLEMA</button>
-        </div>
+            <div class="card-indicador">
+                <p>QUANTIDADE DE PROBLEMAS EXISTENTES</p>
+                <h1>{{ total_problemas }}</h1>
+                <button class="btn btn-relatar" data-bs-toggle="modal" data-bs-target="#modalRelatarProblema">RELATAR PROBLEMA</button>
+            </div>
         </div>
     </div>
     </div>
@@ -71,6 +76,8 @@
 
 </div>
 
+
+<!-- Campo abaixo dos modals, ou seja, cujo o nome é HISTÓRICO DE PROBLEMAS -->
 <div class="mt-4">
     <h5 class="mb-3 titulo-secao">HISTÓRICO DE PROBLEMAS</h5>
     <div class="row">
@@ -83,53 +90,52 @@
 </div>
 
 <!-- Modal RELATAR LACUNA -->
-<!-- Modal Relatar Lacuna -->
 <div class="modal fade" id="modalRelatarLacuna" tabindex="-1" aria-labelledby="modalLacunaLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
             <form method="post" enctype="multipart/form-data">
                 {% csrf_token %}
 
-            <!-- Cabeçalho do Modal -->
-            <div class="modal-header bg-primary text-white">
-                <h5 class="modal-title" id="modalLacunaLabel">
-                    <i class="fas fa-plus-circle me-2"></i>Nova Lacuna
-                </h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                <!-- Cabeçalho do Modal -->
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title" id="modalLacunaLabel">
+                        <i class="fas fa-plus-circle me-2"></i>Nova Lacuna
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                </div>
+
+                <!-- Corpo do Modal -->
+                <div class="modal-body">
+
+                    <!--DISCIPLINA-->
+                    <div class="mb-3">
+                        <label class="form-label">
+                        <i class="fas fa-book-open me-2"></i>Disciplina
+                        </label>
+                        <input type="text" name="disciplina" class="form-control" placeholder="Informe a disciplina" required>
+                    </div>
+                    <!--DISCIPLINA-->
+                    <div class="mb-3">
+                        <label class="form-label">
+                            <i class="fas fa-clock me-2"></i>Carga Horária
+                        </label>
+                        <select name="carga_horaria" class="form-select" required>
+                            <option value="" selected disabled>Selecione a carga horária</option>
+                            <option value="150h">150 horas</option>
+                            <option value="200h">200 horas</option>
+                        </select>
+                    </div>
+                </div>
+
+                    <!-- Rodapé do Modal -->
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-primary">Relatar Lacuna</button>
+                    </div>
+
+                </form>
             </div>
-
-            <!-- Corpo do Modal -->
-            <div class="modal-body">
-
-                <!--DISCIPLINA-->
-                <div class="mb-3">
-                    <label class="form-label">
-                    <i class="fas fa-book-open me-2"></i>Disciplina
-                    </label>
-                    <input type="text" name="disciplina" class="form-control" placeholder="Informe a disciplina" required>
-                </div>
-                <!--DISCIPLINA-->
-                <div class="mb-3">
-                    <label class="form-label">
-                        <i class="fas fa-clock me-2"></i>Carga Horária
-                    </label>
-                    <select name="carga_horaria" class="form-select" required>
-                        <option value="" selected disabled>Selecione a carga horária</option>
-                        <option value="150h">150 horas</option>
-                        <option value="200h">200 horas</option>
-                    </select>
-                </div>
-            </div>
-
-                <!-- Rodapé do Modal -->
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" class="btn btn-primary">Relatar Lacuna</button>
-                </div>
-
-            </form>
         </div>
-    </div>
 </div>
 
 
@@ -152,10 +158,12 @@
                     <p class="text-end text-danger small">Obs. Campos com <span class="fw-bold">*</span> são obrigatórios</p>
 
                     <!-- Problema -->
-                    <div class="mb-3">                        
-                        <i class="bi bi-exclamation-circle me-2"></i>Descrição Detalhada <span class="text-danger">*</span>
+                    <div class="mb-3">
+                        <label for="descricao_manual" class="form-label">
+                            <i class="bi bi-exclamation-circle me-2"></i>Descrição Detalhada <span class="text-danger">*</span>
                         </label>
-                        {{ form.descricao }}
+                        <textarea id="descricao_manual" name="descricao" class="form-control" rows="4" placeholder="Descreva melhor o seu problema:" required 
+                        style="overflow-y: auto; max-height: 150px;"></textarea>
                     </div>
 
                     <!-- Setor e Anexo lado a lado -->
@@ -174,7 +182,7 @@
                             <label class="form-label">
                                 <i class="bi bi-paperclip me-2"></i>Anexo
                             </label>
-                            <input type="file" name="anexo" class="form-control" placeholder="Anexe aqui...">
+                            <input type="file" name="anexo" class="form-control" placeholder="Anexe aqui..." multiple>
                         </div>
 
                     </div>
