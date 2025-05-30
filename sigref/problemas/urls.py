@@ -1,5 +1,5 @@
 from rest_framework import routers
-from .views import LacunaViewSet, ProblemaUsuarioViewSet
+from .views import LacunaViewSet, ProblemaUsuarioViewSet, EscolaDashboardView
 
 router = routers.DefaultRouter()
 router.register(r'lacunas', LacunaViewSet, basename='lacunas')

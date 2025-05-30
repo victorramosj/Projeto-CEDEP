@@ -50,6 +50,7 @@ class ProblemaUsuarioViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         serializer.save(usuario=self.request.user.greuser)
 
+
 def problema_dashboard_view(request):
     form = ProblemaUsuarioForm()
     return render(request, 'escolas/escola_dashboard.html', {'form': form}) # type: ignore
@@ -61,7 +62,7 @@ def relatar_problema_view(request):
             problema = form.save(commit=False)
             problema.usuario = request.user.greuser  # associa ao usuário logado
             problema.save()
-            return redirect('dashboard')  # redireciona após salvar
+            return redirect('escola_dashboard')  # redireciona após salvar para a tela em que ele estava
     else:
         form = ProblemaUsuarioForm()
     return render(request, 'escolas/relatar_problema.html', {'form': form})
