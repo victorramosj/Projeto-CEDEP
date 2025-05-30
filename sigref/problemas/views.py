@@ -101,13 +101,31 @@ from django.shortcuts import render, redirect
 from .models import AvisoImportante
 from monitoramento.models import Escola
 
+from django.shortcuts import render, redirect
+from django.contrib.auth.decorators import login_required
+from monitoramento.models import Escola
+from .models import AvisoImportante
+
+@login_required
+def listar_avisos_view(request):
+    gre_user = request.user.greuser
+    if gre_user.is_escola():
+        avisos = AvisoImportante.objects.filter(escola=gre_user.escolas.first(), ativo=True)
+    else:
+        avisos = AvisoImportante.objects.filter(criado_por=gre_user, ativo=True)
+
+    escolas = Escola.objects.all()  # Para popular select no modal
+    return render(request, 'problemas/listar_avisos.html', {
+        'avisos': avisos,
+        'gre_user': gre_user,
+        'escolas': escolas,
+    })
+
 @login_required
 def criar_aviso_view(request):
     gre_user = request.user.greuser
-
-    # ❌ Bloqueia se for escola
     if gre_user.is_escola():
-        return redirect('dashboard')  # ou renderizar uma página de erro
+        return redirect('listar_avisos')
 
     if request.method == 'POST':
         titulo = request.POST.get('titulo')
@@ -123,16 +141,6 @@ def criar_aviso_view(request):
             criado_por=gre_user,
             ativo=True
         )
-        return redirect('dashboard')  # ou mensagem de sucesso
+        return redirect('listar_avisos')
 
-    escolas = Escola.objects.all()
-    return render(request, 'avisos/criar_aviso.html', {'escolas': escolas})
-
-def relatar_lacuna_view(request):
-    if request.method == 'POST':
-        form = LacunaForm(request.POST)
-        if form.is_valid():
-            lacuna = form.save(commit=False)
-            lacuna.escola = request.user.greuser.escolas.first()
-            lacuna.save()
-    return HttpResponseRedirect(request.META.get('HTTP_REFERER', '/'))
+    return redirect('listar_avisos')  # Se chegar via GET, só redireciona
