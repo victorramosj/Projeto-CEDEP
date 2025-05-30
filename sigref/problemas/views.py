@@ -8,20 +8,23 @@ from django.shortcuts import render, redirect
 from django.views.generic import TemplateView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from monitoramento.models import GREUser, Escola, Setor  # ajuste o import conforme sua estrutura
+from .forms import ProblemaUsuarioForm  # importe seu formulário
 
 class EscolaDashboardView(LoginRequiredMixin, TemplateView):
     template_name = 'escola_dashboard.html'
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        gre_user = self.request.user.greuser  # Supondo que todo usuário tenha um GREUser associado
-        escola = gre_user.escolas.first()  # Assumindo que GREUser está relacionado a uma ou mais escolas
+        gre_user = self.request.user.greuser
+        escola = gre_user.escolas.first()
         setor = Setor.objects.all()
 
         context['gre_user'] = gre_user
         context['escola'] = escola
-        context['setor'] = setor       
+        context['setor'] = setor
+        context['form_problema'] = ProblemaUsuarioForm()  # ✅ aqui está a adição
         return context
+
 
 
 class LacunaViewSet(viewsets.ModelViewSet):
@@ -56,14 +59,14 @@ def problema_dashboard_view(request):
     form = ProblemaUsuarioForm()
     return render(request, 'escolas/escola_dashboard.html', {'form': form}) # type: ignore
 
+from django.http import HttpResponseRedirect
+
 def relatar_problema_view(request):
     if request.method == 'POST':
         form = ProblemaUsuarioForm(request.POST, request.FILES)
         if form.is_valid():
             problema = form.save(commit=False)
-            problema.usuario = request.user.greuser  # associa ao usuário logado
+            problema.usuario = request.user.greuser
             problema.save()
-            return redirect('escola_dashboard')  # redireciona após salvar para a tela em que ele estava
-    else:
-        form = ProblemaUsuarioForm()
-    return render(request, 'escolas/relatar_problema.html', {'form': form})
+    return HttpResponseRedirect(request.META.get('HTTP_REFERER', '/'))
+

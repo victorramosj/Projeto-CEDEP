@@ -20,3 +20,7 @@ class ProblemaUsuarioForm(forms.ModelForm):
             'descricao': 'Problema',
             'setor': 'Setor',
         }
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['setor'].queryset = Setor.objects.all()
+
