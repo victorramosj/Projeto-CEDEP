@@ -133,6 +133,7 @@
                             <thead class="table-light">
                                 <tr>
                                     <th>Hóspede</th>
+                                    <th>Instituicao</th>
                                     <th>Previsão de chegada</th>
                                     <th>Previsão de saída</th>
                                     <th>Status</th>
@@ -142,6 +143,7 @@
                                 {% for reserva in recent_reservations %}
                                 <tr>
                                     <td>{{ reserva.hospede.nome }}</td>
+                                    <td>{{ reserva.hospede.instituicao }}</td>
                                     <td>{{ reserva.data_checkin|date:"d/m/Y" }}</td>
                                     <td>{{ reserva.data_checkout|date:"d/m/Y" }}</td>
                                     <td>
