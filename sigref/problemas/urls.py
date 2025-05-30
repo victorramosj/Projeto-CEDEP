@@ -17,6 +17,8 @@ urlpatterns = [
     path('dashboard/', views.problema_dashboard_view, name='problemas'),
     path('relatar-problema/', views.relatar_problema_view, name='relatar_problema'),
     path('avisos/criar/', criar_aviso_view, name='criar_aviso'),
+    path('avisos/', views.listar_avisos_view, name='listar_avisos'),
+    path('avisos/criar/', views.criar_aviso_view, name='criar_aviso'),
 ]
 
 

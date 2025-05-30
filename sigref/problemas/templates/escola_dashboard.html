@@ -8,19 +8,18 @@
 {% endblock %}
 
 {% block content %}
-
 <div class="container mt-4">
     <div class="header-escola">
         <div class="info-escola">
             <h4><i class="fas fa-school"></i> {{ escola.nome }} - {{ escola.inep }}</h4>
 
             <div class="info-escola-detalhes">
-                <p><i class="fas fa-map-marker-alt"></i> {{ escola.endereco|default:"Endereço não cadastrado" }}</p><!--Endereço-->
-                <p><i class="fas fa-phone-alt"></i> {{ escola.telefone|default:"Telefone não cadastrado" }}</p><!--Telefone-->
-                <p><i class="fas fa-envelope me-2"></i> Email da Escola: {{ escola.email_escola }}</p><!--Email da escola-->
-                <p><i class="fas fa-user-shield"></i> Gestor: {{ escola.nome_gestor }}</p><!--Gestor-->
-                <p><i class="fas fa-phone-alt"></i> Telefone do Gestor: {{ escola.telefone_gestor|default:"Telefone não cadastrado" }}</p> <!--Telefone do gestor-->
-                <p><i class="fas fa-envelope me-2"></i> Email do Gestor: {{ escola.email_gestor|default:"Email não cadastrado" }}</p> <!--Email do gestor-->
+                <p><i class="fas fa-map-marker-alt"></i> {{ escola.endereco|default:"Endereço não cadastrado" }}</p>
+                <p><i class="fas fa-phone-alt"></i> {{ escola.telefone|default:"Telefone não cadastrado" }}</p>
+                <p><i class="fas fa-envelope me-2"></i> Email da Escola: {{ escola.email_escola }}</p>
+                <p><i class="fas fa-user-shield"></i> Gestor: {{ escola.nome_gestor }}</p>
+                <p><i class="fas fa-phone-alt"></i> Telefone do Gestor: {{ escola.telefone_gestor|default:"Telefone não cadastrado" }}</p>
+                <p><i class="fas fa-envelope me-2"></i> Email do Gestor: {{ escola.email_gestor|default:"Email não cadastrado" }}</p>
             </div>
         </div>
         
@@ -28,65 +27,95 @@
             {% if escola.foto_fachada %}
                 <img src="{{ escola.foto_fachada }}" alt="Foto da Escola" />
             {% else %}
-                <img src="{% static 'images\default-school.jpeg' %}" alt="Foto não disponível" />
+                <img src="{% static 'images/default-school.jpeg' %}" alt="Foto não disponível" />
             {% endif %}
         </div>
     </div>
 
-<div class="row">
-    <div class="col-md-8">
     <div class="row">
-        <div class="col-md-6">
-            <div class="card-indicador">
-                <p>QUANTIDADE DE LACUNAS EXISTENTES</p>
-                <h1>{{ total_lacunas }}</h1>
-                <button class="btn btn-relatar" data-bs-toggle="modal" data-bs-target="#modalRelatarLacuna">RELATAR LACUNA</button>
-            </div>
-        </div>
-        <div class="col-md-6">
-            <div class="card-indicador">
-                <p>QUANTIDADE DE PROBLEMAS EXISTENTES</p>
-                <h1>{{ total_problemas }}</h1>
-                <button class="btn btn-relatar" data-bs-toggle="modal" data-bs-target="#modalRelatarProblema">RELATAR PROBLEMA</button>
-            </div>
-        </div>
-    </div>
-    </div>
-    <div class="col-md-4">
-        <div class="avisos-importantes">
-            <h5>
-                <i class="fas fa-exclamation-triangle"></i> AVISOS IMPORTANTES
-            </h5>
-
-            {% if avisos %}
-                <div>
-                    <p class="text-muted mb-2">
-                        <strong>{{ avisos.0.titulo|upper }}</strong>:
-                        {{ avisos.0.mensagem|truncatechars:70 }}
-                    </p>
-                    <button class="btn btn-sm btn-outline-danger w-100" data-bs-toggle="modal" data-bs-target="#modalAvisos">
-                        Ver todos os avisos
-                    </button>
+        <div class="col-md-8">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="card-indicador">
+                        <p>QUANTIDADE DE LACUNAS EXISTENTES</p>
+                        <h1>{{ total_lacunas }}</h1>
+                        <button class="btn btn-relatar" data-bs-toggle="modal" data-bs-target="#modalRelatarLacuna">RELATAR LACUNA</button>
+                    </div>
                 </div>
-            {% else %}
-                <p class="text-muted">Nenhum aviso no momento.</p>
-            {% endif %}
+                <div class="col-md-6">
+                    <div class="card-indicador">
+                        <p>QUANTIDADE DE PROBLEMAS EXISTENTES</p>
+                        <h1>{{ total_problemas }}</h1>
+                        <button class="btn btn-relatar" data-bs-toggle="modal" data-bs-target="#modalRelatarProblema">RELATAR PROBLEMA</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="avisos-importantes">
+                <h5>
+                    <i class="fas fa-exclamation-triangle"></i> AVISOS IMPORTANTES
+                </h5>
+
+                {% if avisos %}
+                    <div>
+                        <p class="text-muted mb-2">
+                            <strong>{{ avisos.0.titulo|upper }}</strong>:
+                            {{ avisos.0.mensagem|truncatechars:70 }}
+                        </p>
+                        <button class="btn btn-sm btn-outline-danger w-100 mb-2" data-bs-toggle="modal" data-bs-target="#modalAvisos">
+                            Ver todos os avisos
+                        </button>
+
+                        {% if not gre_user.is_escola %}
+                        <button class="btn btn-sm btn-outline-danger w-100" data-bs-toggle="modal" data-bs-target="#modalCriarAviso">
+                            Criar Aviso Importante
+                        </button>
+                        {% endif %}
+                    </div>
+                {% else %}
+                    <p class="text-muted">Nenhum aviso no momento.</p>
+
+                    {% if not gre_user.is_escola %}
+                    <button class="btn btn-sm btn-outline-danger w-100 mt-3" data-bs-toggle="modal" data-bs-target="#modalCriarAviso">
+                        Criar Aviso Importante
+                    </button>
+                    {% endif %}
+                {% endif %}
+            </div>
         </div>
     </div>
 
-</div>
-
-
-<!-- Campo abaixo dos modals, ou seja, cujo o nome é HISTÓRICO DE PROBLEMAS -->
-<div class="mt-4">
-    <h5 class="mb-3 titulo-secao">HISTÓRICO DE PROBLEMAS</h5>
-    <div class="row">
-    <div class="col-md-3 col-sm-6 mb-3"><div class="card-status resolvidos"><div class="numero">{{ total_resolvidos }}</div><div class="descricao"><i class="fas fa-check-circle"></i> Resolvidos</div></div></div>
-    <div class="col-md-3 col-sm-6 mb-3"><div class="card-status pendentes"><div class="numero">{{ total_pendentes }}</div><div class="descricao"><i class="fas fa-exclamation-circle"></i> Pendentes</div></div></div>
-    <div class="col-md-3 col-sm-6 mb-3"><div class="card-status em-andamento"><div class="numero">{{ total_andamento }}</div><div class="descricao"><i class="fas fa-spinner"></i> Em Andamento</div></div></div>
-    <div class="col-md-3 col-sm-6 mb-3"><div class="card-status este-mes"><div class="numero">{{ total_mes }}</div><div class="descricao"><i class="fas fa-calendar-alt"></i> Este Mês</div></div></div>
+    <!-- HISTÓRICO DE PROBLEMAS -->
+    <div class="mt-4">
+        <h5 class="mb-3 titulo-secao">HISTÓRICO DE PROBLEMAS</h5>
+        <div class="row">
+            <div class="col-md-3 col-sm-6 mb-3">
+                <div class="card-status resolvidos">
+                    <div class="numero">{{ total_resolvidos }}</div>
+                    <div class="descricao"><i class="fas fa-check-circle"></i> Resolvidos</div>
+                </div>
+            </div>
+            <div class="col-md-3 col-sm-6 mb-3">
+                <div class="card-status pendentes">
+                    <div class="numero">{{ total_pendentes }}</div>
+                    <div class="descricao"><i class="fas fa-exclamation-circle"></i> Pendentes</div>
+                </div>
+            </div>
+            <div class="col-md-3 col-sm-6 mb-3">
+                <div class="card-status em-andamento">
+                    <div class="numero">{{ total_andamento }}</div>
+                    <div class="descricao"><i class="fas fa-spinner"></i> Em Andamento</div>
+                </div>
+            </div>
+            <div class="col-md-3 col-sm-6 mb-3">
+                <div class="card-status este-mes">
+                    <div class="numero">{{ total_mes }}</div>
+                    <div class="descricao"><i class="fas fa-calendar-alt"></i> Este Mês</div>
+                </div>
+            </div>
+        </div>
     </div>
-</div>
 </div>
 
 <!-- Modal RELATAR LACUNA -->
@@ -95,26 +124,19 @@
         <div class="modal-content">
             <form method="post" enctype="multipart/form-data">
                 {% csrf_token %}
-
-                <!-- Cabeçalho do Modal -->
                 <div class="modal-header bg-primary text-white">
                     <h5 class="modal-title" id="modalLacunaLabel">
                         <i class="fas fa-plus-circle me-2"></i>Nova Lacuna
                     </h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
                 </div>
-
-                <!-- Corpo do Modal -->
                 <div class="modal-body">
-
-                    <!--DISCIPLINA-->
                     <div class="mb-3">
                         <label class="form-label">
                         <i class="fas fa-book-open me-2"></i>Disciplina
                         </label>
                         <input type="text" name="disciplina" class="form-control" placeholder="Informe a disciplina" required>
                     </div>
-                    <!--DISCIPLINA-->
                     <div class="mb-3">
                         <label class="form-label">
                             <i class="fas fa-clock me-2"></i>Carga Horária
@@ -126,18 +148,14 @@
                         </select>
                     </div>
                 </div>
-
-                    <!-- Rodapé do Modal -->
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                        <button type="submit" class="btn btn-primary">Relatar Lacuna</button>
-                    </div>
-
-                </form>
-            </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Relatar Lacuna</button>
+                </div>
+            </form>
         </div>
+    </div>
 </div>
-
 
 <!-- Modal RELATAR PROBLEMA -->
 <div class="modal fade" id="modalRelatarProblema" tabindex="-1" aria-labelledby="modalProblemaLabel" aria-hidden="true">
@@ -145,51 +163,36 @@
         <div class="modal-content">
             <form method="post" enctype="multipart/form-data" action="{% url 'relatar_problema' %}">
                 {% csrf_token %}
-                <!-- Cabeçalho -->
                 <div class="modal-header bg-primary text-white">
                     <h5 class="modal-title" id="modalProblemaLabel">
                         <i class="bi bi-plus-circle me-2"></i> Novo Problema
                     </h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
                 </div>
-
-                <!-- Corpo -->
                 <div class="modal-body">
                     <p class="text-end text-danger small">Obs. Campos com <span class="fw-bold">*</span> são obrigatórios</p>
-
-                    <!-- Problema -->
                     <div class="mb-3">
                         <label for="descricao_manual" class="form-label">
                             <i class="bi bi-exclamation-circle me-2"></i>Descrição Detalhada <span class="text-danger">*</span>
                         </label>
-                        <textarea id="descricao_manual" name="descricao" class="form-control" rows="4" placeholder="Descreva melhor o seu problema:" required 
+                        <textarea id="descricao_manual" name="descricao" class="form-control" rows="4" placeholder="Descreva melhor o seu problema:" required
                         style="overflow-y: auto; max-height: 150px;"></textarea>
                     </div>
-
-                    <!-- Setor e Anexo lado a lado -->
                     <div class="row">
-
-                        <!-- Setor -->
                         <div class="col-md-6 mb-3">
                             <label class="form-label">
                                 <i class="bi bi-diagram-3 me-2"></i>Setor <span class="text-danger">*</span>
                             </label>
                             {{ form.setor }}
                         </div>
-                        
-                        <!-- Anexo -->
                         <div class="col-md-6 mb-3">
                             <label class="form-label">
                                 <i class="bi bi-paperclip me-2"></i>Anexo
                             </label>
                             <input type="file" name="anexo" class="form-control" placeholder="Anexe aqui..." multiple>
                         </div>
-
                     </div>
                 </div>
-                
-
-                <!-- Rodapé do Modal -->
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
                     <button type="submit" class="btn btn-primary">Relatar Problema</button>
@@ -199,34 +202,70 @@
     </div>
 </div>
 
-
-
-
+<!-- Modal TODOS OS AVISOS -->
 <div class="modal fade" id="modalAvisos" tabindex="-1" aria-labelledby="modalAvisosLabel" aria-hidden="true">
-<div class="modal-dialog modal-dialog-scrollable">
-    <div class="modal-content">
-
-    <div class="modal-header bg-danger text-white">
-        <h5 class="modal-title" id="modalAvisosLabel"><i class="fas fa-bullhorn me-2"></i>Todos os Avisos</h5>
-        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
-    </div>
-
-    <div class="modal-body">
-        {% for aviso in avisos %}
-        <div class="mb-3">
-            <p class="mb-1"><strong>{{ aviso.titulo|upper }}</strong></p>
-            <p class="text-muted">{{ aviso.mensagem }}</p>
-            <hr>
+    <div class="modal-dialog modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title" id="modalAvisosLabel"><i class="fas fa-bullhorn me-2"></i>Todos os Avisos</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
+            </div>
+            <div class="modal-body">
+                {% for aviso in avisos %}
+                <div class="mb-3">
+                    <p class="mb-1"><strong>{{ aviso.titulo|upper }}</strong></p>
+                    <p class="text-muted">{{ aviso.mensagem }}</p>
+                    <hr>
+                </div>
+                {% endfor %}
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+            </div>
         </div>
-        {% endfor %}
-    </div>
-
-    <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
-    </div>
-
     </div>
 </div>
+
+<!-- Modal CRIAR AVISO IMPORTANTE -->
+<div class="modal fade" id="modalCriarAviso" tabindex="-1" aria-labelledby="modalCriarAvisoLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="post" action="{% url 'criar_aviso' %}">
+                {% csrf_token %}
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title" id="modalCriarAvisoLabel"><i class="fas fa-plus-circle me-2"></i>Novo Aviso Importante</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="titulo" class="form-label">Título</label>
+                        <input type="text" name="titulo" id="titulo" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="mensagem" class="form-label">Mensagem</label>
+                        <textarea name="mensagem" id="mensagem" class="form-control" rows="4" required></textarea>
+                    </div>
+
+                    <!-- ESCOLA FIXA, NÃO VISÍVEL -->
+                    <input type="hidden" name="escola_id" value="{{ escola.id }}">
+
+                    <div class="mb-3">
+                        <label for="prioridade" class="form-label">Prioridade</label>
+                        <select name="prioridade" id="prioridade" class="form-select">
+                            <option value="baixa">Baixa</option>
+                            <option value="normal" selected>Normal</option>
+                            <option value="alta">Alta</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-danger">Publicar Aviso</button>
+                </div>
+            </form>
+        </div>
+    </div>
 </div>
+
 
 {% endblock %}
