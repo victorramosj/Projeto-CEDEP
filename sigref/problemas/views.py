@@ -1,7 +1,7 @@
 from rest_framework import viewsets, permissions
 from .models import Lacuna, ProblemaUsuario
 from .serializers import LacunaSerializer, ProblemaUsuarioSerializer
-from .forms import ProblemaUsuarioForm
+from .forms import ProblemaUsuarioForm, LacunaForm
 from django.shortcuts import render, redirect
 
 
@@ -23,6 +23,7 @@ class EscolaDashboardView(LoginRequiredMixin, TemplateView):
         context['escola'] = escola
         context['setor'] = setor
         context['form_problema'] = ProblemaUsuarioForm()  # ✅ aqui está a adição
+        context['form_lacuna'] = LacunaForm() 
         return context
 
 
@@ -59,6 +60,8 @@ def problema_dashboard_view(request):
     form = ProblemaUsuarioForm()
     return render(request, 'escolas/escola_dashboard.html', {'form': form}) # type: ignore
 
+
+
 from django.http import HttpResponseRedirect
 
 def relatar_problema_view(request):
@@ -70,3 +73,11 @@ def relatar_problema_view(request):
             problema.save()
     return HttpResponseRedirect(request.META.get('HTTP_REFERER', '/'))
 
+def relatar_lacuna_view(request):
+    if request.method == 'POST':
+        form = LacunaForm(request.POST)
+        if form.is_valid():
+            lacuna = form.save(commit=False)
+            lacuna.escola = request.user.greuser.escolas.first()
+            lacuna.save()
+    return HttpResponseRedirect(request.META.get('HTTP_REFERER', '/'))
