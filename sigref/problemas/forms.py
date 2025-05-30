@@ -1,5 +1,6 @@
 from django import forms
 from .models import ProblemaUsuario
+from monitoramento.models import Setor  # <- Corrigido aqui
 
 class ProblemaUsuarioForm(forms.ModelForm):
     class Meta:

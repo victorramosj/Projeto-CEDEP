@@ -7,7 +7,7 @@ from django.shortcuts import render, redirect
 
 from django.views.generic import TemplateView
 from django.contrib.auth.mixins import LoginRequiredMixin
-from monitoramento.models import GREUser, Escola  # ajuste o import conforme sua estrutura
+from monitoramento.models import GREUser, Escola, Setor  # ajuste o import conforme sua estrutura
 
 class EscolaDashboardView(LoginRequiredMixin, TemplateView):
     template_name = 'escola_dashboard.html'
@@ -16,9 +16,11 @@ class EscolaDashboardView(LoginRequiredMixin, TemplateView):
         context = super().get_context_data(**kwargs)
         gre_user = self.request.user.greuser  # Supondo que todo usuário tenha um GREUser associado
         escola = gre_user.escolas.first()  # Assumindo que GREUser está relacionado a uma ou mais escolas
+        setor = Setor.objects.all()
 
         context['gre_user'] = gre_user
         context['escola'] = escola
+        context['setor'] = setor       
         return context
 
 
