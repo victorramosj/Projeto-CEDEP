@@ -114,48 +114,49 @@
 <div class="modal fade" id="modalRelatarLacuna" tabindex="-1" aria-labelledby="modalLacunaLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
-            <form method="POST" action="{% url 'relatar_lacuna' %}">
+            <form method="post" action="{% url 'relatar_lacuna' %}">
                 {% csrf_token %}
 
-                <!-- Cabeçalho do Modal -->
+                <!-- Cabeçalho -->
                 <div class="modal-header bg-primary text-white">
                     <h5 class="modal-title" id="modalLacunaLabel">
-                        <i class="fas fa-plus-circle me-2"></i>Nova Lacuna
+                        <i class="bi bi-plus-circle me-2"></i> Nova Lacuna
                     </h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
-                        aria-label="Fechar"></button>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
                 </div>
 
-                <!-- Corpo do Modal -->
+                <!-- Corpo -->
                 <div class="modal-body">
+                    <p class="text-end text-danger small">Obs. Campos com <span class="fw-bold">*</span> são obrigatórios</p>
 
-                    <!--DISCIPLINA-->
+                    <!-- Disciplina -->
                     <div class="mb-3">
-                        <label class="form-label">
-                            <i class="fas fa-book-open me-2"></i>Disciplina
+                        <label for="disciplina_manual" class="form-label">
+                            <i class="bi bi-book me-2"></i>Disciplina <span class="text-danger">*</span>
                         </label>
-                        <input type="text" name="disciplina" class="form-control" placeholder="Informe a disciplina"
-                            required>
+                        <input id="disciplina_manual" type="text" name="disciplina" class="form-control" placeholder="Ex: Matemática" required>
                     </div>
-                    <!--DISCIPLINA-->
+
+                    <!-- Carga Horária -->
                     <div class="mb-3">
-                        <label class="form-label">
-                            <i class="fas fa-clock me-2"></i>Carga Horária
+                        <label for="carga_horaria_manual" class="form-label">
+                            <i class="bi bi-clock me-2"></i>Carga Horária <span class="text-danger">*</span>
                         </label>
-                        <select name="carga_horaria" class="form-select" required>
-                            <option value="" selected disabled>Selecione a carga horária</option>
-                            <option value="150h">150 horas</option>
-                            <option value="200h">200 horas</option>
+                        <select id="carga_horaria_manual" name="carga_horaria" class="form-select" required>
+                            <option value="" disabled selected>Selecione</option>                          
+                            <option value="150">150 horas</option>
+                            <option value="200">200 horas</option>
                         </select>
                     </div>
                 </div>
 
-                <!-- Rodapé do Modal -->
+                <!-- Rodapé -->
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" class="btn btn-primary" onclick="alert('Lacuna relatada com sucesso!')">Relatar Lacuna</button>
+                    <button type="submit" class="btn btn-primary" onclick="alert('Lacuna relatada com sucesso!')">
+                        Relatar Lacuna
+                    </button>
                 </div>
-
             </form>
         </div>
     </div>
