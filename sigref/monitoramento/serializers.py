@@ -30,7 +30,7 @@ class EscolaSerializer(serializers.ModelSerializer):
     class Meta:
         model = Escola
         fields = ['id', 'nome', 'inep', 'endereco', 'foto_fachada_url', 
-                 'nome_gestor', 'email_gestor', 'telefone']
+                    'nome_gestor', 'email_gestor', 'telefone']
 
     def get_foto_fachada_url(self, obj):
         if obj.foto_fachada:

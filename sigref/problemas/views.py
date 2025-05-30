@@ -4,11 +4,20 @@ from .serializers import LacunaSerializer, ProblemaUsuarioSerializer
 from .forms import ProblemaUsuarioForm, LacunaForm
 from django.shortcuts import render, redirect
 
+from .models import AvisoImportante
+from django.utils import timezone
+from django.db.models import Q
+
+
 
 from django.views.generic import TemplateView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from monitoramento.models import GREUser, Escola, Setor  # ajuste o import conforme sua estrutura
 from .forms import ProblemaUsuarioForm  # importe seu formulário
+
+from .models import AvisoImportante  # Adicione no topo do arquivo
+from django.utils import timezone
+from django.db.models import Q
 
 class EscolaDashboardView(LoginRequiredMixin, TemplateView):
     template_name = 'escola_dashboard.html'
@@ -17,10 +26,20 @@ class EscolaDashboardView(LoginRequiredMixin, TemplateView):
         context = super().get_context_data(**kwargs)
         gre_user = self.request.user.greuser
         escola = gre_user.escolas.first()
-        setor = Setor.objects.all()
+
+        # 🔥 Buscar avisos válidos da escola
+        avisos = AvisoImportante.objects.filter(
+            escola=escola,
+            ativo=True
+        ).filter(
+            Q(data_expiracao__isnull=True) | Q(data_expiracao__gte=timezone.now())
+        ).order_by('-prioridade', '-data_criacao')
 
         context['gre_user'] = gre_user
         context['escola'] = escola
+        context['avisos'] = avisos  # 👈 essa linha envia os avisos pro template
+        setor = Setor.objects.all()
+
         context['setor'] = setor
         context['form_problema'] = ProblemaUsuarioForm()  # ✅ aqui está a adição
         context['form_lacuna'] = LacunaForm() 
@@ -71,22 +90,57 @@ def relatar_problema_view(request):
             problema = form.save(commit=False)
             problema.usuario = request.user.greuser
             problema.save()
-    return HttpResponseRedirect(request.META.get('HTTP_REFERER', '/'))
+            return redirect('dashboard')  # redireciona após salvar
+    else:
+        form = ProblemaUsuarioForm()
+    return render(request, 'escolas/relatar_problema.html', {'form': form})
 
-# views.py (continuação)
-from django.shortcuts import redirect
-from django.http import HttpResponseRedirect
-from .forms import LacunaForm
 
-def relatar_lacuna_view(request):
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import render, redirect
+from .models import AvisoImportante
+from monitoramento.models import Escola
+
+from django.shortcuts import render, redirect
+from django.contrib.auth.decorators import login_required
+from monitoramento.models import Escola
+from .models import AvisoImportante
+
+@login_required
+def listar_avisos_view(request):
+    gre_user = request.user.greuser
+    if gre_user.is_escola():
+        avisos = AvisoImportante.objects.filter(escola=gre_user.escolas.first(), ativo=True)
+    else:
+        avisos = AvisoImportante.objects.filter(criado_por=gre_user, ativo=True)
+
+    escolas = Escola.objects.all()  # Para popular select no modal
+    return render(request, 'problemas/listar_avisos.html', {
+        'avisos': avisos,
+        'gre_user': gre_user,
+        'escolas': escolas,
+    })
+
+@login_required
+def criar_aviso_view(request):
+    gre_user = request.user.greuser
+    if gre_user.is_escola():
+        return redirect('listar_avisos')
+
     if request.method == 'POST':
-        form = LacunaForm(request.POST)
-        if form.is_valid():
-            lacuna = form.save(commit=False)
-            lacuna.escola = request.user.greuser.escolas.first()
-            lacuna.save()
-        else:
-            # opcional: aqui você poderia salvar os erros em messages framework
-            pass
-    # volta para a página de onde veio (dashboard)
-    return HttpResponseRedirect(request.META.get('HTTP_REFERER', '/'))
+        titulo = request.POST.get('titulo')
+        mensagem = request.POST.get('mensagem')
+        escola_id = request.POST.get('escola_id')
+        prioridade = request.POST.get('prioridade', 'normal')
+
+        aviso = AvisoImportante.objects.create(
+            titulo=titulo,
+            mensagem=mensagem,
+            prioridade=prioridade,
+            escola=Escola.objects.get(id=escola_id),
+            criado_por=gre_user,
+            ativo=True
+        )
+        return redirect('listar_avisos')
+
+    return redirect('listar_avisos')  # Se chegar via GET, só redireciona
