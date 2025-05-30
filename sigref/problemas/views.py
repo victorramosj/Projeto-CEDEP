@@ -73,6 +73,11 @@ def relatar_problema_view(request):
             problema.save()
     return HttpResponseRedirect(request.META.get('HTTP_REFERER', '/'))
 
+# views.py (continuação)
+from django.shortcuts import redirect
+from django.http import HttpResponseRedirect
+from .forms import LacunaForm
+
 def relatar_lacuna_view(request):
     if request.method == 'POST':
         form = LacunaForm(request.POST)
@@ -80,4 +85,8 @@ def relatar_lacuna_view(request):
             lacuna = form.save(commit=False)
             lacuna.escola = request.user.greuser.escolas.first()
             lacuna.save()
+        else:
+            # opcional: aqui você poderia salvar os erros em messages framework
+            pass
+    # volta para a página de onde veio (dashboard)
     return HttpResponseRedirect(request.META.get('HTTP_REFERER', '/'))
