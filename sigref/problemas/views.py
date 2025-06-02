@@ -39,7 +39,6 @@ class EscolaDashboardView(LoginRequiredMixin, TemplateView):
         context['escola'] = escola
         context['avisos'] = avisos  # 👈 essa linha envia os avisos pro template
         setor = Setor.objects.all()
-
         context['setor'] = setor
         context['form_problema'] = ProblemaUsuarioForm()  # ✅ aqui está a adição
         context['form_lacuna'] = LacunaForm() 

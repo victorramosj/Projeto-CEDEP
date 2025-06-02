@@ -20,6 +20,8 @@ urlpatterns = [
     path('eventos/novo/', views.evento_form, name='evento_form'),
     path('eventos/novo/modal', views.evento_form, name='evento_form_modal'),
     path('eventos/editar/<int:pk>/', views.evento_form, name='editar_evento'),
+    path('relatorio/pdf/', views.eventos_report_pdf, name='eventos_report_pdf'),
+
     
     # Agendamentos
     path('agendamentos/', views.gerenciar_agendamentos, name='gerenciar_agendamentos'),

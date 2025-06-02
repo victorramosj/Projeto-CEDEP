@@ -105,6 +105,8 @@ def evento_form(request, pk=None):
     })
     
 
+from django.db.models import Q
+
 # Views para Agendamentos
 def gerenciar_agendamentos(request):
     query = request.GET.get('q', '')
@@ -116,8 +118,8 @@ def gerenciar_agendamentos(request):
     if query:
         agendamentos_list = agendamentos_list.filter(
             Q(evento__titulo__icontains=query) |
-            Q(sala__nome__icontains=query)
-        )
+            Q(salas__nome__icontains=query)  # <-- Correção aqui
+        ).distinct()
     
     paginator = Paginator(agendamentos_list, ITENS_POR_PAGINA)
     
@@ -134,6 +136,7 @@ def gerenciar_agendamentos(request):
         'filter_by': filter_by,
     }
     return render(request, 'eventos/gerenciar_agendamentos.html', context)
+
 
 from django.shortcuts import get_object_or_404, redirect, render
 from django.contrib import messages
@@ -250,26 +253,182 @@ def dashboard(request):
     
     return render(request, 'eventos/dashboard.html', context)
 
-# views.py
+
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from .models import Agendamento
 from rest_framework import permissions
+from django.utils import timezone
+from .models import Agendamento
 
 class FullCalendarEventsView(APIView):
-    permission_classes = [permissions.AllowAny]
+    permission_classes = [permissions.AllowAny]    
 
     def get(self, request, format=None):
         agendamentos = Agendamento.objects.all()
         events = [{
             'id': agendamento.id,
             'title': agendamento.evento.titulo,
-            'start': timezone.localtime(agendamento.inicio).isoformat(),
-            'end': timezone.localtime(agendamento.fim).isoformat(),
+            'start': agendamento.inicio.isoformat(),
+            'end': agendamento.fim.isoformat(),
             'extendedProps': {
                 'salas': [sala.nome for sala in agendamento.salas.all()],
                 'descricao': agendamento.evento.descricao,
-                'horario': f"{timezone.localtime(agendamento.inicio).strftime('%H:%M')} - {timezone.localtime(agendamento.fim).strftime('%H:%M')}"
+                'horario': f"{agendamento.inicio.strftime('%H:%M')} - {agendamento.fim.strftime('%H:%M')}"
             }
         } for agendamento in agendamentos]
         return Response(events)
+    
+from django.db.models.functions import ExtractYear    
+from django.shortcuts import render
+from django.http import HttpResponse
+from datetime import datetime
+from .models import Evento, Agendamento
+from reportlab.pdfgen import canvas
+from reportlab.lib.pagesizes import A4
+from reportlab.lib.units import cm
+from reportlab.lib.colors import HexColor
+from reportlab.lib.styles import ParagraphStyle
+from reportlab.platypus import Paragraph  # Import corrigido aqui
+
+
+
+def eventos_report_pdf(request):
+    if request.method == 'POST':
+        tipo_filtro = request.POST.get('tipo_filtro')
+        data_inicio = data_fim = None
+
+        if tipo_filtro == 'mes':
+            mes = int(request.POST.get('mes'))
+            ano = int(request.POST.get('ano'))
+            data_inicio = datetime(ano, mes, 1)
+            if mes == 12:
+                data_fim = datetime(ano + 1, 1, 1)
+            else:
+                data_fim = datetime(ano, mes + 1, 1)
+        elif tipo_filtro == 'periodo':
+            data_inicio = datetime.strptime(request.POST.get('data_inicio'), '%Y-%m-%d')
+            data_fim = datetime.strptime(request.POST.get('data_fim'), '%Y-%m-%d')
+
+        agendamentos = Agendamento.objects.filter(inicio__gte=data_inicio, fim__lte=data_fim).order_by('inicio')
+
+        # Geração do PDF
+        response = HttpResponse(content_type='application/pdf')
+        response['Content-Disposition'] = f'attachment; filename="relatorio_eventos_{datetime.now().date()}.pdf"'
+
+        styles = {
+            'title': ParagraphStyle(
+                name='Title',
+                fontSize=16,
+                leading=18,
+                textColor=HexColor('#2c3e50'),
+                fontName='Helvetica-Bold',
+                spaceAfter=12
+            ),
+            'header': ParagraphStyle(
+                name='Header',
+                fontSize=10,
+                textColor=HexColor('#7f8c8d'),
+                fontName='Helvetica',
+                spaceAfter=15
+            ),
+            'event_title': ParagraphStyle(
+                name='EventTitle',
+                fontSize=12,
+                textColor=HexColor('#2c3e50'),
+                fontName='Helvetica-Bold',
+                spaceAfter=6
+            ),
+            'detail': ParagraphStyle(
+                name='Detail',
+                fontSize=10,
+                textColor=HexColor('#34495e'),
+                fontName='Helvetica',
+                leading=12,
+                spaceAfter=8
+            )
+        }
+
+        p = canvas.Canvas(response, pagesize=A4)
+        width, height = A4
+        margin = 2 * cm
+        line_height = 0.7 * cm
+        max_width = width - 2 * margin
+
+        # Cabeçalho
+        title = Paragraph("Relatório de Eventos e Agendamentos", styles['title'])
+        title.wrapOn(p, width, height)
+        title.drawOn(p, margin, height - margin)
+
+        period_text = f"Período: {data_inicio.strftime('%d/%m/%Y')} a {data_fim.strftime('%d/%m/%Y')}"
+        period = Paragraph(period_text, styles['header'])
+        period.wrapOn(p, width, height)
+        period.drawOn(p, margin, height - margin - 1.2*cm)
+
+        y = height - margin - 3*cm
+        for agendamento in agendamentos:
+            if y < 6 * cm:  # Mais espaço reservado para "card"
+                p.showPage()
+                y = height - margin
+                title.drawOn(p, margin, height - margin)
+                period.drawOn(p, margin, height - margin - 1.2*cm)
+                y -= 2*cm
+
+            evento = agendamento.evento
+
+            # Define cor de fundo com base na hora
+            hora_inicio = agendamento.inicio.hour
+            if hora_inicio < 12:
+                bg_color = HexColor('#dff9fb')  # manhã
+            elif hora_inicio < 18:
+                bg_color = HexColor('#f6e58d')  # tarde
+            else:
+                bg_color = HexColor('#ffbe76')  # noite
+
+            card_height = 5 * cm
+            card_width = max_width
+
+            # Desenha o retângulo (card)
+            p.setFillColor(bg_color)
+            p.roundRect(margin, y - card_height, card_width, card_height, 10, fill=True, stroke=False)
+
+            # Adiciona título do evento
+            event_title = Paragraph(f"<b>Evento:</b> {evento.titulo}", styles['event_title'])
+            event_title.wrapOn(p, card_width - 1*cm, line_height)
+            event_title.drawOn(p, margin + 0.5*cm, y - 0.8*cm)
+
+            # Detalhes do agendamento
+            details = [
+            f"<b>Início:</b> {agendamento.inicio.strftime('%d/%m/%Y %H:%M')} | Fim:</b> {agendamento.fim.strftime('%d/%m/%Y %H:%M')}",
+            f"<b>Organizador:</b> {evento.organizador} | ",
+            f"<b>Participantes:</b> {agendamento.participantes or 'Não informado'}",
+            f"<b>Salas:</b> {', '.join([s.nome for s in agendamento.salas.all()])}"
+        ]
+
+            text_y = y - 1.6*cm
+            for detail in details:
+                text = Paragraph(detail, styles['detail'])
+                text.wrapOn(p, card_width - 1.5*cm, line_height)
+                text.drawOn(p, margin + 0.7*cm, text_y)
+                text_y -= line_height
+
+            y -= card_height + 0.5*cm
+
+        p.save()
+        return response
+
+    # Gera lista de meses
+    meses = [
+        'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+        'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
+    ]
+
+    # Obtém anos distintos a partir dos agendamentos
+    anos_inicio = Agendamento.objects.annotate(ano=ExtractYear('inicio')).values_list('ano', flat=True)
+    anos_fim = Agendamento.objects.annotate(ano=ExtractYear('fim')).values_list('ano', flat=True)
+    anos = sorted(set(anos_inicio).union(anos_fim))
+
+    return render(request, 'relatorios/filtro_eventos.html', {
+        'meses': meses,
+        'anos': anos,
+    })
+
