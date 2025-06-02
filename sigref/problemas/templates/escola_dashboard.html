@@ -14,20 +14,25 @@
             <h4><i class="fas fa-school"></i> {{ escola.nome }} - {{ escola.inep }}</h4>
 
             <div class="info-escola-detalhes">
-                <p><i class="fas fa-map-marker-alt"></i> {{ escola.endereco|default:"Endereço não cadastrado" }}</p><!--Endereço-->
-                <p><i class="fas fa-phone-alt"></i> {{ escola.telefone|default:"Telefone não cadastrado" }}</p><!--Telefone-->
-                <p><i class="fas fa-envelope me-2"></i> <strong>Email da Escola:</strong> {{ escola.email_escola }}</p><!--Email da escola-->
+                <p><i class="fas fa-map-marker-alt"></i> {{ escola.endereco|default:"Endereço não cadastrado" }}</p>
+                <!--Endereço-->
+                <p><i class="fas fa-phone-alt"></i> {{ escola.telefone|default:"Telefone não cadastrado" }}</p>
+                <!--Telefone-->
+                <p><i class="fas fa-envelope me-2"></i> <strong>Email da Escola:</strong> {{ escola.email_escola }}</p>
+                <!--Email da escola-->
                 <p><i class="fas fa-user-shield"></i><strong>Gestor:</strong> {{ escola.nome_gestor }}</p><!--Gestor-->
-                <p><i class="fas fa-phone-alt"></i> <strong>Telefone do Gestor:</strong> {{ escola.telefone_gestor|default:"Telefone não cadastrado" }}</p> <!--Telefone do gestor-->
-                <p><i class="fas fa-envelope me-2"></i> <strong>Email do Gestor:</strong> {{ escola.email_gestor|default:"Email não cadastrado" }}</p> <!--Email do gestor-->
+                <p><i class="fas fa-phone-alt"></i> <strong>Telefone do Gestor:</strong> {{
+                    escola.telefone_gestor|default:"Telefone não cadastrado" }}</p> <!--Telefone do gestor-->
+                <p><i class="fas fa-envelope me-2"></i> <strong>Email do Gestor:</strong> {{
+                    escola.email_gestor|default:"Email não cadastrado" }}</p> <!--Email do gestor-->
             </div>
         </div>
-        
+
         <div class="imagem-escola">
             {% if escola.foto_fachada %}
-                <img src="{{ escola.foto_fachada }}" alt="Foto da Escola" />
+            <img src="{{ escola.foto_fachada }}" alt="Foto da Escola" />
             {% else %}
-                <img src="{% static 'images/default-school.jpeg' %}" alt="Foto não disponível" />
+            <img src="{% static 'images/default-school.jpeg' %}" alt="Foto não disponível" />
             {% endif %}
         </div>
     </div>
@@ -38,7 +43,7 @@
                 <div class="col-md-6">
                     <div class="card-indicador">
                         <p>QUANTIDADE DE LACUNAS EXISTENTES</p>
-                        <h1>{{ total_lacunas }}</h1>
+                        <h1>{{ total_lacunas }}</h1><br>
                         <button class="btn btn-relatar" data-bs-toggle="modal"
                             data-bs-target="#modalRelatarLacuna">RELATAR LACUNA</button>
                     </div>
@@ -46,7 +51,7 @@
                 <div class="col-md-6">
                     <div class="card-indicador">
                         <p>QUANTIDADE DE PROBLEMAS EXISTENTES</p>
-                        <h1>{{ total_problemas }}</h1>
+                        <h1>{{ total_problemas }}</h1><br>
                         <button class="btn btn-relatar" data-bs-toggle="modal"
                             data-bs-target="#modalRelatarProblema">RELATAR PROBLEMA</button>
                     </div>
@@ -61,29 +66,32 @@
                     <i class="fas fa-exclamation-triangle"></i> AVISOS IMPORTANTES
                 </h5>
                 {% if avisos %}
-                    <div>
-                        <p class="text-muted mb-2">
-                            <strong>{{ avisos.0.titulo|upper }}</strong>:
-                            {{ avisos.0.mensagem|truncatechars:70 }}
-                        </p>
-                        <button class="btn btn-sm btn-outline-danger w-100 mb-2" data-bs-toggle="modal" data-bs-target="#modalAvisos">
-                            Ver todos os avisos
-                        </button>
-
-                        {% if not gre_user.is_escola %}
-                        <button class="btn btn-sm btn-outline-danger w-100" data-bs-toggle="modal" data-bs-target="#modalCriarAviso">
-                            Criar Aviso Importante
-                        </button>
-                        {% endif %}
-                    </div>
-                {% else %}
-                    <p class="text-muted">Nenhum aviso no momento.</p>
+                <div>
+                    <p class="text-muted mb-2">
+                        <strong>{{ avisos.0.titulo|upper }}</strong>:
+                        {{ avisos.0.mensagem|truncatechars:70 }}
+                    </p>
+                    <button class="btn btn-sm btn-outline-danger w-100 mb-2" data-bs-toggle="modal"
+                        data-bs-target="#modalAvisos">
+                        Ver todos os avisos
+                    </button>
 
                     {% if not gre_user.is_escola %}
-                    <button class="btn btn-sm btn-outline-danger w-100 mt-3" data-bs-toggle="modal" data-bs-target="#modalCriarAviso">
+                    <button class="btn btn-sm btn-outline-danger w-100" data-bs-toggle="modal"
+                        data-bs-target="#modalCriarAviso">
                         Criar Aviso Importante
                     </button>
                     {% endif %}
+                </div>
+                {% else %}
+                <p class="text-muted">Nenhum aviso no momento.</p>
+
+                {% if not gre_user.is_escola %}
+                <button class="btn btn-sm btn-outline-danger w-100 mt-3" data-bs-toggle="modal"
+                    data-bs-target="#modalCriarAviso">
+                    Criar Aviso Importante
+                </button>
+                {% endif %}
                 {% endif %}
             </div>
         </div>
@@ -134,19 +142,22 @@
                     <h5 class="modal-title" id="modalLacunaLabel">
                         <i class="bi bi-plus-circle me-2"></i> Nova Lacuna
                     </h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                        aria-label="Fechar"></button>
                 </div>
 
                 <!-- Corpo -->
                 <div class="modal-body">
-                    <p class="text-end text-danger small">Obs. Campos com <span class="fw-bold">*</span> são obrigatórios</p>
+                    <p class="text-end text-danger small">Obs. Campos com <span class="fw-bold">*</span> são
+                        obrigatórios</p>
 
                     <!-- Disciplina -->
                     <div class="mb-3">
                         <label for="disciplina_manual" class="form-label">
                             <i class="bi bi-book me-2"></i>Disciplina <span class="text-danger">*</span>
                         </label>
-                        <input id="disciplina_manual" type="text" name="disciplina" class="form-control" placeholder="Ex: Matemática" required>
+                        <input id="disciplina_manual" type="text" name="disciplina" class="form-control"
+                            placeholder="Ex: Matemática" required>
                     </div>
 
                     <!-- Carga Horária -->
@@ -155,7 +166,7 @@
                             <i class="bi bi-clock me-2"></i>Carga Horária <span class="text-danger">*</span>
                         </label>
                         <select id="carga_horaria_manual" name="carga_horaria" class="form-select" required>
-                            <option value="" disabled selected>Selecione</option>                          
+                            <option value="" disabled selected>Selecione</option>
                             <option value="150">150 horas</option>
                             <option value="200">200 horas</option>
                         </select>
@@ -242,7 +253,8 @@
         <div class="modal-content">
             <div class="modal-header bg-danger text-white">
                 <h5 class="modal-title" id="modalAvisosLabel"><i class="fas fa-bullhorn me-2"></i>Todos os Avisos</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                    aria-label="Fechar"></button>
             </div>
             <div class="modal-body">
                 {% for aviso in avisos %}
@@ -267,8 +279,10 @@
             <form method="post" action="{% url 'criar_aviso' %}">
                 {% csrf_token %}
                 <div class="modal-header bg-danger text-white">
-                    <h5 class="modal-title" id="modalCriarAvisoLabel"><i class="fas fa-plus-circle me-2"></i>Novo Aviso Importante</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                    <h5 class="modal-title" id="modalCriarAvisoLabel"><i class="fas fa-plus-circle me-2"></i>Novo Aviso
+                        Importante</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                        aria-label="Fechar"></button>
                 </div>
                 <div class="modal-body">
                     <div class="mb-3">

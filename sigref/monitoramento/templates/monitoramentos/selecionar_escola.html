@@ -47,10 +47,13 @@
                             INEP: {{ escola.inep }}<br>
                             Gestor: {{ escola.nome_gestor }}
                         </p>
-                        <div class="mt-auto">
-                            <button class="btn btn-outline-primary w-100">
+                        <div class="mt-auto d-flex gap-2">
+                            <a href="{% url 'questionarios_escola' escola.id %}" class="btn btn-outline-primary w-50">
                                 Ver questionários
-                            </button>
+                            </a>
+                            <a href="{% url 'escola_dashboard' %}" class="btn btn-outline-primary w-50">
+                                Ver escola
+                            </a>
                         </div>
                     </div>
                 </div>
