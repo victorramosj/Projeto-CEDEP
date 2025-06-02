@@ -38,7 +38,7 @@ def user_login(request):
                     if gre_user.is_admin():
                         return redirect('home')
                     elif gre_user.is_coordenador():
-                        return redirect('coordenador_home')
+                        return redirect('home')
                     elif gre_user.is_chefe_setor():
                         return redirect('home')
                     elif gre_user.is_monitor():

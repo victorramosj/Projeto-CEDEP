@@ -143,3 +143,19 @@ def criar_aviso_view(request):
         return redirect('listar_avisos')
 
     return redirect('listar_avisos')  # Se chegar via GET, só redireciona
+
+from django.shortcuts import redirect
+from django.http import HttpResponseRedirect
+from .forms import LacunaForm
+def relatar_lacuna_view(request):    
+    if request.method == 'POST':
+        form = LacunaForm(request.POST)
+        lacuna = form.save(commit=False)
+        lacuna.escola = request.user.greuser.escolas.first()
+        lacuna.save()
+        return HttpResponseRedirect(request.META.get('HTTP_REFERER', '/'))
+    else:
+            # opcional: aqui você poderia salvar os erros em messages framework
+        pass       
+    # volta para a página de onde veio (dashboard) 
+        return HttpResponseRedirect(request.META.get('HTTP_REFERER', '/'))
