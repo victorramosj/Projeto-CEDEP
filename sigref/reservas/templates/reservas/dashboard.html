@@ -7,65 +7,85 @@
 <div class="container-fluid px-4">
     
     <!-- Cards de Resumo -->
-    <div class="row g-4 my-2">
-        <!-- Quartos -->
-        <div class="col-12 col-md-3">
-            <div class="card shadow border-start-primary h-100 position-relative">
-                <div class="card-body">
-                    <h5 class="text-muted mb-2">
-                        <i class="bi bi-door-closed me-2"></i>Quartos
-                    </h5>
-                    <p class="h1 text-primary">{{ total_quartos }}</p>
-                </div>
+<div class="row g-4 my-2">
+    <!-- Quartos -->
+    <div class="col-12 col-md-3">
+        <div class="card shadow border-start-primary h-100 position-relative">
+            <div class="card-body">
+                <h5 class="text-muted mb-2">
+                    <i class="bi bi-door-closed me-2"></i>Quartos
+                </h5>
+                <p class="h1 text-primary">{{ total_quartos }}</p>
             </div>
         </div>
+    </div>
 
-        <!-- Camas -->
-        <div class="col-12 col-md-3">
-            <div class="card shadow border-start-success h-100 position-relative">
-                <div class="card-body">
-                    <h5 class="text-muted mb-2">
-                        <i class="bi bi-bed me-2"></i>Camas
-                    </h5>
-                    <p class="h1 text-success">{{ total_camas }}</p>
-                    <div class="mt-2">
-                        <span class="badge bg-info me-1">Disponíveis: {{ camas_data.0 }}</span>
-                        <span class="badge bg-warning">Ocupadas: {{ camas_data.1 }}</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Hóspedes -->
-        <div class="col-12 col-md-3">
-            <div class="card shadow border-start-info h-100 position-relative">
-                <div class="card-body">
-                    <a href="{% url 'hospede_form' %}" title="Adicionar novo hóspede" class="btn btn-info btn-sm position-absolute top-0 end-0 m-2">
-                        <i class="bi bi-person-plus"></i>
-                    </a>
-                    <h5 class="text-muted mb-2">
-                        <i class="bi bi-people me-2"></i>Hóspedes
-                    </h5>
-                    <p class="h1 text-info">{{ total_hospedes }}</p>
-                </div>
-            </div>
-        </div>
-
-        <!-- Reservas Ativas (Confirmadas) -->
-        <div class="col-12 col-md-3">
-            <div class="card shadow border-start-warning h-100 position-relative">
-                <div class="card-body">
-                    <a href="{% url 'reserva_form' %}" title="Adicionar nova reserva" class="btn btn-warning btn-sm position-absolute top-0 end-0 m-2">
-                        <i class="bi bi-journal-plus"></i>
-                    </a>
-                    <h5 class="text-muted mb-2">
-                        <i class="bi bi-journal-check me-2"></i>Reservas Ativas
-                    </h5>
-                    <p class="h1 text-warning">{{ reservas_ativas }}</p>
+    <!-- Camas -->
+    <div class="col-12 col-md-3">
+        <div class="card shadow border-start-success h-100 position-relative">
+            <div class="card-body">
+                <h5 class="text-muted mb-2">
+                    <i class="bi bi-bed me-2"></i>Camas
+                </h5>
+                <p class="h1 text-success">{{ total_camas }}</p>
+                <div class="mt-2">
+                    <span class="badge bg-info me-1">Disponíveis: {{ camas_data.0 }}</span>
+                    <span class="badge bg-warning">Ocupadas: {{ camas_data.1 }}</span>
                 </div>
             </div>
         </div>
     </div>
+
+    <!-- Hóspedes -->
+    <div class="col-12 col-md-3">
+        <div class="card shadow border-start-info h-100 position-relative">
+            <div class="card-body">
+                <a href="{% url 'hospede_form' %}" title="Adicionar novo hóspede" class="btn btn-info btn-sm position-absolute top-0 end-0 m-2">
+                    <i class="bi bi-person-plus"></i>
+                </a>
+                <h5 class="text-muted mb-2">
+                    <i class="bi bi-people me-2"></i>Hóspedes
+                </h5>
+                <p class="h1 text-info">{{ total_hospedes }}</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Reservas Ativas -->
+    <div class="col-12 col-md-3">
+        <div class="card shadow border-start-warning h-100 position-relative">
+            <div class="card-body">
+                <a href="{% url 'reserva_form' %}" title="Adicionar nova reserva" class="btn btn-warning btn-sm position-absolute top-0 end-0 m-2">
+                    <i class="bi bi-journal-plus"></i>
+                </a>
+                <h5 class="text-muted mb-2">
+                    <i class="bi bi-journal-check me-2"></i>Reservas Ativas
+                </h5>
+                <p class="h1 text-warning">{{ reservas_ativas }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Botões de Relatórios -->
+<div class="row mt-4">
+    <div class="col-12">
+        <h5 class="text-muted mb-3">
+            <i class="bi bi-file-earmark-bar-graph me-2"></i>Relatórios
+        </h5>
+    </div>
+    <div class="col-12 col-md-3 mb-2">
+        <a href="{% url 'reservas_report_pdf' %}" class="btn btn-outline-warning w-100">
+            <i class="bi bi-file-earmark-bar-graph me-2"></i>Relatório de Reservas
+        </a>
+    </div>
+    <div class="col-12 col-md-3 mb-2">
+        <a href="{% url 'ocupacoes_report_pdf' %}" class="btn btn-outline-warning w-100">
+            <i class="bi bi-file-earmark-bar-graph me-2"></i>Relatório de Ocupações
+        </a>
+    </div>
+</div>
+
 
     <!-- Gráficos -->
     <div class="row g-4 my-2">
@@ -113,6 +133,7 @@
                             <thead class="table-light">
                                 <tr>
                                     <th>Hóspede</th>
+                                    <th>Instituicao</th>
                                     <th>Previsão de chegada</th>
                                     <th>Previsão de saída</th>
                                     <th>Status</th>
@@ -122,6 +143,7 @@
                                 {% for reserva in recent_reservations %}
                                 <tr>
                                     <td>{{ reserva.hospede.nome }}</td>
+                                    <td>{{ reserva.hospede.instituicao }}</td>
                                     <td>{{ reserva.data_checkin|date:"d/m/Y" }}</td>
                                     <td>{{ reserva.data_checkout|date:"d/m/Y" }}</td>
                                     <td>

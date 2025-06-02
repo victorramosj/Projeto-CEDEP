@@ -2,6 +2,9 @@ import os
 import csv
 import django
 import random
+import re
+import unicodedata
+from django.db.models import Q
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "sigref.settings")
 django.setup()
@@ -62,7 +65,37 @@ def criar_setores():
     print(f"→ {Setor.objects.count()} setores criados.")
     return setores
 
-def importar_usuarios():
+def normalizar_texto(texto):
+    """Normaliza texto para comparação: remove acentos, espaços e converte para maiúsculas"""
+    texto = unicodedata.normalize('NFKD', texto).encode('ASCII', 'ignore').decode('ASCII')
+    texto = re.sub(r'\W+', '', texto).upper()
+    return texto
+
+def associar_setor_por_username(greuser, setores):
+    """Associa setor baseado na similaridade do nome de usuário com o nome do setor"""
+    username_norm = normalizar_texto(greuser.user.username)
+    
+    # Tentar encontrar correspondência exata primeiro
+    for setor_nome, setor_obj in setores.items():
+        setor_nome_norm = normalizar_texto(setor_nome)
+        if setor_nome_norm == username_norm:
+            greuser.setor = setor_obj
+            greuser.save()
+            print(f"→ Associado setor '{setor_nome}' ao usuário '{greuser.user.username}'")
+            return True
+    
+    # Tentar correspondência parcial
+    for setor_nome, setor_obj in setores.items():
+        setor_nome_norm = normalizar_texto(setor_nome)
+        if setor_nome_norm in username_norm or username_norm in setor_nome_norm:
+            greuser.setor = setor_obj
+            greuser.save()
+            print(f"→ Associado setor '{setor_nome}' ao usuário '{greuser.user.username}' (correspondência parcial)")
+            return True
+    
+    return False
+
+def importar_usuarios(setores):
     path = os.path.join(settings.BASE_DIR, 'usuarios.csv')
     print(f"📥 Importando usuários de {path}…")
     with open(path, newline='', encoding='utf-8') as f:
@@ -92,12 +125,10 @@ def importar_usuarios():
                 greuser.tipo_usuario = tipo
                 greuser.save()
 
+            # Tentar associar setor automaticamente
+            associar_setor_por_username(greuser, setores)
+            
             print(f"• Usuário: {greuser.nome_completo} [{greuser.tipo_usuario}]")
-
-import os
-import csv
-from django.conf import settings
-from monitoramento.models import Escola, GREUser
 
 def importar_escolas():
     path = os.path.join(settings.BASE_DIR, 'escolas.csv')
@@ -125,7 +156,12 @@ def importar_escolas():
             )
 
             try:
-                gre = GREUser.objects.get(nome_completo__iexact=nome)
+                # Busca por nome completo ou username
+                gre = GREUser.objects.get(
+                    Q(nome_completo__iexact=nome) | 
+                    Q(user__username__iexact=nome)
+                )
+
                 escola.user = gre.user
                 escola.save()
                 gre.escolas.add(escola)
@@ -146,6 +182,24 @@ def importar_escolas():
     else:
         print("\n✅ Nenhuma duplicata de usuário encontrada.")
 
+def associar_escolas_usuarios_nao_escola():
+    """Associa todas as escolas a todos os usuários que não são escolas"""
+    print("🏫 Associando escolas a usuários não-escolares...")
+    usuarios_nao_escola = GREUser.objects.exclude(tipo_usuario='ESCOLA')
+    todas_escolas = Escola.objects.all()
+    
+    count = 0
+    for usuario in usuarios_nao_escola:
+        # Adiciona todas as escolas, evitando duplicatas
+        escolas_atuais = usuario.escolas.all()
+        novas_escolas = [e for e in todas_escolas if e not in escolas_atuais]
+        
+        if novas_escolas:
+            usuario.escolas.add(*novas_escolas)
+            count += len(novas_escolas)
+            print(f"→ Associadas {len(novas_escolas)} escolas ao usuário {usuario}")
+    
+    print(f"✅ Total de {count} associações escola-usuário criadas.")
 
 def criar_questionarios_exemplo(setores):
     print("📝 Criando questionários de exemplo…")
@@ -199,8 +253,9 @@ def main():
     limpar_tabelas()
     criar_superadmin()
     setores = criar_setores()
-    importar_usuarios()
+    importar_usuarios(setores)  # Passa setores para associação
     importar_escolas()
+    associar_escolas_usuarios_nao_escola()  # Nova função
     qs = criar_questionarios_exemplo(setores)
     criar_monitoramentos_exemplo(qs)
     print("🎉 População completa executada com sucesso!")

@@ -116,7 +116,7 @@ STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
-
+LOGOUT_REDIRECT_URL = 'home'
 
 # Configure as variáveis antes da configuração do banco
 '''DATABASE_URL = os.getenv('DATABASE_URL', 'postgresql://postgres:HKhnFzXggtmylfsSKcPbVGfQEvataqYo@shortline.proxy.rlwy.net:13741/railway')  # Coloque sua URL como fallback
