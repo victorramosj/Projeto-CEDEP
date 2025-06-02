@@ -5,40 +5,86 @@
 {% block content %}
 <div class="container mt-4">
     <h3 class="mb-4">Novo Aviso Importante</h3>
-    <form method="post">
+
+    <!-- Busca -->
+    <form method="get" action="" class="mb-3 d-flex gap-2">
+        <input type="text" name="busca" class="form-control" placeholder="Buscar escolas por nome, INEP, gestor..." value="{{ request.GET.busca }}">
+        <button type="submit" class="btn btn-outline-secondary">Buscar</button>
+    </form>
+
+    <!-- Carrossel horizontal com Bootstrap -->
+    <div class="d-flex overflow-auto mb-4" style="gap: 1rem; scroll-behavior: smooth; padding-bottom: 1rem;">
+        {% for escola in escolas %}
+        <div class="card" style="min-width: 220px; flex-shrink: 0;">
+            <img src="{% if escola.foto_fachada %}{{ escola.foto_fachada.url }}{% else %}/media/monitoramentos/comprovantes/default-school.jpeg{% endif %}" class="card-img-top" alt="Fachada {{ escola.nome }}" style="height: 140px; object-fit: cover;">
+            <div class="card-body p-2">
+                <h5 class="card-title text-truncate" title="{{ escola.nome }}">{{ escola.nome }}</h5>
+                <p class="card-text mb-1"><small><strong>INEP:</strong> {{ escola.inep }}</small></p>
+                <p class="card-text mb-1"><small><strong>Email:</strong> {{ escola.email_escola }}</small></p>
+                <p class="card-text mb-1"><small><strong>Endereço:</strong> {{ escola.endereco }}</small></p>
+                <p class="card-text mb-1"><small><strong>Gestor:</strong> {{ escola.nome_gestor }}</small></p>
+                <p class="card-text mb-1"><small><strong>Telefone:</strong> {{ escola.telefone_gestor }}</small></p>
+                <p class="card-text mb-1"><small><strong>Email Gestor:</strong> {{ escola.email_gestor }}</small></p>
+            </div>
+        </div>
+        {% empty %}
+        <p>Nenhuma escola encontrada para a busca.</p>
+        {% endfor %}
+    </div>
+
+    <!-- Formulário -->
+    <form method="post" id="avisoForm">
         {% csrf_token %}
-        <div class="mb-3">
-            <label for="titulo" class="form-label">Título</label>
-            <input type="text" name="titulo" id="titulo" class="form-control" required>
-        </div>
 
         <div class="mb-3">
-            <label for="mensagem" class="form-label">Mensagem</label>
-            <textarea name="mensagem" id="mensagem" class="form-control" rows="4" required></textarea>
-        </div>
-
-        <div class="mb-3">
-            <label for="escola" class="form-label">Escola</label>
-            <select name="escola_id" id="escola" class="form-select" required>
+            <label for="escola_id" class="form-label">Selecione uma escola ou escolha todas</label>
+            <select name="escola_id" id="escola_id" class="form-select" required>
+                <option value="" disabled selected>-- Escolha uma opção --</option>
+                <option value="todas" {% if request.POST.escola_id == 'todas' %}selected{% endif %}>Todas as escolas listadas</option>
                 {% for escola in escolas %}
-                    <option value="{{ escola.id }}">{{ escola.nome }}</option>
+                    <option value="{{ escola.id }}" {% if request.POST.escola_id == escola.id|stringformat:"s" %}selected{% endif %}>{{ escola.nome }}</option>
                 {% endfor %}
             </select>
         </div>
 
         <div class="mb-3">
+            <label for="titulo" class="form-label">Título</label>
+            <input type="text" name="titulo" id="titulo" class="form-control" required value="{{ request.POST.titulo }}">
+        </div>
+
+        <div class="mb-3">
+            <label for="mensagem" class="form-label">Mensagem</label>
+            <textarea name="mensagem" id="mensagem" class="form-control" rows="4" required>{{ request.POST.mensagem }}</textarea>
+        </div>
+
+        <div class="mb-3">
             <label for="prioridade" class="form-label">Prioridade</label>
             <select name="prioridade" id="prioridade" class="form-select">
-                <option value="baixa">Baixa</option>
-                <option value="normal" selected>Normal</option>
-                <option value="alta">Alta</option>
+                <option value="baixa" {% if request.POST.prioridade == 'baixa' %}selected{% endif %}>Baixa</option>
+                <option value="normal" {% if request.POST.prioridade == 'normal' or not request.POST.prioridade %}selected{% endif %}>Normal</option>
+                <option value="alta" {% if request.POST.prioridade == 'alta' %}selected{% endif %}>Alta</option>
             </select>
+        </div>
+
+        <div class="mb-3">
+            <label for="data_expiracao" class="form-label">Data de Expiração (opcional)</label>
+            <input type="date" name="data_expiracao" id="data_expiracao" class="form-control" value="{{ request.POST.data_expiracao }}">
         </div>
 
         <button type="submit" class="btn btn-primary">Publicar Aviso</button>
     </form>
 </div>
+
+<!-- JS para alerta de confirmação -->
+<script>
+document.getElementById('avisoForm').addEventListener('submit', function(event) {
+    const select = document.getElementById('escola_id');
+    const escolha = select.options[select.selectedIndex].text;
+    if (!confirm(`Você tem certeza que deseja enviar o aviso para: "${escolha}"?`)) {
+        event.preventDefault();
+    }
+});
+</script>
+
 {% endblock %}
-
-<!-- Isso é um comentário em HTML -->
-
+    
