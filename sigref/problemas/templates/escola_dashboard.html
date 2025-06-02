@@ -9,6 +9,8 @@
 
 {% block content %}
 <div class="container mt-4">
+
+    <!--Bloco de Informações da ESCOLA-->
     <div class="header-escola">
         <div class="info-escola">
             <h4><i class="fas fa-school"></i> {{ escola.nome }} - {{ escola.inep }}</h4>
@@ -20,11 +22,11 @@
                 <!--Telefone-->
                 <p><i class="fas fa-envelope me-2"></i> <strong>Email da Escola:</strong> {{ escola.email_escola }}</p>
                 <!--Email da escola-->
-                <p><i class="fas fa-user-shield"></i><strong>Gestor:</strong> {{ escola.nome_gestor }}</p><!--Gestor-->
-                <p><i class="fas fa-phone-alt"></i> <strong>Telefone do Gestor:</strong> {{
-                    escola.telefone_gestor|default:"Telefone não cadastrado" }}</p> <!--Telefone do gestor-->
-                <p><i class="fas fa-envelope me-2"></i> <strong>Email do Gestor:</strong> {{
-                    escola.email_gestor|default:"Email não cadastrado" }}</p> <!--Email do gestor-->
+                <p><i class="fas fa-user-shield"></i><strong>Gestor:</strong> {{ escola.nome_gestor }}</p>
+                <!--Gestor-->
+                <p><i class="fas fa-phone-alt"></i> <strong>Telefone do Gestor:</strong> {{escola.telefone_gestor|default:"Telefone não cadastrado" }}</p>
+                <!--Telefone do gestor-->
+                <p><i class="fas fa-envelope me-2"></i> <strong>Email do Gestor:</strong> {{escola.email_gestor|default:"Email não cadastrado" }}</p> <!--Email do gestor-->
             </div>
         </div>
 
@@ -37,9 +39,11 @@
         </div>
     </div>
 
+    <!--Linha de quantidade de LACUNAS/PROBLEMAS/AVISOS-->
     <div class="row">
         <div class="col-md-8">
             <div class="row">
+                <!--LACUNAS-->
                 <div class="col-md-6">
                     <div class="card-indicador">
                         <p>QUANTIDADE DE LACUNAS EXISTENTES</p>
@@ -48,6 +52,7 @@
                             data-bs-target="#modalRelatarLacuna">RELATAR LACUNA</button>
                     </div>
                 </div>
+                <!--PROBLEMAS-->
                 <div class="col-md-6">
                     <div class="card-indicador">
                         <p>QUANTIDADE DE PROBLEMAS EXISTENTES</p>
@@ -86,12 +91,12 @@
                 {% else %}
                 <p class="text-muted">Nenhum aviso no momento.</p>
 
-                {% if not gre_user.is_escola %}
-                <button class="btn btn-sm btn-outline-danger w-100 mt-3" data-bs-toggle="modal"
-                    data-bs-target="#modalCriarAviso">
-                    Criar Aviso Importante
-                </button>
-                {% endif %}
+                    {% if not gre_user.is_escola %}
+                    <button class="btn btn-sm btn-outline-danger w-100 mt-3" data-bs-toggle="modal"
+                        data-bs-target="#modalCriarAviso">
+                        Criar Aviso Importante
+                    </button>
+                    {% endif %}
                 {% endif %}
             </div>
         </div>
