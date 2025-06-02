@@ -30,14 +30,29 @@ class EscolaDashboardView(LoginRequiredMixin, TemplateView):
             Q(data_expiracao__isnull=True) | Q(data_expiracao__gte=timezone.now())
         ).order_by('-prioridade', '-data_criacao')
 
-        context['gre_user'] = gre_user
-        context['escola'] = escola
-        context['avisos'] = avisos  # envia os avisos pro template
-        setor = Setor.objects.all()
-        context['setor'] = setor
-        context['form_problema'] = ProblemaUsuarioForm()  # aqui está a adição
-        context['form_lacuna'] = LacunaForm() 
+        # Estatísticas
+        total_lacunas = Lacuna.objects.filter(escola=escola).count()
+        total_problemas = ProblemaUsuario.objects.filter(usuario=gre_user).count()
+
+        # Contexto enviado ao template
+        context.update({
+            'gre_user': gre_user,
+            'escola': escola,
+            'avisos': avisos,
+            'setor': Setor.objects.all(),
+            'form_problema': ProblemaUsuarioForm(),
+            'form_lacuna': LacunaForm(),
+            'total_lacunas': total_lacunas,
+            'total_problemas': total_problemas,
+        })
+
         return context
+
+
+
+
+
+
 
 
 # View das LACUNAS
@@ -141,3 +156,5 @@ def relatar_lacuna_view(request):
         pass       
     # volta para a página de onde veio (dashboard) 
         return HttpResponseRedirect(request.META.get('HTTP_REFERER', '/'))
+    
+#View de Quantidade de lacunas e problemas
