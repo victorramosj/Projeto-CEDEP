@@ -1,24 +1,19 @@
 from rest_framework import viewsets, permissions
-from .models import Lacuna, ProblemaUsuario
+from .models import Lacuna, ProblemaUsuario, AvisoImportante
 from .serializers import LacunaSerializer, ProblemaUsuarioSerializer
-from .forms import ProblemaUsuarioForm, LacunaForm
-from django.shortcuts import render, redirect
+from .forms import ProblemaUsuarioForm, LacunaForm # importe seu formulário
 
-from .models import AvisoImportante
+from django.shortcuts import render, redirect
 from django.utils import timezone
 from django.db.models import Q
-
-
+from django.http import HttpResponseRedirect
 
 from django.views.generic import TemplateView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from monitoramento.models import GREUser, Escola, Setor  # ajuste o import conforme sua estrutura
-from .forms import ProblemaUsuarioForm  # importe seu formulário
 
-from .models import AvisoImportante  # Adicione no topo do arquivo
-from django.utils import timezone
-from django.db.models import Q
 
+# View da DASHBOARD
 class EscolaDashboardView(LoginRequiredMixin, TemplateView):
     template_name = 'escola_dashboard.html'
 
@@ -27,7 +22,7 @@ class EscolaDashboardView(LoginRequiredMixin, TemplateView):
         gre_user = self.request.user.greuser
         escola = gre_user.escolas.first()
 
-        # 🔥 Buscar avisos válidos da escola
+        # Buscar avisos válidos da escola
         avisos = AvisoImportante.objects.filter(
             escola=escola,
             ativo=True
@@ -37,15 +32,15 @@ class EscolaDashboardView(LoginRequiredMixin, TemplateView):
 
         context['gre_user'] = gre_user
         context['escola'] = escola
-        context['avisos'] = avisos  # 👈 essa linha envia os avisos pro template
+        context['avisos'] = avisos  # envia os avisos pro template
         setor = Setor.objects.all()
         context['setor'] = setor
-        context['form_problema'] = ProblemaUsuarioForm()  # ✅ aqui está a adição
+        context['form_problema'] = ProblemaUsuarioForm()  # aqui está a adição
         context['form_lacuna'] = LacunaForm() 
         return context
 
 
-
+# View das LACUNAS
 class LacunaViewSet(viewsets.ModelViewSet):
     serializer_class = LacunaSerializer
     permission_classes = [permissions.IsAuthenticated]
@@ -57,7 +52,7 @@ class LacunaViewSet(viewsets.ModelViewSet):
         # Monitores e escolas veem apenas suas escolas
         return Lacuna.objects.filter(escola__in=user.escolas.all())
 
-
+# View dos PROBLEMAS
 class ProblemaUsuarioViewSet(viewsets.ModelViewSet):
     serializer_class = ProblemaUsuarioSerializer
     permission_classes = [permissions.IsAuthenticated]
@@ -78,10 +73,6 @@ def problema_dashboard_view(request):
     form = ProblemaUsuarioForm()
     return render(request, 'escolas/escola_dashboard.html', {'form': form}) # type: ignore
 
-
-
-from django.http import HttpResponseRedirect
-
 def relatar_problema_view(request):
     if request.method == 'POST':
         form = ProblemaUsuarioForm(request.POST, request.FILES)
@@ -96,15 +87,8 @@ def relatar_problema_view(request):
 
 
 from django.contrib.auth.decorators import login_required
-from django.shortcuts import render, redirect
-from .models import AvisoImportante
-from monitoramento.models import Escola
 
-from django.shortcuts import render, redirect
-from django.contrib.auth.decorators import login_required
-from monitoramento.models import Escola
-from .models import AvisoImportante
-
+# View de AVISOS IMPORTANTES
 @login_required
 def listar_avisos_view(request):
     gre_user = request.user.greuser
@@ -144,9 +128,7 @@ def criar_aviso_view(request):
 
     return redirect('listar_avisos')  # Se chegar via GET, só redireciona
 
-from django.shortcuts import redirect
-from django.http import HttpResponseRedirect
-from .forms import LacunaForm
+
 def relatar_lacuna_view(request):    
     if request.method == 'POST':
         form = LacunaForm(request.POST)
