@@ -19,3 +19,30 @@ class ProblemaUsuarioForm(forms.ModelForm):
             'descricao': 'Problema',
             'setor': 'Setor',
         }
+<<<<<<< Updated upstream
+=======
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['setor'].queryset = Setor.objects.all()
+
+class LacunaForm(forms.ModelForm):
+    class Meta:
+        model = Lacuna
+        fields = ['disciplina', 'carga_horaria']
+        widgets = {
+            'disciplina': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Nome da disciplina'
+            }),
+            'carga_horaria': forms.NumberInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Carga horária (em horas-aula)',
+                'min': 1
+            }),
+        }
+        labels = {
+            'disciplina': 'Disciplina',
+            'carga_horaria': 'Carga Horária',
+        }
+
+>>>>>>> Stashed changes

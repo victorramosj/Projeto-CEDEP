@@ -1,7 +1,11 @@
 from rest_framework import viewsets, permissions
 from .models import Lacuna, ProblemaUsuario
 from .serializers import LacunaSerializer, ProblemaUsuarioSerializer
+<<<<<<< Updated upstream
 from .forms import ProblemaUsuarioForm
+=======
+from .forms import ProblemaUsuarioForm, LacunaForm
+>>>>>>> Stashed changes
 from django.shortcuts import render, redirect
 
 from .models import AvisoImportante
@@ -12,7 +16,12 @@ from django.db.models import Q
 
 from django.views.generic import TemplateView
 from django.contrib.auth.mixins import LoginRequiredMixin
+<<<<<<< Updated upstream
 from monitoramento.models import GREUser, Escola  # ajuste o import conforme sua estrutura
+=======
+from monitoramento.models import GREUser, Escola, Setor  # ajuste o import conforme sua estrutura
+from .forms import ProblemaUsuarioForm  # importe seu formulário
+>>>>>>> Stashed changes
 
 from .models import AvisoImportante  # Adicione no topo do arquivo
 from django.utils import timezone
@@ -37,6 +46,13 @@ class EscolaDashboardView(LoginRequiredMixin, TemplateView):
         context['gre_user'] = gre_user
         context['escola'] = escola
         context['avisos'] = avisos  # 👈 essa linha envia os avisos pro template
+<<<<<<< Updated upstream
+=======
+        setor = Setor.objects.all()
+        context['setor'] = setor
+        context['form_problema'] = ProblemaUsuarioForm()  # ✅ aqui está a adição
+        context['form_lacuna'] = LacunaForm() 
+>>>>>>> Stashed changes
         return context
 
 
@@ -71,6 +87,10 @@ class ProblemaUsuarioViewSet(viewsets.ModelViewSet):
 
 def problema_dashboard_view(request):
     return render(request, 'escolas/escola_dashboard.html', {'form': form}) # type: ignore
+
+
+
+from django.http import HttpResponseRedirect
 
 def relatar_problema_view(request):
     if request.method == 'POST':
@@ -134,3 +154,21 @@ def criar_aviso_view(request):
 
     return redirect('listar_avisos')  # Se chegar via GET, só redireciona
 
+<<<<<<< Updated upstream
+=======
+from django.shortcuts import redirect
+from django.http import HttpResponseRedirect
+from .forms import LacunaForm
+def relatar_lacuna_view(request):    
+    if request.method == 'POST':
+        form = LacunaForm(request.POST)
+        lacuna = form.save(commit=False)
+        lacuna.escola = request.user.greuser.escolas.first()
+        lacuna.save()
+        return HttpResponseRedirect(request.META.get('HTTP_REFERER', '/'))
+    else:
+            # opcional: aqui você poderia salvar os erros em messages framework
+        pass       
+    # volta para a página de onde veio (dashboard) 
+        return HttpResponseRedirect(request.META.get('HTTP_REFERER', '/'))
+>>>>>>> Stashed changes

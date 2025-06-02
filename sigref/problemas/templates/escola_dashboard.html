@@ -14,12 +14,21 @@
             <h4><i class="fas fa-school"></i> {{ escola.nome }} - {{ escola.inep }}</h4>
 
             <div class="info-escola-detalhes">
+<<<<<<< Updated upstream
                 <p><i class="fas fa-map-marker-alt"></i> {{ escola.endereco|default:"Endereço não cadastrado" }}</p>
                 <p><i class="fas fa-phone-alt"></i> {{ escola.telefone|default:"Telefone não cadastrado" }}</p>
                 <p><i class="fas fa-envelope me-2"></i> Email da Escola: {{ escola.email_escola }}</p>
                 <p><i class="fas fa-user-shield"></i> Gestor: {{ escola.nome_gestor }}</p>
                 <p><i class="fas fa-phone-alt"></i> Telefone do Gestor: {{ escola.telefone_gestor|default:"Telefone não cadastrado" }}</p>
                 <p><i class="fas fa-envelope me-2"></i> Email do Gestor: {{ escola.email_gestor|default:"Email não cadastrado" }}</p>
+=======
+                <p><i class="fas fa-map-marker-alt"></i> {{ escola.endereco|default:"Endereço não cadastrado" }}</p><!--Endereço-->
+                <p><i class="fas fa-phone-alt"></i> {{ escola.telefone|default:"Telefone não cadastrado" }}</p><!--Telefone-->
+                <p><i class="fas fa-envelope me-2"></i> <strong>Email da Escola:</strong> {{ escola.email_escola }}</p><!--Email da escola-->
+                <p><i class="fas fa-user-shield"></i><strong>Gestor:</strong> {{ escola.nome_gestor }}</p><!--Gestor-->
+                <p><i class="fas fa-phone-alt"></i> <strong>Telefone do Gestor:</strong> {{ escola.telefone_gestor|default:"Telefone não cadastrado" }}</p> <!--Telefone do gestor-->
+                <p><i class="fas fa-envelope me-2"></i> <strong>Email do Gestor:</strong> {{ escola.email_gestor|default:"Email não cadastrado" }}</p> <!--Email do gestor-->
+>>>>>>> Stashed changes
             </div>
         </div>
         
@@ -130,21 +139,41 @@
                     </h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
                 </div>
+<<<<<<< Updated upstream
                 <div class="modal-body">
+=======
+
+                <!-- Corpo -->
+                <div class="modal-body">
+                    <p class="text-end text-danger small">Obs. Campos com <span class="fw-bold">*</span> são obrigatórios</p>
+
+                    <!-- Disciplina -->
+>>>>>>> Stashed changes
                     <div class="mb-3">
                         <label class="form-label">
                         <i class="fas fa-book-open me-2"></i>Disciplina
                         </label>
+<<<<<<< Updated upstream
                         <input type="text" name="disciplina" class="form-control" placeholder="Informe a disciplina" required>
+=======
+                        <input id="disciplina_manual" type="text" name="disciplina" class="form-control" placeholder="Ex: Matemática" required>
+>>>>>>> Stashed changes
                     </div>
                     <div class="mb-3">
                         <label class="form-label">
                             <i class="fas fa-clock me-2"></i>Carga Horária
                         </label>
+<<<<<<< Updated upstream
                         <select name="carga_horaria" class="form-select" required>
                             <option value="" selected disabled>Selecione a carga horária</option>
                             <option value="150h">150 horas</option>
                             <option value="200h">200 horas</option>
+=======
+                        <select id="carga_horaria_manual" name="carga_horaria" class="form-select" required>
+                            <option value="" disabled selected>Selecione</option>                          
+                            <option value="150">150 horas</option>
+                            <option value="200">200 horas</option>
+>>>>>>> Stashed changes
                         </select>
                     </div>
                 </div>
