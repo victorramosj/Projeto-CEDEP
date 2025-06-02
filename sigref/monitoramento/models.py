@@ -116,7 +116,11 @@ class GREUser(models.Model):
     )
     
     def __str__(self):
-        return self.user.get_full_name()
+        # Exibir nome completo se disponível, caso contrário username
+        display_name = self.nome_completo.strip()
+        if not display_name:
+            display_name = self.user.username
+        return f"{display_name} ({self.get_tipo_usuario_display()})"
     
     
     # Métodos de verificação de perfil atualizados
@@ -195,6 +199,10 @@ class GREUser(models.Model):
         
         return Setor.objects.none()
     
+    
+    # Adicione este método para facilitar a exibição do tipo de usuário
+    def get_tipo_usuario_display(self):
+        return dict(self.TIPO_USUARIO_CHOICES).get(self.tipo_usuario, self.tipo_usuario)
     # Novas propriedades para templates
     @property
     def nivel_acesso(self):
