@@ -4,8 +4,31 @@ from django.contrib.auth.forms import UserCreationForm
 from django.contrib import messages
 from .forms import LoginForm
 
+from django.shortcuts import render, redirect
+from monitoramento.models import GREUser
+
+
+from django.shortcuts import redirect, render
+from monitoramento.models import GREUser 
+
 def dashboard(request):
-    return render(request, 'cedepe/home.html')
+    if not request.user.is_authenticated:
+        return render(request, "cedepe/home.html")
+
+    try:
+        gre_user = GREUser.objects.get(user=request.user)
+
+        if gre_user.is_escola():
+            return redirect('escola_dashboard')  # 🔁 redireciona para a view específica
+
+        # 👇 para qualquer outro tipo de usuário
+        return render(request, "cedepe/home.html")
+
+    except GREUser.DoesNotExist:
+        return render(request, "cedepe/home.html")
+
+
+
 
 from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login
