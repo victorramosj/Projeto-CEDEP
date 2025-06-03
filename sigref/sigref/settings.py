@@ -118,30 +118,30 @@ STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 LOGOUT_REDIRECT_URL = 'home'
 
-# Configure as variáveis antes da configuração do banco
-'''DATABASE_URL = os.getenv('DATABASE_URL', 'postgresql://postgres:HKhnFzXggtmylfsSKcPbVGfQEvataqYo@shortline.proxy.rlwy.net:13741/railway')  # Coloque sua URL como fallback
+# Banco de dados online se colocar 3 aspas simples vira comentário
+DATABASE_URL = os.getenv('DATABASE_URL', 'postgresql://postgres:vDadjhfHsAXBQkxbEkskxbOZSRhogYvs@mainline.proxy.rlwy.net:32588/railway')  # Coloque sua URL como fallback
 
 DATABASES = {
     'default': dj_database_url.config(
         default=DATABASE_URL,
         conn_max_age=600,
-        ssl_require=True
+        ssl_require=False
     )
 }
-'''
+
 import os
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 
-# Configuração para banco de dados SQLite (útil para testes)
+'''# Configuração para banco de dados SQLite (útil para testes) Local
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
     }
-}
+}'''
 
 # Password validation
 # https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators
