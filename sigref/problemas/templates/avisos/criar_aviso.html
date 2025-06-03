@@ -4,87 +4,317 @@
 
 {% block content %}
 <div class="container mt-4">
-    <h3 class="mb-4">Novo Aviso Importante</h3>
 
-    <!-- Busca -->
-    <form method="get" action="" class="mb-3 d-flex gap-2">
-        <input type="text" name="busca" class="form-control" placeholder="Buscar escolas por nome, INEP, gestor..." value="{{ request.GET.busca }}">
-        <button type="submit" class="btn btn-outline-secondary">Buscar</button>
-    </form>
-
-    <!-- Carrossel horizontal com Bootstrap -->
-    <div class="d-flex overflow-auto mb-4" style="gap: 1rem; scroll-behavior: smooth; padding-bottom: 1rem;">
-        {% for escola in escolas %}
-        <div class="card" style="min-width: 220px; flex-shrink: 0;">
-            <img src="{% if escola.foto_fachada %}{{ escola.foto_fachada.url }}{% else %}/media/monitoramentos/comprovantes/default-school.jpeg{% endif %}" class="card-img-top" alt="Fachada {{ escola.nome }}" style="height: 140px; object-fit: cover;">
-            <div class="card-body p-2">
-                <h5 class="card-title text-truncate" title="{{ escola.nome }}">{{ escola.nome }}</h5>
-                <p class="card-text mb-1"><small><strong>INEP:</strong> {{ escola.inep }}</small></p>
-                <p class="card-text mb-1"><small><strong>Email:</strong> {{ escola.email_escola }}</small></p>
-                <p class="card-text mb-1"><small><strong>Endereço:</strong> {{ escola.endereco }}</small></p>
-                <p class="card-text mb-1"><small><strong>Gestor:</strong> {{ escola.nome_gestor }}</small></p>
-                <p class="card-text mb-1"><small><strong>Telefone:</strong> {{ escola.telefone_gestor }}</small></p>
-                <p class="card-text mb-1"><small><strong>Email Gestor:</strong> {{ escola.email_gestor }}</small></p>
-            </div>
-        </div>
-        {% empty %}
-        <p>Nenhuma escola encontrada para a busca.</p>
-        {% endfor %}
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4">
+        <h3 class="mb-3 mb-md-0">Novo Aviso Importante</h3>
+        <a href="{% url 'listar_avisos' %}" class="btn btn-outline-info d-inline-flex align-items-center">
+            <i class="bi bi-list-task me-2"></i>Lista de Avisos
+        </a>
     </div>
 
-    <!-- Formulário -->
+    <div class="mb-3 p-3 border rounded bg-light" id="formFiltroCheckboxes">
+        <label for="termo_busca_checkbox" class="form-label fw-semibold">Buscar Escola por Nome ou INEP para filtrar a lista abaixo:</label>
+        <input type="text" id="termo_busca_checkbox" class="form-control" placeholder="Digite para filtrar as escolas...">
+    </div>
+
+    <div class="mb-3 p-3 border rounded bg-white shadow-sm">
+        <h6 class="fw-semibold mb-1">Escola(s) Selecionada(s) para o Aviso:</h6>
+        <div id="escolasSelecionadasDisplay" class="text-primary fw-bold">
+            <em>Nenhuma escola selecionada ainda.</em>
+        </div>
+    </div>
+
     <form method="post" id="avisoForm">
         {% csrf_token %}
-
         <div class="mb-3">
-            <label for="escola_id" class="form-label">Selecione uma escola ou escolha todas</label>
-            <select name="escola_id" id="escola_id" class="form-select" required>
-                <option value="" disabled selected>-- Escolha uma opção --</option>
-                <option value="todas" {% if request.POST.escola_id == 'todas' %}selected{% endif %}>Todas as escolas listadas</option>
-                {% for escola in escolas %}
-                    <option value="{{ escola.id }}" {% if request.POST.escola_id == escola.id|stringformat:"s" %}selected{% endif %}>{{ escola.nome }}</option>
-                {% endfor %}
-            </select>
+            <label class="form-label fw-semibold">Selecione uma ou mais escolas para o aviso:</label>
+            <div id="listaEscolasCheckboxes" class="border rounded p-3" style="max-height: 350px; overflow-y: auto;">
+                {% if escolas %}
+                    {% for escola in escolas %}
+                    <div class="form-check escola-item" data-nome="{{ escola.nome|lower|escapejs }}" data-inep="{{ escola.inep|default_if_none:''|escapejs }}">
+                        <input class="form-check-input escola-checkbox" type="checkbox" name="escola_id" value="{{ escola.id }}" id="escola_check_{{ escola.id }}">
+                        <label class="form-check-label" for="escola_check_{{ escola.id }}">
+                            {{ escola.nome }} <span class="text-muted small">(INEP: {{ escola.inep|default_if_none:'N/A' }})</span>
+                        </label>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <p class="text-muted m-0">Nenhuma escola disponível.</p>
+                {% endif %}
+            </div>
+            <small class="form-text text-muted">Use a busca acima para filtrar a lista. Marque as caixas para selecionar.</small>
+            <div class="mt-2">
+                <button type="button" id="btnMarcarTodasEscolasSistema" class="btn btn-outline-primary btn-sm me-2">
+                    <i class="bi bi-check2-all"></i> Marcar Todas do Sistema
+                </button>
+                <button type="button" id="btnLimparSelecaoEscolas" class="btn btn-outline-secondary btn-sm">
+                    <i class="bi bi-x-square"></i> Limpar Seleção
+                </button>
+            </div>
         </div>
 
         <div class="mb-3">
-            <label for="titulo" class="form-label">Título</label>
+            <label for="titulo" class="form-label fw-semibold">Título</label>
             <input type="text" name="titulo" id="titulo" class="form-control" required value="{{ request.POST.titulo }}">
         </div>
-
         <div class="mb-3">
-            <label for="mensagem" class="form-label">Mensagem</label>
+            <label for="mensagem" class="form-label fw-semibold">Mensagem</label>
             <textarea name="mensagem" id="mensagem" class="form-control" rows="4" required>{{ request.POST.mensagem }}</textarea>
         </div>
-
         <div class="mb-3">
-            <label for="prioridade" class="form-label">Prioridade</label>
+            <label for="prioridade" class="form-label fw-semibold">Prioridade</label>
             <select name="prioridade" id="prioridade" class="form-select">
                 <option value="baixa" {% if request.POST.prioridade == 'baixa' %}selected{% endif %}>Baixa</option>
                 <option value="normal" {% if request.POST.prioridade == 'normal' or not request.POST.prioridade %}selected{% endif %}>Normal</option>
                 <option value="alta" {% if request.POST.prioridade == 'alta' %}selected{% endif %}>Alta</option>
             </select>
         </div>
-
         <div class="mb-3">
-            <label for="data_expiracao" class="form-label">Data de Expiração (opcional)</label>
+            <label for="data_expiracao" class="form-label fw-semibold">Data de Expiração (opcional)</label>
             <input type="date" name="data_expiracao" id="data_expiracao" class="form-control" value="{{ request.POST.data_expiracao }}">
         </div>
 
-        <button type="submit" class="btn btn-primary">Publicar Aviso</button>
+        <button type="button" class="btn btn-success btn-lg" data-bs-toggle="modal" data-bs-target="#confirmPublicarModal">
+            <i class="bi bi-send-fill me-2"></i>Publicar Aviso
+        </button>
     </form>
 </div>
 
-<!-- JS para alerta de confirmação -->
+<div class="modal fade" id="confirmPublicarModal" tabindex="-1" aria-labelledby="confirmPublicarModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+        <div class="modal-header">
+            <h5 class="modal-title" id="confirmPublicarModalLabel">Confirmação de Envio</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+        </div>
+        <div class="modal-body">
+            <p>Você tem certeza que deseja enviar o aviso para:</p>
+            <ul id="listaEscolasSelecionadasModal"></ul>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+            <button type="button" class="btn btn-primary" id="confirmarEnvioAviso">Confirmar e Enviar</button>
+        </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="confirmMarcarTodasModal" tabindex="-1" aria-labelledby="confirmMarcarTodasModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="confirmMarcarTodasModalLabel">Confirmar Seleção Global</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        Você tem certeza que deseja selecionar TODAS as <strong id="totalEscolasParaConfirmacao">X</strong> escolas do sistema para este aviso?
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button type="button" class="btn btn-primary" id="confirmarMarcarTodasAcaoBtn">Sim, selecionar todas</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script>
-document.getElementById('avisoForm').addEventListener('submit', function(event) {
-    const select = document.getElementById('escola_id');
-    const escolha = select.options[select.selectedIndex].text;
-    if (!confirm(`Você tem certeza que deseja enviar o aviso para: "${escolha}"?`)) {
-        event.preventDefault();
+document.addEventListener('DOMContentLoaded', function() {
+    // Elementos do DOM
+    const termoBuscaInput = document.getElementById('termo_busca_checkbox');
+    const listaEscolasCheckboxesDiv = document.getElementById('listaEscolasCheckboxes');
+    const displayDiv = document.getElementById('escolasSelecionadasDisplay');
+    const btnMarcarTodasSistema = document.getElementById('btnMarcarTodasEscolasSistema');
+    const btnLimparSelecao = document.getElementById('btnLimparSelecaoEscolas');
+    
+    const escolaCheckboxItems = listaEscolasCheckboxesDiv.querySelectorAll('.escola-item');
+    const todasEscolasCheckboxes = listaEscolasCheckboxesDiv.querySelectorAll('.escola-checkbox');
+    const totalEscolasSistema = todasEscolasCheckboxes.length;
+
+    // Modais Bootstrap (instanciar se existirem)
+    const confirmPublicarModalEl = document.getElementById('confirmPublicarModal');
+    const confirmPublicarModal = confirmPublicarModalEl ? new bootstrap.Modal(confirmPublicarModalEl) : null;
+    
+    const confirmMarcarTodasModalEl = document.getElementById('confirmMarcarTodasModal');
+    const confirmMarcarTodasModal = confirmMarcarTodasModalEl ? new bootstrap.Modal(confirmMarcarTodasModalEl) : null;
+    const totalEscolasParaConfirmacaoSpan = document.getElementById('totalEscolasParaConfirmacao');
+
+    // --- FUNÇÕES AUXILIARES ---
+    function atualizarDisplayEscolasSelecionadas() {
+        const selecionadas = Array.from(todasEscolasCheckboxes).filter(cb => cb.checked);
+        displayDiv.innerHTML = ''; // Limpa o display anterior
+
+        if (selecionadas.length === 0) {
+            const em = document.createElement('em');
+            em.textContent = 'Nenhuma escola selecionada ainda.';
+            displayDiv.appendChild(em);
+        } else if (selecionadas.length === totalEscolasSistema && totalEscolasSistema > 0) {
+            const strong = document.createElement('strong');
+            strong.textContent = `Todas as ${totalEscolasSistema} escolas do sistema estão selecionadas.`;
+            displayDiv.appendChild(strong);
+
+            const btnLimparNoDisplay = document.createElement('button');
+            btnLimparNoDisplay.type = 'button';
+            btnLimparNoDisplay.className = 'btn btn-link btn-sm p-0 ms-2 text-decoration-underline';
+            btnLimparNoDisplay.innerHTML = '(Desmarcar todas)';
+            btnLimparNoDisplay.title = 'Clique para desmarcar todas as escolas';
+            btnLimparNoDisplay.onclick = function() {
+                if (btnLimparSelecao) { 
+                    btnLimparSelecao.click(); 
+                }
+            };
+            displayDiv.appendChild(btnLimparNoDisplay);
+
+        } else {
+            const containerPills = document.createElement('div');
+            containerPills.className = 'd-flex flex-wrap gap-2'; 
+
+            selecionadas.forEach(cb => {
+                const escolaId = cb.value;
+                const escolaItemDiv = cb.closest('.escola-item');
+                const labelElement = escolaItemDiv.querySelector('label');
+                const nomeEscola = labelElement.textContent.split('(INEP:')[0].trim();
+
+                const pillDiv = document.createElement('div');
+                pillDiv.className = 'badge text-bg-primary d-inline-flex align-items-center gap-2'; 
+                pillDiv.style.fontSize = '0.9em';
+                pillDiv.style.paddingLeft = '0.65rem';
+                pillDiv.style.paddingRight = '0.35rem';
+                pillDiv.style.paddingTop = '0.35em';
+                pillDiv.style.paddingBottom = '0.35em';
+
+                const nomeSpan = document.createElement('span');
+                nomeSpan.textContent = nomeEscola;
+                pillDiv.appendChild(nomeSpan);
+
+                const removeBtn = document.createElement('button');
+                removeBtn.type = 'button';
+                removeBtn.className = 'btn btn-sm p-0 text-white d-flex align-items-center justify-content-center';
+                removeBtn.innerHTML = '<i class="bi bi-x" style="font-size: 1.1rem; line-height: 1;"></i>';
+                removeBtn.setAttribute('aria-label', 'Remover ' + nomeEscola);
+                removeBtn.title = 'Remover ' + nomeEscola + ' da seleção';
+                removeBtn.dataset.escolaId = escolaId;
+                removeBtn.style.opacity = '0.75';
+                removeBtn.onmouseover = function() { this.style.opacity = '1'; }
+                removeBtn.onmouseout = function() { this.style.opacity = '0.75'; }
+
+                removeBtn.addEventListener('click', function(e) {
+                    e.stopPropagation(); 
+                    const checkboxId = 'escola_check_' + this.dataset.escolaId;
+                    const checkboxToRemove = document.getElementById(checkboxId);
+                    if (checkboxToRemove) {
+                        checkboxToRemove.checked = false;
+                        checkboxToRemove.dispatchEvent(new Event('change', { bubbles: true }));
+                    }
+                });
+                pillDiv.appendChild(removeBtn);
+                containerPills.appendChild(pillDiv);
+            });
+            displayDiv.appendChild(containerPills);
+        }
     }
+
+    function filtrarListaEscolas() {
+        if (!termoBuscaInput) return; // Garante que o input existe
+        const termo = termoBuscaInput.value.toLowerCase().trim();
+        escolaCheckboxItems.forEach(item => {
+            const nome = item.dataset.nome; // Já está em lower no data-attribute
+            const inep = item.dataset.inep; // Já está em lower no data-attribute (ou vazio)
+            if (nome.includes(termo) || (inep && inep.includes(termo))) {
+                item.style.display = '';
+            } else {
+                item.style.display = 'none';
+            }
+        });
+    }
+
+    // --- LISTENERS ---
+    if (termoBuscaInput) {
+        termoBuscaInput.addEventListener('input', filtrarListaEscolas);
+    }
+
+    todasEscolasCheckboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', function() {
+            atualizarDisplayEscolasSelecionadas();
+        });
+    });
+
+    if (btnMarcarTodasSistema) {
+        btnMarcarTodasSistema.addEventListener('click', function() {
+            if (totalEscolasParaConfirmacaoSpan) {
+                totalEscolasParaConfirmacaoSpan.textContent = totalEscolasSistema;
+            }
+            if (confirmMarcarTodasModal) {
+                confirmMarcarTodasModal.show();
+            } else { 
+                if (confirm(`Tem certeza que deseja selecionar TODAS as ${totalEscolasSistema} escolas do sistema para este aviso?`)) {
+                    marcarTodasAcao();
+                }
+            }
+        });
+    }
+    
+    const confirmarMarcarTodasAcaoBtn = document.getElementById('confirmarMarcarTodasAcaoBtn');
+    if (confirmarMarcarTodasAcaoBtn && confirmMarcarTodasModal) {
+        confirmarMarcarTodasAcaoBtn.addEventListener('click', function() {
+            marcarTodasAcao();
+            confirmMarcarTodasModal.hide();
+        });
+    }
+    
+    function marcarTodasAcao() {
+        todasEscolasCheckboxes.forEach(cb => cb.checked = true);
+        atualizarDisplayEscolasSelecionadas();
+    }
+
+    if (btnLimparSelecao) {
+        btnLimparSelecao.addEventListener('click', function() {
+            todasEscolasCheckboxes.forEach(cb => cb.checked = false);
+            atualizarDisplayEscolasSelecionadas();
+        });
+    }
+    
+    if (confirmPublicarModalEl) {
+        confirmPublicarModalEl.addEventListener('show.bs.modal', function () {
+            const listaEscolasModalUl = document.getElementById('listaEscolasSelecionadasModal');
+            listaEscolasModalUl.innerHTML = ''; 
+            const selecionadas = Array.from(todasEscolasCheckboxes).filter(cb => cb.checked);
+
+            if (selecionadas.length === 0) {
+                listaEscolasModalUl.innerHTML = '<li><em>Nenhuma escola selecionada.</em></li>';
+            } else if (selecionadas.length === totalEscolasSistema && totalEscolasSistema > 0) {
+                 const li = document.createElement('li');
+                 li.innerHTML = `<strong>Todas as ${totalEscolasSistema} escolas do sistema.</strong>`;
+                 listaEscolasModalUl.appendChild(li);
+            } else {
+                selecionadas.forEach(function(cb) {
+                    const li = document.createElement('li');
+                    const labelText = cb.closest('.escola-item').querySelector('label').textContent;
+                    li.textContent = labelText.split('(INEP:')[0].trim(); // Apenas o nome
+                    listaEscolasModalUl.appendChild(li);
+                });
+            }
+        });
+    }
+
+    const btnConfirmarEnvioAviso = document.getElementById('confirmarEnvioAviso');
+    if (btnConfirmarEnvioAviso) {
+        btnConfirmarEnvioAviso.addEventListener('click', function () {
+            // Adicionar validação: pelo menos uma escola deve ser selecionada
+            const algumaSelecionada = Array.from(todasEscolasCheckboxes).some(cb => cb.checked);
+            if (!algumaSelecionada) {
+                alert('Por favor, selecione pelo menos uma escola para enviar o aviso.');
+                if (confirmPublicarModal) {
+                    confirmPublicarModal.hide(); // Esconde o modal se nenhuma escola foi selecionada
+                }
+                return; 
+            }
+            document.getElementById('avisoForm').submit();
+        });
+    }
+
+    // --- CHAMADAS INICIAIS ---
+    filtrarListaEscolas(); 
+    atualizarDisplayEscolasSelecionadas();
 });
 </script>
-
 {% endblock %}
-    

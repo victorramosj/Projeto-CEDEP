@@ -108,7 +108,8 @@ def listar_avisos_view(request):
     })
 
 
-# CRIAR AVISO
+from django.contrib import messages
+
 @login_required
 def criar_aviso_view(request):
     gre_user = request.user.greuser
@@ -129,13 +130,13 @@ def criar_aviso_view(request):
         titulo = request.POST.get('titulo')
         mensagem = request.POST.get('mensagem')
         prioridade = request.POST.get('prioridade', 'normal')
-        enviar_para_todas = request.POST.get('todas_escolas')
         data_expiracao = request.POST.get('data_expiracao')
+        
+        escolas_ids = request.POST.getlist('escola_id')
 
-        if enviar_para_todas:
+        if 'todas' in escolas_ids:
             escolas_destino = escolas
         else:
-            escolas_ids = request.POST.getlist('escola_id')
             escolas_destino = Escola.objects.filter(id__in=escolas_ids)
 
         for escola in escolas_destino:
@@ -148,9 +149,13 @@ def criar_aviso_view(request):
                 ativo=True,
                 data_expiracao=data_expiracao if data_expiracao else None
             )
+        
+        messages.success(request, "Aviso publicado com sucesso!")  # mensagem de sucesso
         return redirect('listar_avisos')
 
     return render(request, 'avisos/criar_aviso.html', {'escolas': escolas})
+
+
 
 
 # RELATAR LACUNA
