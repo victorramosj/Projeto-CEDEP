@@ -14,7 +14,10 @@ from .views import criar_aviso_view
 
 urlpatterns = [
     #Visualização da dashboard
-    path('escola/dashboard/', views.EscolaDashboardView.as_view(), name='escola_dashboard'),
+    # URL para a escola associada ao usuário (sem precisar passar o escola_id para 'escola' tipo)
+    path('escola/dashboard/', EscolaDashboardView.as_view(), name='escola_dashboard'),
+    
+    # URL para acessar uma escola específica, para monitores e administradores
     path('escola/<int:escola_id>/', EscolaDashboardView.as_view(), name='dashboard_escola'),
 
     #PROBLEMAS/LACUNA

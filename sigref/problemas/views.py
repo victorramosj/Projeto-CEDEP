@@ -12,7 +12,6 @@ from django.views.generic import TemplateView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from monitoramento.models import GREUser, Escola, Setor  # ajuste o import conforme sua estrutura
 
-
 # View da DASHBOARD
 class EscolaDashboardView(LoginRequiredMixin, TemplateView):
     template_name = 'escola_dashboard.html'
@@ -21,8 +20,16 @@ class EscolaDashboardView(LoginRequiredMixin, TemplateView):
         context = super().get_context_data(**kwargs)
         gre_user = self.request.user.greuser
 
-        escola_id = self.kwargs.get('escola_id')
-        escola = get_object_or_404(gre_user.escolas, id=escola_id)# Garante o acesso apenas a escolas que possui acesso
+        # Se o usuário for do tipo 'escola', redireciona para sua própria escola
+        if gre_user.is_escola():
+            escola = gre_user.escolas.first() # Obtém a primeira escola associada ao usuário
+            context['escola'] = escola # Exibe o perfil da escola associada ao usuário
+
+        else:
+            escola_id = self.kwargs.get('escola_id')
+            if escola_id:
+                escola = get_object_or_404(Escola, id=escola_id)  # Busca a escola com o ID
+                context['escola'] = escola
 
         # Buscar avisos válidos da escola
         avisos = AvisoImportante.objects.filter(
@@ -34,7 +41,7 @@ class EscolaDashboardView(LoginRequiredMixin, TemplateView):
 
         # Estatísticas
         total_lacunas = Lacuna.objects.filter(escola=escola).count() # Contagem de lacunas para a escola
-        usuarios_da_escola = gre_user.escolas.get(id=escola_id).usuarios.all()
+        usuarios_da_escola = escola.usuarios.all()
         total_problemas = ProblemaUsuario.objects.filter(usuario__in=usuarios_da_escola).count() # Contagem de problemas dos usuários associados à escola
         
         # Contexto enviado ao template
