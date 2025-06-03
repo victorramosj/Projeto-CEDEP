@@ -3,7 +3,7 @@ from .models import Lacuna, ProblemaUsuario, AvisoImportante
 from .serializers import LacunaSerializer, ProblemaUsuarioSerializer
 from .forms import ProblemaUsuarioForm, LacunaForm # importe seu formulário
 
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.utils import timezone
 from django.db.models import Q
 from django.http import HttpResponseRedirect
@@ -20,7 +20,9 @@ class EscolaDashboardView(LoginRequiredMixin, TemplateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         gre_user = self.request.user.greuser
-        escola = gre_user.escolas.first()
+
+        escola_id = self.kwargs.get('escola_id')
+        escola = get_object_or_404(gre_user.escolas, id=escola_id)# Garante o acesso apenas a escolas que possui acesso
 
         # Buscar avisos válidos da escola
         avisos = AvisoImportante.objects.filter(
@@ -31,9 +33,10 @@ class EscolaDashboardView(LoginRequiredMixin, TemplateView):
         ).order_by('-prioridade', '-data_criacao')
 
         # Estatísticas
-        total_lacunas = Lacuna.objects.filter(escola=escola).count()
-        total_problemas = ProblemaUsuario.objects.filter(usuario=gre_user).count()
-
+        total_lacunas = Lacuna.objects.filter(escola=escola).count() # Contagem de lacunas para a escola
+        usuarios_da_escola = gre_user.escolas.get(id=escola_id).usuarios.all()
+        total_problemas = ProblemaUsuario.objects.filter(usuario__in=usuarios_da_escola).count() # Contagem de problemas dos usuários associados à escola
+        
         # Contexto enviado ao template
         context.update({
             'gre_user': gre_user,
@@ -47,12 +50,6 @@ class EscolaDashboardView(LoginRequiredMixin, TemplateView):
         })
 
         return context
-
-
-
-
-
-
 
 
 # View das LACUNAS
