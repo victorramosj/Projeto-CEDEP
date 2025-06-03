@@ -1,41 +1,88 @@
 {% extends "cedepe/base.html" %}
 
+
 {% block title %}Lista de Avisos{% endblock %}
 
 {% block content %}
-<h1>Avisos</h1>
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="mb-0">Avisos Importantes</h1>
+        <a href="{% url 'criar_aviso' %}" class="btn btn-primary">
+            <i class="bi bi-plus-circle-fill me-2"></i>Criar Novo Aviso
+        </a>
+    </div>
 
-<a href="{% url 'criar_aviso' %}" class="btn btn-primary mb-3">Criar Novo Aviso</a>
-
-<table class="table table-bordered">
-    <thead>
-        <tr>
-            <th>Título</th>
-            <th>Escola</th>
-            <th>Prioridade</th>
-            <th>Data de Criação</th>
-            <th>Ações</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for aviso in avisos %}
-        <tr>
-            <td>{{ aviso.titulo }}</td>
-            <td>{{ aviso.escola.nome }}</td>
-            <td>{{ aviso.prioridade|capfirst }}</td>
-            <td>{{ aviso.data_criacao|date:"d/m/Y H:i" }}</td>
-            <td>
-                <form method="post" action="{% url 'apagar_aviso' aviso.id %}" style="display:inline;">
-                    {% csrf_token %}
-                    <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Deseja mesmo apagar esse aviso?');">Apagar</button>
-                </form>
-            </td>
-        </tr>
-        {% empty %}
-        <tr>
-            <td colspan="5">Nenhum aviso encontrado.</td>
-        </tr>
-        {% endfor %}
-    </tbody>
-</table>
+    {% if avisos %}
+    <div class="table-responsive">
+        <table class="table table-bordered table-striped table-hover">
+            <thead class="table-light">
+                <tr>
+                    <th>Título</th>
+                    <th>Escola(s) Destino</th>
+                    <th>Criado por (Usuário)</th>
+                    <th>Setor Destino</th>
+                    <th>Prioridade</th>
+                    <th>Data de Criação</th>
+                    <th class="text-center">Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for aviso in avisos %}
+                <tr>
+                    <td>{{ aviso.titulo }}</td>
+                    <td>
+                        {% if aviso.escola %}
+                            {{ aviso.escola.nome }}
+                        {% elif aviso.escolas_selecionadas_display %} {# Assumindo que você pode ter um campo/método para múltiplas escolas #}
+                            {{ aviso.escolas_selecionadas_display }}
+                        {% else %}
+                            Todas as escolas
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if aviso.criado_por %}
+                            {{ aviso.criado_por.user.get_full_name|default:aviso.criado_por.user.username }}
+                        {% else %}
+                            N/A
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if aviso.setor_destino %}
+                            {{ aviso.setor_destino.nome|default:"-" }} {# Ou use aviso.setor_destino.hierarquia_completa se preferir e existir #}
+                        {% else %}
+                            Geral / Todas
+                        {% endif %}
+                    </td>
+                    <td>
+                        <span class="badge 
+                            {% if aviso.prioridade == 'alta' %}bg-danger
+                            {% elif aviso.prioridade == 'normal' %}bg-warning text-dark
+                            {% else %}bg-secondary
+                            {% endif %}">
+                            {{ aviso.get_prioridade_display }}
+                        </span>
+                    </td>
+                    <td>{{ aviso.data_criacao|date:"d/m/Y H:i" }}</td>
+                    <td class="text-center">
+                        {# Aqui você pode adicionar outros botões, como "Editar" ou "Ver Detalhes" #}
+                        {# Exemplo: <a href="#" class="btn btn-info btn-sm me-1"><i class="bi bi-eye-fill"></i></a> #}
+                        {# Exemplo: <a href="#" class="btn btn-warning btn-sm me-1"><i class="bi bi-pencil-fill"></i></a> #}
+                        <form method="post" action="{% url 'apagar_aviso' aviso.id %}" style="display:inline;">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Tem certeza que deseja apagar este aviso?\n\nTítulo: {{ aviso.titulo|escapejs }}\nEscola: {% if aviso.escola %}{{ aviso.escola.nome|escapejs }}{% else %}Todas{% endif %}');">
+                                <i class="bi bi-trash-fill"></i> Apagar
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="alert alert-info mt-4" role="alert">
+        Nenhum aviso encontrado. <a href="{% url 'criar_aviso' %}" class="alert-link">Crie o primeiro aviso!</a>
+    </div>
+    {% endif %}
+</div>
 {% endblock %}

@@ -189,15 +189,23 @@ def problema_dashboard_view(request):
     return render(request, 'escolas/escola_dashboard.html', {'form': form})  # type: ignore
 
 from django.shortcuts import get_object_or_404, redirect
+from django.contrib import messages
 from .models import AvisoImportante
+from django.urls import reverse
 
 def apagar_aviso_view(request, aviso_id):
     aviso = get_object_or_404(AvisoImportante, id=aviso_id)
-    if request.method == "POST":
+    if request.method == 'POST':
+        aviso_titulo = aviso.titulo  # Para usar na mensagem de sucesso
         aviso.delete()
-        return redirect('nome_da_url_de_lista_de_avisos')  # Ajuste para a URL que lista avisos
-    # Se quiser pode adicionar uma confirmação via template antes de apagar
-    return render(request, 'problemas/confirma_apagar_aviso.html', {'aviso': aviso})
+        messages.success(request, f"O aviso '{aviso_titulo}' foi apagado com sucesso!")
+
+        # Redireciona para a página de listagem de avisos
+        return redirect(reverse('listar_avisos'))  # Sem namespace, apenas o nome da URL
+
+    # Se o método não for POST, redirecione para a lista de avisos também,
+    # pois não se deve apagar com GET.
+    return redirect(reverse('listar_avisos'))  # Redirecionamento padrão
 
 from django.shortcuts import render
 from .models import Escola

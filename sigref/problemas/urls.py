@@ -1,6 +1,6 @@
-from rest_framework import routers
 from django.urls import path
-from . import views 
+from . import views
+from rest_framework import routers
 from .views import (
     LacunaViewSet,
     ProblemaUsuarioViewSet,
@@ -11,7 +11,6 @@ from .views import (
     relatar_problema_view,
     problema_dashboard_view,
 )
-
 
 router = routers.DefaultRouter()
 router.register(r'lacunas', LacunaViewSet, basename='lacunas')
@@ -27,10 +26,6 @@ urlpatterns = [
     path('avisos/editar/<int:aviso_id>/', views.editar_aviso_view, name='editar_aviso'),
     path('avisos/apagar/<int:aviso_id>/', views.apagar_aviso_view, name='apagar_aviso'),
     path('escolas/', views.listar_escolas, name='listar_escolas'),
-    
-
-    
-
 ]
 
 urlpatterns += router.urls
