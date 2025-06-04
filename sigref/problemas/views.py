@@ -161,3 +161,6 @@ def relatar_lacuna_view(request):
     # volta para a página de onde veio (dashboard) 
         return HttpResponseRedirect(request.META.get('HTTP_REFERER', '/'))
 #View de Quantidade de lacunas e problemas
+
+
+#View dos
