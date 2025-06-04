@@ -57,7 +57,6 @@ class AvisoImportante(models.Model):
         ('baixa', 'Baixa'),
         ('normal', 'Normal'),
         ('alta', 'Alta'),
-
     ]
     setor_destino = models.ForeignKey(Setor, on_delete=models.SET_NULL, null=True, blank=True)
 
