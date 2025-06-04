@@ -5,8 +5,8 @@ from .models import Lacuna, ProblemaUsuario, AvisoImportante
 # Lacuna Admin: exibe disciplina, carga horária, escola e data de criação
 @admin.register(Lacuna)
 class LacunaAdmin(admin.ModelAdmin):
-    list_display = ('disciplina', 'carga_horaria', 'escola', 'criado_em')
-    list_filter = ('escola',)
+    list_display = ('disciplina', 'carga_horaria', 'escola', 'status', 'criado_em')
+    list_filter = ('escola', 'status') 
     search_fields = ('disciplina', 'escola__nome')
     date_hierarchy = 'criado_em'
     ordering = ('-criado_em',)
@@ -16,12 +16,12 @@ class LacunaAdmin(admin.ModelAdmin):
 # ProblemaUsuario Admin: exibe nome completo do GREUser, hierarquia do setor e data de criação
 @admin.register(ProblemaUsuario)
 class ProblemaUsuarioAdmin(admin.ModelAdmin):
-    list_display = ('nome_completo', 'setor_hierarquia', 'criado_em')
-    list_filter = ('setor', 'usuario__tipo_usuario')
-    search_fields = ('usuario__nome_completo', 'setor__nome', 'descricao')
+    list_display = ('nome_completo', 'setor_hierarquia', 'escola', 'status', 'criado_em')
+    list_filter = ('setor', 'status', 'usuario__tipo_usuario') 
+    search_fields = ('usuario__nome_completo', 'setor__nome', 'descricao', 'escola__nome')
     date_hierarchy = 'criado_em'
     ordering = ('-criado_em',)
-    list_select_related = ('usuario__user', 'setor')
+    list_select_related = ('usuario__user', 'setor', 'escola')
 
     def nome_completo(self, obj):
         # Exibe sempre o campo nome_completo do GREUser; se vazio, mostra username

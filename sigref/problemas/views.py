@@ -20,41 +20,50 @@ class EscolaDashboardView(LoginRequiredMixin, TemplateView):
         context = super().get_context_data(**kwargs)
         gre_user = self.request.user.greuser
 
+        # Inicializar a variável escola
+        escola = None
+
         # Se o usuário for do tipo 'escola', redireciona para sua própria escola
         if gre_user.is_escola():
-            escola = gre_user.escolas.first() # Obtém a primeira escola associada ao usuário
-            context['escola'] = escola # Exibe o perfil da escola associada ao usuário
+            escola = gre_user.escolas.first()
+            context['escola'] = escola
 
+        # Caso contrário, tenta buscar a escola pelo ID passado na URL
         else:
             escola_id = self.kwargs.get('escola_id')
             if escola_id:
-                escola = get_object_or_404(Escola, id=escola_id)  # Busca a escola com o ID
+                escola = get_object_or_404(Escola, id=escola_id) 
                 context['escola'] = escola
 
-        # Buscar avisos válidos da escola
-        avisos = AvisoImportante.objects.filter(
-            escola=escola,
-            ativo=True
-        ).filter(
-            Q(data_expiracao__isnull=True) | Q(data_expiracao__gte=timezone.now())
-        ).order_by('-prioridade', '-data_criacao')
+        # Verifique se a variável escola foi atribuída corretamente
+        if escola is None:
+            context['error_message'] = "Escola não encontrada ou não associada ao usuário."
+        else:
 
-        # Estatísticas
-        total_lacunas = Lacuna.objects.filter(escola=escola).count() # Contagem de lacunas para a escola
-        usuarios_da_escola = escola.usuarios.all()
-        total_problemas = ProblemaUsuario.objects.filter(usuario__in=usuarios_da_escola).count() # Contagem de problemas dos usuários associados à escola
-        
-        # Contexto enviado ao template
-        context.update({
-            'gre_user': gre_user,
-            'escola': escola,
-            'avisos': avisos,
-            'setor': Setor.objects.all(),
-            'form_problema': ProblemaUsuarioForm(),
-            'form_lacuna': LacunaForm(),
-            'total_lacunas': total_lacunas,
-            'total_problemas': total_problemas,
-        })
+            # ::AVISOS:: Buscar avisos válidos da escola
+            avisos = AvisoImportante.objects.filter(
+                escola=escola,
+                ativo=True
+            ).filter(
+                Q(data_expiracao__isnull=True) | Q(data_expiracao__gte=timezone.now())
+            ).order_by('-prioridade', '-data_criacao')
+
+            # Estatísticas
+            total_lacunas = Lacuna.objects.filter(escola=escola).count() # Contagem de lacunas para a escola
+            usuarios_da_escola = escola.usuarios.all()
+            total_problemas = ProblemaUsuario.objects.filter(usuario__in=usuarios_da_escola).count() # Contagem de problemas dos usuários associados à escola
+            
+            # Contexto enviado ao template
+            context.update({
+                'gre_user': gre_user,
+                'escola': escola,
+                'avisos': avisos,
+                'setor': Setor.objects.all(),
+                'form_problema': ProblemaUsuarioForm(),
+                'form_lacuna': LacunaForm(),
+                'total_lacunas': total_lacunas,
+                'total_problemas': total_problemas,
+            })
 
         return context
 

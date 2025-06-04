@@ -3,6 +3,13 @@ from django.utils import timezone
 
 from monitoramento.models import Escola, Setor, GREUser  # ajuste o caminho conforme seu projeto
 
+# Definir as escolhas de status
+STATUS_CHOICES = [
+    ('P', 'Pendente'),
+    ('C', 'Concluído'),
+    ('A', 'Atrasado'),
+]
+
 class Lacuna(models.Model):
     escola = models.ForeignKey(
         Escola,
@@ -14,7 +21,8 @@ class Lacuna(models.Model):
         help_text="Carga horária em horas-aula"
     )
     criado_em = models.DateTimeField(auto_now_add=True)
-
+    status = models.CharField(max_length=1, choices=STATUS_CHOICES, default='P')
+    
     class Meta:
         ordering = ['-criado_em']
         verbose_name = 'Lacuna'
@@ -22,6 +30,7 @@ class Lacuna(models.Model):
 
     def __str__(self):
         return f"{self.disciplina} ({self.escola.nome})"
+    
 
 
 class ProblemaUsuario(models.Model):
@@ -39,6 +48,14 @@ class ProblemaUsuario(models.Model):
     )
     descricao = models.TextField()
     criado_em = models.DateTimeField(auto_now_add=True)
+    escola = models.ForeignKey(
+        Escola,
+        on_delete=models.CASCADE,
+        related_name='problemas',
+        default=1
+    )
+    status = models.CharField(max_length=1, choices=STATUS_CHOICES, default='P')
+
 
     class Meta:
         ordering = ['-criado_em']
