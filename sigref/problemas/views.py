@@ -184,4 +184,3 @@ def relatar_lacuna_view(request):
         pass       
     # volta para a página de onde veio (dashboard) 
         return HttpResponseRedirect(request.META.get('HTTP_REFERER', '/'))
-    
