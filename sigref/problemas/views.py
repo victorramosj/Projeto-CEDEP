@@ -3,7 +3,7 @@ from .models import Lacuna, ProblemaUsuario, AvisoImportante
 from .serializers import LacunaSerializer, ProblemaUsuarioSerializer
 from .forms import ProblemaUsuarioForm, LacunaForm # importe seu formulário
 
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.utils import timezone
 from django.db.models import Q
 from django.http import HttpResponseRedirect
@@ -12,7 +12,6 @@ from django.views.generic import TemplateView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from monitoramento.models import GREUser, Escola, Setor  # ajuste o import conforme sua estrutura
 
-
 # View da DASHBOARD
 class EscolaDashboardView(LoginRequiredMixin, TemplateView):
     template_name = 'escola_dashboard.html'
@@ -20,7 +19,17 @@ class EscolaDashboardView(LoginRequiredMixin, TemplateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         gre_user = self.request.user.greuser
-        escola = gre_user.escolas.first()
+
+        # Se o usuário for do tipo 'escola', redireciona para sua própria escola
+        if gre_user.is_escola():
+            escola = gre_user.escolas.first() # Obtém a primeira escola associada ao usuário
+            context['escola'] = escola # Exibe o perfil da escola associada ao usuário
+
+        else:
+            escola_id = self.kwargs.get('escola_id')
+            if escola_id:
+                escola = get_object_or_404(Escola, id=escola_id)  # Busca a escola com o ID
+                context['escola'] = escola
 
         # Buscar avisos válidos da escola
         avisos = AvisoImportante.objects.filter(
@@ -31,9 +40,10 @@ class EscolaDashboardView(LoginRequiredMixin, TemplateView):
         ).order_by('-prioridade', '-data_criacao')
 
         # Estatísticas
-        total_lacunas = Lacuna.objects.filter(escola=escola).count()
-        total_problemas = ProblemaUsuario.objects.filter(usuario=gre_user).count()
-
+        total_lacunas = Lacuna.objects.filter(escola=escola).count() # Contagem de lacunas para a escola
+        usuarios_da_escola = escola.usuarios.all()
+        total_problemas = ProblemaUsuario.objects.filter(usuario__in=usuarios_da_escola).count() # Contagem de problemas dos usuários associados à escola
+        
         # Contexto enviado ao template
         context.update({
             'gre_user': gre_user,
@@ -47,12 +57,6 @@ class EscolaDashboardView(LoginRequiredMixin, TemplateView):
         })
 
         return context
-
-
-
-
-
-
 
 
 # View das LACUNAS
