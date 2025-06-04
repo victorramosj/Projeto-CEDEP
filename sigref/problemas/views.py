@@ -139,58 +139,6 @@ def problema_dashboard_view(request):
     form = ProblemaUsuarioForm()
     return render(request, 'escolas/escola_dashboard.html', {'form': form})  # type: ignore
 
-from django.shortcuts import get_object_or_404, redirect
-from django.contrib import messages
-from django.contrib.auth.decorators import login_required
-from django.http import HttpResponseForbidden
-from .models import AvisoImportante
-
-@login_required
-def apagar_aviso_view(request, aviso_id):
-    aviso = get_object_or_404(AvisoImportante, id=aviso_id)
-    gre_user = request.user.greuser
-
-    # Verifica se o aviso foi criado pelo usuário ou se ele é administrador
-    if aviso.criado_por != gre_user and not gre_user.is_admin():
-        return HttpResponseForbidden("Você não tem permissão para apagar este aviso.")
-
-    if request.method == 'POST':
-        aviso.delete()
-        messages.success(request, "Aviso apagado com sucesso!")
-        return redirect('listar_avisos')  # Redireciona para a página de listagem de avisos
-
-    # Se não for POST, retorna à lista de avisos
-    return redirect('listar_avisos')
-
-
-
-from django.shortcuts import render
-from .models import Escola
-
-def listar_escolas(request):
-    query = request.GET.get('q', '')  # pegar o termo da pesquisa
-
-    # filtrar pelo nome, inep, email, nome_gestor, etc (exemplo básico com OR)
-    if query:
-        escolas = Escola.objects.filter(
-            Q(nome__icontains=query) |
-            Q(inep__icontains=query) |
-            Q(email_escola__icontains=query) |
-            Q(nome_gestor__icontains=query) |
-            Q(telefone_gestor__icontains=query) |
-            Q(email_gestor__icontains=query) |
-            Q(endereco__icontains=query)
-        )
-    else:
-        escolas = Escola.objects.all()
-
-    return render(request, 'escolas/lista.html', {
-        'escolas': escolas,
-        'query': query,
-    })
-
-# sigref/problemas/views.py
-
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render
 from django.http import HttpResponseForbidden
@@ -208,8 +156,6 @@ def listar_avisos_view(request):
         avisos = AvisoImportante.objects.filter(criado_por=gre_user)
 
     return render(request, 'problemas/listar_avisos.html', {'avisos': avisos})
-
-# sigref/problemas/views.py
 
 from django.shortcuts import render, redirect
 from django.contrib import messages
@@ -263,14 +209,9 @@ def criar_aviso_view(request):
     # Quando for GET, passa as escolas para o template
     return render(request, 'avisos/criar_aviso.html', {'escolas': escolas})
 
-
-
-# sigref/problemas/views.py
-
 from django.shortcuts import get_object_or_404, redirect
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from django.http import HttpResponseForbidden
 from .models import AvisoImportante
 from .forms import AvisoForm
 
@@ -281,15 +222,39 @@ def editar_aviso_view(request, aviso_id):
 
     # Verifica se o aviso foi criado pelo usuário ou se ele é administrador
     if aviso.criado_por != gre_user and not gre_user.is_admin():
-        return HttpResponseForbidden("Você não tem permissão para editar este aviso.")
+        messages.error(request, "Você não tem permissão para editar este aviso.")
+        return redirect('listar_avisos')
 
     if request.method == 'POST':
         form = AvisoForm(request.POST, instance=aviso)
         if form.is_valid():
             form.save()
             messages.success(request, "Aviso editado com sucesso!")
-            return redirect('listar_avisos')  # Redireciona para a página de listagem de avisos
-    else:
-        form = AvisoForm(instance=aviso)
+            return redirect('listar_avisos')  # Redireciona para a lista de avisos
+        else:
+            messages.error(request, "Erro ao editar o aviso. Tente novamente.")
+            return redirect('listar_avisos')
 
-    return render(request, 'problemas/editar_aviso.html', {'form': form})
+    return redirect('listar_avisos')  # Em caso de método inválido
+
+
+
+from django.shortcuts import get_object_or_404, redirect
+from django.contrib import messages
+from django.contrib.auth.decorators import login_required
+from .models import AvisoImportante
+
+@login_required
+def apagar_aviso_view(request, aviso_id):
+    aviso = get_object_or_404(AvisoImportante, id=aviso_id)
+    gre_user = request.user.greuser
+
+    # Verifica se o aviso foi criado pelo usuário ou se ele é administrador
+    if aviso.criado_por != gre_user and not gre_user.is_admin():
+        messages.error(request, "Você não tem permissão para excluir este aviso.")
+        return redirect('listar_avisos')  # Redireciona para a página de avisos
+
+    aviso.delete()
+    messages.success(request, "Aviso excluído com sucesso!")
+    return redirect('listar_avisos')  # Redireciona para a lista de avisos após a exclusão
+

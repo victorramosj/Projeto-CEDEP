@@ -33,24 +33,24 @@
                     <td>{{ aviso.get_prioridade_display }}</td>
                     <td>{{ aviso.data_criacao|date:"d/m/Y H:i" }}</td>
                     <td class="text-center">
+                        <!-- Botão Editar -->
                         <button class="btn btn-warning btn-sm" 
                                 data-bs-toggle="modal" 
                                 data-bs-target="#editAvisoModal" 
                                 data-id="{{ aviso.id }}" 
                                 data-titulo="{{ aviso.titulo }}" 
                                 data-mensagem="{{ aviso.mensagem }}" 
-                                data-prioridade="{{ aviso.prioridade }}"
-                                data-edit-url="{% url 'editar_aviso' aviso.id %}">
+                                data-prioridade="{{ aviso.prioridade }}">
                             <i class="bi bi-pencil"></i> Editar
                         </button>
                         
-                        <button class="btn btn-danger btn-sm" 
-                                data-bs-toggle="modal" 
-                                data-bs-target="#deleteAvisoModal" 
-                                data-id="{{ aviso.id }}" 
-                                data-titulo="{{ aviso.titulo }}">
-                            <i class="bi bi-trash-fill"></i> Apagar
-                        </button>
+                        <!-- Formulário para excluir o aviso -->
+                        <form action="{% url 'apagar_aviso' aviso.id %}" method="POST" style="display:inline;">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-danger btn-sm">
+                                <i class="bi bi-trash-fill"></i> Apagar
+                            </button>
+                        </form>
                     </td>
                 </tr>
                 {% endfor %}
@@ -64,6 +64,7 @@
     {% endif %}
 </div>
 
+<!-- Modal de Edição -->
 <div class="modal fade" id="editAvisoModal" tabindex="-1" aria-labelledby="editAvisoModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -72,9 +73,9 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
             </div>
             <div class="modal-body">
-                <form id="editAvisoForm" method="post" action=""> {# Action será definida pelo JavaScript #}
+                <form method="POST" action="" id="editAvisoForm">
                     {% csrf_token %}
-                    <input type="hidden" id="aviso_id_modal_edit" name="aviso_id"> {# Renomeado para evitar conflito com o campo titulo, se existir um campo aviso_id no form Django #}
+                    <input type="hidden" id="aviso_id_modal_edit" name="aviso_id">
                     <div class="mb-3">
                         <label for="titulo_modal_edit" class="form-label">Título</label>
                         <input type="text" class="form-control" id="titulo_modal_edit" name="titulo" required>
@@ -98,89 +99,29 @@
     </div>
 </div>
 
-<div class="modal fade" id="deleteAvisoModal" tabindex="-1" aria-labelledby="deleteAvisoModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="deleteAvisoModalLabel">Tem certeza que deseja apagar este aviso?</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
-            </div>
-            <div class="modal-body">
-                <p>O aviso <strong id="modalAvisoTitulo"></strong> será excluído permanentemente.</p>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                <form id="deleteAvisoForm" method="post" action="" style="display:inline;">
-                    {% csrf_token %}
-                    <button type="submit" class="btn btn-danger">Apagar</button>
-                </form>
-            </div>
-        </div>
-    </div>
-</div>
+{% endblock %}
 
+<!-- Script para preencher o modal de edição -->
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Preenche o modal de editar com os dados do aviso ao clicar no botão de editar
     const editAvisoModal = document.getElementById('editAvisoModal');
     if (editAvisoModal) {
         editAvisoModal.addEventListener('show.bs.modal', function (event) {
-            const button = event.relatedTarget; // Botão que acionou o modal
-            
-            // Pega os dados dos atributos data-* do botão
+            const button = event.relatedTarget;
             const avisoId = button.getAttribute('data-id');
             const titulo = button.getAttribute('data-titulo');
             const mensagem = button.getAttribute('data-mensagem');
             const prioridade = button.getAttribute('data-prioridade');
-            const editUrl = button.getAttribute('data-edit-url'); // Pega a URL de edição do atributo data
 
-            // Seleciona o formulário e os campos dentro do modal de edição
-            const form = editAvisoModal.querySelector('#editAvisoForm');
-            const avisoIdInput = form.querySelector('#aviso_id_modal_edit');
-            const tituloInput = form.querySelector('#titulo_modal_edit');
-            const mensagemInput = form.querySelector('#mensagem_modal_edit');
-            const prioridadeInput = form.querySelector('#prioridade_modal_edit');
+            // Preenche os campos do formulário no modal
+            document.getElementById('aviso_id_modal_edit').value = avisoId;
+            document.getElementById('titulo_modal_edit').value = titulo;
+            document.getElementById('mensagem_modal_edit').value = mensagem;
+            document.getElementById('prioridade_modal_edit').value = prioridade;
 
-            // Define a action do formulário com a URL de edição
-            if (form && editUrl) {
-                form.action = editUrl;
-            }
-
-            // Preenche os campos do formulário
-            if (avisoIdInput) avisoIdInput.value = avisoId; // Este campo é hidden, usado para o ID
-            if (tituloInput) tituloInput.value = titulo;
-            if (mensagemInput) mensagemInput.value = mensagem;
-            if (prioridadeInput) prioridadeInput.value = prioridade;
-        });
-    }
-
-    // Preenche o modal de exclusão com os dados do aviso ao clicar no botão de excluir
-    const deleteAvisoModal = document.getElementById('deleteAvisoModal');
-    if (deleteAvisoModal) {
-        deleteAvisoModal.addEventListener('show.bs.modal', function (event) {
-            const button = event.relatedTarget; // Botão que acionou o modal
-
-            // Pega os dados dos atributos data-* do botão
-            const avisoId = button.getAttribute('data-id');
-            const titulo = button.getAttribute('data-titulo');
-
-            // Seleciona o formulário e o elemento para o título dentro do modal de exclusão
-            const form = deleteAvisoModal.querySelector('#deleteAvisoForm');
-            const modalAvisoTituloStrong = deleteAvisoModal.querySelector('#modalAvisoTitulo');
-
-            // Preenche o título do aviso no corpo do modal
-            if (modalAvisoTituloStrong) {
-                modalAvisoTituloStrong.textContent = titulo;
-            }
-
-            // Define a action do formulário de exclusão
-            if (form && avisoId) {
-                // Certifique-se que a URL base '/avisos/apagar/' está correta conforme seu urls.py
-                form.action = `/avisos/apagar/${avisoId}/`;
-            }
+            // Atualiza a URL de envio do formulário com o ID do aviso
+            document.getElementById('editAvisoForm').action = "/avisos/editar/" + avisoId + "/";
         });
     }
 });
 </script>
-
-{% endblock %}
