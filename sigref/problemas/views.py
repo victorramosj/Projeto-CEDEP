@@ -7,10 +7,12 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.utils import timezone
 from django.db.models import Q
 from django.http import HttpResponseRedirect
+from django.utils import timezone
 
 from django.views.generic import TemplateView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from monitoramento.models import GREUser, Escola, Setor  # ajuste o import conforme sua estrutura
+
 
 # View da DASHBOARD
 class EscolaDashboardView(LoginRequiredMixin, TemplateView):
@@ -53,6 +55,15 @@ class EscolaDashboardView(LoginRequiredMixin, TemplateView):
             usuarios_da_escola = escola.usuarios.all()
             total_problemas = ProblemaUsuario.objects.filter(usuario__in=usuarios_da_escola).count() # Contagem de problemas dos usuários associados à escola
             
+            problemas = ProblemaUsuario.objects.filter(usuario__in=usuarios_da_escola)
+            # Contagem de problemas criados neste mês
+            agora = timezone.now()
+            problemas_este_mes = problemas.filter(criado_em__month=agora.month, criado_em__year=agora.year).count()
+                
+                 # Contagem por status
+            problemas_resolvidos = problemas.filter(status='resolvido').count()
+            problemas_pendentes = problemas.filter(status='pendente').count()
+            problemas_andamento = problemas.filter(status='andamento').count()
             # Contexto enviado ao template
             context.update({
                 'gre_user': gre_user,
@@ -63,6 +74,10 @@ class EscolaDashboardView(LoginRequiredMixin, TemplateView):
                 'form_lacuna': LacunaForm(),
                 'total_lacunas': total_lacunas,
                 'total_problemas': total_problemas,
+                'problemas_resolvidos': problemas_resolvidos,
+                'problemas_pendentes': problemas_pendentes,
+                'problemas_andamento': problemas_andamento,
+                'problemas_este_mes': problemas_este_mes,
             })
 
         return context
