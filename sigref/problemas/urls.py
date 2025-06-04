@@ -30,11 +30,17 @@ urlpatterns = [
     path('relatar-lacuna/', relatar_lacuna_view, name='relatar_lacuna'),
         
     #AVISOS
-    path('avisos/criar/', criar_aviso_view, name='criar_aviso'),
+    # URL para a criação de um aviso
+    path('avisos/criar/', views.criar_aviso_view, name='criar_aviso'),
+
+    # URL para editar aviso
     path('avisos/editar/<int:aviso_id>/', views.editar_aviso_view, name='editar_aviso'),
+    
+    # URL para apagar aviso
     path('avisos/apagar/<int:aviso_id>/', views.apagar_aviso_view, name='apagar_aviso'),
-    path('escolas/', views.listar_escolas, name='listar_escolas'),
-    path('avisos/', listar_avisos_view, name='listar_avisos'),
+    
+    # URL para listar avisos
+    path('avisos/', views.listar_avisos_view, name='listar_avisos'),
 ]
 
 urlpatterns += router.urls

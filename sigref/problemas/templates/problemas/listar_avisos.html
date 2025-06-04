@@ -1,88 +1,186 @@
-    {% extends "cedepe/base.html" %}
+{% extends "cedepe/base.html" %}
 
+{% block title %}Lista de Avisos{% endblock %}
 
-    {% block title %}Lista de Avisos{% endblock %}
-
-    {% block content %}
-    <div class="container mt-4">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h1 class="mb-0">Avisos Importantes</h1>
-            <a href="{% url 'criar_aviso' %}" class="btn btn-primary mb-3">Criar Aviso</a>
-
-
-        </div>
-
-        {% if avisos %}
-        <div class="table-responsive">
-            <table class="table table-bordered table-striped table-hover">
-                <thead class="table-light">
-                    <tr>
-                        <th>Título</th>
-                        <th>Escola(s) Destino</th>
-                        <th>Criado por (Usuário)</th>
-                        <th>Setor Destino</th>
-                        <th>Prioridade</th>
-                        <th>Data de Criação</th>
-                        <th class="text-center">Ações</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for aviso in avisos %}
-                    <tr>
-                        <td>{{ aviso.titulo }}</td>
-                        <td>
-                            {% if aviso.escola %}
-                                {{ aviso.escola.nome }}
-                            {% elif aviso.escolas_selecionadas_display %} {# Assumindo que você pode ter um campo/método para múltiplas escolas #}
-                                {{ aviso.escolas_selecionadas_display }}
-                            {% else %}
-                                Todas as escolas
-                            {% endif %}
-                        </td>
-                        <td>
-                            {% if aviso.criado_por %}
-                                {{ aviso.criado_por.user.get_full_name|default:aviso.criado_por.user.username }}
-                            {% else %}
-                                N/A
-                            {% endif %}
-                        </td>
-                        <td>
-                            {% if aviso.setor_destino %}
-                                {{ aviso.setor_destino.nome|default:"-" }} {# Ou use aviso.setor_destino.hierarquia_completa se preferir e existir #}
-                            {% else %}
-                                Geral / Todas
-                            {% endif %}
-                        </td>
-                        <td>
-                            <span class="badge 
-                                {% if aviso.prioridade == 'alta' %}bg-danger
-                                {% elif aviso.prioridade == 'normal' %}bg-warning text-dark
-                                {% else %}bg-secondary
-                                {% endif %}">
-                                {{ aviso.get_prioridade_display }}
-                            </span>
-                        </td>
-                        <td>{{ aviso.data_criacao|date:"d/m/Y H:i" }}</td>
-                        <td class="text-center">
-                            {# Aqui você pode adicionar outros botões, como "Editar" ou "Ver Detalhes" #}
-                            {# Exemplo: <a href="#" class="btn btn-info btn-sm me-1"><i class="bi bi-eye-fill"></i></a> #}
-                            {# Exemplo: <a href="#" class="btn btn-warning btn-sm me-1"><i class="bi bi-pencil-fill"></i></a> #}
-                            <form method="post" action="{% url 'apagar_aviso' aviso.id %}" style="display:inline;">
-                                {% csrf_token %}
-                                <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Tem certeza que deseja apagar este aviso?\n\nTítulo: {{ aviso.titulo|escapejs }}\nEscola: {% if aviso.escola %}{{ aviso.escola.nome|escapejs }}{% else %}Todas{% endif %}');">
-                                    <i class="bi bi-trash-fill"></i> Apagar
-                                </button>
-                            </form>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-        {% else %}
-        <div class="alert alert-info mt-4" role="alert">
-            Nenhum aviso encontrado. <a href="{% url 'criar_aviso' %}" class="alert-link">Crie o primeiro aviso!</a>
-        </div>
-        {% endif %}
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="mb-0">Avisos Importantes</h1>
+        <a href="{% url 'criar_aviso' %}" class="btn btn-primary mb-3">Criar Aviso</a>
     </div>
-    {% endblock %}
+
+    {% if avisos %}
+    <div class="table-responsive">
+        <table class="table table-bordered table-striped table-hover">
+            <thead class="table-light">
+                <tr>
+                    <th>Título</th>
+                    <th>Escola(s) Destino</th>
+                    <th>Criado por (Usuário)</th>
+                    <th>Setor Destino</th>
+                    <th>Prioridade</th>
+                    <th>Data de Criação</th>
+                    <th class="text-center">Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for aviso in avisos %}
+                <tr>
+                    <td>{{ aviso.titulo }}</td>
+                    <td>{{ aviso.escola.nome }}</td>
+                    <td>{{ aviso.criado_por.user.get_full_name }}</td>
+                    <td>{{ aviso.setor_destino.nome }}</td>
+                    <td>{{ aviso.get_prioridade_display }}</td>
+                    <td>{{ aviso.data_criacao|date:"d/m/Y H:i" }}</td>
+                    <td class="text-center">
+                        <button class="btn btn-warning btn-sm" 
+                                data-bs-toggle="modal" 
+                                data-bs-target="#editAvisoModal" 
+                                data-id="{{ aviso.id }}" 
+                                data-titulo="{{ aviso.titulo }}" 
+                                data-mensagem="{{ aviso.mensagem }}" 
+                                data-prioridade="{{ aviso.prioridade }}"
+                                data-edit-url="{% url 'editar_aviso' aviso.id %}">
+                            <i class="bi bi-pencil"></i> Editar
+                        </button>
+                        
+                        <button class="btn btn-danger btn-sm" 
+                                data-bs-toggle="modal" 
+                                data-bs-target="#deleteAvisoModal" 
+                                data-id="{{ aviso.id }}" 
+                                data-titulo="{{ aviso.titulo }}">
+                            <i class="bi bi-trash-fill"></i> Apagar
+                        </button>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="alert alert-info mt-4" role="alert">
+        Nenhum aviso encontrado. <a href="{% url 'criar_aviso' %}" class="alert-link">Crie o primeiro aviso!</a>
+    </div>
+    {% endif %}
+</div>
+
+<div class="modal fade" id="editAvisoModal" tabindex="-1" aria-labelledby="editAvisoModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editAvisoModalLabel">Editar Aviso</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+            </div>
+            <div class="modal-body">
+                <form id="editAvisoForm" method="post" action=""> {# Action será definida pelo JavaScript #}
+                    {% csrf_token %}
+                    <input type="hidden" id="aviso_id_modal_edit" name="aviso_id"> {# Renomeado para evitar conflito com o campo titulo, se existir um campo aviso_id no form Django #}
+                    <div class="mb-3">
+                        <label for="titulo_modal_edit" class="form-label">Título</label>
+                        <input type="text" class="form-control" id="titulo_modal_edit" name="titulo" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="mensagem_modal_edit" class="form-label">Mensagem</label>
+                        <textarea class="form-control" id="mensagem_modal_edit" name="mensagem" rows="3" required></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label for="prioridade_modal_edit" class="form-label">Prioridade</label>
+                        <select class="form-select" id="prioridade_modal_edit" name="prioridade" required>
+                            <option value="baixa">Baixa</option>
+                            <option value="normal">Normal</option>
+                            <option value="alta">Alta</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Salvar alterações</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="deleteAvisoModal" tabindex="-1" aria-labelledby="deleteAvisoModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteAvisoModalLabel">Tem certeza que deseja apagar este aviso?</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+            </div>
+            <div class="modal-body">
+                <p>O aviso <strong id="modalAvisoTitulo"></strong> será excluído permanentemente.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <form id="deleteAvisoForm" method="post" action="" style="display:inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">Apagar</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Preenche o modal de editar com os dados do aviso ao clicar no botão de editar
+    const editAvisoModal = document.getElementById('editAvisoModal');
+    if (editAvisoModal) {
+        editAvisoModal.addEventListener('show.bs.modal', function (event) {
+            const button = event.relatedTarget; // Botão que acionou o modal
+            
+            // Pega os dados dos atributos data-* do botão
+            const avisoId = button.getAttribute('data-id');
+            const titulo = button.getAttribute('data-titulo');
+            const mensagem = button.getAttribute('data-mensagem');
+            const prioridade = button.getAttribute('data-prioridade');
+            const editUrl = button.getAttribute('data-edit-url'); // Pega a URL de edição do atributo data
+
+            // Seleciona o formulário e os campos dentro do modal de edição
+            const form = editAvisoModal.querySelector('#editAvisoForm');
+            const avisoIdInput = form.querySelector('#aviso_id_modal_edit');
+            const tituloInput = form.querySelector('#titulo_modal_edit');
+            const mensagemInput = form.querySelector('#mensagem_modal_edit');
+            const prioridadeInput = form.querySelector('#prioridade_modal_edit');
+
+            // Define a action do formulário com a URL de edição
+            if (form && editUrl) {
+                form.action = editUrl;
+            }
+
+            // Preenche os campos do formulário
+            if (avisoIdInput) avisoIdInput.value = avisoId; // Este campo é hidden, usado para o ID
+            if (tituloInput) tituloInput.value = titulo;
+            if (mensagemInput) mensagemInput.value = mensagem;
+            if (prioridadeInput) prioridadeInput.value = prioridade;
+        });
+    }
+
+    // Preenche o modal de exclusão com os dados do aviso ao clicar no botão de excluir
+    const deleteAvisoModal = document.getElementById('deleteAvisoModal');
+    if (deleteAvisoModal) {
+        deleteAvisoModal.addEventListener('show.bs.modal', function (event) {
+            const button = event.relatedTarget; // Botão que acionou o modal
+
+            // Pega os dados dos atributos data-* do botão
+            const avisoId = button.getAttribute('data-id');
+            const titulo = button.getAttribute('data-titulo');
+
+            // Seleciona o formulário e o elemento para o título dentro do modal de exclusão
+            const form = deleteAvisoModal.querySelector('#deleteAvisoForm');
+            const modalAvisoTituloStrong = deleteAvisoModal.querySelector('#modalAvisoTitulo');
+
+            // Preenche o título do aviso no corpo do modal
+            if (modalAvisoTituloStrong) {
+                modalAvisoTituloStrong.textContent = titulo;
+            }
+
+            // Define a action do formulário de exclusão
+            if (form && avisoId) {
+                // Certifique-se que a URL base '/avisos/apagar/' está correta conforme seu urls.py
+                form.action = `/avisos/apagar/${avisoId}/`;
+            }
+        });
+    }
+});
+</script>
+
+{% endblock %}
