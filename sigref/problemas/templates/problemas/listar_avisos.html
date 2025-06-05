@@ -44,7 +44,7 @@
                                 ({{ aviso.criado_por.user.username }})
                             {% endif %}
                         {% elif aviso.criado_por and aviso.criado_por.username %} {# Caso criado_por seja o próprio User #}
-                             {{ aviso.criado_por.get_full_name|default_if_none:aviso.criado_por.username }}
+                            {{ aviso.criado_por.get_full_name|default_if_none:aviso.criado_por.username }}
                         {% else %}
                             N/A
                         {% endif %}
@@ -138,7 +138,7 @@ document.addEventListener('DOMContentLoaded', function() {
             selectPrioridade.value = button.getAttribute('data-prioridade');
 
             // Atualiza a URL do formulário para incluir o ID do aviso
-            form.action = `/avisos/editar/${avisoId}/`;  // URL para editar o aviso
+            form.action = `/problemas/avisos/editar/${avisoId}/`;  // URL para editar o aviso
         });
     }
 });

@@ -216,9 +216,7 @@ from .models import AvisoImportante
 from .forms import AvisoForm
 
 # views.py
-
-# views.py
-from django.shortcuts import get_object_or_404, redirect
+from django.shortcuts import get_object_or_404, render, redirect
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from .models import AvisoImportante
@@ -226,7 +224,6 @@ from .forms import AvisoForm
 
 @login_required
 def editar_aviso_view(request, aviso_id):
-    # Recupera o aviso baseado no ID
     aviso = get_object_or_404(AvisoImportante, id=aviso_id)
 
     # Verifica se o aviso foi criado pelo usuário ou se ele é administrador
@@ -235,18 +232,23 @@ def editar_aviso_view(request, aviso_id):
         messages.error(request, "Você não tem permissão para editar este aviso.")
         return redirect('listar_avisos')
 
+    # Carrega os dados do aviso no formulário quando o método for GET
+    if request.method == 'GET':
+        form = AvisoForm(instance=aviso)  # Preenche o formulário com os dados do aviso
+        return render(request, 'problemas/listar_avisos.html', {'form': form, 'aviso': aviso})  # Caminho correto para o template
+
     # Se o método for POST, salva as alterações
     if request.method == 'POST':
         form = AvisoForm(request.POST, instance=aviso)
         if form.is_valid():
             form.save()
             messages.success(request, "Aviso editado com sucesso!")
-            return redirect('listar_avisos')  # Redireciona para a lista de avisos
+            return redirect('listar_avisos')
         else:
             messages.error(request, "Erro ao editar o aviso. Tente novamente.")
-            return redirect('listar_avisos')
+            print("Formulário inválido. Erros:", form.errors)  # Depuração
+            return render(request, 'problemas/listar_avisos.html', {'form': form, 'aviso': aviso})
 
-    # Se não for POST, redireciona para a lista de avisos
     return redirect('listar_avisos')
 
 
