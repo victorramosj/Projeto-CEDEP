@@ -71,8 +71,8 @@ class ProblemaUsuario(models.Model):
         setor_nome = self.setor.hierarquia_completa if self.setor else "Geral"
         return f"{self.usuario.user.username} → {setor_nome}"
 
+from django.db import models
 from django.utils import timezone
-from monitoramento.models import Escola, Setor, GREUser
 
 class AvisoImportante(models.Model):
     PRIORIDADES = [
@@ -92,8 +92,7 @@ class AvisoImportante(models.Model):
     data_criacao = models.DateTimeField(auto_now_add=True)
     data_expiracao = models.DateTimeField(null=True, blank=True)
     ativo = models.BooleanField(default=True)
-
-    
+    data_exclusao = models.DateTimeField(null=True, blank=True)  # Campo para armazenar a data de exclusão
 
     def __str__(self):
         return f"[{self.escola.nome}] {self.titulo}"

@@ -19,74 +19,73 @@
     {% endif %}
 
     {% if avisos %}
-    <div class="list-group">
+    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
         {% for aviso in avisos %}
-        <div class="list-group-item d-flex justify-content-between align-items-center">
-            <div>
-                <h5 class="mb-1">{{ aviso.titulo }}</h5>
-                <p class="mb-1">
-                    <strong>Escola(s) Destino:</strong> {{ aviso.escola.nome }}<br>
-                    <strong>Setor Destino:</strong> {{ aviso.setor_destino.nome|default_if_none:"N/A" }}<br>
-                    <strong>Prioridade:</strong> {{ aviso.get_prioridade_display }}<br>
-                    <strong>Data de Criação:</strong> {{ aviso.data_criacao|date:"d/m/Y H:i" }}
-                </p>
-            </div>
-            <div>
-                <button class="btn btn-sm btn-warning" data-bs-toggle="modal" data-bs-target="#editAvisoModal"
-                    data-id="{{ aviso.id }}" data-titulo="{{ aviso.titulo }}" data-mensagem="{{ aviso.mensagem }}"
-                    data-prioridade="{{ aviso.prioridade }}" data-escola-id="{{ aviso.escola.id }}"
-                    data-criado-por-id="{{ aviso.criado_por.id }}" data-ativo="{{ aviso.ativo|yesno:'true,false' }}">
-                    <i class="bi bi-pencil"></i> Editar
-                </button>
-                <form action="{% url 'apagar_aviso' aviso.id %}" method="POST" style="display:inline;">
-                    {% csrf_token %}
-                    <button type="submit" class="btn btn-sm btn-danger"
-                        onclick="return confirm('Tem certeza que deseja apagar este aviso?');">
-                        <i class="bi bi-trash-fill"></i> Apagar
+        <div class="col">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h5 class="card-title">{{ aviso.titulo }}</h5>
+                    <p class="card-text">
+                        <strong>Escola(s) Destino:</strong> {{ aviso.escola.nome }}<br>
+                        <strong>Setor Destino:</strong> {{ aviso.setor_destino.nome|default_if_none:"N/A" }}<br>
+                        <strong>Prioridade:</strong> {{ aviso.get_prioridade_display }}<br>
+                        <strong>Data de Criação:</strong> {{ aviso.data_criacao|date:"d/m/Y H:i" }}
+                    </p>
+                </div>
+                <div class="card-footer d-flex justify-content-between">
+                    <button class="btn btn-warning btn-sm" data-bs-toggle="modal" data-bs-target="#editAvisoModal"
+                        data-id="{{ aviso.id }}" data-titulo="{{ aviso.titulo }}" data-mensagem="{{ aviso.mensagem }}"
+                        data-prioridade="{{ aviso.prioridade }}" data-escola-id="{{ aviso.escola.id }}"
+                        data-criado-por-id="{{ aviso.criado_por.id }}" data-ativo="{{ aviso.ativo|yesno:'true,false' }}">
+                        <i class="bi bi-pencil"></i> Editar
                     </button>
-                </form>
+
+                    <!-- Formulário para excluir o aviso -->
+                    <form action="{% url 'apagar_aviso' aviso.id %}" method="POST" style="display:inline;">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-danger btn-sm"
+                            onclick="return confirm('Tem certeza que deseja apagar este aviso?');">
+                            <i class="bi bi-trash-fill"></i> Apagar
+                        </button>
+                    </form>
+                </div>
             </div>
         </div>
         {% endfor %}
     </div>
 
-    <!-- Navegação de Páginas -->
+    <!-- Paginação com "Anterior", "Selecionada" e "Próxima" -->
     <div class="d-flex justify-content-center mt-4">
         <nav aria-label="Navegação de páginas">
             <ul class="pagination">
+                <!-- Página Anterior -->
                 {% if avisos.has_previous %}
                 <li class="page-item">
-                    <a class="page-link" href="?page=1" aria-label="Primeira">
-                        <span aria-hidden="true">&laquo;&laquo;</span>
+                    <a class="page-link" href="?page={{ avisos.previous_page_number }}" aria-label="Anterior">
+                        Página Anterior
                     </a>
                 </li>
-                <li class="page-item">
-                    <a class="page-link" href="?page={{ avisos.previous_page_number }}" aria-label="Anterior">
-                        <span aria-hidden="true">&laquo;</span>
-                    </a>
+                {% else %}
+                <li class="page-item disabled">
+                    <span class="page-link">Página Anterior</span>
                 </li>
                 {% endif %}
-                {% for num in avisos.paginator.page_range %}
-                    {% if avisos.number == num %}
-                    <li class="page-item active" aria-current="page">
-                        <span class="page-link">{{ num }}</span>
-                    </li>
-                    {% else %}
-                    <li class="page-item">
-                        <a class="page-link" href="?page={{ num }}">{{ num }}</a>
-                    </li>
-                    {% endif %}
-                {% endfor %}
+
+                <!-- Página Atual -->
+                <li class="page-item active" aria-current="page">
+                    <span class="page-link">{{ avisos.number }}</span>
+                </li>
+
+                <!-- Página Próxima -->
                 {% if avisos.has_next %}
                 <li class="page-item">
                     <a class="page-link" href="?page={{ avisos.next_page_number }}" aria-label="Próxima">
-                        <span aria-hidden="true">&raquo;</span>
+                        Próxima Página
                     </a>
                 </li>
-                <li class="page-item">
-                    <a class="page-link" href="?page={{ avisos.paginator.num_pages }}" aria-label="Última">
-                        <span aria-hidden="true">&raquo;&raquo;</span>
-                    </a>
+                {% else %}
+                <li class="page-item disabled">
+                    <span class="page-link">Próxima Página</span>
                 </li>
                 {% endif %}
             </ul>

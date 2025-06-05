@@ -177,7 +177,7 @@ def listar_avisos_view(request):
         avisos = AvisoImportante.objects.filter(criado_por=gre_user)
 
     # Aplicando a paginação
-    paginator = Paginator(avisos, 5)  # 5 avisos por página
+    paginator = Paginator(avisos, 9)  # 9 avisos por página
     page_number = request.GET.get('page')  # Número da página atual
     avisos_paginated = paginator.get_page(page_number)  # Obtemos os avisos para a página atual
 
