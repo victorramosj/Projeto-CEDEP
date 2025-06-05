@@ -3,6 +3,11 @@ from django.utils import timezone
 
 from monitoramento.models import Escola, Setor, GREUser  # ajuste o caminho conforme seu projeto
 
+Pendente = 'P'
+Resolvido = 'R'
+Em_Andamento = 'E'
+
+
 # Definir as escolhas de status
 STATUS_CHOICES = [
     ('P', 'Pendente'),
