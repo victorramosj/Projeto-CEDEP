@@ -91,16 +91,21 @@ class LacunaForm(forms.ModelForm):
             'carga_horaria': 'Carga Horária',
         }
 
+# forms.py
+from django import forms
+from .models import AvisoImportante
+
 class AvisoForm(forms.ModelForm):
     class Meta:
         model = AvisoImportante
-        fields = ['titulo', 'mensagem', 'prioridade', 'data_expiracao', 'escola', 'ativo']
+        fields = ['titulo', 'mensagem', 'prioridade', 'data_expiracao', 'escola', 'setor_destino', 'ativo']
         widgets = {
             'titulo': forms.TextInput(attrs={'class': 'form-control'}),
             'mensagem': forms.Textarea(attrs={'class': 'form-control', 'rows': 4}),
             'prioridade': forms.Select(attrs={'class': 'form-select'}),
             'data_expiracao': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
             'escola': forms.Select(attrs={'class': 'form-select'}),
+            'setor_destino': forms.Select(attrs={'class': 'form-select'}),
             'ativo': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
         }
 
@@ -110,5 +115,5 @@ class AvisoForm(forms.ModelForm):
         self.fields['titulo'].widget.attrs.update({'class': 'form-control'})
         self.fields['mensagem'].widget.attrs.update({'class': 'form-control'})
         self.fields['prioridade'].widget.attrs.update({'class': 'form-select'})
-        # Adicione outros campos se necessário
+        self.fields['setor_destino'].widget.attrs.update({'class': 'form-select'})
 

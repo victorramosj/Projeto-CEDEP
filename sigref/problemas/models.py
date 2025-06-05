@@ -80,18 +80,20 @@ class AvisoImportante(models.Model):
         ('normal', 'Normal'),
         ('alta', 'Alta'),
     ]
+    
+    # Mantenha apenas uma definição de setor_destino
     setor_destino = models.ForeignKey(Setor, on_delete=models.SET_NULL, null=True, blank=True)
-
-
+    
     titulo = models.CharField(max_length=255)
     mensagem = models.TextField()
     prioridade = models.CharField(max_length=10, choices=PRIORIDADES, default='normal')
     escola = models.ForeignKey(Escola, on_delete=models.CASCADE, related_name='avisos_problemas')
-    setor_destino = models.ForeignKey(Setor, on_delete=models.SET_NULL, null=True, blank=True)
     criado_por = models.ForeignKey(GREUser, on_delete=models.CASCADE)
     data_criacao = models.DateTimeField(auto_now_add=True)
     data_expiracao = models.DateTimeField(null=True, blank=True)
     ativo = models.BooleanField(default=True)
+
+    
 
     def __str__(self):
         return f"[{self.escola.nome}] {self.titulo}"
