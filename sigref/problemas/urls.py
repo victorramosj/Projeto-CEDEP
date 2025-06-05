@@ -26,8 +26,8 @@ urlpatterns = [
 
     #PROBLEMAS/LACUNA
     path('dashboard/', views.problema_dashboard_view, name='problemas'),
-    path('relatar-problema/', views.relatar_problema_view, name='relatar_problema'),
-    path('relatar-lacuna/<int:escola_id>/', views.relatar_lacuna_view, name='relatar_lacuna'),    #AVISOS
+    path('relatar-problema/<int:escola_id>/', views.relatar_problema_view, name='relatar_problema'),
+    path('relatar-lacuna/<int:escola_id>/', views.relatar_lacuna_view, name='relatar_lacuna'),   
     
     #AVISOS
     path('avisos/criar/', criar_aviso_view, name='criar_aviso'),

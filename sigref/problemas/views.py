@@ -139,17 +139,21 @@ def relatar_lacuna_view(request):
 
 
 # RELATAR PROBLEMA
-def relatar_problema_view(request):
+def relatar_problema_view(request, escola_id):
+    escola = get_object_or_404(Escola,id= escola_id)
+
+
     if request.method == 'POST':
         form = ProblemaUsuarioForm(request.POST, request.FILES)
         if form.is_valid():
             problema = form.save(commit=False)
             problema.usuario = request.user.greuser
+            problema.escola = escola
             problema.save()
-            return redirect('escola_dashboard')
+            return redirect('dashboard_escola', escola_id=escola.id)
     else:
         form = ProblemaUsuarioForm()
-    return render(request, 'escolas/relatar_problema.html', {'form': form})
+    return render(request, 'escolas/relatar_problema.html', {'form': form, 'escola': escola})
 
 
 def problema_dashboard_view(request):
@@ -270,6 +274,7 @@ def relatar_lacuna_view(request, escola_id):
         form = LacunaForm()
 
         return render(request, 'escolas/relatar_lacuna.html', {'form': form, 'escola': escola})
+    
     # Se o método for POST, salva as alterações
     if request.method == 'POST':
         form = AvisoForm(request.POST, instance=aviso)

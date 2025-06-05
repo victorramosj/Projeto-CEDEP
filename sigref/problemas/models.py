@@ -60,7 +60,7 @@ class ProblemaUsuario(models.Model):
         default=1
     )
     status = models.CharField(max_length=1, choices=STATUS_CHOICES, default='P')
-
+    anexo = models.FileField(upload_to='problemas/anexos/', null= True, blank=True)
 
     class Meta:
         ordering = ['-criado_em']

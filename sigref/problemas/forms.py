@@ -51,7 +51,7 @@ from monitoramento.models import Setor
 class ProblemaUsuarioForm(forms.ModelForm):
     class Meta:
         model = ProblemaUsuario
-        fields = ['setor', 'descricao']
+        fields = ['setor', 'descricao','anexo']
         widgets = {
             'descricao': forms.Textarea(attrs={
                 'class': 'form-control',
