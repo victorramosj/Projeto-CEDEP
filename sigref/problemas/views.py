@@ -58,11 +58,10 @@ class EscolaDashboardView(LoginRequiredMixin, TemplateView):
 
             # Estatísticas
             total_lacunas = Lacuna.objects.filter(escola=escola).count() # Contagem de lacunas para a escola
-            usuarios_da_escola = escola.usuarios.all()
             total_problemas = ProblemaUsuario.objects.filter(escola=escola).count() # Contagem de problemas dos usuários associados à escola9
-            
             problemas = ProblemaUsuario.objects.filter(escola=escola)
-            agora = timezone.now() 
+            agora = timezone.now()
+
             # Contagem de problemas criados neste mês
             problemas_este_mes = problemas.filter(criado_em__month=agora.month, criado_em__year=agora.year).count()
                 
@@ -127,15 +126,20 @@ from .forms import AvisoForm
 from .models import AvisoImportante
 
 # RELATAR LACUNA
-def relatar_lacuna_view(request):
+def relatar_lacuna_view(request, escola_id):
+    escola = get_object_or_404(Escola, id=escola_id)  # Obtém a escola com o ID da URL
+
     if request.method == 'POST':
         form = LacunaForm(request.POST)
         if form.is_valid():
             lacuna = form.save(commit=False)
-            lacuna.escola = request.user.greuser.escolas.first()
+            lacuna.escola = escola  # Associa a lacuna à escola
             lacuna.save()
-        return HttpResponseRedirect(request.META.get('HTTP_REFERER', '/'))
-    return HttpResponseRedirect(request.META.get('HTTP_REFERER', '/'))
+            return redirect('dashboard_escola', escola_id=escola.id)  # Redireciona para o dashboard da escola
+    else:
+        form = LacunaForm()
+
+    return render(request, 'escolas/relatar_lacuna.html', {'form': form, 'escola': escola})
 
 
 # RELATAR PROBLEMA
