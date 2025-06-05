@@ -55,12 +55,12 @@ class EscolaDashboardView(LoginRequiredMixin, TemplateView):
             usuarios_da_escola = escola.usuarios.all()
             total_problemas = ProblemaUsuario.objects.filter(escola=escola).count() # Contagem de problemas dos usuários associados à escola9
             
-            problemas = ProblemaUsuario.objects.filter(usuario__in=usuarios_da_escola)
+            problemas = ProblemaUsuario.objects.filter(escola=escola)
             agora = timezone.now() 
             # Contagem de problemas criados neste mês
             problemas_este_mes = problemas.filter(criado_em__month=agora.month, criado_em__year=agora.year).count()
                 
-                 # Contagem por status
+            # Contagem por status
             problemas_resolvidos = problemas.filter(status='R').count()
             problemas_pendentes = problemas.filter(status='P').count()
             problemas_andamento = problemas.filter(status='E').count()
