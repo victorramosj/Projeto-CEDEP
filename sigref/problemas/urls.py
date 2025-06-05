@@ -22,7 +22,7 @@ urlpatterns = [
     path('escola/dashboard/', EscolaDashboardView.as_view(), name='escola_dashboard'),
     
     # URL para acessar uma escola específica, para monitores e administradores
-    path('escola/<int:escola_id>/', EscolaDashboardView.as_view(), name='dashboard_escola'),
+    path('escola/dashboard/<int:escola_id>/', EscolaDashboardView.as_view(), name='dashboard_escola'),
 
     #PROBLEMAS/LACUNA
     path('dashboard/', views.problema_dashboard_view, name='problemas'),
