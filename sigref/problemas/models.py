@@ -76,9 +76,9 @@ class AvisoImportante(models.Model):
         ('alta', 'Alta'),
     ]
     
-    # Apenas uma vez
+    # Mantenha apenas uma definição de setor_destino
     setor_destino = models.ForeignKey(Setor, on_delete=models.SET_NULL, null=True, blank=True)
-
+    
     titulo = models.CharField(max_length=255)
     mensagem = models.TextField()
     prioridade = models.CharField(max_length=10, choices=PRIORIDADES, default='normal')
@@ -87,6 +87,8 @@ class AvisoImportante(models.Model):
     data_criacao = models.DateTimeField(auto_now_add=True)
     data_expiracao = models.DateTimeField(null=True, blank=True)
     ativo = models.BooleanField(default=True)
+
+    
 
     def __str__(self):
         return f"[{self.escola.nome}] {self.titulo}"

@@ -222,34 +222,34 @@ from django.contrib.auth.decorators import login_required
 from .models import AvisoImportante
 from .forms import AvisoForm
 
+from django.http import JsonResponse
+
 @login_required
 def editar_aviso_view(request, aviso_id):
     aviso = get_object_or_404(AvisoImportante, id=aviso_id)
-
-    # Verifica se o aviso foi criado pelo usuário ou se ele é administrador
     gre_user = request.user.greuser
+    
+    # Verificação de permissão
     if aviso.criado_por != gre_user and not gre_user.is_admin():
-        messages.error(request, "Você não tem permissão para editar este aviso.")
-        return redirect('listar_avisos')
+        return JsonResponse({
+            'errors': ['Você não tem permissão para editar este aviso.']
+        }, status=403)
 
-    # Carrega os dados do aviso no formulário quando o método for GET
-    if request.method == 'GET':
-        form = AvisoForm(instance=aviso)  # Preenche o formulário com os dados do aviso
-        return render(request, 'problemas/listar_avisos.html', {'form': form, 'aviso': aviso})  # Caminho correto para o template
-
-    # Se o método for POST, salva as alterações
     if request.method == 'POST':
         form = AvisoForm(request.POST, instance=aviso)
         if form.is_valid():
             form.save()
-            messages.success(request, "Aviso editado com sucesso!")
-            return redirect('listar_avisos')
+            return JsonResponse({'success': 'Aviso editado com sucesso!'})
         else:
-            messages.error(request, "Erro ao editar o aviso. Tente novamente.")
-            print("Formulário inválido. Erros:", form.errors)  # Depuração
-            return render(request, 'problemas/listar_avisos.html', {'form': form, 'aviso': aviso})
-
-    return redirect('listar_avisos')
+            errors = []
+            for field, error_list in form.errors.items():
+                for error in error_list:
+                    errors.append(f"{field}: {error}")
+            return JsonResponse({'errors': errors}, status=400)
+    
+    return JsonResponse({
+        'errors': ['Método não permitido']
+    }, status=405)
 
 
 
