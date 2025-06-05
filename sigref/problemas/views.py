@@ -52,11 +52,10 @@ class EscolaDashboardView(LoginRequiredMixin, TemplateView):
 
             # Estatísticas
             total_lacunas = Lacuna.objects.filter(escola=escola).count() # Contagem de lacunas para a escola
-            usuarios_da_escola = escola.usuarios.all()
             total_problemas = ProblemaUsuario.objects.filter(escola=escola).count() # Contagem de problemas dos usuários associados à escola9
-            
-            problemas = ProblemaUsuario.objects.filter(usuario__in=usuarios_da_escola)
-            agora = timezone.now() 
+            problemas = ProblemaUsuario.objects.filter(escola=escola)
+            agora = timezone.now()
+
             # Contagem de problemas criados neste mês
             problemas_este_mes = problemas.filter(criado_em__month=agora.month, criado_em__year=agora.year).count()
                 
