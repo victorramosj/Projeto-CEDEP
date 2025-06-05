@@ -55,17 +55,23 @@ class EscolaDashboardView(LoginRequiredMixin, TemplateView):
             ).filter(
                 Q(data_expiracao__isnull=True) | Q(data_expiracao__gte=timezone.now())
             ).order_by('-prioridade', '-data_criacao')
-
-            # Estatísticas
-            total_lacunas = Lacuna.objects.filter(escola=escola).count() # Contagem de lacunas para a escola
-            total_problemas = ProblemaUsuario.objects.filter(escola=escola).count() # Contagem de problemas dos usuários associados à escola9
-            problemas = ProblemaUsuario.objects.filter(escola=escola)
+            
             agora = timezone.now()
 
+            # Estatísticas de lacunas
+            total_lacunas = Lacuna.objects.filter(escola=escola).count() # Contagem de lacunas para a escola
+            lacunas_resolvidas = Lacuna.objects.filter(escola= escola, status='R').count()
+            lacunas_pendentes = Lacuna.objects.filter(escola= escola,status='P').count()
+            lacunas_andamento = Lacuna.objects.filter(escola= escola,status='E').count()
+            # Contagem de problemas criados neste mês
+            lacunas_este_mes = Lacuna.objects.filter(escola= escola,criado_em__month=agora.month, criado_em__year=agora.year).count()
+          
+            # Estatísticas de problemas 
+            total_problemas = ProblemaUsuario.objects.filter(escola=escola).count() # Contagem de problemas dos usuários associados à escola9
+            problemas = ProblemaUsuario.objects.filter(escola=escola)
             # Contagem de problemas criados neste mês
             problemas_este_mes = problemas.filter(criado_em__month=agora.month, criado_em__year=agora.year).count()
-                
-            # Contagem por status
+            # Contagem por status de problemas
             problemas_resolvidos = problemas.filter(status='R').count()
             problemas_pendentes = problemas.filter(status='P').count()
             problemas_andamento = problemas.filter(status='E').count()
@@ -79,6 +85,10 @@ class EscolaDashboardView(LoginRequiredMixin, TemplateView):
                 'form_problema': ProblemaUsuarioForm(),
                 'form_lacuna': LacunaForm(),
                 'total_lacunas': total_lacunas,
+                'lacunas_resolvidas': lacunas_resolvidas,
+                'lacunas_pendentes': lacunas_pendentes,
+                'lacunas_andamento': lacunas_andamento,
+                'lacunas_este_mes': lacunas_este_mes,
                 'total_problemas': total_problemas,
                 'problemas_resolvidos': problemas_resolvidos,
                 'problemas_pendentes': problemas_pendentes,
