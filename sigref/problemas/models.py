@@ -6,8 +6,8 @@ from monitoramento.models import Escola, Setor, GREUser  # ajuste o caminho conf
 # Definir as escolhas de status
 STATUS_CHOICES = [
     ('P', 'Pendente'),
-    ('C', 'Concluído'),
-    ('A', 'Atrasado'),
+    ('R', 'Resolvidos'),
+    ('E', 'Em Andamento'),
 ]
 
 class Lacuna(models.Model):
