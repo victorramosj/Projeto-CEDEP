@@ -215,16 +215,27 @@ from django.contrib.auth.decorators import login_required
 from .models import AvisoImportante
 from .forms import AvisoForm
 
+# views.py
+
+# views.py
+from django.shortcuts import get_object_or_404, redirect
+from django.contrib import messages
+from django.contrib.auth.decorators import login_required
+from .models import AvisoImportante
+from .forms import AvisoForm
+
 @login_required
 def editar_aviso_view(request, aviso_id):
+    # Recupera o aviso baseado no ID
     aviso = get_object_or_404(AvisoImportante, id=aviso_id)
-    gre_user = request.user.greuser
 
     # Verifica se o aviso foi criado pelo usuário ou se ele é administrador
+    gre_user = request.user.greuser
     if aviso.criado_por != gre_user and not gre_user.is_admin():
         messages.error(request, "Você não tem permissão para editar este aviso.")
         return redirect('listar_avisos')
 
+    # Se o método for POST, salva as alterações
     if request.method == 'POST':
         form = AvisoForm(request.POST, instance=aviso)
         if form.is_valid():
@@ -235,7 +246,8 @@ def editar_aviso_view(request, aviso_id):
             messages.error(request, "Erro ao editar o aviso. Tente novamente.")
             return redirect('listar_avisos')
 
-    return redirect('listar_avisos')  # Em caso de método inválido
+    # Se não for POST, redireciona para a lista de avisos
+    return redirect('listar_avisos')
 
 
 

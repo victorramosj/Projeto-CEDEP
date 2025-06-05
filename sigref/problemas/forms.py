@@ -103,3 +103,12 @@ class AvisoForm(forms.ModelForm):
             'escola': forms.Select(attrs={'class': 'form-select'}),
             'ativo': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
         }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Customização dos campos do formulário
+        self.fields['titulo'].widget.attrs.update({'class': 'form-control'})
+        self.fields['mensagem'].widget.attrs.update({'class': 'form-control'})
+        self.fields['prioridade'].widget.attrs.update({'class': 'form-select'})
+        # Adicione outros campos se necessário
+

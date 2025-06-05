@@ -29,18 +29,20 @@ urlpatterns = [
     path('relatar-problema/', views.relatar_problema_view, name='relatar_problema'),
     path('relatar-lacuna/', relatar_lacuna_view, name='relatar_lacuna'),
         
-    #AVISOS
+    # URLs de Avisos
     # URL para criar um aviso
     path('avisos/criar/', views.criar_aviso_view, name='criar_aviso'),
 
     # URL para editar aviso
     path('avisos/editar/<int:aviso_id>/', views.editar_aviso_view, name='editar_aviso'),
     
+
     # URL para apagar aviso
     path('avisos/apagar/<int:aviso_id>/', views.apagar_aviso_view, name='apagar_aviso'),
-    
+
     # URL para listar avisos
     path('avisos/', views.listar_avisos_view, name='listar_avisos'),
+
 
 ]
 
