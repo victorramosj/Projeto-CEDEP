@@ -64,6 +64,7 @@ class EscolaDashboardView(LoginRequiredMixin, TemplateView):
             problemas_resolvidos = problemas.filter(status='R').count()
             problemas_pendentes = problemas.filter(status='P').count()
             problemas_andamento = problemas.filter(status='E').count()
+
             # Contexto enviado ao template
             context.update({
                 'gre_user': gre_user,
