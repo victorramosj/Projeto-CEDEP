@@ -10,73 +10,89 @@
     </div>
 
     {% if messages %}
-        {% for message in messages %}
-            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
-                {{ message }}
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-            </div>
-        {% endfor %}
+    {% for message in messages %}
+    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    {% endfor %}
     {% endif %}
 
     {% if avisos %}
-    <div class="table-responsive">
-        <table class="table table-bordered table-striped table-hover">
-            <thead class="table-light">
-                <tr>
-                    <th>Título</th>
-                    <th>Escola(s) Destino</th>
-                    <th>Criado por (Usuário)</th>
-                    <th>Setor Destino</th>
-                    <th>Prioridade</th>
-                    <th>Data de Criação</th>
-                    <th class="text-center">Ações</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for aviso in avisos %}
-                <tr>
-                    <td>{{ aviso.titulo }}</td>
-                    <td>{{ aviso.escola.nome }}</td>
-                    <td>
-                        {% if aviso.criado_por and aviso.criado_por.user %}
-                            {{ aviso.criado_por.user.get_full_name|default_if_none:"" }}
-                            {% if not aviso.criado_por.user.get_full_name and aviso.criado_por.user.username %}
-                                ({{ aviso.criado_por.user.username }})
-                            {% endif %}
-                        {% elif aviso.criado_por and aviso.criado_por.username %} {# Caso criado_por seja o próprio User #}
-                             {{ aviso.criado_por.get_full_name|default_if_none:aviso.criado_por.username }}
-                        {% else %}
-                            N/A
-                        {% endif %}
-                    </td>
-                    <td>{{ aviso.setor_destino.nome|default_if_none:"N/A" }}</td>
-                    <td>{{ aviso.get_prioridade_display }}</td>
-                    <td>{{ aviso.data_criacao|date:"d/m/Y H:i" }}</td>
-                    <td class="text-center">
-                        <!-- Botão Editar -->
-                        <button class="btn btn-warning btn-sm"
-                                data-bs-toggle="modal"
-                                data-bs-target="#editAvisoModal"
-                                data-id="{{ aviso.id }}"
-                                data-titulo="{{ aviso.titulo }}"
-                                data-mensagem="{{ aviso.mensagem }}"
-                                data-prioridade="{{ aviso.prioridade }}">
-                            <i class="bi bi-pencil"></i> Editar
-                        </button>
-
-                        <!-- Formulário para excluir o aviso -->
-                        <form action="{% url 'apagar_aviso' aviso.id %}" method="POST" style="display:inline;">
-                            {% csrf_token %}
-                            <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Tem certeza que deseja apagar este aviso?');">
-                                <i class="bi bi-trash-fill"></i> Apagar
-                            </button>
-                        </form>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+    <div class="list-group">
+        {% for aviso in avisos %}
+        <div class="list-group-item d-flex justify-content-between align-items-center">
+            <div>
+                <h5 class="mb-1">{{ aviso.titulo }}</h5>
+                <p class="mb-1">
+                    <strong>Escola(s) Destino:</strong> {{ aviso.escola.nome }}<br>
+                    <strong>Setor Destino:</strong> {{ aviso.setor_destino.nome|default_if_none:"N/A" }}<br>
+                    <strong>Prioridade:</strong> {{ aviso.get_prioridade_display }}<br>
+                    <strong>Data de Criação:</strong> {{ aviso.data_criacao|date:"d/m/Y H:i" }}
+                </p>
+            </div>
+            <div>
+                <button class="btn btn-sm btn-warning" data-bs-toggle="modal" data-bs-target="#editAvisoModal"
+                    data-id="{{ aviso.id }}" data-titulo="{{ aviso.titulo }}" data-mensagem="{{ aviso.mensagem }}"
+                    data-prioridade="{{ aviso.prioridade }}" data-escola-id="{{ aviso.escola.id }}"
+                    data-criado-por-id="{{ aviso.criado_por.id }}" data-ativo="{{ aviso.ativo|yesno:'true,false' }}">
+                    <i class="bi bi-pencil"></i> Editar
+                </button>
+                <form action="{% url 'apagar_aviso' aviso.id %}" method="POST" style="display:inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-sm btn-danger"
+                        onclick="return confirm('Tem certeza que deseja apagar este aviso?');">
+                        <i class="bi bi-trash-fill"></i> Apagar
+                    </button>
+                </form>
+            </div>
+        </div>
+        {% endfor %}
     </div>
+
+    <!-- Navegação de Páginas -->
+    <div class="d-flex justify-content-center mt-4">
+        <nav aria-label="Navegação de páginas">
+            <ul class="pagination">
+                {% if avisos.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page=1" aria-label="Primeira">
+                        <span aria-hidden="true">&laquo;&laquo;</span>
+                    </a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ avisos.previous_page_number }}" aria-label="Anterior">
+                        <span aria-hidden="true">&laquo;</span>
+                    </a>
+                </li>
+                {% endif %}
+                {% for num in avisos.paginator.page_range %}
+                    {% if avisos.number == num %}
+                    <li class="page-item active" aria-current="page">
+                        <span class="page-link">{{ num }}</span>
+                    </li>
+                    {% else %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                    </li>
+                    {% endif %}
+                {% endfor %}
+                {% if avisos.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ avisos.next_page_number }}" aria-label="Próxima">
+                        <span aria-hidden="true">&raquo;</span>
+                    </a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ avisos.paginator.num_pages }}" aria-label="Última">
+                        <span aria-hidden="true">&raquo;&raquo;</span>
+                    </a>
+                </li>
+                {% endif %}
+            </ul>
+        </nav>
+    </div>
+
     {% else %}
     <div class="alert alert-info mt-4" role="alert">
         Nenhum aviso encontrado. <a href="{% url 'criar_aviso' %}" class="alert-link">Crie o primeiro aviso!</a>
@@ -93,8 +109,14 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
             </div>
             <div class="modal-body">
+                <div id="formErrors" class="alert alert-danger d-none"></div>
                 <form method="POST" action="" id="editAvisoForm">
                     {% csrf_token %}
+                    <!-- Campos ocultos para dados obrigatórios -->
+                    <input type="hidden" id="escola_modal_edit" name="escola">
+                    <input type="hidden" id="criado_por_modal_edit" name="criado_por">
+                    <input type="hidden" id="ativo_modal_edit" name="ativo" value="true">
+                    
                     <div class="mb-3">
                         <label for="titulo_modal_edit" class="form-label">Título</label>
                         <input type="text" class="form-control" id="titulo_modal_edit" name="titulo" required>
@@ -121,24 +143,83 @@
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const editAvisoModal = document.getElementById('editAvisoModal');
+    const errorContainer = document.getElementById('formErrors');
+    
     if (editAvisoModal) {
         editAvisoModal.addEventListener('show.bs.modal', function (event) {
-            const button = event.relatedTarget;  // Botão que acionou o modal
-            const avisoId = button.getAttribute('data-id');  // Pegando o ID do aviso
-
-            // Preenche os campos do formulário no modal
-            const form = editAvisoModal.querySelector('#editAvisoForm');
-            const inputTitulo = editAvisoModal.querySelector('#titulo_modal_edit');
-            const textareaMensagem = editAvisoModal.querySelector('#mensagem_modal_edit');
-            const selectPrioridade = editAvisoModal.querySelector('#prioridade_modal_edit');
-
-            // Atualiza os campos do formulário
+            const button = event.relatedTarget;
+            const avisoId = button.getAttribute('data-id');
+            
+            // Resetar erros
+            errorContainer.classList.add('d-none');
+            errorContainer.innerHTML = '';
+            
+            // Preencher campos do formulário
+            const inputTitulo = document.getElementById('titulo_modal_edit');
+            const textareaMensagem = document.getElementById('mensagem_modal_edit');
+            const selectPrioridade = document.getElementById('prioridade_modal_edit');
+            const inputEscola = document.getElementById('escola_modal_edit');
+            const inputCriadoPor = document.getElementById('criado_por_modal_edit');
+            const inputAtivo = document.getElementById('ativo_modal_edit');
+            
+            // Preencher campos visíveis
             inputTitulo.value = button.getAttribute('data-titulo');
             textareaMensagem.value = button.getAttribute('data-mensagem');
             selectPrioridade.value = button.getAttribute('data-prioridade');
+            
+            // Preencher campos ocultos com dados do aviso
+            inputEscola.value = button.getAttribute('data-escola-id');
+            inputCriadoPor.value = button.getAttribute('data-criado-por-id');
+            inputAtivo.value = button.getAttribute('data-ativo');
+            
+            // Atualizar URL do formulário
+            const form = document.getElementById('editAvisoForm');
+            form.action = `/problemas/avisos/editar/${avisoId}/`;
+        });
+    }
 
-            // Atualiza a URL do formulário para incluir o ID do aviso
-            form.action = `/problemas/avisos/editar/${avisoId}/`;  // URL para editar o aviso
+    // Manipulador de envio do formulário
+    const editForm = document.getElementById('editAvisoForm');
+    if (editForm) {
+        editForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(editForm);
+            const url = editForm.action;
+            const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+            
+            fetch(url, {
+                method: 'POST',
+                body: formData,
+                headers: { 'X-CSRFToken': csrfToken }
+            })
+            .then(response => {
+                if (response.redirected) {
+                    window.location.href = response.url;
+                } else if (response.ok) {
+                    return response.json();
+                } else {
+                    throw new Error('Erro na resposta do servidor');
+                }
+            })
+            .then(data => {
+                if (data && data.errors) {
+                    // Exibir erros
+                    errorContainer.classList.remove('d-none');
+                    errorContainer.innerHTML = data.errors.map(error => 
+                        `<div>${error}</div>`
+                    ).join('');
+                } else if (data && data.success) {
+                    // Fechar modal e recarregar
+                    bootstrap.Modal.getInstance(editAvisoModal).hide();
+                    window.location.reload();
+                }
+            })
+            .catch(error => {
+                console.error('Erro:', error);
+                errorContainer.classList.remove('d-none');
+                errorContainer.innerHTML = `<div>Erro inesperado: ${error.message}</div>`;
+            });
         });
     }
 });

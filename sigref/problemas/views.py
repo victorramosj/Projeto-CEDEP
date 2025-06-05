@@ -158,7 +158,7 @@ def relatar_problema_view(request, escola_id):
 def problema_dashboard_view(request):
     form = ProblemaUsuarioForm()
     return render(request, 'escolas/escola_dashboard.html', {'form': form})  # type: ignore
-
+from django.core.paginator import Paginator
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render
 from django.http import HttpResponseForbidden
@@ -175,7 +175,13 @@ def listar_avisos_view(request):
         # Outros usuários podem ver apenas os avisos que eles mesmos criaram
         avisos = AvisoImportante.objects.filter(criado_por=gre_user)
 
-    return render(request, 'problemas/listar_avisos.html', {'avisos': avisos})
+    # Aplicando a paginação
+    paginator = Paginator(avisos, 5)  # 5 avisos por página
+    page_number = request.GET.get('page')  # Número da página atual
+    avisos_paginated = paginator.get_page(page_number)  # Obtemos os avisos para a página atual
+
+    return render(request, 'problemas/listar_avisos.html', {'avisos': avisos_paginated})
+
 
 from django.shortcuts import render, redirect
 from django.contrib import messages
@@ -236,57 +242,40 @@ from .models import AvisoImportante
 from .forms import AvisoForm
 
 # views.py
-
-# views.py
-from django.shortcuts import get_object_or_404, redirect
+from django.shortcuts import get_object_or_404, render, redirect
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from .models import AvisoImportante
 from .forms import AvisoForm
 
+from django.http import JsonResponse
+
 @login_required
 def editar_aviso_view(request, aviso_id):
-    # Recupera o aviso baseado no ID
     aviso = get_object_or_404(AvisoImportante, id=aviso_id)
-
-    # Verifica se o aviso foi criado pelo usuário ou se ele é administrador
     gre_user = request.user.greuser
-    if aviso.criado_por != gre_user and not gre_user.is_admin():
-        messages.error(request, "Você não tem permissão para editar este aviso.")
-        return redirect('listar_avisos')
-
-    return redirect('listar_avisos')  # Se chegar via GET, só redireciona
-
-
-def relatar_lacuna_view(request, escola_id):    
-    # Obtemos a escola com o ID da URL
-    escola = get_object_or_404(Escola, id=escola_id)
-
-    if request.method == 'POST':
-        form = LacunaForm(request.POST)
-        if form.is_valid():
-            lacuna = form.save(commit=False)
-            lacuna.escola = escola  # Associa a lacuna à escola
-            lacuna.save()
-            return redirect('dashboard_escola', escola_id=escola.id) # Redireciona para o dashboard da escola
-    else:
-        form = LacunaForm()
-
-        return render(request, 'escolas/relatar_lacuna.html', {'form': form, 'escola': escola})
     
-    # Se o método for POST, salva as alterações
+    # Verificação de permissão
+    if aviso.criado_por != gre_user and not gre_user.is_admin():
+        return JsonResponse({
+            'errors': ['Você não tem permissão para editar este aviso.']
+        }, status=403)
+
     if request.method == 'POST':
         form = AvisoForm(request.POST, instance=aviso)
         if form.is_valid():
             form.save()
-            messages.success(request, "Aviso editado com sucesso!")
-            return redirect('listar_avisos')  # Redireciona para a lista de avisos
+            return JsonResponse({'success': 'Aviso editado com sucesso!'})
         else:
-            messages.error(request, "Erro ao editar o aviso. Tente novamente.")
-            return redirect('listar_avisos')
-
-    # Se não for POST, redireciona para a lista de avisos
-    return redirect('listar_avisos')
+            errors = []
+            for field, error_list in form.errors.items():
+                for error in error_list:
+                    errors.append(f"{field}: {error}")
+            return JsonResponse({'errors': errors}, status=400)
+    
+    return JsonResponse({
+        'errors': ['Método não permitido']
+    }, status=405)
 
 
 
