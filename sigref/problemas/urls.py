@@ -23,8 +23,8 @@ urlpatterns = [
     #PROBLEMAS/LACUNA
     path('dashboard/', views.problema_dashboard_view, name='problemas'),
     path('relatar-problema/', views.relatar_problema_view, name='relatar_problema'),
-    path('relatar-lacuna/', relatar_lacuna_view, name='relatar_lacuna'),
-        
+    path('relatar-lacuna/<int:escola_id>/', views.relatar_lacuna_view, name='relatar_lacuna'),    #AVISOS
+    
     #AVISOS
     path('avisos/criar/', criar_aviso_view, name='criar_aviso'),
     path('avisos/', views.listar_avisos_view, name='listar_avisos'),

@@ -24,9 +24,11 @@
                 <!--Email da escola-->
                 <p><i class="fas fa-user-shield"></i><strong>Gestor:</strong> {{ escola.nome_gestor }}</p>
                 <!--Gestor-->
-                <p><i class="fas fa-phone-alt"></i> <strong>Telefone do Gestor:</strong> {{escola.telefone_gestor|default:"Telefone não cadastrado" }}</p>
+                <p><i class="fas fa-phone-alt"></i> <strong>Telefone do Gestor:</strong>
+                    {{escola.telefone_gestor|default:"Telefone não cadastrado" }}</p>
                 <!--Telefone do gestor-->
-                <p><i class="fas fa-envelope me-2"></i> <strong>Email do Gestor:</strong> {{escola.email_gestor|default:"Email não cadastrado" }}</p> <!--Email do gestor-->
+                <p><i class="fas fa-envelope me-2"></i> <strong>Email do Gestor:</strong>
+                    {{escola.email_gestor|default:"Email não cadastrado" }}</p> <!--Email do gestor-->
             </div>
         </div>
 
@@ -91,12 +93,12 @@
                 {% else %}
                 <p class="text-muted">Nenhum aviso no momento.</p>
 
-                    {% if not gre_user.is_escola %}
-                    <button class="btn btn-sm btn-outline-danger w-100 mt-3" data-bs-toggle="modal"
-                        data-bs-target="#modalCriarAviso">
-                        Criar Aviso Importante
-                    </button>
-                    {% endif %}
+                {% if not gre_user.is_escola %}
+                <button class="btn btn-sm btn-outline-danger w-100 mt-3" data-bs-toggle="modal"
+                    data-bs-target="#modalCriarAviso">
+                    Criar Aviso Importante
+                </button>
+                {% endif %}
                 {% endif %}
             </div>
         </div>
@@ -139,7 +141,7 @@
 <div class="modal fade" id="modalRelatarLacuna" tabindex="-1" aria-labelledby="modalLacunaLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
-            <form method="post" action="{% url 'relatar_lacuna' %}">
+            <form method="post" action="{% url 'relatar_lacuna' escola_id=escola.id %}">
                 {% csrf_token %}
 
                 <!-- Cabeçalho -->

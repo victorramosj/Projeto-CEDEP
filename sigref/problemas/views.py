@@ -53,17 +53,18 @@ class EscolaDashboardView(LoginRequiredMixin, TemplateView):
             # Estatísticas
             total_lacunas = Lacuna.objects.filter(escola=escola).count() # Contagem de lacunas para a escola
             usuarios_da_escola = escola.usuarios.all()
-            total_problemas = ProblemaUsuario.objects.filter(usuario__in=usuarios_da_escola).count() # Contagem de problemas dos usuários associados à escola
+            total_problemas = ProblemaUsuario.objects.filter(escola=escola).count() # Contagem de problemas dos usuários associados à escola9
             
             problemas = ProblemaUsuario.objects.filter(usuario__in=usuarios_da_escola)
+            agora = timezone.now() 
             # Contagem de problemas criados neste mês
-            agora = timezone.now()
             problemas_este_mes = problemas.filter(criado_em__month=agora.month, criado_em__year=agora.year).count()
                 
-                 # Contagem por status
+            # Contagem por status
             problemas_resolvidos = problemas.filter(status='resolvido').count()
             problemas_pendentes = problemas.filter(status='pendente').count()
             problemas_andamento = problemas.filter(status='andamento').count()
+
             # Contexto enviado ao template
             context.update({
                 'gre_user': gre_user,
@@ -172,15 +173,18 @@ def criar_aviso_view(request):
     return redirect('listar_avisos')  # Se chegar via GET, só redireciona
 
 
-def relatar_lacuna_view(request):    
+def relatar_lacuna_view(request, escola_id):    
+    # Obtemos a escola com o ID da URL
+    escola = get_object_or_404(Escola, id=escola_id)
+
     if request.method == 'POST':
         form = LacunaForm(request.POST)
-        lacuna = form.save(commit=False)
-        lacuna.escola = request.user.greuser.escolas.first()
-        lacuna.save()
-        return HttpResponseRedirect(request.META.get('HTTP_REFERER', '/'))
+        if form.is_valid():
+            lacuna = form.save(commit=False)
+            lacuna.escola = escola  # Associa a lacuna à escola
+            lacuna.save()
+            return redirect('dashboard_escola', escola_id=escola.id) # Redireciona para o dashboard da escola
     else:
-            # opcional: aqui você poderia salvar os erros em messages framework
-        pass       
-    # volta para a página de onde veio (dashboard) 
-        return HttpResponseRedirect(request.META.get('HTTP_REFERER', '/'))
+        form = LacunaForm()
+
+        return render(request, 'escolas/relatar_lacuna.html', {'form': form, 'escola': escola})
