@@ -1,16 +1,20 @@
+from django.urls import path
+from . import views
 from rest_framework import routers
-from .views import LacunaViewSet, ProblemaUsuarioViewSet, EscolaDashboardView, relatar_lacuna_view
+from .views import (
+    LacunaViewSet,
+    ProblemaUsuarioViewSet,
+    EscolaDashboardView,
+    relatar_lacuna_view,
+    criar_aviso_view,
+    listar_avisos_view,
+    relatar_problema_view,
+    problema_dashboard_view,
+)
 
 router = routers.DefaultRouter()
 router.register(r'lacunas', LacunaViewSet, basename='lacunas')
 router.register(r'problemas-usuario', ProblemaUsuarioViewSet, basename='problemas-usuario')
-
-urlpatterns = router.urls
-
-
-from django.urls import path
-from . import views
-from .views import criar_aviso_view
 
 urlpatterns = [
     #Visualização da dashboard
@@ -29,6 +33,18 @@ urlpatterns = [
     path('avisos/criar/', criar_aviso_view, name='criar_aviso'),
     path('avisos/', views.listar_avisos_view, name='listar_avisos'),
     path('avisos/criar/', views.criar_aviso_view, name='criar_aviso'),
+
+    # URL para editar aviso
+    path('avisos/editar/<int:aviso_id>/', views.editar_aviso_view, name='editar_aviso'),
+    
+
+    # URL para apagar aviso
+    path('avisos/apagar/<int:aviso_id>/', views.apagar_aviso_view, name='apagar_aviso'),
+
+    # URL para listar avisos
+    path('avisos/', views.listar_avisos_view, name='listar_avisos'),
+
+
 ]
 
-
+urlpatterns += router.urls

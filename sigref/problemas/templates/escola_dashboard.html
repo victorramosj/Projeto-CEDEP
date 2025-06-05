@@ -83,12 +83,6 @@
                         Ver todos os avisos
                     </button>
 
-                    {% if not gre_user.is_escola %}
-                    <button class="btn btn-sm btn-outline-danger w-100" data-bs-toggle="modal"
-                        data-bs-target="#modalCriarAviso">
-                        Criar Aviso Importante
-                    </button>
-                    {% endif %}
                 </div>
                 {% else %}
                 <p class="text-muted">Nenhum aviso no momento.</p>
@@ -279,46 +273,7 @@
     </div>
 </div>
 
-<!-- Modal CRIAR AVISO IMPORTANTE -->
-<div class="modal fade" id="modalCriarAviso" tabindex="-1" aria-labelledby="modalCriarAvisoLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <form method="post" action="{% url 'criar_aviso' %}">
-                {% csrf_token %}
-                <div class="modal-header bg-danger text-white">
-                    <h5 class="modal-title" id="modalCriarAvisoLabel"><i class="fas fa-plus-circle me-2"></i>Novo Aviso
-                        Importante</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
-                        aria-label="Fechar"></button>
-                </div>
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <label for="titulo" class="form-label">Título</label>
-                        <input type="text" name="titulo" id="titulo" class="form-control" required>
-                    </div>
-                    <div class="mb-3">
-                        <label for="mensagem" class="form-label">Mensagem</label>
-                        <textarea name="mensagem" id="mensagem" class="form-control" rows="4" required></textarea>
-                    </div>
 
-                    <!-- ESCOLA FIXA, NÃO VISÍVEL -->
-                    <input type="hidden" name="escola_id" value="{{ escola.id }}">
 
-                    <div class="mb-3">
-                        <label for="prioridade" class="form-label">Prioridade</label>
-                        <select name="prioridade" id="prioridade" class="form-select">
-                            <option value="baixa">Baixa</option>
-                            <option value="normal" selected>Normal</option>
-                            <option value="alta">Alta</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" class="btn btn-danger">Publicar Aviso</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
+
 {% endblock %}

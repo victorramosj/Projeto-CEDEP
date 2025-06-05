@@ -11,7 +11,13 @@ from django.utils import timezone
 
 from django.views.generic import TemplateView
 from django.contrib.auth.mixins import LoginRequiredMixin
-from monitoramento.models import GREUser, Escola, Setor  # ajuste o import conforme sua estrutura
+from django.contrib.auth.decorators import login_required
+
+from monitoramento.models import GREUser, Escola, Setor
+
+from .models import Lacuna, ProblemaUsuario, AvisoImportante
+from .serializers import LacunaSerializer, ProblemaUsuarioSerializer
+from .forms import ProblemaUsuarioForm, LacunaForm, AvisoForm
 
 
 # View da DASHBOARD
@@ -84,7 +90,7 @@ class EscolaDashboardView(LoginRequiredMixin, TemplateView):
         return context
 
 
-# View das LACUNAS
+# VIEWSETS PARA API REST
 class LacunaViewSet(viewsets.ModelViewSet):
     serializer_class = LacunaSerializer
     permission_classes = [permissions.IsAuthenticated]
@@ -93,10 +99,9 @@ class LacunaViewSet(viewsets.ModelViewSet):
         user = self.request.user.greuser
         if user.is_admin() or user.is_coordenador():
             return Lacuna.objects.all()
-        # Monitores e escolas veem apenas suas escolas
         return Lacuna.objects.filter(escola__in=user.escolas.all())
 
-# View dos PROBLEMAS
+
 class ProblemaUsuarioViewSet(viewsets.ModelViewSet):
     serializer_class = ProblemaUsuarioSerializer
     permission_classes = [permissions.IsAuthenticated]
@@ -107,16 +112,33 @@ class ProblemaUsuarioViewSet(viewsets.ModelViewSet):
             return ProblemaUsuario.objects.all()
         if user.is_chefe_setor():
             return ProblemaUsuario.objects.filter(setor=user.setor)
-        # Usuário padrão vê apenas seus próprios relatos
         return ProblemaUsuario.objects.filter(usuario=user)
 
     def perform_create(self, serializer):
         serializer.save(usuario=self.request.user.greuser)
 
-def problema_dashboard_view(request):
-    form = ProblemaUsuarioForm()
-    return render(request, 'escolas/escola_dashboard.html', {'form': form}) # type: ignore
 
+# sigref/problemas/views.py
+
+from django.contrib.auth.decorators import login_required
+from django.http import HttpResponseForbidden
+from django.shortcuts import render, get_object_or_404, redirect
+from .forms import AvisoForm
+from .models import AvisoImportante
+
+# RELATAR LACUNA
+def relatar_lacuna_view(request):
+    if request.method == 'POST':
+        form = LacunaForm(request.POST)
+        if form.is_valid():
+            lacuna = form.save(commit=False)
+            lacuna.escola = request.user.greuser.escolas.first()
+            lacuna.save()
+        return HttpResponseRedirect(request.META.get('HTTP_REFERER', '/'))
+    return HttpResponseRedirect(request.META.get('HTTP_REFERER', '/'))
+
+
+# RELATAR PROBLEMA
 def relatar_problema_view(request):
     if request.method == 'POST':
         form = ProblemaUsuarioForm(request.POST, request.FILES)
@@ -124,50 +146,110 @@ def relatar_problema_view(request):
             problema = form.save(commit=False)
             problema.usuario = request.user.greuser
             problema.save()
-            return redirect('escola_dashboard')  # redireciona após salvar
+            return redirect('escola_dashboard')
     else:
         form = ProblemaUsuarioForm()
     return render(request, 'escolas/relatar_problema.html', {'form': form})
 
 
-from django.contrib.auth.decorators import login_required
+def problema_dashboard_view(request):
+    form = ProblemaUsuarioForm()
+    return render(request, 'escolas/escola_dashboard.html', {'form': form})  # type: ignore
 
-# View de AVISOS IMPORTANTES
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import render
+from django.http import HttpResponseForbidden
+from .models import AvisoImportante
+
 @login_required
 def listar_avisos_view(request):
     gre_user = request.user.greuser
-    if gre_user.is_escola():
-        avisos = AvisoImportante.objects.filter(escola=gre_user.escolas.first(), ativo=True)
-    else:
-        avisos = AvisoImportante.objects.filter(criado_por=gre_user, ativo=True)
 
-    escolas = Escola.objects.all()  # Para popular select no modal
-    return render(request, 'problemas/listar_avisos.html', {
-        'avisos': avisos,
-        'gre_user': gre_user,
-        'escolas': escolas,
-    })
+    # Administradores podem ver todos os avisos
+    if gre_user.is_admin():
+        avisos = AvisoImportante.objects.all()
+    else:
+        # Outros usuários podem ver apenas os avisos que eles mesmos criaram
+        avisos = AvisoImportante.objects.filter(criado_por=gre_user)
+
+    return render(request, 'problemas/listar_avisos.html', {'avisos': avisos})
+
+from django.shortcuts import render, redirect
+from django.contrib import messages
+from django.http import HttpResponseForbidden
+from .models import AvisoImportante, Escola
+from django.contrib.auth.decorators import login_required
 
 @login_required
 def criar_aviso_view(request):
     gre_user = request.user.greuser
+
+    # Verifica se o usuário é do tipo 'Escola' e bloqueia o acesso
     if gre_user.is_escola():
-        return redirect('listar_avisos')
+        messages.error(request, "Usuários do tipo 'Escola' não têm permissão para criar avisos.")
+        return redirect('listar_avisos')  # Redireciona para a página de avisos
+
+    escolas = Escola.objects.all()  # Pega todas as escolas disponíveis para selecionar
 
     if request.method == 'POST':
         titulo = request.POST.get('titulo')
         mensagem = request.POST.get('mensagem')
-        escola_id = request.POST.get('escola_id')
         prioridade = request.POST.get('prioridade', 'normal')
+        data_expiracao = request.POST.get('data_expiracao')
+        escolas_ids = request.POST.getlist('escola_id')  # Obtém as escolas selecionadas
 
-        aviso = AvisoImportante.objects.create(
-            titulo=titulo,
-            mensagem=mensagem,
-            prioridade=prioridade,
-            escola=Escola.objects.get(id=escola_id),
-            criado_por=gre_user,
-            ativo=True
-        )
+        # Validação simples para garantir que o título e a mensagem não estão vazios
+        if not titulo or not mensagem:
+            messages.error(request, "O título e a mensagem são obrigatórios.")
+            return render(request, 'avisos/criar_aviso.html', {'escolas': escolas})
+
+        if not escolas_ids:  # Verifica se ao menos uma escola foi selecionada
+            messages.error(request, "Pelo menos uma escola precisa ser selecionada.")
+            return render(request, 'avisos/criar_aviso.html', {'escolas': escolas})
+
+        # Criando o aviso
+        for escola_id in escolas_ids:
+            escola = Escola.objects.get(id=escola_id)  # Obtém a escola correspondente ao ID
+            AvisoImportante.objects.create(
+                titulo=titulo,
+                mensagem=mensagem,
+                prioridade=prioridade,
+                criado_por=gre_user,
+                escola=escola,  # Associando o aviso à escola
+                ativo=True,
+                data_expiracao=data_expiracao if data_expiracao else None
+            )
+
+        messages.success(request, "Aviso criado com sucesso!")
+        return redirect('listar_avisos')  # Redireciona para a página de avisos
+
+    # Quando for GET, passa as escolas para o template
+    return render(request, 'avisos/criar_aviso.html', {'escolas': escolas})
+
+from django.shortcuts import get_object_or_404, redirect
+from django.contrib import messages
+from django.contrib.auth.decorators import login_required
+from .models import AvisoImportante
+from .forms import AvisoForm
+
+# views.py
+
+# views.py
+from django.shortcuts import get_object_or_404, redirect
+from django.contrib import messages
+from django.contrib.auth.decorators import login_required
+from .models import AvisoImportante
+from .forms import AvisoForm
+
+@login_required
+def editar_aviso_view(request, aviso_id):
+    # Recupera o aviso baseado no ID
+    aviso = get_object_or_404(AvisoImportante, id=aviso_id)
+
+    # Verifica se o aviso foi criado pelo usuário ou se ele é administrador
+    gre_user = request.user.greuser
+    if aviso.criado_por != gre_user and not gre_user.is_admin():
+        messages.error(request, "Você não tem permissão para editar este aviso.")
         return redirect('listar_avisos')
 
     return redirect('listar_avisos')  # Se chegar via GET, só redireciona
@@ -188,3 +270,38 @@ def relatar_lacuna_view(request, escola_id):
         form = LacunaForm()
 
         return render(request, 'escolas/relatar_lacuna.html', {'form': form, 'escola': escola})
+    # Se o método for POST, salva as alterações
+    if request.method == 'POST':
+        form = AvisoForm(request.POST, instance=aviso)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Aviso editado com sucesso!")
+            return redirect('listar_avisos')  # Redireciona para a lista de avisos
+        else:
+            messages.error(request, "Erro ao editar o aviso. Tente novamente.")
+            return redirect('listar_avisos')
+
+    # Se não for POST, redireciona para a lista de avisos
+    return redirect('listar_avisos')
+
+
+
+from django.shortcuts import get_object_or_404, redirect
+from django.contrib import messages
+from django.contrib.auth.decorators import login_required
+from .models import AvisoImportante
+
+@login_required
+def apagar_aviso_view(request, aviso_id):
+    aviso = get_object_or_404(AvisoImportante, id=aviso_id)
+    gre_user = request.user.greuser
+
+    # Verifica se o aviso foi criado pelo usuário ou se ele é administrador
+    if aviso.criado_por != gre_user and not gre_user.is_admin():
+        messages.error(request, "Você não tem permissão para excluir este aviso.")
+        return redirect('listar_avisos')  # Redireciona para a página de avisos
+
+    aviso.delete()
+    messages.success(request, "Aviso excluído com sucesso!")
+    return redirect('listar_avisos')  # Redireciona para a lista de avisos após a exclusão
+

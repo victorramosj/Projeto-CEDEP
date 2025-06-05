@@ -4,41 +4,137 @@
 
 {% block content %}
 <div class="container mt-4">
-    <h3 class="mb-4">Novo Aviso Importante</h3>
-    <form method="post">
+
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4">
+        <h3 class="mb-3 mb-md-0">Novo Aviso Importante</h3>
+        <a href="{% url 'listar_avisos' %}" class="btn btn-outline-info d-inline-flex align-items-center">
+            <i class="bi bi-list-task me-2"></i>Lista de Avisos
+        </a>
+    </div>
+
+    {% if messages %}
+        <div class="alert alert-info">
+            {% for message in messages %}
+                <p>{{ message }}</p>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <form method="post" id="avisoForm">
         {% csrf_token %}
         <div class="mb-3">
-            <label for="titulo" class="form-label">Título</label>
-            <input type="text" name="titulo" id="titulo" class="form-control" required>
+            <label class="form-label fw-semibold">Título</label>
+            <input type="text" name="titulo" id="titulo" class="form-control" required value="{{ request.POST.titulo }}">
         </div>
-
         <div class="mb-3">
-            <label for="mensagem" class="form-label">Mensagem</label>
-            <textarea name="mensagem" id="mensagem" class="form-control" rows="4" required></textarea>
+            <label class="form-label fw-semibold">Mensagem</label>
+            <textarea name="mensagem" id="mensagem" class="form-control" rows="4" required>{{ request.POST.mensagem }}</textarea>
         </div>
-
         <div class="mb-3">
-            <label for="escola" class="form-label">Escola</label>
-            <select name="escola_id" id="escola" class="form-select" required>
-                {% for escola in escolas %}
-                    <option value="{{ escola.id }}">{{ escola.nome }}</option>
-                {% endfor %}
-            </select>
-        </div>
-
-        <div class="mb-3">
-            <label for="prioridade" class="form-label">Prioridade</label>
+            <label for="prioridade" class="form-label fw-semibold">Prioridade</label>
             <select name="prioridade" id="prioridade" class="form-select">
-                <option value="baixa">Baixa</option>
-                <option value="normal" selected>Normal</option>
-                <option value="alta">Alta</option>
+                <option value="baixa" {% if request.POST.prioridade == 'baixa' %}selected{% endif %}>Baixa</option>
+                <option value="normal" {% if request.POST.prioridade == 'normal' or not request.POST.prioridade %}selected{% endif %}>Normal</option>
+                <option value="alta" {% if request.POST.prioridade == 'alta' %}selected{% endif %}>Alta</option>
             </select>
         </div>
+        <div class="mb-3">
+            <label for="data_expiracao" class="form-label fw-semibold">Data de Expiração (opcional)</label>
+            <input type="date" name="data_expiracao" id="data_expiracao" class="form-control" value="{{ request.POST.data_expiracao }}">
+        </div>
 
-        <button type="submit" class="btn btn-primary">Publicar Aviso</button>
+        <div class="mb-3">
+            <label class="form-label fw-semibold">Selecione uma ou mais escolas para o aviso:</label>
+            
+            <div class="mb-2">
+                <input type="text" id="termo_busca_checkbox" class="form-control form-control-sm" placeholder="Buscar escola por Nome ou INEP..." onkeyup="filtrarListaEscolas()">
+            </div>
+            <div id="listaEscolasCheckboxes" class="border rounded p-3" style="max-height: 350px; overflow-y: auto;">
+                {% if escolas %}
+                    {% for escola in escolas %}
+                    <div class="form-check escola-item" data-nome="{{ escola.nome|lower|escapejs }}" data-inep="{{ escola.inep|default_if_none:''|escapejs }}">
+                        <input class="form-check-input escola-checkbox" type="checkbox" name="escola_id" value="{{ escola.id }}" id="escola_check_{{ escola.id }}">
+                        <label class="form-check-label" for="escola_check_{{ escola.id }}">
+                            {{ escola.nome }} <span class="text-muted small">(INEP: {{ escola.inep|default_if_none:'N/A' }})</span>
+                        </label>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <p class="text-muted m-0">Nenhuma escola disponível.</p>
+                {% endif %}
+            </div>
+            <small class="form-text text-muted">Use a busca acima para filtrar a lista. Marque as caixas para selecionar.</small>
+            <div class="mt-2">
+                <button type="button" id="btnMarcarTodasEscolasSistema" class="btn btn-outline-primary btn-sm me-2">
+                    <i class="bi bi-check2-all"></i> Marcar Todas do Sistema
+                </button>
+                <button type="button" id="btnLimparSelecaoEscolas" class="btn btn-outline-secondary btn-sm">
+                    <i class="bi bi-x-square"></i> Limpar Seleção
+                </button>
+            </div>
+        </div>
+
+        <button type="submit" class="btn btn-success btn-lg">
+            <i class="bi bi-send-fill me-2"></i> Publicar Aviso
+        </button>
     </form>
 </div>
+
+<script>
+// Função de busca para filtrar as escolas na lista
+function filtrarListaEscolas() {
+    const termoBuscaInput = document.getElementById('termo_busca_checkbox');
+    const termo = termoBuscaInput.value.toLowerCase().trim();
+    const escolaCheckboxItems = document.querySelectorAll('.escola-item');
+
+    escolaCheckboxItems.forEach(item => {
+        const nome = item.dataset.nome; // Já está em lower no data-attribute
+        const inep = item.dataset.inep; // Já está em lower no data-attribute (ou vazio)
+        if (nome.includes(termo) || (inep && inep.includes(termo))) {
+            item.style.display = '';
+        } else {
+            item.style.display = 'none';
+        }
+    });
+}
+
+// Adiciona um listener para executar a filtragem assim que a página carregar,
+// caso haja algum valor pré-definido no campo de busca (improvável para este caso, mas boa prática)
+// E também para garantir que o input de busca seja encontrado pelo script se o DOMContentLoaded for necessário
+document.addEventListener('DOMContentLoaded', function() {
+    const termoBuscaInput = document.getElementById('termo_busca_checkbox');
+    if (termoBuscaInput) { // Verifica se o elemento existe
+        termoBuscaInput.addEventListener('keyup', filtrarListaEscolas); // Adiciona o listener aqui também
+        // Chamada inicial caso haja valor (ex: se o formulário lembrasse o valor)
+        // filtrarListaEscolas(); 
+    }
+
+    const btnMarcarTodasSistema = document.getElementById('btnMarcarTodasEscolasSistema');
+    const btnLimparSelecao = document.getElementById('btnLimparSelecaoEscolas');
+    const todasEscolasCheckboxes = document.querySelectorAll('.escola-checkbox');
+
+    if (btnMarcarTodasSistema) {
+        btnMarcarTodasSistema.addEventListener('click', function() {
+            todasEscolasCheckboxes.forEach(checkbox => {
+                checkbox.checked = true;
+            });
+            if (typeof atualizarDisplayEscolasSelecionadas === 'function') { // Verifica se a função existe
+                atualizarDisplayEscolasSelecionadas();  // Atualiza a exibição das escolas selecionadas
+            }
+        });
+    }
+
+    if (btnLimparSelecao) {
+        btnLimparSelecao.addEventListener('click', function() {
+            todasEscolasCheckboxes.forEach(checkbox => {
+                checkbox.checked = false;
+            });
+            if (typeof atualizarDisplayEscolasSelecionadas === 'function') { // Verifica se a função existe
+                atualizarDisplayEscolasSelecionadas();  // Atualiza a exibição das escolas selecionadas
+            }
+        });
+    }
+});
+</script>
+
 {% endblock %}
-
-<!-- Isso é um comentário em HTML -->
-
