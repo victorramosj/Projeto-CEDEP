@@ -19,69 +19,80 @@
     {% endif %}
 
     {% if avisos %}
-    <div class="table-responsive">
-        <table class="table table-bordered table-striped table-hover">
-            <thead class="table-light">
-                <tr>
-                    <th>Título</th>
-                    <th>Escola(s) Destino</th>
-                    <th>Criado por (Usuário)</th>
-                    <th>Setor Destino</th>
-                    <th>Prioridade</th>
-                    <th>Data de Criação</th>
-                    <th class="text-center">Ações</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for aviso in avisos %}
-                <tr>
-                    <td>{{ aviso.titulo }}</td>
-                    <td>{{ aviso.escola.nome }}</td>
-                    <td>
-                        {% if aviso.criado_por and aviso.criado_por.user %}
-                        {{ aviso.criado_por.user.get_full_name|default_if_none:"" }}
-                        {% if not aviso.criado_por.user.get_full_name and aviso.criado_por.user.username %}
-                        ({{ aviso.criado_por.user.username }})
-                        {% endif %}
-                        {% elif aviso.criado_por and aviso.criado_por.username %} {# Caso criado_por seja o próprio User
-                        #}
-                        {{ aviso.criado_por.get_full_name|default_if_none:aviso.criado_por.username }}
-                        {% else %}
-                        N/A
-                        {% endif %}
-                    </td>
-                    <td>{{ aviso.setor_destino.nome|default_if_none:"N/A" }}</td>
-                    <td>{{ aviso.get_prioridade_display }}</td>
-                    <td>{{ aviso.data_criacao|date:"d/m/Y H:i" }}</td>
-                    <td class="text-center">
-                        <!-- Botão Editar -->
-                        <button class="btn btn-warning btn-sm"
-                            data-bs-toggle="modal"
-                            data-bs-target="#editAvisoModal"
-                            data-id="{{ aviso.id }}"
-                            data-titulo="{{ aviso.titulo }}"
-                            data-mensagem="{{ aviso.mensagem }}"
-                            data-prioridade="{{ aviso.prioridade }}"
-                            data-escola-id="{{ aviso.escola.id }}"
-                            data-criado-por-id="{{ aviso.criado_por.id }}"
-                            data-ativo="{{ aviso.ativo|yesno:'true,false' }}">
-                        <i class="bi bi-pencil"></i> Editar
+    <div class="list-group">
+        {% for aviso in avisos %}
+        <div class="list-group-item d-flex justify-content-between align-items-center">
+            <div>
+                <h5 class="mb-1">{{ aviso.titulo }}</h5>
+                <p class="mb-1">
+                    <strong>Escola(s) Destino:</strong> {{ aviso.escola.nome }}<br>
+                    <strong>Setor Destino:</strong> {{ aviso.setor_destino.nome|default_if_none:"N/A" }}<br>
+                    <strong>Prioridade:</strong> {{ aviso.get_prioridade_display }}<br>
+                    <strong>Data de Criação:</strong> {{ aviso.data_criacao|date:"d/m/Y H:i" }}
+                </p>
+            </div>
+            <div>
+                <button class="btn btn-sm btn-warning" data-bs-toggle="modal" data-bs-target="#editAvisoModal"
+                    data-id="{{ aviso.id }}" data-titulo="{{ aviso.titulo }}" data-mensagem="{{ aviso.mensagem }}"
+                    data-prioridade="{{ aviso.prioridade }}" data-escola-id="{{ aviso.escola.id }}"
+                    data-criado-por-id="{{ aviso.criado_por.id }}" data-ativo="{{ aviso.ativo|yesno:'true,false' }}">
+                    <i class="bi bi-pencil"></i> Editar
+                </button>
+                <form action="{% url 'apagar_aviso' aviso.id %}" method="POST" style="display:inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-sm btn-danger"
+                        onclick="return confirm('Tem certeza que deseja apagar este aviso?');">
+                        <i class="bi bi-trash-fill"></i> Apagar
                     </button>
-
-                        <!-- Formulário para excluir o aviso -->
-                        <form action="{% url 'apagar_aviso' aviso.id %}" method="POST" style="display:inline;">
-                            {% csrf_token %}
-                            <button type="submit" class="btn btn-danger btn-sm"
-                                onclick="return confirm('Tem certeza que deseja apagar este aviso?');">
-                                <i class="bi bi-trash-fill"></i> Apagar
-                            </button>
-                        </form>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+                </form>
+            </div>
+        </div>
+        {% endfor %}
     </div>
+
+    <!-- Navegação de Páginas -->
+    <div class="d-flex justify-content-center mt-4">
+        <nav aria-label="Navegação de páginas">
+            <ul class="pagination">
+                {% if avisos.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page=1" aria-label="Primeira">
+                        <span aria-hidden="true">&laquo;&laquo;</span>
+                    </a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ avisos.previous_page_number }}" aria-label="Anterior">
+                        <span aria-hidden="true">&laquo;</span>
+                    </a>
+                </li>
+                {% endif %}
+                {% for num in avisos.paginator.page_range %}
+                    {% if avisos.number == num %}
+                    <li class="page-item active" aria-current="page">
+                        <span class="page-link">{{ num }}</span>
+                    </li>
+                    {% else %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                    </li>
+                    {% endif %}
+                {% endfor %}
+                {% if avisos.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ avisos.next_page_number }}" aria-label="Próxima">
+                        <span aria-hidden="true">&raquo;</span>
+                    </a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ avisos.paginator.num_pages }}" aria-label="Última">
+                        <span aria-hidden="true">&raquo;&raquo;</span>
+                    </a>
+                </li>
+                {% endif %}
+            </ul>
+        </nav>
+    </div>
+
     {% else %}
     <div class="alert alert-info mt-4" role="alert">
         Nenhum aviso encontrado. <a href="{% url 'criar_aviso' %}" class="alert-link">Crie o primeiro aviso!</a>
@@ -129,8 +140,7 @@
     </div>
 </div>
 
-
-   <script>
+<script>
 document.addEventListener('DOMContentLoaded', function() {
     const editAvisoModal = document.getElementById('editAvisoModal');
     const errorContainer = document.getElementById('formErrors');
@@ -214,6 +224,5 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 </script>
-
 
 {% endblock %}

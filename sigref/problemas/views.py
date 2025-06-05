@@ -138,7 +138,7 @@ def relatar_problema_view(request):
 def problema_dashboard_view(request):
     form = ProblemaUsuarioForm()
     return render(request, 'escolas/escola_dashboard.html', {'form': form})  # type: ignore
-
+from django.core.paginator import Paginator
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render
 from django.http import HttpResponseForbidden
@@ -155,7 +155,13 @@ def listar_avisos_view(request):
         # Outros usuários podem ver apenas os avisos que eles mesmos criaram
         avisos = AvisoImportante.objects.filter(criado_por=gre_user)
 
-    return render(request, 'problemas/listar_avisos.html', {'avisos': avisos})
+    # Aplicando a paginação
+    paginator = Paginator(avisos, 5)  # 5 avisos por página
+    page_number = request.GET.get('page')  # Número da página atual
+    avisos_paginated = paginator.get_page(page_number)  # Obtemos os avisos para a página atual
+
+    return render(request, 'problemas/listar_avisos.html', {'avisos': avisos_paginated})
+
 
 from django.shortcuts import render, redirect
 from django.contrib import messages
