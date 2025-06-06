@@ -39,6 +39,12 @@
                   <i class="bi bi-list-ul"></i> Perguntas
                 </a>
               </td>
+              <td>
+                <a href="{% url 'visualizar_graficos_questionario' q.id %}" class="btn btn-primary">
+                  Ver Gráficos
+                </a>
+
+              </td>
             </tr>
             {% empty %}
             <tr>
@@ -61,22 +67,21 @@
           {% endif %}
 
           {% for num in paginator.page_range %}
-            {% if page_obj.number == num %}
-            <li class="page-item active"><span class="page-link">{{ num }}</span></li>
-            {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
-            <li class="page-item">
-              <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+          {% if page_obj.number == num %}
+          <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+          {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %} <li class="page-item">
+            <a class="page-link" href="?page={{ num }}">{{ num }}</a>
             </li>
             {% endif %}
-          {% endfor %}
+            {% endfor %}
 
-          {% if page_obj.has_next %}
-          <li class="page-item">
-            <a class="page-link" href="?page={{ page_obj.next_page_number }}">Próximo</a>
-          </li>
-          {% else %}
-          <li class="page-item disabled"><span class="page-link">Próximo</span></li>
-          {% endif %}
+            {% if page_obj.has_next %}
+            <li class="page-item">
+              <a class="page-link" href="?page={{ page_obj.next_page_number }}">Próximo</a>
+            </li>
+            {% else %}
+            <li class="page-item disabled"><span class="page-link">Próximo</span></li>
+            {% endif %}
         </ul>
       </nav>
       {% endif %}
@@ -176,8 +181,8 @@
         },
         body: JSON.stringify({ escolas: Array.from(escolasSelecionadas) })
       })
-      .then(res => res.ok ? location.reload() : alert('Erro ao salvar.'))
-      .catch(() => alert('Erro na requisição.'));
+        .then(res => res.ok ? location.reload() : alert('Erro ao salvar.'))
+        .catch(() => alert('Erro na requisição.'));
     };
   })();
 </script>

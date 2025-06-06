@@ -1,0 +1,51 @@
+{% extends 'cedepe/base.html' %}
+{% load static %}
+
+{% block content %}
+<h2>{{ questionario.titulo }} - Gráficos</h2>
+
+<div id="graficos-container"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    const dadosGraficos = JSON.parse('{{ dados_graficos|safe }}');
+    const container = document.getElementById('graficos-container');
+
+    dadosGraficos.forEach((item, index) => {
+        const canvas = document.createElement('canvas');
+        canvas.id = `grafico-${index}`;
+        container.appendChild(document.createElement('h4')).innerText = item.pergunta;
+        container.appendChild(canvas);
+
+        if (item.tipo === 'SN') {
+            new Chart(canvas, {
+                type: 'pie',
+                data: {
+                    labels: item.dados.labels,
+                    datasets: [{
+                        data: item.dados.values,
+                        backgroundColor: ['#28a745', '#dc3545'],
+                    }]
+                }
+            });
+        } else if (item.tipo === 'NU') {
+            new Chart(canvas, {
+                type: 'bar',
+                data: {
+                    labels: item.dados.valores.map((_, i) => `Resposta ${i + 1}`),
+                    datasets: [{
+                        label: 'Valor',
+                        data: item.dados.valores,
+                        backgroundColor: '#007bff'
+                    }]
+                }
+            });
+        } else if (item.tipo === 'TX') {
+            const texto = item.dados.exemplos.map(t => `<li>${t}</li>`).join('');
+            const div = document.createElement('div');
+            div.innerHTML = `<ul>${texto}</ul>`;
+            container.appendChild(div);
+        }
+    });
+</script>
+{% endblock %}

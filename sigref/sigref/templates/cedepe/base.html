@@ -98,12 +98,12 @@
          data-bs-toggle="collapse"
          href="#monitoramentosSubmenu"
          role="button"
-         aria-expanded="{{ current|url_in:'dashboard_monitoramentos,fluxo_monitoramento_setores,relatos_problemas,lacunas-list,problemas-usuario-list'|yesno:'true,false' }}"
+         aria-expanded="{{ current|url_in:'dashboard_monitoramentos,fluxo_monitoramento_setores,listar_avisos,lacunas-list,problemas-usuario-list'|yesno:'true,false' }}"
          aria-controls="monitoramentosSubmenu">
         <span><i class="fas fa-clipboard-list me-2"></i>Monitoramentos</span>
         <i class="fas fa-chevron-down"></i>
       </a>
-      <ul class="nav flex-column ms-3 collapse {% if current|url_in:'dashboard_monitoramentos,fluxo_monitoramento_setores,relatos_problemas' %}show{% endif %}"
+      <ul class="nav flex-column ms-3 collapse {% if current|url_in:'dashboard_monitoramentos,fluxo_monitoramento_setores,listar_avisos' %}show{% endif %}"
           id="monitoramentosSubmenu">
 
         <li>

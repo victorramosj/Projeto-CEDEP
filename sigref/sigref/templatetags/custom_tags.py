@@ -23,3 +23,11 @@ def get_by_id(escolas, school_id):
         if e.id == school_id:
             return e
     return None
+
+
+@register.filter
+def average(lista):
+    try:
+        return round(sum(lista) / len(lista), 2)
+    except:
+        return 'N/A'

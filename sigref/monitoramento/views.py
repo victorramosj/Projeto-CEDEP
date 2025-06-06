@@ -482,6 +482,54 @@ class ResponderQuestionarioView(LoginRequiredMixin, View):
             'erro': 'Verifique os campos destacados'
         })
 
+from django.shortcuts import render, get_object_or_404
+from .models import Questionario, Pergunta, Resposta
+from collections import Counter
+import json
+
+def visualizar_graficos_questionario(request, questionario_id):
+    questionario = get_object_or_404(Questionario, pk=questionario_id)
+    perguntas = questionario.pergunta_set.all().order_by('ordem')
+
+    dados_graficos = []
+
+    for pergunta in perguntas:
+        respostas = pergunta.respostas.all()
+        tipo = pergunta.tipo_resposta
+        dados = {}
+
+        if tipo == 'SN':
+            contagem = Counter(r.resposta_sn for r in respostas if r.resposta_sn)
+            dados = {
+                'labels': list(contagem.keys()),
+                'values': list(contagem.values())
+            }
+
+        elif tipo == 'NU':
+            valores = [r.resposta_num for r in respostas if r.resposta_num is not None]
+            dados = {
+                'media': sum(valores) / len(valores) if valores else 0,
+                'valores': valores
+            }
+
+        elif tipo == 'TX':
+            # Para texto você pode contar palavras ou exibir exemplos
+            exemplos = [r.resposta_texto for r in respostas if r.resposta_texto]
+            dados = {'exemplos': exemplos[:5]}  # mostra os 5 primeiros exemplos
+
+        dados_graficos.append({
+            'pergunta': pergunta.texto,
+            'tipo': tipo,
+            'dados': dados
+        })
+
+    context = {
+        'questionario': questionario,
+        'dados_graficos': json.dumps(dados_graficos)
+    }
+
+    return render(request, 'graficos/graficos_questionario.html', context)
+
 
 # Views relacionadas a problemas e escolas
 
