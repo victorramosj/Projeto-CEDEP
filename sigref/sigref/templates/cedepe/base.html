@@ -98,12 +98,12 @@
          data-bs-toggle="collapse"
          href="#monitoramentosSubmenu"
          role="button"
-         aria-expanded="{{ current|url_in:'dashboard_monitoramentos,fluxo_monitoramento_setores,relatos_problemas'|yesno:'true,false' }}"
+         aria-expanded="{{ current|url_in:'dashboard_monitoramentos,fluxo_monitoramento_setores,listar_avisos,lacunas-list,problemas-usuario-list'|yesno:'true,false' }}"
          aria-controls="monitoramentosSubmenu">
         <span><i class="fas fa-clipboard-list me-2"></i>Monitoramentos</span>
         <i class="fas fa-chevron-down"></i>
       </a>
-      <ul class="nav flex-column ms-3 collapse {% if current|url_in:'dashboard_monitoramentos,fluxo_monitoramento_setores,relatos_problemas' %}show{% endif %}"
+      <ul class="nav flex-column ms-3 collapse {% if current|url_in:'dashboard_monitoramentos,fluxo_monitoramento_setores,listar_avisos' %}show{% endif %}"
           id="monitoramentosSubmenu">
 
         <li>
@@ -119,11 +119,24 @@
           </a>
         </li>
         <li>
-          <a href="{% url 'relatos_problemas' %}"
-             class="nav-link text-white sidebar-link {% if current == 'relatos_problemas' %}active{% endif %}">
-            <i class="fas fa-exclamation-triangle me-2"></i>Relatos de Problemas
-          </a>
-        </li>
+      <a href="{% url 'lacunas-list' %}"
+        class="nav-link text-white sidebar-link {% if current == 'lacunas-list' %}active{% endif %}">
+        <i class="fas fa-book me-2"></i>Lacunas
+      </a>
+    </li>
+    <li>
+      <a href="{% url 'problemas-usuario-list' %}"
+        class="nav-link text-white sidebar-link {% if current == 'problemas-usuario-list' %}active{% endif %}">
+        <i class="fas fa-exclamation-circle me-2"></i>Problemas
+      </a>
+    </li>
+    <li>
+      <a href="{% url 'listar_avisos' %}"
+        class="nav-link text-white sidebar-link {% if current == 'listar_avisos' %}active{% endif %}">
+        <i class="fas fa-exclamation-triangle me-2"></i>Avisos
+      </a>
+    </li>
+        
       </ul>
     </li>
  

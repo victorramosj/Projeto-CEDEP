@@ -4,41 +4,215 @@
 
 {% block content %}
 <div class="container mt-4">
-    <h3 class="mb-4">Novo Aviso Importante</h3>
-    <form method="post">
+
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4">
+        <h3 class="mb-3 mb-md-0">Novo Aviso Importante</h3>
+        <a href="{% url 'listar_avisos' %}" class="btn btn-outline-info d-inline-flex align-items-center">
+            <i class="bi bi-list-task me-2"></i>Lista de Avisos
+        </a>
+    </div>
+
+    {% if messages %}
+        <div class="alert alert-info">
+            {% for message in messages %}
+                <p>{{ message }}</p>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <form method="post" id="avisoForm" onsubmit="return validarCampos()">
         {% csrf_token %}
         <div class="mb-3">
-            <label for="titulo" class="form-label">Título</label>
-            <input type="text" name="titulo" id="titulo" class="form-control" required>
+            <label class="form-label fw-semibold">Título</label>
+            <input type="text" name="titulo" id="titulo" class="form-control" required value="{{ request.POST.titulo }}">
         </div>
-
         <div class="mb-3">
-            <label for="mensagem" class="form-label">Mensagem</label>
-            <textarea name="mensagem" id="mensagem" class="form-control" rows="4" required></textarea>
+            <label class="form-label fw-semibold">Mensagem</label>
+            <textarea name="mensagem" id="mensagem" class="form-control" rows="4" required>{{ request.POST.mensagem }}</textarea>
         </div>
-
         <div class="mb-3">
-            <label for="escola" class="form-label">Escola</label>
-            <select name="escola_id" id="escola" class="form-select" required>
-                {% for escola in escolas %}
-                    <option value="{{ escola.id }}">{{ escola.nome }}</option>
-                {% endfor %}
-            </select>
-        </div>
-
-        <div class="mb-3">
-            <label for="prioridade" class="form-label">Prioridade</label>
+            <label for="prioridade" class="form-label fw-semibold">Prioridade</label>
             <select name="prioridade" id="prioridade" class="form-select">
-                <option value="baixa">Baixa</option>
-                <option value="normal" selected>Normal</option>
-                <option value="alta">Alta</option>
+                <option value="baixa" {% if request.POST.prioridade == 'baixa' %}selected{% endif %}>Baixa</option>
+                <option value="normal" {% if request.POST.prioridade == 'normal' or not request.POST.prioridade %}selected{% endif %}>Normal</option>
+                <option value="alta" {% if request.POST.prioridade == 'alta' %}selected{% endif %}>Alta</option>
             </select>
         </div>
+        <div class="mb-3">
+            <label for="data_expiracao" class="form-label fw-semibold">Data de Expiração (opcional)</label>
+            <input type="date" name="data_expiracao" id="data_expiracao" class="form-control" value="{{ request.POST.data_expiracao }}">
+        </div>
 
-        <button type="submit" class="btn btn-primary">Publicar Aviso</button>
+        <!-- Seção de Escolas Selecionadas -->
+        <div class="mb-3">
+            <label class="form-label fw-semibold">Selecione uma ou mais escolas para o aviso:</label>
+            
+            <div class="mb-2">
+                <input type="text" id="termo_busca_checkbox" class="form-control form-control-sm" placeholder="Buscar escola por Nome ou INEP..." onkeyup="filtrarListaEscolas()">
+            </div>
+            <div id="listaEscolasCheckboxes" class="border rounded p-3" style="max-height: 350px; overflow-y: auto;">
+                {% if escolas %}
+                    {% for escola in escolas %}
+                    <div class="form-check escola-item" data-nome="{{ escola.nome|lower|escapejs }}" data-inep="{{ escola.inep|default_if_none:''|escapejs }}">
+                        <input class="form-check-input escola-checkbox" type="checkbox" name="escola_id" value="{{ escola.id }}" id="escola_check_{{ escola.id }}">
+                        <label class="form-check-label" for="escola_check_{{ escola.id }}">
+                            {{ escola.nome }} <span class="text-muted small">(INEP: {{ escola.inep|default_if_none:'N/A' }})</span>
+                        </label>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <p class="text-muted m-0">Nenhuma escola disponível.</p>
+                {% endif %}
+            </div>
+            <small class="form-text text-muted">Use a busca acima para filtrar a lista. Marque as caixas para selecionar.</small>
+            <div class="mt-2">
+                <button type="button" id="btnMarcarTodasEscolasSistema" class="btn btn-outline-primary btn-sm me-2">
+                    <i class="bi bi-check2-all"></i> Marcar Todas do Sistema
+                </button>
+                <button type="button" id="btnLimparSelecaoEscolas" class="btn btn-outline-secondary btn-sm">
+                    <i class="bi bi-x-square"></i> Limpar Seleção
+                </button>
+            </div>
+        </div>
+
+        <!-- Confirmação de Escolas Selecionadas -->
+        <div class="mb-3">
+            <label class="form-label fw-semibold">Confirmação de Escolas Selecionadas:</label>
+            <div id="confirmacaoEscolas" class="text-muted"></div>
+        </div>
+
+        <!-- Observações Importantes -->
+        <div class="mb-3">
+            <label class="form-label fw-semibold">Observações Importantes:</label>
+            <ul class="list-unstyled text-muted">
+                <li>Verifique se todas as informações estão corretas antes de publicar.</li>
+                <li>Após a publicação, você só poderá editar ou apagar seus avisos. Caso envie para a escola errada, será necessário apagar o aviso e criar um novo.</li>
+                <li>Você pode selecionar várias escolas ao mesmo tempo.</li>
+            </ul>
+        </div>
+
+        <!-- Botão para abrir o Modal de Confirmação -->
+        <button type="button" class="btn btn-success btn-lg" data-bs-toggle="modal" data-bs-target="#modalConfirmacao" id="btnPublicar" disabled>
+            <i class="bi bi-send-fill me-2"></i> Publicar Aviso
+        </button>
     </form>
 </div>
+
+<!-- Modal de Confirmação -->
+<div class="modal fade" id="modalConfirmacao" tabindex="-1" aria-labelledby="modalConfirmacaoLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalConfirmacaoLabel">Confirmar Publicação</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Você selecionou as seguintes escolas para o aviso:</p>
+                <div id="modalConfirmacaoEscolas" class="text-muted"></div>
+                <p class="mt-3"><strong>Atenção:</strong> Após a publicação, você só poderá editar ou apagar seus avisos. Caso envie para a escola errada, será necessário apagar o aviso e criar um novo.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="submit" class="btn btn-primary">Confirmar Publicação</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Função de busca para filtrar as escolas na lista
+function filtrarListaEscolas() {
+    const termoBuscaInput = document.getElementById('termo_busca_checkbox');
+    const termo = termoBuscaInput.value.toLowerCase().trim();
+    const escolaCheckboxItems = document.querySelectorAll('.escola-item');
+
+    escolaCheckboxItems.forEach(item => {
+        const nome = item.dataset.nome;
+        const inep = item.dataset.inep;
+        if (nome.includes(termo) || (inep && inep.includes(termo))) {
+            item.style.display = '';
+        } else {
+            item.style.display = 'none';
+        }
+    });
+}
+
+// Função para atualizar a exibição das escolas selecionadas ou "Todas selecionadas"
+function atualizarDisplayEscolasSelecionadas() {
+    const escolasSelecionadas = [];
+    const todasEscolasCheckboxes = document.querySelectorAll('.escola-checkbox');
+    let todasSelecionadas = true;
+
+    todasEscolasCheckboxes.forEach(checkbox => {
+        if (checkbox.checked) {
+            const escolaNome = checkbox.closest('.escola-item').querySelector('label').textContent.trim();
+            escolasSelecionadas.push(escolaNome);
+        } else {
+            todasSelecionadas = false;
+        }
+    });
+
+    const confirmacaoEscolas = document.getElementById('confirmacaoEscolas');
+    const modalConfirmacaoEscolas = document.getElementById('modalConfirmacaoEscolas');
+
+    if (todasSelecionadas) {
+        confirmacaoEscolas.textContent = "Todas selecionadas";
+        modalConfirmacaoEscolas.textContent = "Todas selecionadas";
+    } else {
+        if (escolasSelecionadas.length > 0) {
+            confirmacaoEscolas.textContent = "Escolas selecionadas: " + escolasSelecionadas.join(", ");
+            modalConfirmacaoEscolas.textContent = "Escolas selecionadas: " + escolasSelecionadas.join(", ");
+        } else {
+            confirmacaoEscolas.textContent = "Nenhuma escola selecionada.";
+            modalConfirmacaoEscolas.textContent = "Nenhuma escola selecionada.";
+        }
+    }
+
+    // Habilita o botão de publicação apenas se todos os campos obrigatórios estiverem preenchidos
+    const titulo = document.getElementById('titulo').value.trim();
+    const mensagem = document.getElementById('mensagem').value.trim();
+    const escolasSelecionadasCount = escolasSelecionadas.length;
+
+    const btnPublicar = document.getElementById('btnPublicar');
+    if (titulo && mensagem && escolasSelecionadasCount > 0) {
+        btnPublicar.disabled = false;
+    } else {
+        btnPublicar.disabled = true;
+    }
+}
+
+// Adiciona um listener para atualizar as escolas selecionadas após qualquer alteração
+document.addEventListener('DOMContentLoaded', function() {
+    const escolaCheckboxes = document.querySelectorAll('.escola-checkbox');
+    escolaCheckboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', atualizarDisplayEscolasSelecionadas);
+    });
+
+    // Chama a função para garantir que o estado da seleção seja atualizado na carga inicial
+    atualizarDisplayEscolasSelecionadas();
+
+    const btnMarcarTodasSistema = document.getElementById('btnMarcarTodasEscolasSistema');
+    const btnLimparSelecao = document.getElementById('btnLimparSelecaoEscolas');
+    const todasEscolasCheckboxes = document.querySelectorAll('.escola-checkbox');
+
+    if (btnMarcarTodasSistema) {
+        btnMarcarTodasSistema.addEventListener('click', function() {
+            todasEscolasCheckboxes.forEach(checkbox => {
+                checkbox.checked = true;
+            });
+            atualizarDisplayEscolasSelecionadas();  // Atualiza a exibição das escolas selecionadas
+        });
+    }
+
+    if (btnLimparSelecao) {
+        btnLimparSelecao.addEventListener('click', function() {
+            todasEscolasCheckboxes.forEach(checkbox => {
+                checkbox.checked = false;
+            });
+            atualizarDisplayEscolasSelecionadas();  // Atualiza a exibição das escolas selecionadas
+        });
+    }
+});
+</script>
+
 {% endblock %}
-
-<!-- Isso é um comentário em HTML -->
-

@@ -3,6 +3,18 @@ from django.utils import timezone
 
 from monitoramento.models import Escola, Setor, GREUser  # ajuste o caminho conforme seu projeto
 
+Pendente = 'P'
+Resolvido = 'R'
+Em_Andamento = 'E'
+
+
+# Definir as escolhas de status
+STATUS_CHOICES = [
+    ('P', 'Pendente'),
+    ('R', 'Resolvidos'),
+    ('E', 'Em Andamento'),
+]
+
 class Lacuna(models.Model):
     escola = models.ForeignKey(
         Escola,
@@ -14,7 +26,8 @@ class Lacuna(models.Model):
         help_text="Carga horária em horas-aula"
     )
     criado_em = models.DateTimeField(auto_now_add=True)
-
+    status = models.CharField(max_length=1, choices=STATUS_CHOICES, default='P')
+    
     class Meta:
         ordering = ['-criado_em']
         verbose_name = 'Lacuna'
@@ -22,6 +35,7 @@ class Lacuna(models.Model):
 
     def __str__(self):
         return f"{self.disciplina} ({self.escola.nome})"
+    
 
 
 class ProblemaUsuario(models.Model):
@@ -39,6 +53,14 @@ class ProblemaUsuario(models.Model):
     )
     descricao = models.TextField()
     criado_em = models.DateTimeField(auto_now_add=True)
+    escola = models.ForeignKey(
+        Escola,
+        on_delete=models.CASCADE,
+        related_name='problemas',
+        default=1
+    )
+    status = models.CharField(max_length=1, choices=STATUS_CHOICES, default='P')
+    anexo = models.FileField(upload_to='problemas/anexos/', null= True, blank=True)
 
     class Meta:
         ordering = ['-criado_em']
@@ -49,28 +71,28 @@ class ProblemaUsuario(models.Model):
         setor_nome = self.setor.hierarquia_completa if self.setor else "Geral"
         return f"{self.usuario.user.username} → {setor_nome}"
 
+from django.db import models
 from django.utils import timezone
-from monitoramento.models import Escola, Setor, GREUser
 
 class AvisoImportante(models.Model):
     PRIORIDADES = [
         ('baixa', 'Baixa'),
         ('normal', 'Normal'),
         ('alta', 'Alta'),
-
     ]
+    
+    # Mantenha apenas uma definição de setor_destino
     setor_destino = models.ForeignKey(Setor, on_delete=models.SET_NULL, null=True, blank=True)
-
-
+    
     titulo = models.CharField(max_length=255)
     mensagem = models.TextField()
     prioridade = models.CharField(max_length=10, choices=PRIORIDADES, default='normal')
     escola = models.ForeignKey(Escola, on_delete=models.CASCADE, related_name='avisos_problemas')
-    setor_destino = models.ForeignKey(Setor, on_delete=models.SET_NULL, null=True, blank=True)
     criado_por = models.ForeignKey(GREUser, on_delete=models.CASCADE)
     data_criacao = models.DateTimeField(auto_now_add=True)
     data_expiracao = models.DateTimeField(null=True, blank=True)
     ativo = models.BooleanField(default=True)
+    data_exclusao = models.DateTimeField(null=True, blank=True)  # Campo para armazenar a data de exclusão
 
     def __str__(self):
         return f"[{self.escola.nome}] {self.titulo}"
