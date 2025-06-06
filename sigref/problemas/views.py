@@ -55,18 +55,23 @@ class EscolaDashboardView(LoginRequiredMixin, TemplateView):
             ).filter(
                 Q(data_expiracao__isnull=True) | Q(data_expiracao__gte=timezone.now())
             ).order_by('-prioridade', '-data_criacao')
-
-            # Estatísticas
-            total_lacunas = Lacuna.objects.filter(escola=escola).count() # Contagem de lacunas para a escola
-            usuarios_da_escola = escola.usuarios.all()
-            total_problemas = ProblemaUsuario.objects.filter(escola=escola).count() # Contagem de problemas dos usuários associados à escola9
             
+            agora = timezone.now()
+
+            # Estatísticas de lacunas
+            total_lacunas = Lacuna.objects.filter(escola=escola).count() # Contagem de lacunas para a escola
+            lacunas_resolvidas = Lacuna.objects.filter(escola= escola, status='R').count()
+            lacunas_pendentes = Lacuna.objects.filter(escola= escola,status='P').count()
+            lacunas_andamento = Lacuna.objects.filter(escola= escola,status='E').count()
+            # Contagem de problemas criados neste mês
+            lacunas_este_mes = Lacuna.objects.filter(escola= escola,criado_em__month=agora.month, criado_em__year=agora.year).count()
+          
+            # Estatísticas de problemas 
+            total_problemas = ProblemaUsuario.objects.filter(escola=escola).count() # Contagem de problemas dos usuários associados à escola9
             problemas = ProblemaUsuario.objects.filter(escola=escola)
-            agora = timezone.now() 
             # Contagem de problemas criados neste mês
             problemas_este_mes = problemas.filter(criado_em__month=agora.month, criado_em__year=agora.year).count()
-                
-            # Contagem por status
+            # Contagem por status de problemas
             problemas_resolvidos = problemas.filter(status='R').count()
             problemas_pendentes = problemas.filter(status='P').count()
             problemas_andamento = problemas.filter(status='E').count()
@@ -80,6 +85,10 @@ class EscolaDashboardView(LoginRequiredMixin, TemplateView):
                 'form_problema': ProblemaUsuarioForm(),
                 'form_lacuna': LacunaForm(),
                 'total_lacunas': total_lacunas,
+                'lacunas_resolvidas': lacunas_resolvidas,
+                'lacunas_pendentes': lacunas_pendentes,
+                'lacunas_andamento': lacunas_andamento,
+                'lacunas_este_mes': lacunas_este_mes,
                 'total_problemas': total_problemas,
                 'problemas_resolvidos': problemas_resolvidos,
                 'problemas_pendentes': problemas_pendentes,
@@ -120,15 +129,20 @@ from .forms import AvisoForm
 from .models import AvisoImportante
 
 # RELATAR LACUNA
-def relatar_lacuna_view(request):
+def relatar_lacuna_view(request, escola_id):
+    escola = get_object_or_404(Escola, id=escola_id)  # Obtém a escola com o ID da URL
+
     if request.method == 'POST':
         form = LacunaForm(request.POST)
         if form.is_valid():
             lacuna = form.save(commit=False)
-            lacuna.escola = request.user.greuser.escolas.first()
+            lacuna.escola = escola  # Associa a lacuna à escola
             lacuna.save()
-        return HttpResponseRedirect(request.META.get('HTTP_REFERER', '/'))
-    return HttpResponseRedirect(request.META.get('HTTP_REFERER', '/'))
+            return redirect('dashboard_escola', escola_id=escola.id)  # Redireciona para o dashboard da escola
+    else:
+        form = LacunaForm()
+
+    return render(request, 'escolas/relatar_lacuna.html', {'form': form, 'escola': escola})
 
 
 # RELATAR PROBLEMA
