@@ -39,13 +39,12 @@ urlpatterns = [
 
     # URL para editar aviso
     path('avisos/editar/<int:aviso_id>/', views.editar_aviso_view, name='editar_aviso'),
-    
-
     # URL para apagar aviso
     path('avisos/apagar/<int:aviso_id>/', views.apagar_aviso_view, name='apagar_aviso'),
-
     # URL para listar avisos
     path('avisos/', views.listar_avisos_view, name='listar_avisos'),
+    # URL apagar varios avisos
+    path('apagar_varios_avisos/', views.apagar_varios_avisos, name='apagar_varios_avisos'),
 
 
 ]

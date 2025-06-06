@@ -95,6 +95,12 @@ class LacunaForm(forms.ModelForm):
 from django import forms
 from .models import AvisoImportante
 
+from django import forms
+from .models import AvisoImportante
+
+from django import forms
+from .models import AvisoImportante
+
 class AvisoForm(forms.ModelForm):
     class Meta:
         model = AvisoImportante
@@ -111,9 +117,14 @@ class AvisoForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        # Customização dos campos do formulário
         self.fields['titulo'].widget.attrs.update({'class': 'form-control'})
         self.fields['mensagem'].widget.attrs.update({'class': 'form-control'})
         self.fields['prioridade'].widget.attrs.update({'class': 'form-select'})
         self.fields['setor_destino'].widget.attrs.update({'class': 'form-select'})
+        
+    def clean_titulo(self):
+        titulo = self.cleaned_data.get('titulo')
+        if len(titulo) < 5:
+            raise forms.ValidationError("O título precisa ter pelo menos 5 caracteres.")
+        return titulo
 

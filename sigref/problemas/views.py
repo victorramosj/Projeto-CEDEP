@@ -20,6 +20,7 @@ from .serializers import LacunaSerializer, ProblemaUsuarioSerializer
 from .forms import ProblemaUsuarioForm, LacunaForm, AvisoForm
 
 
+
 # View da DASHBOARD
 class EscolaDashboardView(LoginRequiredMixin, TemplateView):
     template_name = 'escola_dashboard.html'
@@ -306,3 +307,20 @@ def apagar_aviso_view(request, aviso_id):
     messages.success(request, "Aviso excluído com sucesso!")
     return redirect('listar_avisos')  # Redireciona para a lista de avisos após a exclusão
 
+from django.shortcuts import redirect
+from django.contrib import messages
+from .models import AvisoImportante
+
+def apagar_varios_avisos(request):
+    if request.method == 'POST':
+        # Pega os IDs dos avisos selecionados
+        avisos_selecionados = request.POST.getlist('avisos_selecionados')
+
+        # Apagar os avisos selecionados
+        if avisos_selecionados:
+            AvisoImportante.objects.filter(id__in=avisos_selecionados).delete()
+            messages.success(request, "Avisos apagados com sucesso!")
+        else:
+            messages.warning(request, "Nenhum aviso selecionado para apagar.")
+
+    return redirect('listar_avisos')

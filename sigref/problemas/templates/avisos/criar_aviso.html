@@ -113,7 +113,7 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                <button type="submit" class="btn btn-primary">Confirmar Publicação</button>
+                <button type="button" class="btn btn-primary" id="confirmarPublicacao">Confirmar Publicação</button>
             </div>
         </div>
     </div>
@@ -212,6 +212,12 @@ document.addEventListener('DOMContentLoaded', function() {
             atualizarDisplayEscolasSelecionadas();  // Atualiza a exibição das escolas selecionadas
         });
     }
+
+    // Ação do botão de confirmar publicação
+    const confirmarPublicacao = document.getElementById('confirmarPublicacao');
+    confirmarPublicacao.addEventListener('click', function() {
+        document.getElementById('avisoForm').submit();  // Submete o formulário após confirmar
+    });
 });
 </script>
 
