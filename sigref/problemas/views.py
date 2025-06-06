@@ -90,32 +90,25 @@ class EscolaDashboardView(LoginRequiredMixin, TemplateView):
         return context
 
 
-# VIEWSETS PARA API REST
+# views.py
+from rest_framework import viewsets
+from .models import Lacuna, ProblemaUsuario, AvisoImportante
+from .serializers import LacunaSerializer, ProblemaUsuarioSerializer, AvisoImportanteSerializer
+
 class LacunaViewSet(viewsets.ModelViewSet):
+    queryset = Lacuna.objects.all()
     serializer_class = LacunaSerializer
-    permission_classes = [permissions.IsAuthenticated]
-
-    def get_queryset(self):
-        user = self.request.user.greuser
-        if user.is_admin() or user.is_coordenador():
-            return Lacuna.objects.all()
-        return Lacuna.objects.filter(escola__in=user.escolas.all())
-
 
 class ProblemaUsuarioViewSet(viewsets.ModelViewSet):
+    queryset = ProblemaUsuario.objects.all()
     serializer_class = ProblemaUsuarioSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    
+    def get_serializer_context(self):
+        return {'request': self.request}
 
-    def get_queryset(self):
-        user = self.request.user.greuser
-        if user.is_admin() or user.is_coordenador():
-            return ProblemaUsuario.objects.all()
-        if user.is_chefe_setor():
-            return ProblemaUsuario.objects.filter(setor=user.setor)
-        return ProblemaUsuario.objects.filter(usuario=user)
-
-    def perform_create(self, serializer):
-        serializer.save(usuario=self.request.user.greuser)
+class AvisoImportanteViewSet(viewsets.ModelViewSet):
+    queryset = AvisoImportante.objects.all()
+    serializer_class = AvisoImportanteSerializer
 
 
 # sigref/problemas/views.py

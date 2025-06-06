@@ -5,6 +5,7 @@ from .views import (
     LacunaViewSet,
     ProblemaUsuarioViewSet,
     EscolaDashboardView,
+    AvisoImportanteViewSet,
     relatar_lacuna_view,
     criar_aviso_view,
     listar_avisos_view,
@@ -12,9 +13,11 @@ from .views import (
     problema_dashboard_view,
 )
 
+# Criando o roteador para as views baseadas em viewsets
 router = routers.DefaultRouter()
 router.register(r'lacunas', LacunaViewSet, basename='lacunas')
 router.register(r'problemas-usuario', ProblemaUsuarioViewSet, basename='problemas-usuario')
+router.register(r'avisos', AvisoImportanteViewSet, basename='avisos')  # Novo
 
 urlpatterns = [
     #Visualização da dashboard
