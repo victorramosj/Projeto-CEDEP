@@ -65,7 +65,7 @@ class EscolaDashboardView(LoginRequiredMixin, TemplateView):
             lacunas_andamento = Lacuna.objects.filter(escola= escola,status='E').count()
             # Contagem de problemas criados neste mês
             lacunas_este_mes = Lacuna.objects.filter(escola= escola,criado_em__month=agora.month, criado_em__year=agora.year).count()
-          
+            
             # Estatísticas de problemas 
             total_problemas = ProblemaUsuario.objects.filter(escola=escola).count() # Contagem de problemas dos usuários associados à escola9
             problemas = ProblemaUsuario.objects.filter(escola=escola)
@@ -166,11 +166,23 @@ def relatar_problema_view(request, escola_id):
 def problema_dashboard_view(request):
     form = ProblemaUsuarioForm()
     return render(request, 'escolas/escola_dashboard.html', {'form': form})  # type: ignore
+
 from django.core.paginator import Paginator
-from django.contrib.auth.decorators import login_required
-from django.shortcuts import render
-from django.http import HttpResponseForbidden
-from .models import AvisoImportante
+
+# TELA LACUNA P/ CGAF/UDP
+def tela_lacuna_view(request):
+    # Obtém todas as lacunas da escola
+    lacunas_list = Lacuna.objects.all()
+
+    # Cria o objeto paginator para limitar a 9 lacunas por página
+    paginator = Paginator(lacunas_list, 9)
+
+    page_number = request.GET.get('page')
+    lacunas_page = paginator.get_page(page_number)
+
+    # Passa as lacunas paginadas para o template
+    return render(request, 'tela_lacunas.html', {'lacunas': lacunas_page})
+
 
 @login_required
 def listar_avisos_view(request):
