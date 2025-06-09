@@ -59,6 +59,9 @@ class EscolaDashboardView(LoginRequiredMixin, TemplateView):
             agora = timezone.now()
 
             # Estatísticas de lacunas
+            todas_lacunas = Lacuna.objects.all()
+            lacunas_total = todas_lacunas.count()
+
             total_lacunas = Lacuna.objects.filter(escola=escola).count() # Contagem de lacunas para a escola
             lacunas_resolvidas = Lacuna.objects.filter(escola= escola, status='R').count()
             lacunas_pendentes = Lacuna.objects.filter(escola= escola,status='P').count()
@@ -84,6 +87,8 @@ class EscolaDashboardView(LoginRequiredMixin, TemplateView):
                 'setor': Setor.objects.all(),
                 'form_problema': ProblemaUsuarioForm(),
                 'form_lacuna': LacunaForm(),
+                'todas_lacunas': todas_lacunas,
+                'lacunas_total': lacunas_total,  # Passando a contagem correta de lacunas
                 'total_lacunas': total_lacunas,
                 'lacunas_resolvidas': lacunas_resolvidas,
                 'lacunas_pendentes': lacunas_pendentes,
@@ -181,8 +186,7 @@ def tela_lacuna_view(request):
     lacunas_page = paginator.get_page(page_number)
 
     # Passa as lacunas paginadas para o template
-    return render(request, 'tela_lacunas.html', {'lacunas': lacunas_page})
-
+    return render(request, 'tela_lacunas.html', {'lacunas_page': lacunas_page})
 
 @login_required
 def listar_avisos_view(request):
