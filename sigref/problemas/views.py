@@ -1,12 +1,13 @@
 from rest_framework import viewsets, permissions
 from .models import Lacuna, ProblemaUsuario, AvisoImportante
 from .serializers import LacunaSerializer, ProblemaUsuarioSerializer
-from .forms import ProblemaUsuarioForm, LacunaForm # importe seu formulário
+from .forms import ProblemaUsuarioForm, LacunaForm, AvisoForm # importe seu formulário
 
 from django.shortcuts import render, redirect, get_object_or_404
 from django.utils import timezone
 from django.db.models import Q
 from django.http import HttpResponseRedirect
+from django.http import HttpResponse
 from django.utils import timezone
 
 from django.views.generic import TemplateView
@@ -14,10 +15,6 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.decorators import login_required
 
 from monitoramento.models import GREUser, Escola, Setor
-
-from .models import Lacuna, ProblemaUsuario, AvisoImportante
-from .serializers import LacunaSerializer, ProblemaUsuarioSerializer
-from .forms import ProblemaUsuarioForm, LacunaForm, AvisoForm
 
 
 # View da DASHBOARD
@@ -59,6 +56,9 @@ class EscolaDashboardView(LoginRequiredMixin, TemplateView):
             agora = timezone.now()
 
             # Estatísticas de lacunas
+            todas_lacunas = Lacuna.objects.all()
+            lacunas_total = todas_lacunas.count()
+
             total_lacunas = Lacuna.objects.filter(escola=escola).count() # Contagem de lacunas para a escola
             lacunas_resolvidas = Lacuna.objects.filter(escola= escola, status='R').count()
             lacunas_pendentes = Lacuna.objects.filter(escola= escola,status='P').count()
@@ -84,11 +84,17 @@ class EscolaDashboardView(LoginRequiredMixin, TemplateView):
                 'setor': Setor.objects.all(),
                 'form_problema': ProblemaUsuarioForm(),
                 'form_lacuna': LacunaForm(),
-                'total_lacunas': total_lacunas,
+                'todas_lacunas': todas_lacunas,
+                'lacunas_total': lacunas_total,  # Total de lacunas geral
+
+                #CONTEXTO DE LACUNAS ESPECIFICO POR ESCOLA
+                'total_lacunas': total_lacunas, # Total de lacuna especifico por escola
                 'lacunas_resolvidas': lacunas_resolvidas,
                 'lacunas_pendentes': lacunas_pendentes,
                 'lacunas_andamento': lacunas_andamento,
                 'lacunas_este_mes': lacunas_este_mes,
+
+                #CONTEXTO DE PROBLEMAS ESPECIFICO POR ESCOLA
                 'total_problemas': total_problemas,
                 'problemas_resolvidos': problemas_resolvidos,
                 'problemas_pendentes': problemas_pendentes,
@@ -98,6 +104,22 @@ class EscolaDashboardView(LoginRequiredMixin, TemplateView):
 
         return context
 
+# Rest de lacuna para Javascript
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
+
+class UpdateStatusLacuna(APIView):
+    def post(self, request, lacuna_id):
+        lacuna = get_object_or_404(Lacuna, id=lacuna_id)
+        new_status = request.data.get('status')
+
+        if new_status in ['P', 'R', 'E']:  # Validar o status
+            lacuna.status = new_status
+            lacuna.save()
+            return Response(LacunaSerializer(lacuna).data, status=status.HTTP_200_OK)
+        else:
+            return Response({"detail": "Status inválido"}, status=status.HTTP_400_BAD_REQUEST)
 
 # views.py
 from rest_framework import viewsets
@@ -169,7 +191,7 @@ def problema_dashboard_view(request):
 
 from django.core.paginator import Paginator
 
-# TELA LACUNA P/ CGAF/UDP
+# TELA LACUNA CGAF/UDP
 def tela_lacuna_view(request):
     # Obtém todas as lacunas da escola
     lacunas_list = Lacuna.objects.all()
@@ -181,8 +203,9 @@ def tela_lacuna_view(request):
     lacunas_page = paginator.get_page(page_number)
 
     # Passa as lacunas paginadas para o template
-    return render(request, 'tela_lacunas.html', {'lacunas': lacunas_page})
+    return render(request, 'tela_lacunas.html', {'lacunas_page': lacunas_page})
 
+# VIEWS AVISOS *********************************************************
 
 @login_required
 def listar_avisos_view(request):
