@@ -2,6 +2,7 @@ from rest_framework import serializers
 from .models import Lacuna, ProblemaUsuario, AvisoImportante
 from monitoramento.models import Escola, Setor, GREUser
 from monitoramento.serializers import EscolaSerializer, SetorSerializer, GREUserSerializer
+
 class LacunaSerializer(serializers.ModelSerializer):
     escola = EscolaSerializer(read_only=True)
     status_display = serializers.CharField(source='get_status_display', read_only=True)

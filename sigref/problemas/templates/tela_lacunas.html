@@ -1,63 +1,18 @@
 {% extends "cedepe/base.html" %}
-{% block title %}Lacunas{% endblock %}
+{% load static %}
+
+{% block title %}
+Lacunas
+{% endblock %}
 
 {% block extra_style %}
-<style>
-    /* Ajustes na barra de pesquisa e filtros */
-    
-    .input-group {
-        width: 60%;
-        height: 45px;
-    }
-
-    .form-select {
-        width: 160px;
-    }
-
-    /* Estilo para os botões de ação -----------------------------------*/
-    .btnAcao{
-        width: 180px;
-    }
-    
-    .btn-info {
-    background-color: #0cbbdf;
-    color: white;
-    font-weight: bold;
-    }
-
-    .btn-info:hover {
-    background-color: #109ab6;
-    color: white;
-    }
-
-    .btn-danger {
-    font-weight: bold;
-    }
-
-    /* Tabela de Lacunas ---------------------------------------------- */
-    .table th, .table td {
-        text-align: left;
-        vertical-align: middle;
-        font-size: 14px;
-    }
-
-    .table th {
-        background-color: #003366;
-        color: white;
-        font-size: 17px;
-        padding: 12px;
-    }
-
-    .table td {
-        padding: 11px;
-    }
-
-</style>
+<link rel="stylesheet" href="{% static 'css/lacunas.css' %}" />
 {% endblock %}
-{% block content %}
 
+
+{% block content %}
 <div class="container mt-4">
-    <h3>Lacunas ({{ Lacuna.count }})</h3>
+    <h3>Lacunas ({{ lacunas_total }})</h3>
 
     <div class="col-12">
         <div class="d-flex justify-content-between gap-2">
@@ -77,7 +32,7 @@
                 </select>
                 <select class="form-select" aria-label="Filtro Status">
                     <option selected>Status</option>
-                    <option value="1">Concluido</option>
+                    <option value="1">Resolvido</option>
                     <option value="2">Em Andamento</option>
                     <option value="3">Pendente</option>
                 </select>
@@ -100,7 +55,6 @@
                     <th class="text-start">Carga H.</th>
                     <th class="text-start">Data</th>
                     <th class="text-start">Status</th>
-                    <th></th>
                 </tr>
             </thead>
             <tbody>
@@ -112,12 +66,11 @@
                         <td class="text-start">{{ lacuna.carga_horaria }}</td>
                         <td class="text-start">{{ lacuna.criado_em|date:"d/m/Y" }}</td>
                         <td>
-                            <span class="badge {% if lacuna.status == 'P' %}bg-danger{% elif lacuna.status == 'R' %}bg-success{% else %}bg-warning{% endif %}">
-                                {% if lacuna.status == 'P' %}Pendente{% elif lacuna.status == 'R' %}Resolvido{% else %}Em Andamento{% endif %}
-                            </span>
-                        </td>
-                        <td>
-                            <button class="btn btn-danger btn-sm">Excluir</button>
+                            <select class="form-select" aria-label="Filtro Status" data-lacuna-id="{{ lacuna.id }}">
+                                <option value="P" {% if lacuna.status == 'P' %} selected {% endif %}>Pendente</option>
+                                <option value="R" {% if lacuna.status == 'R' %} selected {% endif %}>Resolvido</option>
+                                <option value="E" {% if lacuna.status == 'E' %} selected {% endif %}>Em Andamento</option>
+                            </select>
                         </td>
                     </tr>
                 {% endfor %}
@@ -148,23 +101,37 @@
 </div>
 
 <script>
-    document.getElementById("search").addEventListener("input", function () {
-        var filter = this.value.toLowerCase();
-        var rows = document.getElementById("lacunasTable").getElementsByTagName("tr");
+    document.addEventListener("DOMContentLoaded", function() {
+        const selects = document.querySelectorAll('select[name="status"]');
 
-        for (var i = 0; i < rows.length; i++) {
-            var cells = rows[i].getElementsByTagName("td");
-            var schoolCell = cells[1].textContent.toLowerCase();
-            var subjectCell = cells[2].textContent.toLowerCase();
+        selects.forEach(select => {
+            select.addEventListener('change', function() {
+                const lacunaId = this.getAttribute('data-lacuna-id');
+                const newStatus = this.value;
 
-            if (schoolCell.indexOf(filter) > -1 || subjectCell.indexOf(filter) > -1) {
-                rows[i].style.display = "";
-            } else {
-                rows[i].style.display = "none";
-            }
-        }
+                fetch(`/lacuna/${lacunaId}/alterar_status/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                    },
+                    body: JSON.stringify({ 'status': newStatus })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status) {
+                        alert('Status atualizado com sucesso!');
+                    } else {
+                        alert('Erro ao atualizar o status!');
+                    }
+                })
+                .catch(error => {
+                    console.error('Erro:', error);
+                    alert('Erro ao atualizar o status!');
+                });
+            });
+        });
     });
 </script>
-
 
 {% endblock %}
