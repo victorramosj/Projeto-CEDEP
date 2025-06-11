@@ -65,17 +65,17 @@ Lacunas
     padding: 11px;
 }
 
-/* Select de Status da tabela*/
-
+/* Estilo para o select de status */
 table .form-select {
     color: #333; 
     padding: 5px 10px;     
     border-radius: 5px;       
     border: none;
+    transition: background-color 0.3s ease;  /* Transição suave para a cor */
 }
 
-/* Cor diferente para cada status */
-.form-select .pendente {
+/* Cores para os diferentes status */
+.pendente {
     background-color: #ffcccc !important; /* Pendente */
 }
 
@@ -86,14 +86,13 @@ table .form-select {
 .andamento {
     background-color: #ffffcc !important; /* Em Andamento */
 }
-
 </style>
 {% endblock %}
 
 
 {% block content %}
-<div class="container mt-2 ">
-    <h3>Lacunas ({{ lacunas_total }})</h3>
+<div class="container mt-4">
+    <h3>Lacunas ({{ todas_lacunas }})</h3>
 
     <div class="col-12">
         <div class="d-flex justify-content-between gap-2">
@@ -185,50 +184,5 @@ table .form-select {
         </ul>
     </nav>
 </div>
-
-<script>
-    document.addEventListener("DOMContentLoaded", function () {
-        const selects = document.querySelectorAll('select[name="status"]');
-
-        selects.forEach(select => {
-            select.addEventListener('change', function () {
-                const lacunaId = this.getAttribute('data-lacuna-id');
-                const newStatus = this.value;
-
-                // Atualiza a cor do fundo da linha de acordo com o status
-                const row = this.closest('tr');
-                row.classList.remove('status-P', 'status-R', 'status-E');
-                if (newStatus == 'P') {
-                    row.classList.add('status-P');
-                } else if (newStatus == 'R') {
-                    row.classList.add('status-R');
-                } else if (newStatus == 'E') {
-                    row.classList.add('status-E');
-                }
-
-                fetch(`/lacuna/${lacunaId}/alterar_status/`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
-                    },
-                    body: JSON.stringify({ 'status': newStatus })
-                })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.status) {
-                            alert('Status atualizado com sucesso!');
-                        } else {
-                            alert('Erro ao atualizar o status!');
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Erro:', error);
-                        alert('Erro ao atualizar o status!');
-                    });
-            });
-        });
-    });
-</script>
 
 {% endblock %}

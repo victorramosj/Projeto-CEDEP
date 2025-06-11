@@ -14,6 +14,8 @@ from django.views.generic import TemplateView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.decorators import login_required
 
+from django.core.paginator import Paginator
+
 from monitoramento.models import GREUser, Escola, Setor
 
 
@@ -100,6 +102,7 @@ class EscolaDashboardView(LoginRequiredMixin, TemplateView):
                 'problemas_pendentes': problemas_pendentes,
                 'problemas_andamento': problemas_andamento,
                 'problemas_este_mes': problemas_este_mes,
+               
             })
 
         return context
@@ -203,7 +206,7 @@ def problema_dashboard_view(request):
     form = ProblemaUsuarioForm()
     return render(request, 'escolas/escola_dashboard.html', {'form': form})  # type: ignore
 
-from django.core.paginator import Paginator
+
 
 # TELA LACUNA CGAF/UDP
 def tela_lacuna_view(request):
@@ -216,12 +219,16 @@ def tela_lacuna_view(request):
     page_number = request.GET.get('page')
     lacunas_page = paginator.get_page(page_number)
 
+    todas_lacunas = lacunas_list.count()
+
     # Passa as lacunas paginadas para o template
-    return render(request, 'tela_lacunas.html', {'lacunas_page': lacunas_page})
+    return render(request, 'tela_lacunas.html', {
+        'lacunas_page': lacunas_page,
+        'todas_lacunas': todas_lacunas,  # <--- ESSENCIAL
+    })
 
 
-
-# TELA PROBLEMA
+# TELA PROBLEMA CGAF/UDP
 def tela_problema_view(request):
     # Obtém todas as lacunas da escola
     problemas_list = ProblemaUsuario.objects.all()
@@ -232,8 +239,15 @@ def tela_problema_view(request):
     page_number = request.GET.get('page')
     problemas_page = paginator.get_page(page_number)
 
+    total_problemas = problemas_list.count()
+
     # Passa as lacunas paginadas para o template
-    return render(request, 'tela_problemas.html', {'problemas_page': problemas_page})
+    return render(request, 'tela_problemas.html',  {
+        'problemas_page': problemas_page,
+        'total_problemas': total_problemas,  # <--- ESSENCIAL
+    })
+   
+
 
 # VIEWS AVISOS *********************************************************
 
