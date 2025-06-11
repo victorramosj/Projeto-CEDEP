@@ -6,63 +6,11 @@ Lacunas
 {% endblock %}
 
 {% block extra_style %}
+<link rel="stylesheet" href="{% static 'css/tabelas.css' %}" />
 <style>
-.input-group {
-    width: 60%;
-    height: 45px;
-}
-
+/**/
 .form-select {
     width: 160px;
-}
-
-/* Estilo para os botões de ação -----------------------------------*/
-.btnAcao {
-    width: 180px;
-}
-
-.btn-source {
-    width: 100px;
-    background-color: white;
-    border: none;
-}
-
-.btn-source:hover {
-    background-color: #f3f3f3;
-}
-
-.btn-info {
-    background-color: #0cbbdf;
-    color: white;
-    font-weight: bold;
-}
-
-.btn-info:hover {
-    background-color: #109ab6;
-    color: white;
-}
-
-.btn-danger {
-    font-weight: bold;
-}
-
-/* Tabela de Lacunas ---------------------------------------------- */
-.table th,
-.table td {
-    text-align: left;
-    vertical-align: middle;
-    font-size: 14px;
-}
-
-.table th {
-    background-color: #003366;
-    color: white;
-    font-size: 17px;
-    padding: 12px;
-}
-
-.table td {
-    padding: 11px;
 }
 
 /* Estilo para o select de status */
@@ -74,18 +22,6 @@ table .form-select {
     transition: background-color 0.3s ease;  /* Transição suave para a cor */
 }
 
-/* Cores para os diferentes status */
-.pendente {
-    background-color: #ffcccc !important; /* Pendente */
-}
-
-.resolvido {
-    background-color: #ccffcc !important; /* Resolvido */
-}
-
-.andamento {
-    background-color: #ffffcc !important; /* Em Andamento */
-}
 </style>
 {% endblock %}
 
@@ -148,10 +84,13 @@ table .form-select {
                         <td class="text-start">{{ lacuna.criado_em|date:"d/m/Y" }}</td>
                         <td>
                             <select class="form-select" aria-label="Filtro Status"
-                                data-lacuna-id="{{ lacuna.id }}">
-                                <option class="pendente" value="P" {% if lacuna.status == 'P' %} selected {% endif %}>Pendente</option>
-                                <option class="resolvido" value="R" {% if lacuna.status == 'R' %} selected {% endif %}>Resolvido</option>
-                                <option class="andamento" value="E" {% if lacuna.status == 'E' %} selected {% endif %}>Em Andamento</option>
+                                data-lacuna-id="{{ lacuna.id }}"
+                                {% if lacuna.status == 'P'%} style="background-color: #ffcccc !important;" {% endif %} 
+                                {% if lacuna.status == 'R'%} style="background-color: #ccffcc !important;" {% endif %} 
+                                {% if lacuna.status == 'E'%} style="background-color: #ffffcc !important;" {% endif %} >
+                                <option value="P" {% if lacuna.status == 'P' %} selected {% endif %}>Pendente</option>
+                                <option value="R" {% if lacuna.status == 'R' %} selected {% endif %}>Resolvido</option>
+                                <option value="E" {% if lacuna.status == 'E' %} selected {% endif %}>Em Andamento</option>
                             </select>
                         </td>
                     </tr>
@@ -184,5 +123,39 @@ table .form-select {
         </ul>
     </nav>
 </div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const selects = document.querySelectorAll('select[name="status"]');
+
+        selects.forEach(select => {
+            select.addEventListener('change', function() {
+                const lacunaId = this.getAttribute('data-lacuna-id');
+                const newStatus = this.value;
+
+                fetch(`/lacuna/${lacunaId}/alterar_status/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                    },
+                    body: JSON.stringify({ 'status': newStatus })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status) {
+                        alert('Status atualizado com sucesso!');
+                    } else {
+                        alert('Erro ao atualizar o status!');
+                    }
+                })
+                .catch(error => {
+                    console.error('Erro:', error);
+                    alert('Erro ao atualizar o status!');
+                });
+            });
+        });
+    });
+</script>
 
 {% endblock %}

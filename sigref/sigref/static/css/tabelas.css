@@ -4,7 +4,7 @@
 }
 
 .form-select {
-    width: 200px !important;
+    width: 160px;
 }
 
 /* Estilo para os botões de ação -----------------------------------*/
@@ -12,9 +12,14 @@
     width: 180px;
 }
 
-.btn-source{
+.btn-source {
     width: 100px;
-    background-color: #0cbbdf;
+    background-color: white;
+    border: none;
+}
+
+.btn-source:hover {
+    background-color: #f3f3f3;
 }
 
 .btn-info {
@@ -31,7 +36,6 @@
 .btn-danger {
     font-weight: bold;
 }
-
 
 /* Tabela de Lacunas ---------------------------------------------- */
 .table th,
@@ -51,6 +55,4 @@
 .table td {
     padding: 11px;
 }
-
-/* Select de Status da tabela*/
 
