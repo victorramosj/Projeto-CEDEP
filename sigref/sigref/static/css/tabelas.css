@@ -4,12 +4,17 @@
 }
 
 .form-select {
-    width: 160px;
+    width: 200px !important;
 }
 
 /* Estilo para os botões de ação -----------------------------------*/
 .btnAcao {
     width: 180px;
+}
+
+.btn-source{
+    width: 100px;
+    background-color: #0cbbdf;
 }
 
 .btn-info {
@@ -26,6 +31,7 @@
 .btn-danger {
     font-weight: bold;
 }
+
 
 /* Tabela de Lacunas ---------------------------------------------- */
 .table th,

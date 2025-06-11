@@ -6,7 +6,88 @@ Lacunas
 {% endblock %}
 
 {% block extra_style %}
-<link rel="stylesheet" href="{% static 'css/tabelas.css' %}" />
+<style>
+.input-group {
+    width: 60%;
+    height: 45px;
+}
+
+.form-select {
+    width: 160px;
+}
+
+/* Estilo para os botões de ação -----------------------------------*/
+.btnAcao {
+    width: 180px;
+}
+
+.btn-source {
+    width: 100px;
+    background-color: white;
+    border: none;
+}
+
+.btn-source:hover {
+    background-color: #f3f3f3;
+}
+
+.btn-info {
+    background-color: #0cbbdf;
+    color: white;
+    font-weight: bold;
+}
+
+.btn-info:hover {
+    background-color: #109ab6;
+    color: white;
+}
+
+.btn-danger {
+    font-weight: bold;
+}
+
+/* Tabela de Lacunas ---------------------------------------------- */
+.table th,
+.table td {
+    text-align: left;
+    vertical-align: middle;
+    font-size: 14px;
+}
+
+.table th {
+    background-color: #003366;
+    color: white;
+    font-size: 17px;
+    padding: 12px;
+}
+
+.table td {
+    padding: 11px;
+}
+
+/* Select de Status da tabela*/
+
+table .form-select {
+    color: #333; 
+    padding: 5px 10px;     
+    border-radius: 5px;       
+    border: none;
+}
+
+/* Cor diferente para cada status */
+.form-select .pendente {
+    background-color: #ffcccc !important; /* Pendente */
+}
+
+.resolvido {
+    background-color: #ccffcc !important; /* Resolvido */
+}
+
+.andamento {
+    background-color: #ffffcc !important; /* Em Andamento */
+}
+
+</style>
 {% endblock %}
 
 
@@ -17,24 +98,24 @@ Lacunas
     <div class="col-12">
         <div class="d-flex justify-content-between gap-2">
             <!-- Barra de pesquisa -->
-            <div class="input-group" style="width: 50%;">
-                <span class="input-group-text"><i class="fas fa-search"></i></span>
-                <input type="text" class="form-control" placeholder="Pesquise por Escola ou Disciplina...">
+            <div class="input-group">
+                <button type="submit" class="btnAcao btn btn-source"><i class="fas fa-search"></i></button>
+                <input type="text" class="form-control" id="search-input" placeholder="Pesquise por Escola ou Disciplina...">
             </div>
 
             <div class="d-flex gap-2">
                 <!-- Filtros -->
-                <select class="form-select" aria-label="Filtro Data">
-                    <option selected>Data</option>
-                    <option value="1">Última semana</option>
-                    <option value="2">Último mês</option>
-                    <option value="3">Último ano</option>
+                <select class="form-select" name="data" aria-label="Filtro Data">
+                    <option value="" {% if not request.GET.data %}selected{% endif %}>Data</option>
+                    <option value="1" {% if request.GET.data == '1' %}selected{% endif %}>Última semana</option>
+                    <option value="2" {% if request.GET.data == '2' %}selected{% endif %}>Último mês</option>
+                    <option value="3" {% if request.GET.data == '3' %}selected{% endif %}>Último ano</option>
                 </select>
-                <select class="form-select" aria-label="Filtro Status">
-                    <option selected>Status</option>
-                    <option value="1">Resolvido</option>
-                    <option value="2">Em Andamento</option>
-                    <option value="3">Pendente</option>
+                <select class="form-select" name="status" aria-label="Filtro Status">
+                    <option value="" {% if not request.GET.status %}selected{% endif %}>Status</option>
+                    <option value="P" {% if lacuna.status == 'P' %} selected {% endif %}>Pendente</option>
+                    <option value="R" {% if lacuna.status == 'R' %} selected {% endif %}>Resolvido</option>
+                    <option value="E" {% if lacuna.status == 'E' %} selected {% endif %}>Em Andamento</option>
                 </select>
             </div>
 
@@ -67,10 +148,11 @@ Lacunas
                         <td class="text-start">{{ lacuna.carga_horaria }}</td>
                         <td class="text-start">{{ lacuna.criado_em|date:"d/m/Y" }}</td>
                         <td>
-                            <select class="form-select" aria-label="Filtro Status" data-lacuna-id="{{ lacuna.id }}">
-                                <option value="P" {% if lacuna.status == 'P' %} selected {% endif %}>Pendente</option>
-                                <option value="R" {% if lacuna.status == 'R' %} selected {% endif %}>Resolvido</option>
-                                <option value="E" {% if lacuna.status == 'E' %} selected {% endif %}>Em Andamento</option>
+                            <select class="form-select" aria-label="Filtro Status"
+                                data-lacuna-id="{{ lacuna.id }}">
+                                <option class="pendente" value="P" {% if lacuna.status == 'P' %} selected {% endif %}>Pendente</option>
+                                <option class="resolvido" value="R" {% if lacuna.status == 'R' %} selected {% endif %}>Resolvido</option>
+                                <option class="andamento" value="E" {% if lacuna.status == 'E' %} selected {% endif %}>Em Andamento</option>
                             </select>
                         </td>
                     </tr>
@@ -112,6 +194,17 @@ Lacunas
             select.addEventListener('change', function () {
                 const lacunaId = this.getAttribute('data-lacuna-id');
                 const newStatus = this.value;
+
+                // Atualiza a cor do fundo da linha de acordo com o status
+                const row = this.closest('tr');
+                row.classList.remove('status-P', 'status-R', 'status-E');
+                if (newStatus == 'P') {
+                    row.classList.add('status-P');
+                } else if (newStatus == 'R') {
+                    row.classList.add('status-R');
+                } else if (newStatus == 'E') {
+                    row.classList.add('status-E');
+                }
 
                 fetch(`/lacuna/${lacunaId}/alterar_status/`, {
                     method: 'POST',
