@@ -12,6 +12,10 @@ from .views import (
     relatar_problema_view,
     problema_dashboard_view,
     UpdateStatusLacuna,
+    UpdateStatusProblema,
+    tela_lacuna_view,
+    tela_problema_view,
+
 )
 
 # Criando o roteador para as views baseadas em viewsets
@@ -33,10 +37,13 @@ urlpatterns = [
     path('relatar-problema/<int:escola_id>/', views.relatar_problema_view, name='relatar_problema'),
     path('relatar-lacuna/<int:escola_id>/', views.relatar_lacuna_view, name='relatar_lacuna'),  
     path('problemas/lacunas/', views.tela_lacuna_view, name='tela_lacunas'),
+    path('problema/problemas/', views.tela_problema_view, name='tela_problemas'),
 
     #API Tela Lacuna
     path('lacuna/<int:lacuna_id>/alterar_status/', UpdateStatusLacuna.as_view(), name='alterar_status_lacuna'),
 
+    #API Tela Problema
+   
     #AVISOS
     path('avisos/criar/', criar_aviso_view, name='criar_aviso'),
     path('avisos/', views.listar_avisos_view, name='listar_avisos'),

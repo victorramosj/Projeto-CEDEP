@@ -120,6 +120,20 @@ class UpdateStatusLacuna(APIView):
             return Response(LacunaSerializer(lacuna).data, status=status.HTTP_200_OK)
         else:
             return Response({"detail": "Status inválido"}, status=status.HTTP_400_BAD_REQUEST)
+        
+
+class UpdateStatusProblema(APIView):
+    def post(self, request, problema_id):
+        problema = get_object_or_404(ProblemaUsuario, id=problema_id)
+        new_status = request.data.get('status')
+
+        if new_status in ['P', 'R', 'E']:  # Validar o status
+            problema.status = new_status
+            problema.save()
+            return Response(ProblemaUsuarioSerializer(problema).data, status=status.HTTP_200_OK)
+        else:
+            return Response({"detail": "Status inválido"}, status=status.HTTP_400_BAD_REQUEST)
+        
 
 # views.py
 from rest_framework import viewsets
@@ -204,6 +218,22 @@ def tela_lacuna_view(request):
 
     # Passa as lacunas paginadas para o template
     return render(request, 'tela_lacunas.html', {'lacunas_page': lacunas_page})
+
+
+
+# TELA PROBLEMA
+def tela_problema_view(request):
+    # Obtém todas as lacunas da escola
+    problemas_list = ProblemaUsuario.objects.all()
+
+    # Cria o objeto paginator para limitar a 9 lacunas por página
+    paginator = Paginator(problemas_list, 9)
+
+    page_number = request.GET.get('page')
+    problemas_page = paginator.get_page(page_number)
+
+    # Passa as lacunas paginadas para o template
+    return render(request, 'tela_problemas.html', {'problemas_page': problemas_page})
 
 # VIEWS AVISOS *********************************************************
 
