@@ -1,12 +1,13 @@
 from rest_framework import viewsets, permissions
 from .models import Lacuna, ProblemaUsuario, AvisoImportante
 from .serializers import LacunaSerializer, ProblemaUsuarioSerializer
-from .forms import ProblemaUsuarioForm, LacunaForm # importe seu formulário
+from .forms import ProblemaUsuarioForm, LacunaForm, AvisoForm # importe seu formulário
 
 from django.shortcuts import render, redirect, get_object_or_404
 from django.utils import timezone
 from django.db.models import Q
 from django.http import HttpResponseRedirect
+from django.http import HttpResponse
 from django.utils import timezone
 
 from django.views.generic import TemplateView
@@ -14,10 +15,6 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.decorators import login_required
 
 from monitoramento.models import GREUser, Escola, Setor
-
-from .models import Lacuna, ProblemaUsuario, AvisoImportante
-from .serializers import LacunaSerializer, ProblemaUsuarioSerializer
-from .forms import ProblemaUsuarioForm, LacunaForm, AvisoForm
 
 
 
@@ -60,13 +57,16 @@ class EscolaDashboardView(LoginRequiredMixin, TemplateView):
             agora = timezone.now()
 
             # Estatísticas de lacunas
+            todas_lacunas = Lacuna.objects.all()
+            lacunas_total = todas_lacunas.count()
+
             total_lacunas = Lacuna.objects.filter(escola=escola).count() # Contagem de lacunas para a escola
             lacunas_resolvidas = Lacuna.objects.filter(escola= escola, status='R').count()
             lacunas_pendentes = Lacuna.objects.filter(escola= escola,status='P').count()
             lacunas_andamento = Lacuna.objects.filter(escola= escola,status='E').count()
             # Contagem de problemas criados neste mês
             lacunas_este_mes = Lacuna.objects.filter(escola= escola,criado_em__month=agora.month, criado_em__year=agora.year).count()
-          
+            
             # Estatísticas de problemas 
             total_problemas = ProblemaUsuario.objects.filter(escola=escola).count() # Contagem de problemas dos usuários associados à escola9
             problemas = ProblemaUsuario.objects.filter(escola=escola)
@@ -85,11 +85,17 @@ class EscolaDashboardView(LoginRequiredMixin, TemplateView):
                 'setor': Setor.objects.all(),
                 'form_problema': ProblemaUsuarioForm(),
                 'form_lacuna': LacunaForm(),
-                'total_lacunas': total_lacunas,
+                'todas_lacunas': todas_lacunas,
+                'lacunas_total': lacunas_total,  # Total de lacunas geral
+
+                #CONTEXTO DE LACUNAS ESPECIFICO POR ESCOLA
+                'total_lacunas': total_lacunas, # Total de lacuna especifico por escola
                 'lacunas_resolvidas': lacunas_resolvidas,
                 'lacunas_pendentes': lacunas_pendentes,
                 'lacunas_andamento': lacunas_andamento,
                 'lacunas_este_mes': lacunas_este_mes,
+
+                #CONTEXTO DE PROBLEMAS ESPECIFICO POR ESCOLA
                 'total_problemas': total_problemas,
                 'problemas_resolvidos': problemas_resolvidos,
                 'problemas_pendentes': problemas_pendentes,
@@ -99,6 +105,36 @@ class EscolaDashboardView(LoginRequiredMixin, TemplateView):
 
         return context
 
+# Rest de lacuna para Javascript
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
+
+class UpdateStatusLacuna(APIView):
+    def post(self, request, lacuna_id):
+        lacuna = get_object_or_404(Lacuna, id=lacuna_id)
+        new_status = request.data.get('status')
+
+        if new_status in ['P', 'R', 'E']:  # Validar o status
+            lacuna.status = new_status
+            lacuna.save()
+            return Response(LacunaSerializer(lacuna).data, status=status.HTTP_200_OK)
+        else:
+            return Response({"detail": "Status inválido"}, status=status.HTTP_400_BAD_REQUEST)
+        
+
+class UpdateStatusProblema(APIView):
+    def post(self, request, problema_id):
+        problema = get_object_or_404(ProblemaUsuario, id=problema_id)
+        new_status = request.data.get('status')
+
+        if new_status in ['P', 'R', 'E']:  # Validar o status
+            problema.status = new_status
+            problema.save()
+            return Response(ProblemaUsuarioSerializer(problema).data, status=status.HTTP_200_OK)
+        else:
+            return Response({"detail": "Status inválido"}, status=status.HTTP_400_BAD_REQUEST)
+        
 
 # views.py
 from rest_framework import viewsets
@@ -167,11 +203,29 @@ def relatar_problema_view(request, escola_id):
 def problema_dashboard_view(request):
     form = ProblemaUsuarioForm()
     return render(request, 'escolas/escola_dashboard.html', {'form': form})  # type: ignore
+
 from django.core.paginator import Paginator
-from django.contrib.auth.decorators import login_required
-from django.shortcuts import render
-from django.http import HttpResponseForbidden
-from .models import AvisoImportante
+
+# TELA LACUNA CGAF/UDP
+def tela_lacuna_view(request):
+    # Obtém todas as lacunas da escola
+    lacunas_list = Lacuna.objects.all()
+
+    # Cria o objeto paginator para limitar a 9 lacunas por página
+    paginator = Paginator(lacunas_list, 9)
+
+    page_number = request.GET.get('page')
+    lacunas_page = paginator.get_page(page_number)
+
+    # Passa as lacunas paginadas para o template
+    return render(request, 'tela_lacunas.html', {'lacunas_page': lacunas_page})
+
+# TELA PROBLEMA
+def tela_problema_view(request):
+    
+    return render(request, 'tela_problemas.html')
+
+# VIEWS AVISOS *********************************************************
 
 @login_required
 def listar_avisos_view(request):

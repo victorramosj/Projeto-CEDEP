@@ -16,7 +16,7 @@ class LacunaAdmin(admin.ModelAdmin):
 # ProblemaUsuario Admin: exibe nome completo do GREUser, hierarquia do setor e data de criação
 @admin.register(ProblemaUsuario)
 class ProblemaUsuarioAdmin(admin.ModelAdmin):
-    list_display = ('nome_completo', 'setor_hierarquia', 'escola', 'status', 'criado_em')
+    list_display = ('descricao','nome_completo', 'setor_hierarquia', 'escola', 'status', 'criado_em')
     list_filter = ('setor', 'status', 'usuario__tipo_usuario') 
     search_fields = ('usuario__nome_completo', 'setor__nome', 'descricao', 'escola__nome')
     date_hierarchy = 'criado_em'
