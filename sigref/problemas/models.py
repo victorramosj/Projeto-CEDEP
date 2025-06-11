@@ -74,6 +74,7 @@ class ProblemaUsuario(models.Model):
 from django.db import models
 from django.utils import timezone
 
+
 class AvisoImportante(models.Model):
     PRIORIDADES = [
         ('baixa', 'Baixa'),

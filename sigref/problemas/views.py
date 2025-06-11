@@ -198,12 +198,6 @@ from django.http import HttpResponseForbidden
 from .models import AvisoImportante, Escola
 from django.contrib.auth.decorators import login_required
 
-from django.shortcuts import render, redirect
-from django.contrib import messages
-from django.http import HttpResponseForbidden
-from .models import AvisoImportante, Escola, Setor
-from django.contrib.auth.decorators import login_required
-
 @login_required
 def criar_aviso_view(request):
     gre_user = request.user.greuser
@@ -213,31 +207,25 @@ def criar_aviso_view(request):
         messages.error(request, "Usuários do tipo 'Escola' não têm permissão para criar avisos.")
         return redirect('listar_avisos')  # Redireciona para a página de avisos
 
-    # Obtém todas as escolas e setores disponíveis para seleção
-    escolas = Escola.objects.all()
-    setores = Setor.objects.all()  # Recupera todos os setores disponíveis
+    escolas = Escola.objects.all()  # Pega todas as escolas disponíveis para selecionar
 
     if request.method == 'POST':
         titulo = request.POST.get('titulo')
         mensagem = request.POST.get('mensagem')
         prioridade = request.POST.get('prioridade', 'normal')
         data_expiracao = request.POST.get('data_expiracao')
-
-        # Obtém as escolas e setores selecionados
-        escolas_ids = request.POST.getlist('escola_id')  # Escolas selecionadas
-        setores_ids = request.POST.getlist('setor_id')  # Setores selecionados
+        escolas_ids = request.POST.getlist('escola_id')  # Obtém as escolas selecionadas
 
         # Validação simples para garantir que o título e a mensagem não estão vazios
         if not titulo or not mensagem:
             messages.error(request, "O título e a mensagem são obrigatórios.")
-            return render(request, 'avisos/criar_aviso.html', {'escolas': escolas, 'setores': setores})
+            return render(request, 'avisos/criar_aviso.html', {'escolas': escolas})
 
-        # Validar se ao menos uma escola ou setor foi selecionado
-        if not escolas_ids and not setores_ids:
-            messages.error(request, "Pelo menos uma escola ou um setor precisa ser selecionado.")
-            return render(request, 'avisos/criar_aviso.html', {'escolas': escolas, 'setores': setores})
+        if not escolas_ids:  # Verifica se ao menos uma escola foi selecionada
+            messages.error(request, "Pelo menos uma escola precisa ser selecionada.")
+            return render(request, 'avisos/criar_aviso.html', {'escolas': escolas})
 
-        # Criando o aviso para as escolas selecionadas
+        # Criando o aviso
         for escola_id in escolas_ids:
             escola = Escola.objects.get(id=escola_id)  # Obtém a escola correspondente ao ID
             AvisoImportante.objects.create(
@@ -250,24 +238,11 @@ def criar_aviso_view(request):
                 data_expiracao=data_expiracao if data_expiracao else None
             )
 
-        # Criando o aviso para os setores selecionados
-        for setor_id in setores_ids:
-            setor = Setor.objects.get(id=setor_id)  # Obtém o setor correspondente ao ID
-            AvisoImportante.objects.create(
-                titulo=titulo,
-                mensagem=mensagem,
-                prioridade=prioridade,
-                criado_por=gre_user,
-                setor_destino=setor,  # Associando o aviso ao setor
-                ativo=True,
-                data_expiracao=data_expiracao if data_expiracao else None
-            )
-
         messages.success(request, "Aviso criado com sucesso!")
         return redirect('listar_avisos')  # Redireciona para a página de avisos
 
-    # Quando for GET, passa as escolas e setores para o template
-    return render(request, 'avisos/criar_aviso.html', {'escolas': escolas, 'setores': setores})
+    # Quando for GET, passa as escolas para o template
+    return render(request, 'avisos/criar_aviso.html', {'escolas': escolas})
 
 from django.shortcuts import get_object_or_404, redirect
 from django.contrib import messages
