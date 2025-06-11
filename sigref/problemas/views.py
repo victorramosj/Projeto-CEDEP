@@ -249,6 +249,7 @@ def listar_avisos_view(request):
 from django.shortcuts import render, redirect
 from django.contrib import messages
 from django.http import HttpResponseForbidden
+from django.utils import timezone
 from .models import AvisoImportante, Escola
 from django.contrib.auth.decorators import login_required
 
@@ -279,6 +280,13 @@ def criar_aviso_view(request):
             messages.error(request, "Pelo menos uma escola precisa ser selecionada.")
             return render(request, 'avisos/criar_aviso.html', {'escolas': escolas})
 
+        # Converte a data de expiração para o formato datetime
+        if data_expiracao:
+            # Converte a data de expiração para datetime, com a hora também
+            data_expiracao = timezone.datetime.strptime(data_expiracao, "%Y-%m-%dT%H:%M")
+        else:
+            data_expiracao = None
+
         # Criando o aviso
         for escola_id in escolas_ids:
             escola = Escola.objects.get(id=escola_id)  # Obtém a escola correspondente ao ID
@@ -289,7 +297,7 @@ def criar_aviso_view(request):
                 criado_por=gre_user,
                 escola=escola,  # Associando o aviso à escola
                 ativo=True,
-                data_expiracao=data_expiracao if data_expiracao else None
+                data_expiracao=data_expiracao  # Salvando a data e hora de expiração
             )
 
         messages.success(request, "Aviso criado com sucesso!")
@@ -297,6 +305,7 @@ def criar_aviso_view(request):
 
     # Quando for GET, passa as escolas para o template
     return render(request, 'avisos/criar_aviso.html', {'escolas': escolas})
+
 
 from django.shortcuts import get_object_or_404, redirect
 from django.contrib import messages
