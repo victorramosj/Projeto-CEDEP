@@ -313,41 +313,37 @@ from django.contrib.auth.decorators import login_required
 from .models import AvisoImportante
 from .forms import AvisoForm
 
-# views.py
 from django.shortcuts import get_object_or_404, render, redirect
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from .models import AvisoImportante
 from .forms import AvisoForm
-
-from django.http import JsonResponse
+from .models import AvisoImportante
 
 @login_required
 def editar_aviso_view(request, aviso_id):
     aviso = get_object_or_404(AvisoImportante, id=aviso_id)
     gre_user = request.user.greuser
     
-    # Verificação de permissão
+    # Verificação de permissão para garantir que o usuário possa editar o aviso
     if aviso.criado_por != gre_user and not gre_user.is_admin():
-        return JsonResponse({
-            'errors': ['Você não tem permissão para editar este aviso.']
-        }, status=403)
+        messages.error(request, "Você não tem permissão para editar este aviso.")
+        return redirect('listar_avisos')
 
+    # Se for um POST, tentamos editar o aviso
     if request.method == 'POST':
         form = AvisoForm(request.POST, instance=aviso)
         if form.is_valid():
             form.save()
-            return JsonResponse({'success': 'Aviso editado com sucesso!'})
+            messages.success(request, "Aviso editado com sucesso!")
+            return redirect('listar_avisos')  # Redireciona após salvar
         else:
-            errors = []
-            for field, error_list in form.errors.items():
-                for error in error_list:
-                    errors.append(f"{field}: {error}")
-            return JsonResponse({'errors': errors}, status=400)
+            messages.error(request, "Houve um erro ao editar o aviso.")
+            return render(request, 'avisos/editar_aviso.html', {'form': form, 'aviso': aviso})
     
-    return JsonResponse({
-        'errors': ['Método não permitido']
-    }, status=405)
+    # Se for um GET, mostramos o formulário de edição
+    form = AvisoForm(instance=aviso)
+    return render(request, 'avisos/editar_aviso.html', {'form': form, 'aviso': aviso})
+
 
 
 
