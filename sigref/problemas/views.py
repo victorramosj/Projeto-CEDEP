@@ -219,10 +219,21 @@ def tela_lacuna_view(request):
     # Passa as lacunas paginadas para o template
     return render(request, 'tela_lacunas.html', {'lacunas_page': lacunas_page})
 
+
+
 # TELA PROBLEMA
 def tela_problema_view(request):
-    
-    return render(request, 'tela_problemas.html')
+    # Obtém todas as lacunas da escola
+    problemas_list = ProblemaUsuario.objects.all()
+
+    # Cria o objeto paginator para limitar a 9 lacunas por página
+    paginator = Paginator(problemas_list, 9)
+
+    page_number = request.GET.get('page')
+    problemas_page = paginator.get_page(page_number)
+
+    # Passa as lacunas paginadas para o template
+    return render(request, 'tela_problemas.html', {'problemas_page': problemas_page})
 
 # VIEWS AVISOS *********************************************************
 
