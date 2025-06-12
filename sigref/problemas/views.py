@@ -252,23 +252,36 @@ def tela_problema_view(request):
 
 # VIEWS AVISOS *********************************************************
 
+from django.shortcuts import render
+from django.contrib.auth.decorators import login_required
+from .models import AvisoImportante # Certifique-se que o import está correto
+from django.core.paginator import Paginator
+
 @login_required
 def listar_avisos_view(request):
     gre_user = request.user.greuser
 
-    # Administradores podem ver todos os avisos
     if gre_user.is_admin():
-        avisos = AvisoImportante.objects.all()
+        avisos_queryset = AvisoImportante.objects.all()
     else:
-        # Outros usuários podem ver apenas os avisos que eles mesmos criaram
-        avisos = AvisoImportante.objects.filter(criado_por=gre_user)
+        avisos_queryset = AvisoImportante.objects.filter(criado_por=gre_user)
 
-    # Aplicando a paginação
-    paginator = Paginator(avisos, 9)  # 9 avisos por página
-    page_number = request.GET.get('page')  # Número da página atual
-    avisos_paginated = paginator.get_page(page_number)  # Obtemos os avisos para a página atual
+    prioridade_filtro = request.GET.get('prioridade', None)
 
-    return render(request, 'problemas/listar_avisos.html', {'avisos': avisos_paginated})
+    if prioridade_filtro and prioridade_filtro in ['alta', 'normal', 'baixa']:
+        avisos_queryset = avisos_queryset.filter(prioridade=prioridade_filtro)
+    avisos_ordenados = avisos_queryset.order_by('-data_criacao')
+
+    paginator = Paginator(avisos_ordenados, 9)  
+    page_number = request.GET.get('page')
+    avisos_paginated = paginator.get_page(page_number)
+
+    context = {
+        'avisos': avisos_paginated,
+        'prioridade_atual': prioridade_filtro, 
+    }
+
+    return render(request, 'problemas/listar_avisos.html', context)
 
 
 from django.shortcuts import render, redirect

@@ -39,22 +39,17 @@ urlpatterns = [
 
     # API Tela Lacuna
     path('lacuna/<int:lacuna_id>/alterar_status/', UpdateStatusLacuna.as_view(), name='alterar_status_lacuna'),
-
     # API Tela Problema
     path('problema/problemas/', views.tela_problema_view, name='tela_problema'),
-
+    
     # AVISOS
     path('avisos/criar/', criar_aviso_view, name='criar_aviso'),
-    
     # URL para listar avisos (apenas uma vez)
     path('avisos/', views.listar_avisos_view, name='listar_avisos'),
-
     # URL para editar aviso
     path('avisos/editar/<int:aviso_id>/', views.editar_aviso_view, name='editar_aviso'),
-
     # URL para apagar aviso
     path('avisos/apagar/<int:aviso_id>/', views.apagar_aviso_view, name='apagar_aviso'),
-
     # URL para apagar vários avisos
     path('apagar_varios_avisos/', views.apagar_varios_avisos, name='apagar_varios_avisos'),
 ]

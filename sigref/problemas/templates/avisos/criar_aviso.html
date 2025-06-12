@@ -4,37 +4,54 @@
 
 {% block content %}
 <style>
-    /* [NOVO] Classe para forçar a quebra de texto dentro dos badges */
+    /* Estilo para garantir que o texto quebre corretamente dentro dos badges */
     .badge-wrap {
-        white-space: normal; /* Permite que o texto quebre para a próxima linha */
-        word-break: break-all; /* Força a quebra de palavras muito longas */
-        text-align: left;    /* Alinha o texto à esquerda quando quebrado, para melhor leitura */
-        line-height: 1.4;    /* Melhora o espaçamento entre as linhas quando o texto quebra */
+        white-space: normal;
+        word-break: break-word;
+        text-align: left;
+        line-height: 1.4;
+        max-width: 100%; /* Garante que o badge não exceda o contêiner do slide */
     }
 
-    /* Estilo para garantir que o carrossel tenha uma altura mínima */
+    /* [MELHORADO] Estilos para o contêiner do carrossel na página */
     #carouselEscolasContainer .carousel {
         background-color: #f8f9fa;
         border-radius: 0.375rem;
         border: 1px solid #dee2e6;
-        padding-top: 1rem;
+        padding: 1rem 0;
         min-height: 120px;
         display: flex;
         align-items: center;
         justify-content: center;
     }
+
+    /* Estilos para os controles do carrossel */
+    .carousel-dark .carousel-control-prev-icon,
+    .carousel-dark .carousel-control-next-icon {
+        filter: invert(0.7) grayscale(100);
+    }
     .carousel-dark .carousel-indicators [data-bs-target] {
-        background-color: #000;
+        background-color: #555;
     }
 
-    /* [MODIFICADO] Adicionado padding horizontal (4rem) para não sobrepor as setas */
+    /* Conteúdo de cada slide do carrossel */
     .carousel-item-content {
         display: flex;
         flex-wrap: wrap;
         gap: 0.5rem;
         justify-content: center;
-        /* Adiciona padding para afastar os badges das setas de controle */
-        padding: 0 4rem 2.5rem 4rem; /* Topo | Direita/Esquerda | Fundo */
+        /* Padding para não sobrepor as setas de controle */
+        padding: 0 4rem 2.5rem 4rem;
+    }
+
+    /* [NOVO] Estilo para a lista de escolas com rolagem dentro do modal */
+    .modal-escolas-container {
+        max-height: 250px; /* Altura máxima antes de a rolagem aparecer */
+        overflow-y: auto;  /* Habilita a rolagem vertical quando necessário */
+        background-color: #f8f9fa;
+        border: 1px solid #dee2e6;
+        border-radius: 0.375rem;
+        padding: 1rem;
     }
 </style>
 
@@ -66,38 +83,38 @@
 
                 <h6 class="text-muted fw-bold text-uppercase small mb-3">Detalhes do Aviso</h6>
                 <div class="row g-3 mb-4">
-                    <div class="col-md-12">
-                        <label for="titulo" class="form-label fw-semibold">Título</label>
-                        <div class="input-group">
-                            <span class="input-group-text"><i class="bi bi-fonts"></i></span>
-                            <input type="text" name="titulo" id="titulo" class="form-control" required value="{{ request.POST.titulo }}" placeholder="Ex: Reunião de Pais e Mestres">
-                        </div>
-                    </div>
-                    <div class="col-md-12">
-                        <label for="mensagem" class="form-label fw-semibold">Mensagem</label>
+                     <div class="col-md-12">
+                         <label for="titulo" class="form-label fw-semibold">Título</label>
                          <div class="input-group">
-                            <span class="input-group-text"><i class="bi bi-chat-left-text"></i></span>
-                            <textarea name="mensagem" id="mensagem" class="form-control" rows="4" required placeholder="Digite a mensagem completa do aviso aqui...">{{ request.POST.mensagem }}</textarea>
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <label for="prioridade" class="form-label fw-semibold">Prioridade</label>
-                        <div class="input-group">
-                            <span class="input-group-text"><i class="bi bi-tags"></i></span>
-                            <select name="prioridade" id="prioridade" class="form-select">
-                                <option value="baixa" {% if request.POST.prioridade == 'baixa' %}selected{% endif %}>Baixa</option>
-                                <option value="normal" {% if not request.POST.prioridade or request.POST.prioridade == 'normal' %}selected{% endif %}>Normal</option>
-                                <option value="alta" {% if request.POST.prioridade == 'alta' %}selected{% endif %}>Alta</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <label for="data_expiracao" class="form-label fw-semibold">Data e Hora de Expiração <span class="text-muted">(opcional)</span></label>
+                             <span class="input-group-text"><i class="bi bi-fonts"></i></span>
+                             <input type="text" name="titulo" id="titulo" class="form-control" required value="{{ request.POST.titulo }}" placeholder="Ex: Reunião de Pais e Mestres">
+                         </div>
+                     </div>
+                     <div class="col-md-12">
+                         <label for="mensagem" class="form-label fw-semibold">Mensagem</label>
+                          <div class="input-group">
+                             <span class="input-group-text"><i class="bi bi-chat-left-text"></i></span>
+                             <textarea name="mensagem" id="mensagem" class="form-control" rows="4" required placeholder="Digite a mensagem completa do aviso aqui...">{{ request.POST.mensagem }}</textarea>
+                         </div>
+                     </div>
+                     <div class="col-md-6">
+                         <label for="prioridade" class="form-label fw-semibold">Prioridade</label>
                          <div class="input-group">
-                            <span class="input-group-text"><i class="bi bi-calendar-event"></i></span>
-                            <input type="datetime-local" name="data_expiracao" id="data_expiracao" class="form-control" value="{{ request.POST.data_expiracao }}">
-                        </div>
-                    </div>
+                             <span class="input-group-text"><i class="bi bi-tags"></i></span>
+                             <select name="prioridade" id="prioridade" class="form-select">
+                                 <option value="baixa" {% if request.POST.prioridade == 'baixa' %}selected{% endif %}>Baixa</option>
+                                 <option value="normal" {% if not request.POST.prioridade or request.POST.prioridade == 'normal' %}selected{% endif %}>Normal</option>
+                                 <option value="alta" {% if request.POST.prioridade == 'alta' %}selected{% endif %}>Alta</option>
+                             </select>
+                         </div>
+                     </div>
+                     <div class="col-md-6">
+                         <label for="data_expiracao" class="form-label fw-semibold">Data e Hora de Expiração <span class="text-muted">(opcional)</span></label>
+                          <div class="input-group">
+                             <span class="input-group-text"><i class="bi bi-calendar-event"></i></span>
+                             <input type="datetime-local" name="data_expiracao" id="data_expiracao" class="form-control" value="{{ request.POST.data_expiracao }}">
+                         </div>
+                     </div>
                 </div>
 
                 <hr class="my-4">
@@ -131,21 +148,21 @@
                 </div>
 
                 <div class="mb-4">
-                    <label class="form-label fw-semibold">Escolas Selecionadas:</label>
+                    <label class="form-label fw-semibold">Escolas Selecionadas (<span id="contadorEscolas">0</span>):</label>
                     <div id="carouselEscolasContainer">
                         </div>
                 </div>
 
                 <div class="alert alert-warning d-flex align-items-center" role="alert">
-                  <i class="bi bi-exclamation-triangle-fill me-3" style="font-size: 1.5rem;"></i>
-                  <div>
-                    <h6 class="alert-heading">Atenção!</h6>
-                    <ul class="mb-0 ps-3">
-                        <li>Verifique se todas as informações estão corretas antes de publicar.</li>
-                        <li>Uma vez publicado, o aviso só poderá ser <strong>editado ou apagado</strong>.</li>
-                        <li>Não é possível alterar as escolas de um aviso já enviado.</li>
-                    </ul>
-                  </div>
+                    <i class="bi bi-exclamation-triangle-fill me-3" style="font-size: 1.5rem;"></i>
+                    <div>
+                        <h6 class="alert-heading">Atenção!</h6>
+                        <ul class="mb-0 ps-3">
+                            <li>Verifique se todas as informações estão corretas antes de publicar.</li>
+                            <li>Uma vez publicado, o aviso só poderá ser <strong>editado ou apagado</strong>.</li>
+                            <li>Não é possível alterar as escolas de um aviso já enviado.</li>
+                        </ul>
+                    </div>
                 </div>
             </form>
         </div>
@@ -159,17 +176,16 @@
 </div>
 
 <div class="modal fade" id="modalConfirmacao" tabindex="-1" aria-labelledby="modalConfirmacaoLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
+    <div class="modal-dialog modal-dialog-centered modal-lg"> <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="modalConfirmacaoLabel">Confirmar Publicação</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <p>O aviso será enviado para as seguintes escolas:</p>
-                <div id="modalConfirmacaoEscolas" class="mb-3 d-flex flex-wrap gap-2">
+                <p>O aviso será enviado para <strong id="modalContadorEscolas">0 escolas</strong>. Confira a lista abaixo:</p>
+                <div id="modalConfirmacaoEscolas">
                     </div>
-                <div class="alert alert-danger">
+                <div class="alert alert-danger mt-3">
                     <strong>Atenção:</strong> Após confirmar, a ação não poderá ser desfeita. Você só poderá editar o conteúdo ou apagar o aviso completamente.
                 </div>
             </div>
@@ -182,7 +198,6 @@
         </div>
     </div>
 </div>
-
 
 <script>
 // Função de busca (sem alterações)
@@ -197,87 +212,94 @@ function filtrarListaEscolas() {
 }
 
 /**
- * [MODIFICADO]
- * Gera o carrossel e o conteúdo do modal, aplicando a classe .badge-wrap para
- * garantir a quebra de linha correta.
+ * [REESCRITO E MELHORADO]
+ * Atualiza o display das escolas selecionadas, gerando um carrossel para a página
+ * e uma lista com rolagem para o modal de confirmação.
  */
 function atualizarDisplayEscolasSelecionadas() {
     const carouselContainer = document.getElementById('carouselEscolasContainer');
-    const modalConfirmacaoEscolasDiv = document.getElementById('modalConfirmacaoEscolas');
-    
-    modalConfirmacaoEscolasDiv.innerHTML = '';
+    const modalEscolasContainer = document.getElementById('modalConfirmacaoEscolas');
+    const contadorEscolasSpan = document.getElementById('contadorEscolas');
+    const modalContadorEscolasSpan = document.getElementById('modalContadorEscolas');
+
     carouselContainer.innerHTML = '';
+    modalEscolasContainer.innerHTML = '';
 
     const checkedCheckboxes = Array.from(document.querySelectorAll('.escola-checkbox:checked'));
-    const totalEscolas = document.querySelectorAll('.escola-checkbox').length;
-    const escolasPorSlide = 6;
+    const totalEscolasNoSistema = document.querySelectorAll('.escola-checkbox').length;
+    const numSelecionadas = checkedCheckboxes.length;
+    
+    // Atualiza contadores
+    contadorEscolasSpan.textContent = numSelecionadas;
+    modalContadorEscolasSpan.textContent = `${numSelecionadas} escola(s)`;
 
     // 1. Nenhuma escola selecionada
-    if (checkedCheckboxes.length === 0) {
+    if (numSelecionadas === 0) {
         carouselContainer.innerHTML = `<div class="p-3 border rounded bg-light text-muted text-center">Nenhuma escola selecionada.</div>`;
+        modalEscolasContainer.innerHTML = `<div class="text-muted text-center">Nenhuma escola selecionada.</div>`;
     
-    // 2. TODAS as escolas selecionadas
-    } else if (checkedCheckboxes.length === totalEscolas) {
-        const todasBadge = `<div class="p-3 border rounded bg-light text-center"><span class="badge bg-primary fs-6 fw-normal badge-wrap">Todas as ${totalEscolas} escolas selecionadas</span></div>`;
-        carouselContainer.innerHTML = todasBadge;
-        modalConfirmacaoEscolasDiv.innerHTML = `<span class="badge bg-primary fs-6 fw-normal badge-wrap">Todas as ${totalEscolas} escolas selecionadas</span>`;
-    
-    // 3. Escolas selecionadas (Lógica do Carrossel)
-    } else {
-        // Preenche o modal de confirmação (sem carrossel)
-        checkedCheckboxes.forEach(checkbox => {
-            const escolaNome = checkbox.closest('.escola-item').querySelector('label').textContent.trim();
-            // [MODIFICADO] Adiciona a classe .badge-wrap
-            modalConfirmacaoEscolasDiv.innerHTML += `<span class="badge text-bg-info badge-wrap">${escolaNome}</span>`;
-        });
+    // 2. TODAS as escolas do sistema selecionadas
+    } else if (numSelecionadas === totalEscolasNoSistema) {
+        const badgeTodas = `<div class="p-3 border rounded bg-light text-center"><span class="badge bg-primary fs-6 fw-normal badge-wrap">Todas as ${totalEscolasNoSistema} escolas do sistema selecionadas</span></div>`;
+        carouselContainer.innerHTML = badgeTodas;
+        modalEscolasContainer.innerHTML = badgeTodas;
 
-        // Constrói o Carrossel
-        const carouselId = 'escolasCarousel';
+    // 3. Uma ou mais escolas selecionadas (Lógica principal)
+    } else {
+        // --- A. Preenche o MODAL com uma lista com rolagem ---
+        const modalBadgesHtml = checkedCheckboxes.map(checkbox => {
+            const escolaNome = checkbox.nextElementSibling.textContent.trim();
+            return `<span class="badge text-bg-info badge-wrap m-1">${escolaNome}</span>`;
+        }).join('');
+        modalEscolasContainer.innerHTML = `<div class="modal-escolas-container d-flex flex-wrap justify-content-center">${modalBadgesHtml}</div>`;
+
+        // --- B. Constrói o CARROSSEL para a página principal ---
+        const escolasPorSlide = 8;
+        const numSlides = Math.ceil(numSelecionadas / escolasPorSlide);
+        const carouselId = 'escolasSelecionadasCarousel';
+        
         let indicatorsHtml = '';
         let slidesHtml = '';
-        
-        for (let i = 0; i < checkedCheckboxes.length; i += escolasPorSlide) {
-            const slideIndex = i / escolasPorSlide;
-            const activeClass = (slideIndex === 0) ? 'active' : '';
+
+        for (let i = 0; i < numSlides; i++) {
+            const activeClass = (i === 0) ? 'active' : '';
+            indicatorsHtml += `<button type="button" data-bs-target="#${carouselId}" data-bs-slide-to="${i}" class="${activeClass}" aria-current="${activeClass ? 'true' : 'false'}"></button>`;
             
-            indicatorsHtml += `<button type="button" data-bs-target="#${carouselId}" data-bs-slide-to="${slideIndex}" class="${activeClass}" aria-current="${activeClass ? 'true' : 'false'}" aria-label="Slide ${slideIndex + 1}"></button>`;
-            
-            const slideItems = checkedCheckboxes.slice(i, i + escolasPorSlide);
-            let slideContent = '';
-            slideItems.forEach(checkbox => {
-                const escolaNome = checkbox.closest('.escola-item').querySelector('label').textContent.trim();
-                 // [MODIFICADO] Adiciona a classe .badge-wrap
-                slideContent += `<span class="badge text-bg-info badge-wrap">${escolaNome}</span>`;
-            });
+            const slideItems = checkedCheckboxes.slice(i * escolasPorSlide, (i + 1) * escolasPorSlide);
+            const slideContent = slideItems.map(checkbox => {
+                const escolaNome = checkbox.nextElementSibling.textContent.trim();
+                return `<span class="badge text-bg-info badge-wrap">${escolaNome}</span>`;
+            }).join('');
             
             slidesHtml += `
                 <div class="carousel-item ${activeClass}">
-                    <div class="carousel-item-content">
-                        ${slideContent}
-                    </div>
+                    <div class="carousel-item-content">${slideContent}</div>
                 </div>`;
         }
         
+        const controlsHtml = numSlides > 1 ? `
+            <button class="carousel-control-prev" type="button" data-bs-target="#${carouselId}" data-bs-slide="prev">
+                <span class="carousel-control-prev-icon" aria-hidden="true"></span><span class="visually-hidden">Anterior</span>
+            </button>
+            <button class="carousel-control-next" type="button" data-bs-target="#${carouselId}" data-bs-slide="next">
+                <span class="carousel-control-next-icon" aria-hidden="true"></span><span class="visually-hidden">Próximo</span>
+            </button>
+        ` : '';
+
+        const indicatorsContainerHtml = numSlides > 1 ? `<div class="carousel-indicators">${indicatorsHtml}</div>` : '';
+
         carouselContainer.innerHTML = `
             <div id="${carouselId}" class="carousel carousel-dark slide" data-bs-ride="false">
-                <div class="carousel-indicators">${indicatorsHtml}</div>
+                ${indicatorsContainerHtml}
                 <div class="carousel-inner">${slidesHtml}</div>
-                <button class="carousel-control-prev" type="button" data-bs-target="#${carouselId}" data-bs-slide="prev">
-                    <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-                    <span class="visually-hidden">Anterior</span>
-                </button>
-                <button class="carousel-control-next" type="button" data-bs-target="#${carouselId}" data-bs-slide="next">
-                    <span class="carousel-control-next-icon" aria-hidden="true"></span>
-                    <span class="visually-hidden">Próximo</span>
-                </button>
+                ${controlsHtml}
             </div>`;
     }
 
-    // Validação para habilitar o botão de publicação (lógica inalterada)
+    // Validação final para habilitar/desabilitar o botão de publicação
     const titulo = document.getElementById('titulo').value.trim();
     const mensagem = document.getElementById('mensagem').value.trim();
-    const btnPublicar = document.getElementById('btnPublicar');
-    btnPublicar.disabled = !(titulo && mensagem && checkedCheckboxes.length > 0);
+    document.getElementById('btnPublicar').disabled = !(titulo && mensagem && numSelecionadas > 0);
 }
 
 // Listener principal do DOM
@@ -293,12 +315,17 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     document.getElementById('btnMarcarTodasEscolasSistema').addEventListener('click', () => {
-        document.querySelectorAll('.escola-checkbox').forEach(c => { c.checked = true; });
+        // Filtra apenas os checkboxes visíveis para marcar todos
+        document.querySelectorAll('.escola-item').forEach(item => {
+            if (item.style.display !== 'none') {
+                item.querySelector('.escola-checkbox').checked = true;
+            }
+        });
         atualizarDisplayEscolasSelecionadas();
     });
 
     document.getElementById('btnLimparSelecaoEscolas').addEventListener('click', () => {
-        document.querySelectorAll('.escola-checkbox').forEach(c => { c.checked = false; });
+        document.querySelectorAll('.escola-checkbox:checked').forEach(c => { c.checked = false; });
         atualizarDisplayEscolasSelecionadas();
     });
 
@@ -308,7 +335,7 @@ document.addEventListener('DOMContentLoaded', function() {
         form.submit();
     });
 
-    // Carga inicial
+    // Carga inicial para refletir dados pré-preenchidos, se houver
     atualizarDisplayEscolasSelecionadas();
 });
 </script>

@@ -1,6 +1,6 @@
 {% extends "cedepe/base.html" %}
 
-{% block title %}Lista de Avisos{% endblock %}
+{% block title %}Painel de Avisos{% endblock %}
 
 {% block content %}
 <div class="container mt-4 mb-5">
@@ -26,18 +26,33 @@
                 {% endfor %}
             {% endif %}
 
+            <div class="d-flex justify-content-center mb-4">
+                <div class="btn-group" role="group" aria-label="Filtro de Prioridade">
+                    <a href="{% url 'listar_avisos' %}" class="btn {% if not prioridade_atual %}btn-primary{% else %}btn-outline-primary{% endif %}">
+                       Todas
+                    </a>
+                    <a href="?prioridade=alta" class="btn {% if prioridade_atual == 'alta' %}btn-danger{% else %}btn-outline-danger{% endif %}">
+                       <i class="bi bi-exclamation-triangle-fill me-1"></i> Alta
+                    </a>
+                    <a href="?prioridade=normal" class="btn {% if prioridade_atual == 'normal' %}btn-warning text-dark{% else %}btn-outline-warning text-dark{% endif %}">
+                       <i class="bi bi-tag-fill me-1"></i> Normal
+                    </a>
+                    <a href="?prioridade=baixa" class="btn {% if prioridade_atual == 'baixa' %}btn-success{% else %}btn-outline-success{% endif %}">
+                       <i class="bi bi-check-circle-fill me-1"></i> Baixa
+                    </a>
+                </div>
+            </div>
+            <hr>
+
             {% if avisos %}
-            
-            <form method="POST" action="{% url 'apagar_varios_avisos' %}">
+            <form method="POST" action="{% url 'apagar_varios_avisos' %}" id="deleteMultipleForm">
                 {% csrf_token %}
                 <div class="d-flex align-items-center mb-4">
                     <div class="form-check me-3">
                         <input class="form-check-input" type="checkbox" id="selecionarTodosCheckbox">
-                        <label class="form-check-label" for="selecionarTodosCheckbox">
-                            Selecionar Todos
-                        </label>
+                        <label class="form-check-label" for="selecionarTodosCheckbox">Selecionar Todos</label>
                     </div>
-                    <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Tem certeza que deseja apagar os avisos selecionados?');">
+                    <button type="submit" class="btn btn-danger btn-sm">
                         <i class="bi bi-trash"></i> Apagar Selecionados
                     </button>
                 </div>
@@ -50,12 +65,9 @@
                                 <h6 class="card-title mb-0 fw-bold text-truncate" title="{{ aviso.titulo }}">
                                     {{ aviso.titulo }}
                                 </h6>
-                                {% if aviso.prioridade == 'alta' %}
-                                    <span class="badge bg-danger">Alta</span>
-                                {% elif aviso.prioridade == 'normal' %}
-                                    <span class="badge bg-warning text-dark">Normal</span>
-                                {% else %}
-                                    <span class="badge bg-success">Baixa</span>
+                                {% if aviso.prioridade == 'alta' %}<span class="badge bg-danger">Alta</span>
+                                {% elif aviso.prioridade == 'normal' %}<span class="badge bg-warning text-dark">Normal</span>
+                                {% else %}<span class="badge bg-success">Baixa</span>
                                 {% endif %}
                             </div>
 
@@ -65,7 +77,6 @@
                                         <i class="bi bi-building me-2 text-muted"></i>
                                         <strong class="me-2">Escola(s):</strong> {{ aviso.escola.nome }}
                                     </li>
-                            
                                     <li class="list-group-item d-flex align-items-center">
                                         <i class="bi bi-calendar-event me-2 text-muted"></i>
                                         <strong class="me-2">Publicado em:</strong> {{ aviso.data_criacao|date:"d/m/Y H:i" }}
@@ -77,19 +88,16 @@
                                 <input class="form-check-input me-auto aviso-checkbox" type="checkbox" name="avisos_selecionados" value="{{ aviso.id }}" title="Selecionar para apagar">
                                 
                                 <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#viewAvisoModal"
-                                        data-titulo="{{ aviso.titulo }}"
-                                        data-mensagem="{{ aviso.mensagem }}"
-                                        data-prioridade="{{ aviso.prioridade }}"
-                                        data-escola="{{ aviso.escola.nome }}"
-                                        data-criado-por="{{ aviso.criado_por }}"
-                                        data-data-criacao="{{ aviso.data_criacao|date:"d/m/Y H:i" }}">
+                                    data-titulo="{{ aviso.titulo }}" data-mensagem="{{ aviso.mensagem }}"
+                                    data-prioridade="{{ aviso.get_prioridade_display }}" data-escola="{{ aviso.escola.nome }}"
+                                    data-criado-por="{{ aviso.criado_por }}" data-data-criacao="{{ aviso.data_criacao|date:"d/m/Y H:i" }}">
                                     <i class="bi bi-eye-fill"></i> Visualizar
                                 </button>
 
                                 <button type="button" class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#editAvisoModal"
-                                        data-id="{{ aviso.id }}" data-titulo="{{ aviso.titulo }}" data-mensagem="{{ aviso.mensagem }}"
-                                        data-prioridade="{{ aviso.prioridade }}" data-escola-id="{{ aviso.escola.id }}"
-                                        data-criado-por-id="{{ aviso.criado_por.id }}" data-ativo="{{ aviso.ativo|yesno:'true,false' }}">
+                                    data-id="{{ aviso.id }}" data-titulo="{{ aviso.titulo }}" data-mensagem="{{ aviso.mensagem }}"
+                                    data-prioridade="{{ aviso.prioridade }}" data-escola-id="{{ aviso.escola.id }}"
+                                    data-criado-por-id="{{ aviso.criado_por.id }}" data-ativo="{{ aviso.ativo|yesno:'true,false' }}">
                                     <i class="bi bi-pencil-square"></i> Editar
                                 </button>
                             </div>
@@ -102,27 +110,21 @@
             <nav aria-label="Navegação de páginas" class="mt-5">
                 <ul class="pagination justify-content-center">
                     {% if avisos.has_previous %}
-                        <li class="page-item"><a class="page-link" href="?page=1" aria-label="Primeira">&laquo;</a></li>
-                        <li class="page-item"><a class="page-link" href="?page={{ avisos.previous_page_number }}" aria-label="Anterior">&lsaquo;</a></li>
-                    {% else %}
-                        <li class="page-item disabled"><span class="page-link">&laquo;</span></li>
-                        <li class="page-item disabled"><span class="page-link">&lsaquo;</span></li>
+                        <li class="page-item"><a class="page-link" href="?page=1{% if prioridade_atual %}&prioridade={{ prioridade_atual }}{% endif %}">&laquo;</a></li>
+                        <li class="page-item"><a class="page-link" href="?page={{ avisos.previous_page_number }}{% if prioridade_atual %}&prioridade={{ prioridade_atual }}{% endif %}">&lsaquo;</a></li>
                     {% endif %}
 
                     {% for num in avisos.paginator.page_range %}
                         {% if avisos.number == num %}
-                            <li class="page-item active" aria-current="page"><span class="page-link">{{ num }}</span></li>
+                            <li class="page-item active"><span class="page-link">{{ num }}</span></li>
                         {% elif num > avisos.number|add:'-3' and num < avisos.number|add:'3' %}
-                            <li class="page-item"><a class="page-link" href="?page={{ num }}">{{ num }}</a></li>
+                            <li class="page-item"><a class="page-link" href="?page={{ num }}{% if prioridade_atual %}&prioridade={{ prioridade_atual }}{% endif %}">{{ num }}</a></li>
                         {% endif %}
                     {% endfor %}
 
                     {% if avisos.has_next %}
-                        <li class="page-item"><a class="page-link" href="?page={{ avisos.next_page_number }}" aria-label="Próxima">&rsaquo;</a></li>
-                        <li class="page-item"><a class="page-link" href="?page={{ avisos.paginator.num_pages }}" aria-label="Última">&raquo;</a></li>
-                    {% else %}
-                        <li class="page-item disabled"><span class="page-link">&rsaquo;</span></li>
-                        <li class="page-item disabled"><span class="page-link">&raquo;</span></li>
+                        <li class="page-item"><a class="page-link" href="?page={{ avisos.next_page_number }}{% if prioridade_atual %}&prioridade={{ prioridade_atual }}{% endif %}">&rsaquo;</a></li>
+                        <li class="page-item"><a class="page-link" href="?page={{ avisos.paginator.num_pages }}{% if prioridade_atual %}&prioridade={{ prioridade_atual }}{% endif %}">&raquo;</a></li>
                     {% endif %}
                 </ul>
             </nav>
@@ -131,171 +133,125 @@
             <div class="text-center p-5">
                 <i class="bi bi-bell-slash fs-1 text-muted"></i>
                 <h4 class="mt-3">Nenhum aviso encontrado</h4>
-                <p class="text-muted">Parece que ainda não há nada por aqui. Que tal criar o primeiro?</p>
-                <a href="{% url 'criar_aviso' %}" class="btn btn-primary mt-2">
-                    <i class="bi bi-plus-circle me-2"></i>Criar Primeiro Aviso
-                </a>
+                <p class="text-muted">Verifique o filtro de prioridade ou crie um novo aviso.</p>
+                <a href="{% url 'criar_aviso' %}" class="btn btn-primary mt-2"><i class="bi bi-plus-circle me-2"></i>Criar Primeiro Aviso</a>
             </div>
             {% endif %}
         </div>
     </div>
 </div>
 
-<div class="modal fade" id="viewAvisoModal" tabindex="-1" aria-labelledby="viewAvisoModalLabel" aria-hidden="true">
+<div class="modal fade" id="viewAvisoModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content">
-            <div class="modal-header border-bottom-0 pb-0">
-                <h5 class="modal-title d-flex align-items-center" id="viewAvisoModalLabel">
-                    <i class="bi bi-info-circle-fill text-primary me-2"></i>
-                    <span id="viewAvisoModalTitle"></span>
-                </h5>
-                <span id="viewAvisoModalPriorityBadge" class="badge ms-auto"></span>
-                <button type="button" class="btn-close ms-2" data-bs-dismiss="modal" aria-label="Fechar"></button>
-            </div>
-            <div class="modal-body pt-2">
-                <hr class="mt-1">
-                <div class="mb-4">
-                    <p class="text-muted mb-2 small"><strong><i class="bi bi-chat-left-text me-2"></i>MENSAGEM</strong></p>
-                    <p id="viewAvisoModalBodyContent" class="ps-2" style="white-space: pre-wrap;"></p>
-                </div>
+            <div class="modal-header"><h5 class="modal-title" id="viewAvisoModalTitle"></h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+            <div class="modal-body">
+                <p><strong>Prioridade: </strong><span id="viewAvisoModalPriorityBadge"></span></p>
+                <p><strong>Mensagem:</strong></p>
+                <p id="viewAvisoModalBodyContent" style="white-space: pre-wrap;"></p>
                 <hr>
-                <div class="row small text-muted">
-                    <div class="col-md-6 mb-2 mb-md-0">
-                        <p class="mb-0"><i class="bi bi-building me-2"></i><strong>Escola:</strong> <span id="viewAvisoModalEscola"></span></p>
-                    </div>
-                    <div class="col-md-6">
-                        <p class="mb-0"><i class="bi bi-person me-2"></i><strong>Criado por:</strong> <span id="viewAvisoModalCriadoPor"></span></p>
-                    </div>
-                    <div class="col-md-6 mt-md-2">
-                         <p class="mb-0"><i class="bi bi-calendar-event me-2"></i><strong>Publicado em:</strong> <span id="viewAvisoModalDataCriacao"></span></p>
-                    </div>
-                </div>
+                <small class="text-muted"><strong>Escola:</strong> <span id="viewAvisoModalEscola"></span></small><br>
+                <small class="text-muted"><strong>Criado por:</strong> <span id="viewAvisoModalCriadoPor"></span></small><br>
+                <small class="text-muted"><strong>Publicado em:</strong> <span id="viewAvisoModalDataCriacao"></span></small>
             </div>
-            <div class="modal-footer border-top-0">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
-            </div>
+            <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button></div>
         </div>
     </div>
 </div>
 
-<div class="modal fade" id="editAvisoModal" tabindex="-1" aria-labelledby="editAvisoModalLabel" aria-hidden="true">
+<div class="modal fade" id="editAvisoModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="editAvisoModalLabel"><i class="bi bi-pencil-square me-2"></i>Editar Aviso</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
-            </div>
+            <div class="modal-header"><h5 class="modal-title">Editar Aviso</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
             <div class="modal-body">
                 <form method="POST" action="" id="editAvisoForm">
                     {% csrf_token %}
-                    <input type="hidden" id="escola_modal_edit" name="escola">
-                    <input type="hidden" id="criado_por_modal_edit" name="criado_por">
-                    <input type="hidden" id="ativo_modal_edit" name="ativo" value="true">
-                    
-                    <div id="formErrors" class="alert alert-danger d-none"></div>
-
-                    <div class="mb-3">
-                        <label for="titulo_modal_edit" class="form-label">Título</label>
-                        <div class="input-group"><span class="input-group-text"><i class="bi bi-fonts"></i></span><input type="text" class="form-control" id="titulo_modal_edit" name="titulo" required></div>
-                    </div>
-                    <div class="mb-3">
-                        <label for="mensagem_modal_edit" class="form-label">Mensagem</label>
-                        <div class="input-group"><span class="input-group-text"><i class="bi bi-chat-left-text"></i></span><textarea class="form-control" id="mensagem_modal_edit" name="mensagem" rows="4" required></textarea></div>
-                    </div>
-                    <div class="mb-3">
-                        <label for="prioridade_modal_edit" class="form-label">Prioridade</label>
-                        <div class="input-group"><span class="input-group-text"><i class="bi bi-tags"></i></span><select class="form-select" id="prioridade_modal_edit" name="prioridade" required><option value="baixa">Baixa</option><option value="normal">Normal</option><option value="alta">Alta</option></select></div>
-                    </div>
-                    <div class="d-grid"><button type="submit" class="btn btn-primary"><i class="bi bi-check-circle me-2"></i>Salvar Alterações</button></div>
+                    <input type="hidden" id="escola_modal_edit" name="escola"><input type="hidden" id="criado_por_modal_edit" name="criado_por"><input type="hidden" id="ativo_modal_edit" name="ativo" value="true">
+                    <div class="mb-3"><label for="titulo_modal_edit" class="form-label">Título</label><input type="text" class="form-control" id="titulo_modal_edit" name="titulo" required></div>
+                    <div class="mb-3"><label for="mensagem_modal_edit" class="form-label">Mensagem</label><textarea class="form-control" id="mensagem_modal_edit" name="mensagem" rows="4" required></textarea></div>
+                    <div class="mb-3"><label for="prioridade_modal_edit" class="form-label">Prioridade</label><select class="form-select" id="prioridade_modal_edit" name="prioridade" required><option value="baixa">Baixa</option><option value="normal">Normal</option><option value="alta">Alta</option></select></div>
+                    <div class="d-grid"><button type="submit" id="saveChangesBtn" class="btn btn-primary">Salvar Alterações</button></div>
                 </form>
             </div>
         </div>
     </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Script para o modal de visualização
+    // Modal de Visualização
     const viewAvisoModal = document.getElementById('viewAvisoModal');
-    if (viewAvisoModal) {
-        viewAvisoModal.addEventListener('show.bs.modal', function (event) {
-            const button = event.relatedTarget;
-            
-            const titulo = button.getAttribute('data-titulo');
-            const mensagem = button.getAttribute('data-mensagem');
-            const prioridade = button.getAttribute('data-prioridade');
-            const escola = button.getAttribute('data-escola');
-            const criadoPor = button.getAttribute('data-criado-por');
-            const dataCriacao = button.getAttribute('data-data-criacao');
+    viewAvisoModal.addEventListener('show.bs.modal', event => {
+        const button = event.relatedTarget;
+        document.getElementById('viewAvisoModalTitle').textContent = button.getAttribute('data-titulo');
+        document.getElementById('viewAvisoModalBodyContent').textContent = button.getAttribute('data-mensagem');
+        document.getElementById('viewAvisoModalPriorityBadge').textContent = button.getAttribute('data-prioridade');
+        document.getElementById('viewAvisoModalEscola').textContent = button.getAttribute('data-escola');
+        document.getElementById('viewAvisoModalCriadoPor').textContent = button.getAttribute('data-criado-por');
+        document.getElementById('viewAvisoModalDataCriacao').textContent = button.getAttribute('data-data-criacao');
+    });
 
-            const modalTitle = document.getElementById('viewAvisoModalTitle');
-            const modalBodyContent = document.getElementById('viewAvisoModalBodyContent');
-            const modalEscola = document.getElementById('viewAvisoModalEscola');
-            const modalCriadoPor = document.getElementById('viewAvisoModalCriadoPor');
-            const modalDataCriacao = document.getElementById('viewAvisoModalDataCriacao');
-            const modalPriorityBadge = document.getElementById('viewAvisoModalPriorityBadge');
-
-            modalTitle.textContent = titulo;
-            modalBodyContent.textContent = mensagem;
-            modalEscola.textContent = escola;
-            modalCriadoPor.textContent = criadoPor;
-            modalDataCriacao.textContent = dataCriacao;
-            
-            modalPriorityBadge.textContent = prioridade.charAt(0).toUpperCase() + prioridade.slice(1);
-            modalPriorityBadge.className = 'badge ms-auto';
-            if (prioridade === 'alta') {
-                modalPriorityBadge.classList.add('bg-danger');
-            } else if (prioridade === 'normal') {
-                modalPriorityBadge.classList.add('bg-warning', 'text-dark');
-            } else {
-                modalPriorityBadge.classList.add('bg-success');
-            }
-        });
-    }
-
-    // Script para o modal de edição
+    // Modal de Edição com Validação
     const editAvisoModal = document.getElementById('editAvisoModal');
-    if (editAvisoModal) {
-        editAvisoModal.addEventListener('show.bs.modal', function (event) {
-            const button = event.relatedTarget;
-            const avisoId = button.getAttribute('data-id');
-            const errorContainer = document.getElementById('formErrors');
-            
-            if(errorContainer){
-                errorContainer.classList.add('d-none');
-                errorContainer.innerHTML = '';
-            }
-            
-            const inputTitulo = document.getElementById('titulo_modal_edit');
-            const textareaMensagem = document.getElementById('mensagem_modal_edit');
-            const selectPrioridade = document.getElementById('prioridade_modal_edit');
-            const inputEscola = document.getElementById('escola_modal_edit');
-            const inputCriadoPor = document.getElementById('criado_por_modal_edit');
-            const inputAtivo = document.getElementById('ativo_modal_edit');
-            
-            inputTitulo.value = button.getAttribute('data-titulo');
-            textareaMensagem.value = button.getAttribute('data-mensagem');
-            selectPrioridade.value = button.getAttribute('data-prioridade');
-            inputEscola.value = button.getAttribute('data-escola-id');
-            inputCriadoPor.value = button.getAttribute('data-criado-por-id');
-            inputAtivo.value = button.getAttribute('data-ativo');
-            
-            const form = document.getElementById('editAvisoForm');
-            form.action = `/problemas/avisos/editar/${avisoId}/`;
+    editAvisoModal.addEventListener('show.bs.modal', event => {
+        const button = event.relatedTarget;
+        const form = document.getElementById('editAvisoForm');
+        form.action = `/problemas/avisos/editar/${button.getAttribute('data-id')}/`;
+        const inputTitulo = document.getElementById('titulo_modal_edit');
+        const textareaMensagem = document.getElementById('mensagem_modal_edit');
+        const selectPrioridade = document.getElementById('prioridade_modal_edit');
+        inputTitulo.value = button.getAttribute('data-titulo');
+        textareaMensagem.value = button.getAttribute('data-mensagem');
+        selectPrioridade.value = button.getAttribute('data-prioridade');
+        document.getElementById('escola_modal_edit').value = button.getAttribute('data-escola-id');
+        document.getElementById('criado_por_modal_edit').value = button.getAttribute('data-criado-por-id');
+        document.getElementById('ativo_modal_edit').value = button.getAttribute('data-ativo');
+        
+        const saveChangesBtn = document.getElementById('saveChangesBtn');
+        const originalData = { titulo: inputTitulo.value, mensagem: textareaMensagem.value, prioridade: selectPrioridade.value };
+        saveChangesBtn.disabled = true;
+        
+        const checkForChanges = () => {
+            const isChanged = inputTitulo.value !== originalData.titulo || textareaMensagem.value !== originalData.mensagem || selectPrioridade.value !== originalData.prioridade;
+            saveChangesBtn.disabled = !isChanged;
+        };
+        form.addEventListener('input', checkForChanges);
+    });
+
+    // Selecionar Todos
+    const masterCheckbox = document.getElementById('selecionarTodosCheckbox');
+    const noticeCheckboxes = document.querySelectorAll('.aviso-checkbox');
+    if (masterCheckbox) {
+        masterCheckbox.addEventListener('change', function() {
+            noticeCheckboxes.forEach(checkbox => { checkbox.checked = this.checked; });
         });
     }
 
-    // NOVO SCRIPT PARA SELECIONAR TODOS
-    const masterCheckbox = document.getElementById('selecionarTodosCheckbox');
-    // Seleciona todas as checkboxes individuais pela classe '.aviso-checkbox'
-    const noticeCheckboxes = document.querySelectorAll('.aviso-checkbox');
-
-    if (masterCheckbox && noticeCheckboxes.length > 0) {
-        masterCheckbox.addEventListener('change', function() {
-            // Itera sobre cada checkbox de aviso e define seu estado (marcado/desmarcado)
-            // para ser o mesmo da checkbox principal.
-            noticeCheckboxes.forEach(checkbox => {
-                checkbox.checked = this.checked;
+    // Confirmação de Exclusão com SweetAlert2
+    const deleteForm = document.getElementById('deleteMultipleForm');
+    if (deleteForm) {
+        deleteForm.addEventListener('submit', function(event) {
+            event.preventDefault();
+            const selectedCount = document.querySelectorAll('.aviso-checkbox:checked').length;
+            if (selectedCount === 0) {
+                Swal.fire({ icon: 'warning', title: 'Nenhum aviso selecionado', text: 'Selecione ao menos um aviso para apagar.' });
+                return;
+            }
+            Swal.fire({
+                title: `Apagar ${selectedCount} aviso(s)?`,
+                text: "Esta ação não pode ser desfeita!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Sim, apagar!',
+                cancelButtonText: 'Cancelar'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    event.target.submit();
+                }
             });
         });
     }
