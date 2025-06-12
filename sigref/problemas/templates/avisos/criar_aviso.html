@@ -4,16 +4,14 @@
 
 {% block content %}
 <style>
-    /* Estilo para garantir que o texto quebre corretamente dentro dos badges */
+    /* Seus estilos CSS permanecem os mesmos */
     .badge-wrap {
         white-space: normal;
         word-break: break-word;
         text-align: left;
         line-height: 1.4;
-        max-width: 100%; /* Garante que o badge não exceda o contêiner do slide */
+        max-width: 100%;
     }
-
-    /* [MELHORADO] Estilos para o contêiner do carrossel na página */
     #carouselEscolasContainer .carousel {
         background-color: #f8f9fa;
         border-radius: 0.375rem;
@@ -24,8 +22,6 @@
         align-items: center;
         justify-content: center;
     }
-
-    /* Estilos para os controles do carrossel */
     .carousel-dark .carousel-control-prev-icon,
     .carousel-dark .carousel-control-next-icon {
         filter: invert(0.7) grayscale(100);
@@ -33,21 +29,16 @@
     .carousel-dark .carousel-indicators [data-bs-target] {
         background-color: #555;
     }
-
-    /* Conteúdo de cada slide do carrossel */
     .carousel-item-content {
         display: flex;
         flex-wrap: wrap;
         gap: 0.5rem;
         justify-content: center;
-        /* Padding para não sobrepor as setas de controle */
         padding: 0 4rem 2.5rem 4rem;
     }
-
-    /* [NOVO] Estilo para a lista de escolas com rolagem dentro do modal */
     .modal-escolas-container {
-        max-height: 250px; /* Altura máxima antes de a rolagem aparecer */
-        overflow-y: auto;  /* Habilita a rolagem vertical quando necessário */
+        max-height: 250px;
+        overflow-y: auto;
         background-color: #f8f9fa;
         border: 1px solid #dee2e6;
         border-radius: 0.375rem;
@@ -78,7 +69,7 @@
                 {% endfor %}
             {% endif %}
 
-            <form method="post" id="avisoForm">
+            <form method="post" id="avisoForm" enctype="multipart/form-data">
                 {% csrf_token %}
 
                 <h6 class="text-muted fw-bold text-uppercase small mb-3">Detalhes do Aviso</h6>
@@ -95,8 +86,19 @@
                           <div class="input-group">
                              <span class="input-group-text"><i class="bi bi-chat-left-text"></i></span>
                              <textarea name="mensagem" id="mensagem" class="form-control" rows="4" required placeholder="Digite a mensagem completa do aviso aqui...">{{ request.POST.mensagem }}</textarea>
-                         </div>
+                          </div>
                      </div>
+
+                    <div class="col-md-12">
+                        <label for="imagem" class="form-label fw-semibold">Imagem do Aviso <span class="text-muted">(Opcional)</span></label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="bi bi-image"></i></span>
+                            <input type="file" name="imagem" id="imagem" class="form-control" accept="image/*">
+                        </div>
+                        <div class="form-text">Selecione uma imagem se desejar ilustrar o aviso.</div>
+                        <img id="imagePreview" src="#" alt="Preview da imagem selecionada" class="img-fluid rounded mt-2" style="max-height: 200px; display: none;"/>
+                    </div>
+
                      <div class="col-md-6">
                          <label for="prioridade" class="form-label fw-semibold">Prioridade</label>
                          <div class="input-group">
@@ -113,7 +115,7 @@
                           <div class="input-group">
                              <span class="input-group-text"><i class="bi bi-calendar-event"></i></span>
                              <input type="datetime-local" name="data_expiracao" id="data_expiracao" class="form-control" value="{{ request.POST.data_expiracao }}">
-                         </div>
+                          </div>
                      </div>
                 </div>
 
@@ -121,30 +123,30 @@
 
                 <h6 class="text-muted fw-bold text-uppercase small mb-3">Destinatários</h6>
                 <div class="mb-3 p-3 border rounded">
-                    <label class="form-label fw-semibold">Selecione uma ou mais escolas para o aviso:</label>
-                    <input type="text" id="termo_busca_checkbox" class="form-control mb-2" placeholder="🔎 Buscar escola por Nome ou INEP..." onkeyup="filtrarListaEscolas()">
-                    <div id="listaEscolasCheckboxes" class="border rounded p-3 bg-light" style="max-height: 300px; overflow-y: auto;">
-                        {% if escolas %}
-                            {% for escola in escolas %}
-                            <div class="form-check escola-item" data-nome="{{ escola.nome|lower|escapejs }}" data-inep="{{ escola.inep|default_if_none:''|escapejs }}">
-                                <input class="form-check-input escola-checkbox" type="checkbox" name="escola_id" value="{{ escola.id }}" id="escola_check_{{ escola.id }}">
-                                <label class="form-check-label" for="escola_check_{{ escola.id }}">
-                                    {{ escola.nome }} <span class="text-muted small">(INEP: {{ escola.inep|default_if_none:'N/A' }})</span>
-                                </label>
-                            </div>
-                            {% endfor %}
-                        {% else %}
-                            <p class="text-muted m-0 text-center">Nenhuma escola disponível para seleção.</p>
-                        {% endif %}
-                    </div>
-                    <div class="mt-3">
-                        <button type="button" id="btnMarcarTodasEscolasSistema" class="btn btn-outline-primary btn-sm me-2">
-                            <i class="bi bi-check2-square"></i> Marcar Todas
-                        </button>
-                        <button type="button" id="btnLimparSelecaoEscolas" class="btn btn-outline-secondary btn-sm">
-                            <i class="bi bi-x-square"></i> Limpar Seleção
-                        </button>
-                    </div>
+                     <label class="form-label fw-semibold">Selecione uma ou mais escolas para o aviso:</label>
+                     <input type="text" id="termo_busca_checkbox" class="form-control mb-2" placeholder="🔎 Buscar escola por Nome ou INEP..." onkeyup="filtrarListaEscolas()">
+                     <div id="listaEscolasCheckboxes" class="border rounded p-3 bg-light" style="max-height: 300px; overflow-y: auto;">
+                         {% if escolas %}
+                             {% for escola in escolas %}
+                             <div class="form-check escola-item" data-nome="{{ escola.nome|lower|escapejs }}" data-inep="{{ escola.inep|default_if_none:''|escapejs }}">
+                                 <input class="form-check-input escola-checkbox" type="checkbox" name="escola_id" value="{{ escola.id }}" id="escola_check_{{ escola.id }}">
+                                 <label class="form-check-label" for="escola_check_{{ escola.id }}">
+                                     {{ escola.nome }} <span class="text-muted small">(INEP: {{ escola.inep|default_if_none:'N/A' }})</span>
+                                 </label>
+                             </div>
+                             {% endfor %}
+                         {% else %}
+                             <p class="text-muted m-0 text-center">Nenhuma escola disponível para seleção.</p>
+                         {% endif %}
+                     </div>
+                     <div class="mt-3">
+                         <button type="button" id="btnMarcarTodasEscolasSistema" class="btn btn-outline-primary btn-sm me-2">
+                             <i class="bi bi-check2-square"></i> Marcar Todas
+                         </button>
+                         <button type="button" id="btnLimparSelecaoEscolas" class="btn btn-outline-secondary btn-sm">
+                             <i class="bi bi-x-square"></i> Limpar Seleção
+                         </button>
+                     </div>
                 </div>
 
                 <div class="mb-4">
@@ -152,17 +154,17 @@
                     <div id="carouselEscolasContainer">
                         </div>
                 </div>
-
+                
                 <div class="alert alert-warning d-flex align-items-center" role="alert">
-                    <i class="bi bi-exclamation-triangle-fill me-3" style="font-size: 1.5rem;"></i>
-                    <div>
-                        <h6 class="alert-heading">Atenção!</h6>
-                        <ul class="mb-0 ps-3">
-                            <li>Verifique se todas as informações estão corretas antes de publicar.</li>
-                            <li>Uma vez publicado, o aviso só poderá ser <strong>editado ou apagado</strong>.</li>
-                            <li>Não é possível alterar as escolas de um aviso já enviado.</li>
-                        </ul>
-                    </div>
+                     <i class="bi bi-exclamation-triangle-fill me-3" style="font-size: 1.5rem;"></i>
+                     <div>
+                         <h6 class="alert-heading">Atenção!</h6>
+                         <ul class="mb-0 ps-3">
+                             <li>Verifique se todas as informações estão corretas antes de publicar.</li>
+                             <li>Uma vez publicado, o aviso só poderá ser <strong>editado ou apagado</strong>.</li>
+                             <li>Não é possível alterar as escolas de um aviso já enviado.</li>
+                         </ul>
+                     </div>
                 </div>
             </form>
         </div>
@@ -183,8 +185,7 @@
             </div>
             <div class="modal-body">
                 <p>O aviso será enviado para <strong id="modalContadorEscolas">0 escolas</strong>. Confira a lista abaixo:</p>
-                <div id="modalConfirmacaoEscolas">
-                    </div>
+                <div id="modalConfirmacaoEscolas"></div>
                 <div class="alert alert-danger mt-3">
                     <strong>Atenção:</strong> Após confirmar, a ação não poderá ser desfeita. Você só poderá editar o conteúdo ou apagar o aviso completamente.
                 </div>
@@ -200,6 +201,9 @@
 </div>
 
 <script>
+// Todo o seu JavaScript existente...
+// Adicionamos o listener para o preview da imagem.
+
 // Função de busca (sem alterações)
 function filtrarListaEscolas() {
     const termoBuscaInput = document.getElementById('termo_busca_checkbox');
@@ -211,83 +215,54 @@ function filtrarListaEscolas() {
     });
 }
 
-/**
- * [REESCRITO E MELHORADO]
- * Atualiza o display das escolas selecionadas, gerando um carrossel para a página
- * e uma lista com rolagem para o modal de confirmação.
- */
 function atualizarDisplayEscolasSelecionadas() {
     const carouselContainer = document.getElementById('carouselEscolasContainer');
     const modalEscolasContainer = document.getElementById('modalConfirmacaoEscolas');
     const contadorEscolasSpan = document.getElementById('contadorEscolas');
     const modalContadorEscolasSpan = document.getElementById('modalContadorEscolas');
-
     carouselContainer.innerHTML = '';
     modalEscolasContainer.innerHTML = '';
-
     const checkedCheckboxes = Array.from(document.querySelectorAll('.escola-checkbox:checked'));
     const totalEscolasNoSistema = document.querySelectorAll('.escola-checkbox').length;
     const numSelecionadas = checkedCheckboxes.length;
-    
-    // Atualiza contadores
     contadorEscolasSpan.textContent = numSelecionadas;
     modalContadorEscolasSpan.textContent = `${numSelecionadas} escola(s)`;
-
-    // 1. Nenhuma escola selecionada
     if (numSelecionadas === 0) {
         carouselContainer.innerHTML = `<div class="p-3 border rounded bg-light text-muted text-center">Nenhuma escola selecionada.</div>`;
         modalEscolasContainer.innerHTML = `<div class="text-muted text-center">Nenhuma escola selecionada.</div>`;
-    
-    // 2. TODAS as escolas do sistema selecionadas
     } else if (numSelecionadas === totalEscolasNoSistema) {
         const badgeTodas = `<div class="p-3 border rounded bg-light text-center"><span class="badge bg-primary fs-6 fw-normal badge-wrap">Todas as ${totalEscolasNoSistema} escolas do sistema selecionadas</span></div>`;
         carouselContainer.innerHTML = badgeTodas;
         modalEscolasContainer.innerHTML = badgeTodas;
-
-    // 3. Uma ou mais escolas selecionadas (Lógica principal)
     } else {
-        // --- A. Preenche o MODAL com uma lista com rolagem ---
         const modalBadgesHtml = checkedCheckboxes.map(checkbox => {
             const escolaNome = checkbox.nextElementSibling.textContent.trim();
             return `<span class="badge text-bg-info badge-wrap m-1">${escolaNome}</span>`;
         }).join('');
         modalEscolasContainer.innerHTML = `<div class="modal-escolas-container d-flex flex-wrap justify-content-center">${modalBadgesHtml}</div>`;
-
-        // --- B. Constrói o CARROSSEL para a página principal ---
         const escolasPorSlide = 8;
         const numSlides = Math.ceil(numSelecionadas / escolasPorSlide);
         const carouselId = 'escolasSelecionadasCarousel';
-        
         let indicatorsHtml = '';
         let slidesHtml = '';
-
         for (let i = 0; i < numSlides; i++) {
             const activeClass = (i === 0) ? 'active' : '';
             indicatorsHtml += `<button type="button" data-bs-target="#${carouselId}" data-bs-slide-to="${i}" class="${activeClass}" aria-current="${activeClass ? 'true' : 'false'}"></button>`;
-            
             const slideItems = checkedCheckboxes.slice(i * escolasPorSlide, (i + 1) * escolasPorSlide);
             const slideContent = slideItems.map(checkbox => {
                 const escolaNome = checkbox.nextElementSibling.textContent.trim();
                 return `<span class="badge text-bg-info badge-wrap">${escolaNome}</span>`;
             }).join('');
-            
             slidesHtml += `
                 <div class="carousel-item ${activeClass}">
                     <div class="carousel-item-content">${slideContent}</div>
                 </div>`;
         }
-        
         const controlsHtml = numSlides > 1 ? `
-            <button class="carousel-control-prev" type="button" data-bs-target="#${carouselId}" data-bs-slide="prev">
-                <span class="carousel-control-prev-icon" aria-hidden="true"></span><span class="visually-hidden">Anterior</span>
-            </button>
-            <button class="carousel-control-next" type="button" data-bs-target="#${carouselId}" data-bs-slide="next">
-                <span class="carousel-control-next-icon" aria-hidden="true"></span><span class="visually-hidden">Próximo</span>
-            </button>
+            <button class="carousel-control-prev" type="button" data-bs-target="#${carouselId}" data-bs-slide="prev"><span class="carousel-control-prev-icon" aria-hidden="true"></span><span class="visually-hidden">Anterior</span></button>
+            <button class="carousel-control-next" type="button" data-bs-target="#${carouselId}" data-bs-slide="next"><span class="carousel-control-next-icon" aria-hidden="true"></span><span class="visually-hidden">Próximo</span></button>
         ` : '';
-
         const indicatorsContainerHtml = numSlides > 1 ? `<div class="carousel-indicators">${indicatorsHtml}</div>` : '';
-
         carouselContainer.innerHTML = `
             <div id="${carouselId}" class="carousel carousel-dark slide" data-bs-ride="false">
                 ${indicatorsContainerHtml}
@@ -295,27 +270,19 @@ function atualizarDisplayEscolasSelecionadas() {
                 ${controlsHtml}
             </div>`;
     }
-
-    // Validação final para habilitar/desabilitar o botão de publicação
     const titulo = document.getElementById('titulo').value.trim();
     const mensagem = document.getElementById('mensagem').value.trim();
     document.getElementById('btnPublicar').disabled = !(titulo && mensagem && numSelecionadas > 0);
 }
 
-// Listener principal do DOM
 document.addEventListener('DOMContentLoaded', function() {
     const form = document.getElementById('avisoForm');
-    
-    // Gatilhos para atualização da UI
     document.getElementById('titulo').addEventListener('input', atualizarDisplayEscolasSelecionadas);
     document.getElementById('mensagem').addEventListener('input', atualizarDisplayEscolasSelecionadas);
-    
     document.querySelectorAll('.escola-checkbox').forEach(checkbox => {
         checkbox.addEventListener('change', atualizarDisplayEscolasSelecionadas);
     });
-
     document.getElementById('btnMarcarTodasEscolasSistema').addEventListener('click', () => {
-        // Filtra apenas os checkboxes visíveis para marcar todos
         document.querySelectorAll('.escola-item').forEach(item => {
             if (item.style.display !== 'none') {
                 item.querySelector('.escola-checkbox').checked = true;
@@ -323,19 +290,32 @@ document.addEventListener('DOMContentLoaded', function() {
         });
         atualizarDisplayEscolasSelecionadas();
     });
-
     document.getElementById('btnLimparSelecaoEscolas').addEventListener('click', () => {
         document.querySelectorAll('.escola-checkbox:checked').forEach(c => { c.checked = false; });
         atualizarDisplayEscolasSelecionadas();
     });
-
     document.getElementById('confirmarPublicacao').addEventListener('click', function() {
         this.disabled = true;
         this.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Publicando...';
         form.submit();
     });
 
-    // Carga inicial para refletir dados pré-preenchidos, se houver
+    // [NOVO] Listener para o preview da imagem
+    const imageInput = document.getElementById('imagem');
+    const imagePreview = document.getElementById('imagePreview');
+    imageInput.addEventListener('change', function() {
+        if (this.files && this.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                imagePreview.src = e.target.result;
+                imagePreview.style.display = 'block';
+            }
+            reader.readAsDataURL(this.files[0]);
+        } else {
+            imagePreview.style.display = 'none';
+        }
+    });
+
     atualizarDisplayEscolasSelecionadas();
 });
 </script>

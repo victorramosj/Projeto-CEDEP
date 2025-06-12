@@ -284,9 +284,10 @@ def listar_avisos_view(request):
     return render(request, 'problemas/listar_avisos.html', context)
 
 
+# seu_app/views.py
+
 from django.shortcuts import render, redirect
 from django.contrib import messages
-from django.http import HttpResponseForbidden
 from django.utils import timezone
 from .models import AvisoImportante, Escola
 from django.contrib.auth.decorators import login_required
@@ -298,51 +299,86 @@ def criar_aviso_view(request):
     # Verifica se o usuário é do tipo 'Escola' e bloqueia o acesso
     if gre_user.is_escola():
         messages.error(request, "Usuários do tipo 'Escola' não têm permissão para criar avisos.")
-        return redirect('listar_avisos')  # Redireciona para a página de avisos
+        return redirect('listar_avisos')
 
-    escolas = Escola.objects.all()  # Pega todas as escolas disponíveis para selecionar
+    # Busca todas as escolas para preencher o formulário no método GET
+    escolas = Escola.objects.all().order_by('nome')
 
     if request.method == 'POST':
+        # --- Obtenção dos dados do formulário ---
         titulo = request.POST.get('titulo')
         mensagem = request.POST.get('mensagem')
         prioridade = request.POST.get('prioridade', 'normal')
-        data_expiracao = request.POST.get('data_expiracao')
-        escolas_ids = request.POST.getlist('escola_id')  # Obtém as escolas selecionadas
+        data_expiracao_str = request.POST.get('data_expiracao')
+        escolas_ids = request.POST.getlist('escola_id')
+        
+        # [NOVO] Obtém o arquivo de imagem do request. Será 'None' se nenhum for enviado.
+        imagem_aviso = request.FILES.get('imagem')
 
-        # Validação simples para garantir que o título e a mensagem não estão vazios
+        # --- Validação dos dados ---
         if not titulo or not mensagem:
             messages.error(request, "O título e a mensagem são obrigatórios.")
-            return render(request, 'avisos/criar_aviso.html', {'escolas': escolas})
+            # Retorna ao formulário, mantendo os dados que o usuário já preencheu
+            return render(request, 'avisos/criar_aviso.html', {
+                'escolas': escolas,
+                'request': request # Passa o request para popular os campos no template
+            })
 
-        if not escolas_ids:  # Verifica se ao menos uma escola foi selecionada
+        if not escolas_ids:
             messages.error(request, "Pelo menos uma escola precisa ser selecionada.")
-            return render(request, 'avisos/criar_aviso.html', {'escolas': escolas})
+            return render(request, 'avisos/criar_aviso.html', {
+                'escolas': escolas,
+                'request': request
+            })
 
-        # Converte a data de expiração para o formato datetime
-        if data_expiracao:
-            # Converte a data de expiração para datetime, com a hora também
-            data_expiracao = timezone.datetime.strptime(data_expiracao, "%Y-%m-%dT%H:%M")
-        else:
-            data_expiracao = None
+        # --- Processamento dos dados ---
+        data_expiracao = None
+        if data_expiracao_str:
+            try:
+                # O formato do datetime-local do HTML é "YYYY-MM-DDTHH:MM"
+                data_expiracao = timezone.datetime.strptime(data_expiracao_str, "%Y-%m-%dT%H:%M")
+            except ValueError:
+                messages.error(request, "O formato da data de expiração é inválido.")
+                return render(request, 'avisos/criar_aviso.html', {
+                    'escolas': escolas,
+                    'request': request
+                })
 
-        # Criando o aviso
+        # --- Criação dos Avisos ---
         for escola_id in escolas_ids:
-            escola = Escola.objects.get(id=escola_id)  # Obtém a escola correspondente ao ID
-            AvisoImportante.objects.create(
-                titulo=titulo,
-                mensagem=mensagem,
-                prioridade=prioridade,
-                criado_por=gre_user,
-                escola=escola,  # Associando o aviso à escola
-                ativo=True,
-                data_expiracao=data_expiracao  # Salvando a data e hora de expiração
-            )
+            try:
+                escola = Escola.objects.get(id=escola_id)
+                
+                # Prepara um dicionário com os dados comuns
+                dados_aviso = {
+                    'titulo': titulo,
+                    'mensagem': mensagem,
+                    'prioridade': prioridade,
+                    'criado_por': gre_user,
+                    'escola': escola,
+                    'ativo': True,
+                    'data_expiracao': data_expiracao
+                }
 
-        messages.success(request, "Aviso criado com sucesso!")
-        return redirect('listar_avisos')  # Redireciona para a página de avisos
+                # [NOVO] Adiciona a imagem ao dicionário SOMENTE se ela foi enviada
+                if imagem_aviso:
+                    dados_aviso['imagem'] = imagem_aviso
 
-    # Quando for GET, passa as escolas para o template
-    return render(request, 'avisos/criar_aviso.html', {'escolas': escolas})
+                # Cria o objeto no banco de dados usando os dados do dicionário
+                AvisoImportante.objects.create(**dados_aviso)
+
+            except Escola.DoesNotExist:
+                messages.warning(request, f"A escola com ID {escola_id} não foi encontrada e foi ignorada.")
+                continue
+
+        messages.success(request, "Aviso(s) criado(s) com sucesso!")
+        return redirect('listar_avisos')
+
+    # Contexto para o método GET (quando a página é carregada pela primeira vez)
+    context = {
+        'escolas': escolas
+    }
+    return render(request, 'avisos/criar_aviso.html', context)
 
 
 from django.shortcuts import get_object_or_404, redirect
@@ -421,3 +457,63 @@ def apagar_varios_avisos(request):
             messages.warning(request, "Nenhum aviso selecionado para apagar.")
 
     return redirect('listar_avisos')
+
+
+
+
+
+# seu_app/views.py
+# problemas/views.py
+
+from django.http import JsonResponse
+from django.views.decorators.http import require_POST
+from django.utils import timezone
+import json
+from .models import AvisoImportante # <-- NOME CORRIGIDO AQUI
+
+# ... suas outras views
+
+def verificar_avisos_automaticos(request):
+    """
+    Verifica avisos que estão ativos mas cuja data de expiração já passou.
+    Esta lógica é mais precisa, usando os campos do seu modelo.
+    """
+    # Filtra por avisos que ainda estão marcados como ativos
+    # e cuja data de expiração já passou (é menor que o tempo atual).
+    avisos_expirados = AvisoImportante.objects.filter(
+        ativo=True,
+        data_expiracao__isnull=False, # Garante que o campo de expiração não é nulo
+        data_expiracao__lt=timezone.now()
+    )
+    
+    # Prepara a lista de avisos para ser enviada como JSON
+    avisos_para_apagar = list(avisos_expirados.values('id', 'titulo'))
+    
+    return JsonResponse({'avisos_para_apagar': avisos_para_apagar})
+
+
+@require_POST
+def apagar_avisos_automaticos(request):
+    """
+    Recebe uma lista de IDs de avisos via POST e os apaga.
+    Esta função agora opera no modelo AvisoImportante.
+    """
+    try:
+        data = json.loads(request.body)
+        aviso_ids = data.get('aviso_ids', [])
+
+        if not aviso_ids or not isinstance(aviso_ids, list):
+            return JsonResponse({'status': 'error', 'message': 'Nenhum ID de aviso fornecido.'}, status=400)
+
+        # Apaga os avisos do modelo correto: AvisoImportante
+        avisos_apagados, _ = AvisoImportante.objects.filter(id__in=aviso_ids).delete()
+
+        if avisos_apagados > 0:
+            return JsonResponse({'status': 'success', 'message': f'{avisos_apagados} aviso(s) foram apagados com sucesso.'})
+        else:
+            return JsonResponse({'status': 'error', 'message': 'Nenhum aviso correspondente encontrado para apagar.'})
+
+    except json.JSONDecodeError:
+        return JsonResponse({'status': 'error', 'message': 'Formato de requisição inválido.'}, status=400)
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=500)

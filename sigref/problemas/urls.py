@@ -52,6 +52,11 @@ urlpatterns = [
     path('avisos/apagar/<int:aviso_id>/', views.apagar_aviso_view, name='apagar_aviso'),
     # URL para apagar vários avisos
     path('apagar_varios_avisos/', views.apagar_varios_avisos, name='apagar_varios_avisos'),
+
+
+    # NOVAS URLS
+    path('problemas/avisos/verificar-automaticos/', views.verificar_avisos_automaticos, name='verificar_avisos_automaticos'),
+    path('problemas/avisos/apagar-automaticos/', views.apagar_avisos_automaticos, name='apagar_avisos_automaticos'),
 ]
 
 urlpatterns += router.urls

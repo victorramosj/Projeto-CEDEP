@@ -12,6 +12,18 @@ Dashboard da Escola
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 <!-- Seu CSS customizado -->
 <link rel="stylesheet" href="{% static 'css/escola.css' %}" />
+
+<style>
+    /* Estilos para o filtro ativo no modal de avisos */
+    .filter-btn-group .btn.active {
+        background-color: #0d6efd;
+        color: white;
+    }
+    .aviso-card .card-body {
+        padding-top: 0.5rem;
+        padding-bottom: 0.5rem;
+    }
+</style>
 {% endblock %}
 
 {% block content %}
@@ -238,35 +250,65 @@ Dashboard da Escola
 
 <!-- Modal de Avisos (COM NOVO DESIGN E FUNCIONALIDADES) -->
 <div class="modal fade" id="modalAvisos" tabindex="-1" aria-labelledby="modalAvisosLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+    <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="modalAvisosLabel"><i class="fas fa-bullhorn me-2"></i>Todos os Avisos</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
             </div>
             <div class="modal-body">
-                {% for aviso in avisos %}
-                    <div class="card mb-3 shadow-sm">
+                
+                <!-- Filtros -->
+                <div class="d-flex justify-content-center flex-wrap gap-2 mb-4 filter-btn-group">
+                    <button class="btn btn-outline-primary active" data-filter="todos">Todos</button>
+                    <button class="btn btn-outline-secondary" data-sort="recentes">Mais Recentes</button>
+                    <div class="btn-group">
+                        <button type="button" class="btn btn-outline-info dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                            Prioridade
+                        </button>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="#" data-filter="alta">Alta</a></li>
+                            <li><a class="dropdown-item" href="#" data-filter="normal">Normal</a></li>
+                            <li><a class="dropdown-item" href="#" data-filter="baixa">Baixa</a></li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div id="avisos-container">
+                    {% for aviso in avisos %}
+                    <div class="card mb-3 shadow-sm aviso-item" data-prioridade="{{ aviso.prioridade }}" data-timestamp="{{ aviso.data_criacao.timestamp }}">
                         <div class="card-header d-flex justify-content-between align-items-center">
                             <strong class="text-truncate">{{ aviso.titulo }}</strong>
-                            {% if aviso.prioridade == 'alta' %}<span class="badge bg-danger">Alta</span>
-                            {% elif aviso.prioridade == 'normal' %}<span class="badge bg-warning text-dark">Normal</span>
-                            {% else %}<span class="badge bg-success">Baixa</span>
-                            {% endif %}
+                            <div>
+                                {% if aviso.prioridade == 'alta' %}<span class="badge bg-danger">Alta</span>
+                                {% elif aviso.prioridade == 'normal' %}<span class="badge bg-warning text-dark">Normal</span>
+                                {% else %}<span class="badge bg-success">Baixa</span>
+                                {% endif %}
+                            </div>
                         </div>
                         <div class="card-body">
-                            <p style="white-space: pre-wrap;">{{ aviso.mensagem }}</p>
+                           <button class="btn btn-sm btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#collapseAviso{{ aviso.id }}" aria-expanded="false" aria-controls="collapseAviso{{ aviso.id }}">
+                               <i class="bi bi-eye"></i> Visualizar Mensagem
+                           </button>
+                           <div class="collapse mt-2" id="collapseAviso{{ aviso.id }}">
+                                {% if aviso.imagem %}
+                                    <img src="{{ aviso.imagem.url }}" class="img-fluid rounded my-3" alt="Imagem do Aviso">
+                                {% endif %}
+                               <p style="white-space: pre-wrap;">{{ aviso.mensagem }}</p>
+                           </div>
                         </div>
                         <div class="card-footer bg-light text-muted small d-flex justify-content-between flex-wrap">
                             <span><i class="fas fa-user me-1"></i> {{ aviso.criado_por }}</span>
+                            <span><i class="bi bi-calendar-event me-1"></i> Publicado em: {{ aviso.data_criacao|date:"d/m/Y H:i" }}</span>
                             {% if aviso.data_expiracao %}
                                 <span><i class="fas fa-clock me-1"></i> Expira em: {{ aviso.data_expiracao|date:"d/m/Y H:i" }}</span>
                             {% endif %}
                         </div>
                     </div>
-                {% empty %}
-                    <p class="text-center text-muted">Não há avisos para exibir.</p>
-                {% endfor %}
+                    {% empty %}
+                        <p class="text-center text-muted">Não há avisos para exibir.</p>
+                    {% endfor %}
+                </div>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
@@ -275,4 +317,60 @@ Dashboard da Escola
     </div>
 </div>
 
+{% endblock %}
+
+{% block extra_script %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const modal = document.getElementById('modalAvisos');
+    if (!modal) return;
+
+    const filterButtons = modal.querySelectorAll('.filter-btn-group .btn, .filter-btn-group .dropdown-item');
+    const avisosContainer = modal.querySelector('#avisos-container');
+    const allAvisos = Array.from(avisosContainer.querySelectorAll('.aviso-item'));
+
+    filterButtons.forEach(button => {
+        button.addEventListener('click', function(e) {
+            e.preventDefault();
+
+            // Lógica para o botão de Ordenar
+            if (this.dataset.sort === 'recentes') {
+                // Remove o 'active' de outros botões de filtro principal
+                modal.querySelectorAll('.filter-btn-group > .btn.active').forEach(b => b.classList.remove('active'));
+                this.classList.add('active'); // Ativa o botão 'Mais Recentes'
+                
+                const sortedAvisos = allAvisos.slice().sort((a, b) => {
+                    return b.dataset.timestamp - a.dataset.timestamp;
+                });
+                
+                avisosContainer.innerHTML = ''; // Limpa o container
+                sortedAvisos.forEach(aviso => avisosContainer.appendChild(aviso)); // Adiciona ordenado
+                return; // Encerra a função aqui
+            }
+            
+            // Lógica para os botões de Filtro
+            const filterValue = this.dataset.filter;
+            
+            // Gerencia o estado 'active' dos botões
+            modal.querySelectorAll('.filter-btn-group .btn.active').forEach(b => b.classList.remove('active'));
+            if(this.classList.contains('btn')){
+                this.classList.add('active');
+            } else {
+                // Se for um item do dropdown, ativa o botão 'Todos' se o filtro for 'todos'
+                modal.querySelector('[data-filter="todos"]').classList.add('active');
+            }
+
+
+            allAvisos.forEach(aviso => {
+                const prioridade = aviso.dataset.prioridade;
+                if (filterValue === 'todos' || prioridade === filterValue) {
+                    aviso.style.display = 'block';
+                } else {
+                    aviso.style.display = 'none';
+                }
+            });
+        });
+    });
+});
+</script>
 {% endblock %}

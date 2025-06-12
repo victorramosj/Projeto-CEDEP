@@ -29,16 +29,16 @@
             <div class="d-flex justify-content-center mb-4">
                 <div class="btn-group" role="group" aria-label="Filtro de Prioridade">
                     <a href="{% url 'listar_avisos' %}" class="btn {% if not prioridade_atual %}btn-primary{% else %}btn-outline-primary{% endif %}">
-                       Todas
+                        Todas
                     </a>
                     <a href="?prioridade=alta" class="btn {% if prioridade_atual == 'alta' %}btn-danger{% else %}btn-outline-danger{% endif %}">
-                       <i class="bi bi-exclamation-triangle-fill me-1"></i> Alta
+                        <i class="bi bi-exclamation-triangle-fill me-1"></i> Alta
                     </a>
                     <a href="?prioridade=normal" class="btn {% if prioridade_atual == 'normal' %}btn-warning text-dark{% else %}btn-outline-warning text-dark{% endif %}">
-                       <i class="bi bi-tag-fill me-1"></i> Normal
+                        <i class="bi bi-tag-fill me-1"></i> Normal
                     </a>
                     <a href="?prioridade=baixa" class="btn {% if prioridade_atual == 'baixa' %}btn-success{% else %}btn-outline-success{% endif %}">
-                       <i class="bi bi-check-circle-fill me-1"></i> Baixa
+                        <i class="bi bi-check-circle-fill me-1"></i> Baixa
                     </a>
                 </div>
             </div>
@@ -61,6 +61,7 @@
                     {% for aviso in avisos %}
                     <div class="col">
                         <div class="card h-100 shadow-hover">
+                            
                             <div class="card-header d-flex justify-content-between align-items-center bg-white">
                                 <h6 class="card-title mb-0 fw-bold text-truncate" title="{{ aviso.titulo }}">
                                     {{ aviso.titulo }}
@@ -88,16 +89,20 @@
                                 <input class="form-check-input me-auto aviso-checkbox" type="checkbox" name="avisos_selecionados" value="{{ aviso.id }}" title="Selecionar para apagar">
                                 
                                 <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#viewAvisoModal"
-                                    data-titulo="{{ aviso.titulo }}" data-mensagem="{{ aviso.mensagem }}"
-                                    data-prioridade="{{ aviso.get_prioridade_display }}" data-escola="{{ aviso.escola.nome }}"
-                                    data-criado-por="{{ aviso.criado_por }}" data-data-criacao="{{ aviso.data_criacao|date:"d/m/Y H:i" }}">
+                                        data-titulo="{{ aviso.titulo }}" 
+                                        data-mensagem="{{ aviso.mensagem }}"
+                                        data-prioridade="{{ aviso.get_prioridade_display }}" 
+                                        data-escola="{{ aviso.escola.nome }}"
+                                        data-criado-por="{{ aviso.criado_por }}" 
+                                        data-data-criacao="{{ aviso.data_criacao|date:"d/m/Y H:i" }}"
+                                        {% if aviso.imagem %}data-imagem-url="{{ aviso.imagem.url }}"{% endif %}>
                                     <i class="bi bi-eye-fill"></i> Visualizar
                                 </button>
 
                                 <button type="button" class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#editAvisoModal"
-                                    data-id="{{ aviso.id }}" data-titulo="{{ aviso.titulo }}" data-mensagem="{{ aviso.mensagem }}"
-                                    data-prioridade="{{ aviso.prioridade }}" data-escola-id="{{ aviso.escola.id }}"
-                                    data-criado-por-id="{{ aviso.criado_por.id }}" data-ativo="{{ aviso.ativo|yesno:'true,false' }}">
+                                        data-id="{{ aviso.id }}" data-titulo="{{ aviso.titulo }}" data-mensagem="{{ aviso.mensagem }}"
+                                        data-prioridade="{{ aviso.prioridade }}" data-escola-id="{{ aviso.escola.id }}"
+                                        data-criado-por-id="{{ aviso.criado_por.id }}" data-ativo="{{ aviso.ativo|yesno:'true,false' }}">
                                     <i class="bi bi-pencil-square"></i> Editar
                                 </button>
                             </div>
@@ -146,6 +151,11 @@
         <div class="modal-content">
             <div class="modal-header"><h5 class="modal-title" id="viewAvisoModalTitle"></h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
             <div class="modal-body">
+                
+                <div id="viewAvisoModalImageContainer" class="text-center mb-3" style="display: none;">
+                    <img id="viewAvisoModalImage" src="" class="img-fluid rounded" alt="Imagem do Aviso">
+                </div>
+                
                 <p><strong>Prioridade: </strong><span id="viewAvisoModalPriorityBadge"></span></p>
                 <p><strong>Mensagem:</strong></p>
                 <p id="viewAvisoModalBodyContent" style="white-space: pre-wrap;"></p>
@@ -181,55 +191,66 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Modal de Visualização
     const viewAvisoModal = document.getElementById('viewAvisoModal');
-    viewAvisoModal.addEventListener('show.bs.modal', event => {
-        const button = event.relatedTarget;
-        document.getElementById('viewAvisoModalTitle').textContent = button.getAttribute('data-titulo');
-        document.getElementById('viewAvisoModalBodyContent').textContent = button.getAttribute('data-mensagem');
-        document.getElementById('viewAvisoModalPriorityBadge').textContent = button.getAttribute('data-prioridade');
-        document.getElementById('viewAvisoModalEscola').textContent = button.getAttribute('data-escola');
-        document.getElementById('viewAvisoModalCriadoPor').textContent = button.getAttribute('data-criado-por');
-        document.getElementById('viewAvisoModalDataCriacao').textContent = button.getAttribute('data-data-criacao');
-    });
+    if (viewAvisoModal) {
+        viewAvisoModal.addEventListener('show.bs.modal', event => {
+            const button = event.relatedTarget;
+            document.getElementById('viewAvisoModalTitle').textContent = button.getAttribute('data-titulo');
+            document.getElementById('viewAvisoModalBodyContent').textContent = button.getAttribute('data-mensagem');
+            document.getElementById('viewAvisoModalPriorityBadge').textContent = button.getAttribute('data-prioridade');
+            document.getElementById('viewAvisoModalEscola').textContent = button.getAttribute('data-escola');
+            document.getElementById('viewAvisoModalCriadoPor').textContent = button.getAttribute('data-criado-por');
+            document.getElementById('viewAvisoModalDataCriacao').textContent = button.getAttribute('data-data-criacao');
+            
+            const imageUrl = button.getAttribute('data-imagem-url');
+            const imageContainer = document.getElementById('viewAvisoModalImageContainer');
+            const imageView = document.getElementById('viewAvisoModalImage');
 
-    // Modal de Edição com Validação
+            if (imageUrl) {
+                imageView.src = imageUrl;
+                imageContainer.style.display = 'block';
+            } else {
+                imageContainer.style.display = 'none';
+            }
+        });
+    }
+
     const editAvisoModal = document.getElementById('editAvisoModal');
-    editAvisoModal.addEventListener('show.bs.modal', event => {
-        const button = event.relatedTarget;
-        const form = document.getElementById('editAvisoForm');
-        form.action = `/problemas/avisos/editar/${button.getAttribute('data-id')}/`;
-        const inputTitulo = document.getElementById('titulo_modal_edit');
-        const textareaMensagem = document.getElementById('mensagem_modal_edit');
-        const selectPrioridade = document.getElementById('prioridade_modal_edit');
-        inputTitulo.value = button.getAttribute('data-titulo');
-        textareaMensagem.value = button.getAttribute('data-mensagem');
-        selectPrioridade.value = button.getAttribute('data-prioridade');
-        document.getElementById('escola_modal_edit').value = button.getAttribute('data-escola-id');
-        document.getElementById('criado_por_modal_edit').value = button.getAttribute('data-criado-por-id');
-        document.getElementById('ativo_modal_edit').value = button.getAttribute('data-ativo');
-        
-        const saveChangesBtn = document.getElementById('saveChangesBtn');
-        const originalData = { titulo: inputTitulo.value, mensagem: textareaMensagem.value, prioridade: selectPrioridade.value };
-        saveChangesBtn.disabled = true;
-        
-        const checkForChanges = () => {
-            const isChanged = inputTitulo.value !== originalData.titulo || textareaMensagem.value !== originalData.mensagem || selectPrioridade.value !== originalData.prioridade;
-            saveChangesBtn.disabled = !isChanged;
-        };
-        form.addEventListener('input', checkForChanges);
-    });
+    if (editAvisoModal) {
+        editAvisoModal.addEventListener('show.bs.modal', event => {
+            const button = event.relatedTarget;
+            const form = document.getElementById('editAvisoForm');
+            form.action = `/problemas/avisos/editar/${button.getAttribute('data-id')}/`;
+            const inputTitulo = document.getElementById('titulo_modal_edit');
+            const textareaMensagem = document.getElementById('mensagem_modal_edit');
+            const selectPrioridade = document.getElementById('prioridade_modal_edit');
+            inputTitulo.value = button.getAttribute('data-titulo');
+            textareaMensagem.value = button.getAttribute('data-mensagem');
+            selectPrioridade.value = button.getAttribute('data-prioridade');
+            document.getElementById('escola_modal_edit').value = button.getAttribute('data-escola-id');
+            document.getElementById('criado_por_modal_edit').value = button.getAttribute('data-criado-por-id');
+            document.getElementById('ativo_modal_edit').value = button.getAttribute('data-ativo');
+            
+            const saveChangesBtn = document.getElementById('saveChangesBtn');
+            const originalData = { titulo: inputTitulo.value, mensagem: textareaMensagem.value, prioridade: selectPrioridade.value };
+            saveChangesBtn.disabled = true;
+            
+            const checkForChanges = () => {
+                const isChanged = inputTitulo.value !== originalData.titulo || textareaMensagem.value !== originalData.mensagem || selectPrioridade.value !== originalData.prioridade;
+                saveChangesBtn.disabled = !isChanged;
+            };
+            form.addEventListener('input', checkForChanges);
+        });
+    }
 
-    // Selecionar Todos
     const masterCheckbox = document.getElementById('selecionarTodosCheckbox');
-    const noticeCheckboxes = document.querySelectorAll('.aviso-checkbox');
     if (masterCheckbox) {
         masterCheckbox.addEventListener('change', function() {
+            const noticeCheckboxes = document.querySelectorAll('.aviso-checkbox');
             noticeCheckboxes.forEach(checkbox => { checkbox.checked = this.checked; });
         });
     }
 
-    // Confirmação de Exclusão com SweetAlert2
     const deleteForm = document.getElementById('deleteMultipleForm');
     if (deleteForm) {
         deleteForm.addEventListener('submit', function(event) {
@@ -255,6 +276,56 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         });
     }
+ 
+    function getCsrfToken() {
+        return document.querySelector('[name=csrfmiddlewaretoken]').value;
+    }
+
+    async function verificarEApagarAvisosAutomaticos() {
+        try {
+            const response = await fetch("{% url 'verificar_avisos_automaticos' %}");
+            const data = await response.json();
+
+            if (data.avisos_para_apagar && data.avisos_para_apagar.length > 0) {
+                const avisos = data.avisos_para_apagar;
+                const total = avisos.length;
+                
+                const result = await Swal.fire({
+                    title: `Encontramos ${total} aviso(s) automático(s) expirado(s).`,
+                    text: 'Deseja apagá-los agora?',
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonText: 'Sim, apagar!',
+                    cancelButtonText: 'Cancelar',
+                    confirmButtonColor: '#d33'
+                });
+
+                if (result.isConfirmed) {
+                    const deleteResponse = await fetch("{% url 'apagar_avisos_automaticos' %}", {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': getCsrfToken()
+                        },
+                        body: JSON.stringify({ 'aviso_ids': avisos.map(a => a.id) })
+                    });
+
+                    const deleteData = await deleteResponse.json();
+
+                    if (deleteData.status === 'success') {
+                        await Swal.fire('Sucesso!', deleteData.message, 'success');
+                        window.location.reload();
+                    } else {
+                        await Swal.fire('Erro!', deleteData.message || 'Ocorreu um erro ao apagar os avisos.', 'error');
+                    }
+                }
+            }
+        } catch (error) {
+            console.error('Erro ao verificar/apagar avisos automáticos:', error);
+        }
+    }
+ 
+    verificarEApagarAvisosAutomaticos();
 });
 </script>
 
