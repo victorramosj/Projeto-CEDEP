@@ -37,6 +37,10 @@ urlpatterns = [
     path('problemas/lacunas/', views.tela_lacuna_view, name='tela_lacunas'),
     path('problema/problemas/', views.tela_problema_view, name='tela_problemas'),
 
+    path('alertas/', views.dashboard, name='alertas'),
+    path('tela_lacunas/', views.tela_lacuna_view, name='tela_lacunas'),
+    path('tela_problemas/', views.tela_problema_view, name='tela_problemas'),
+
     # API Tela Lacuna
     path('lacuna/<int:lacuna_id>/alterar_status/', UpdateStatusLacuna.as_view(), name='alterar_status_lacuna'),
     # API Tela Problema
