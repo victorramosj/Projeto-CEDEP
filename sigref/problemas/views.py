@@ -471,26 +471,43 @@ from django.utils import timezone
 import json
 from .models import AvisoImportante # <-- NOME CORRIGIDO AQUI
 
-# ... suas outras views
+# Em seu arquivo views.py
+
+from django.http import JsonResponse
+from django.utils import timezone
+from .models import AvisoImportante # Nome do seu modelo
 
 def verificar_avisos_automaticos(request):
     """
-    Verifica avisos que estão ativos mas cuja data de expiração já passou.
-    Esta lógica é mais precisa, usando os campos do seu modelo.
+    Verifica avisos que estão ativos mas cuja data de expiração já passou
+    e retorna os dados completos para o front-end.
     """
-    # Filtra por avisos que ainda estão marcados como ativos
-    # e cuja data de expiração já passou (é menor que o tempo atual).
+    # A sua consulta para buscar os avisos expirados está correta.
     avisos_expirados = AvisoImportante.objects.filter(
         ativo=True,
-        data_expiracao__isnull=False, # Garante que o campo de expiração não é nulo
+        data_expiracao__isnull=False,
         data_expiracao__lt=timezone.now()
-    )
+    ).select_related('escola') # Otimização: busca a escola relacionada na mesma consulta
+
+    # --- INÍCIO DA CORREÇÃO ---
+    # Em vez de usar .values(), vamos construir a lista manualmente
+    # para incluir todos os campos necessários e formatar a data.
     
-    # Prepara a lista de avisos para ser enviada como JSON
-    avisos_para_apagar = list(avisos_expirados.values('id', 'titulo'))
+    avisos_para_apagar = []
+    for aviso in avisos_expirados:
+        avisos_para_apagar.append({
+            'id': aviso.id,
+            'titulo': aviso.titulo,
+            # Acessa o nome da escola através da relação e trata caso não haja escola
+            'escola_nome': aviso.escola.nome if aviso.escola else 'Não especificada',
+            # Converte a data para o formato ISO 8601, que o JavaScript entende
+            'data_expiracao': aviso.data_expiracao.isoformat()
+        })
+    # --- FIM DA CORREÇÃO ---
     
     return JsonResponse({'avisos_para_apagar': avisos_para_apagar})
 
+# ... suas outras views, como a de apagar avisos, etc.
 
 @require_POST
 def apagar_avisos_automaticos(request):
