@@ -29,51 +29,37 @@
                 <div class="accordion" id="perguntasAccordion">
                     {% for form in formset %}
                     <div class="card mb-3 border-primary">
-                        <div class="card-header p-0" id="heading{{ forloop.counter }}">
+                        <div class="card-header" id="heading{{ forloop.counter }}">
                             <h5 class="mb-0">
-                                <button class="btn btn-link text-primary w-100 text-start px-3 py-3 fw-semibold d-flex align-items-center gap-2"
-                                        type="button"
-                                        data-bs-toggle="collapse"
-                                        data-bs-target="#collapse{{ forloop.counter }}"
-                                        aria-expanded="{{ forloop.first|yesno:'true,false' }}"
-                                        aria-controls="collapse{{ forloop.counter }}">
-                                    <span class="badge bg-primary rounded-pill me-2">{{ forloop.counter }}</span>
-                                    <span class="flex-grow-1">{{ form.initial.pergunta.texto|truncatechars:60 }}</span>
-                                    <i class="fas fa-chevron-down ms-auto"></i>
+                                <button class="btn btn-link text-primary w-100 text-start" 
+                                        type="button" 
+                                        data-bs-toggle="collapse" 
+                                        data-bs-target="#collapse{{ forloop.counter }}" 
+                                        aria-expanded="true">
+                                    Pergunta {{ forloop.counter }}: {{ form.initial.pergunta.texto|truncatechars:40 }}
                                 </button>
                             </h5>
                         </div>
 
-                        <div id="collapse{{ forloop.counter }}"
-                             class="collapse {% if forloop.first %}show{% endif %}"
-                             aria-labelledby="heading{{ forloop.counter }}"
+                        <div id="collapse{{ forloop.counter }}" 
+                             class="collapse show" 
+                             aria-labelledby="heading{{ forloop.counter }}" 
                              data-bs-parent="#perguntasAccordion">
                             <div class="card-body">
                                 {% if form.initial.pergunta.tipo_resposta == 'SN' %}
-                                <div class="btn-group w-100 mb-3" role="group" aria-label="Sim ou Não">
+                                <div class="btn-group-vertical w-100 gap-2">
                                     {% for choice in form.resposta_sn %}
-                                    <input type="radio"
-                                           class="btn-check"
-                                           name="{{ choice.name }}"
-                                           id="{{ choice.id_for_label }}"
-                                           value="{{ choice.choice_value }}"
-                                           autocomplete="off"
-                                           {% if choice.choice_value == form.initial.resposta_sn %}checked{% endif %}>
-                                    <label class="btn btn-outline-primary px-4 py-2"
-                                           for="{{ choice.id_for_label }}">
-                                        {{ choice.choice_label }}
-                                    </label>
+                                    <div class="btn btn-outline-primary text-start position-relative">
+                                        {{ choice.tag }}
+                                        <label for="{{ choice.id_for_label }}" class="w-100 ps-4">
+                                            {{ choice.choice_label }}
+                                        </label>
+                                    </div>
                                     {% endfor %}
                                 </div>
                                 {% else %}
-                                <div class="form-floating mb-3">
-                                    {{ form.resposta_texto }}
-                                    <label for="{{ form.resposta_texto.id_for_label }}">Sua resposta</label>
-                                </div>
-                                {% endif %}
-                                {% if form.errors %}
-                                <div class="alert alert-danger mt-2">
-                                    {{ form.errors }}
+                                <div class="form-floating">
+                                    {{ form.as_p }}
                                 </div>
                                 {% endif %}
                             </div>
