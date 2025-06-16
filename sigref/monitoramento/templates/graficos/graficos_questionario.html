@@ -4,20 +4,40 @@
 {% block content %}
 <h2>{{ questionario.titulo }} - Gráficos</h2>
 
-<div id="graficos-container"></div>
+<div id="graficos-container" style="max-width: 900px; margin: auto;"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
     const dadosGraficos = JSON.parse('{{ dados_graficos|safe }}');
     const container = document.getElementById('graficos-container');
 
-    dadosGraficos.forEach((item, index) => {
-        const canvas = document.createElement('canvas');
-        canvas.id = `grafico-${index}`;
-        container.appendChild(document.createElement('h4')).innerText = item.pergunta;
-        container.appendChild(canvas);
+    if (dadosGraficos.length === 0) {
+        container.innerHTML = "<p>Nenhum dado disponível para exibir gráficos.</p>";
+    }
 
+    dadosGraficos.forEach((item, index) => {
+        // Pergunta
+        const pergunta = document.createElement('h4');
+        pergunta.innerText = item.pergunta;
+        pergunta.style.marginTop = "32px";
+        container.appendChild(pergunta);
+
+        // Descrição (se houver)
+        if (item.descricao) {
+            const desc = document.createElement('p');
+            desc.innerText = item.descricao;
+            desc.style.color = "#666";
+            desc.style.fontSize = "0.95em";
+            container.appendChild(desc);
+        }
+
+        // Gráfico ou lista
         if (item.tipo === 'SN') {
+            const canvas = document.createElement('canvas');
+            canvas.id = `grafico-${index}`;
+            canvas.height = 200;
+            container.appendChild(canvas);
+
             new Chart(canvas, {
                 type: 'pie',
                 data: {
@@ -26,9 +46,21 @@
                         data: item.dados.values,
                         backgroundColor: ['#28a745', '#dc3545'],
                     }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: { position: 'bottom' },
+                        title: { display: false }
+                    }
                 }
             });
         } else if (item.tipo === 'NU') {
+            const canvas = document.createElement('canvas');
+            canvas.id = `grafico-${index}`;
+            canvas.height = 220;
+            container.appendChild(canvas);
+
             new Chart(canvas, {
                 type: 'bar',
                 data: {
@@ -38,12 +70,30 @@
                         data: item.dados.valores,
                         backgroundColor: '#007bff'
                     }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: { display: false },
+                        title: { display: false }
+                    },
+                    scales: {
+                        y: { beginAtZero: true }
+                    }
                 }
             });
         } else if (item.tipo === 'TX') {
-            const texto = item.dados.exemplos.map(t => `<li>${t}</li>`).join('');
             const div = document.createElement('div');
-            div.innerHTML = `<ul>${texto}</ul>`;
+            div.style.background = "#f8f9fa";
+            div.style.padding = "12px 18px";
+            div.style.borderRadius = "6px";
+            div.style.marginBottom = "16px";
+            div.style.marginTop = "8px";
+            if (item.dados.exemplos.length > 0) {
+                div.innerHTML = `<ul style="margin:0; padding-left:18px;">${item.dados.exemplos.map(t => `<li>${t}</li>`).join('')}</ul>`;
+            } else {
+                div.innerHTML = "<em>Nenhuma resposta textual registrada.</em>";
+            }
             container.appendChild(div);
         }
     });
