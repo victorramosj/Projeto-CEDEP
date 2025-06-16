@@ -209,25 +209,51 @@ def problema_dashboard_view(request):
 
 
 
+from django.shortcuts import render
+from django.core.paginator import Paginator
+from django.db.models import Q
+from .models import Lacuna  # Certifique-se de que o modelo Lacuna está importado
+
 # TELA LACUNA CGAF/UDP
 def tela_lacuna_view(request):
-    # Obtém todas as lacunas da escola
-    lacunas_list = Lacuna.objects.all()
+    """
+    Esta view agora lida com a lógica de busca e paginação.
+    """
+    # 1. Obter o termo de busca a partir dos parâmetros GET da URL (ex: ?q=minha-busca)
+    search_query = request.GET.get('q', '')
 
-    # Cria o objeto paginator para limitar a 9 lacunas por página
-    paginator = Paginator(lacunas_list, 9)
+    # 2. Começar com a lista de todas as lacunas
+    # Usar select_related('escola') otimiza a consulta, evitando múltiplos acessos ao banco de dados para buscar o nome de cada escola.
+    lacunas_list = Lacuna.objects.select_related('escola').all()
 
+    # 3. Se um termo de busca for fornecido, filtrar a lista
+    if search_query:
+        # A busca é feita no nome da escola (escola__nome) E na disciplina.
+        # '__icontains' torna a busca case-insensitive (não diferencia maiúsculas de minúsculas).
+        # O objeto Q permite a condição OR (ou uma coisa OU outra).
+        lacunas_list = lacunas_list.filter(
+            Q(escola__nome__icontains=search_query) |
+            Q(disciplina__icontains=search_query)
+        ).distinct()
+
+    # Ordenar o resultado
+    lacunas_list = lacunas_list.order_by('-criado_em')
+    
+    # Obter a contagem total DEPOIS de aplicar o filtro
+    todas_lacunas_count = lacunas_list.count()
+
+    # 4. Configurar a paginação
+    paginator = Paginator(lacunas_list, 9)  # 9 itens por página
     page_number = request.GET.get('page')
     lacunas_page = paginator.get_page(page_number)
 
-    todas_lacunas = lacunas_list.count()
-
-    # Passa as lacunas paginadas para o template
-    return render(request, 'tela_lacunas.html', {
+    # 5. Passar os dados para o template, incluindo o termo de busca
+    context = {
         'lacunas_page': lacunas_page,
-        'todas_lacunas': todas_lacunas,  # <--- ESSENCIAL
-    })
-
+        'todas_lacunas': todas_lacunas_count,
+        'search_query': search_query,  # Essencial para manter o valor no input de busca
+    }
+    return render(request, 'tela_lacunas.html', context)
 
 # TELA PROBLEMA CGAF/UDP
 def tela_problema_view(request):

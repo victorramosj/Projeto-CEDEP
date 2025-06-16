@@ -61,6 +61,9 @@ urlpatterns = [
     # NOVAS URLS
     path('problemas/avisos/verificar-automaticos/', views.verificar_avisos_automaticos, name='verificar_avisos_automaticos'),
     path('problemas/avisos/apagar-automaticos/', views.apagar_avisos_automaticos, name='apagar_avisos_automaticos'),
+    
+    path('tela_lacunas/', views.tela_lacuna_view, name='tela_lacuna_view'),
+
 ]
 
 urlpatterns += router.urls
