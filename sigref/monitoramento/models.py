@@ -288,7 +288,6 @@ class Monitoramento(models.Model):
         return f"{self.escola} - {self.questionario} ({self.criado_em:%d/%m/%Y %H:%M})"
     
 
-
 class Resposta(models.Model):
     monitoramento = models.ForeignKey(
         Monitoramento,
@@ -301,8 +300,8 @@ class Resposta(models.Model):
         related_name='respostas'
     )
     resposta_sn = models.CharField(
-        max_length=3, 
-        choices=[('Sim', 'Sim'), ('Nao', 'Não')], 
+        max_length=1,  # Alterado para 1 caractere
+        choices=[('S', 'Sim'), ('N', 'Não')],  # Valores corrigidos
         blank=True, 
         null=True
     )
@@ -312,7 +311,8 @@ class Resposta(models.Model):
 
     def resposta_formatada(self):
         if self.pergunta.tipo_resposta == 'SN':
-            return self.resposta_sn
+            # Retorna o display name baseado nas choices
+            return dict(self._meta.get_field('resposta_sn').choices).get(self.resposta_sn, '')
         elif self.pergunta.tipo_resposta == 'NU':
             return str(self.resposta_num)
         return self.resposta_texto
