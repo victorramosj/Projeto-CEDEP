@@ -6,9 +6,12 @@
 {% block content %}
 <div class="container-fluid px-4">
   <div class="d-flex justify-content-between align-items-center mb-4">
-    <h1 class="mb-2" style="color: #10295d">Perguntas de “{{ questionario.titulo }}”</h1>
+    <h1 class="mb-2 fw-bold" style="color: #10295d">
+      <i class="bi bi-question-circle me-2"></i>
+      Perguntas de “{{ questionario.titulo }}”
+    </h1>
     <div class="btn-group">
-      <a href="{% url 'fluxo_monitoramento_setores' %}" class="btn btn-secondary btn-sm me-2">
+      <a href="{% url 'fluxo_monitoramento_setores' %}" class="btn btn-outline-secondary btn-sm me-2">
         <i class="bi bi-arrow-left"></i> Voltar
       </a>
       <button class="btn btn-success btn-sm" id="btn-add">
@@ -17,19 +20,19 @@
     </div>
   </div>
 
-  <div class="card shadow-sm">
+  <div class="card shadow-sm border-0">
     <div class="card-body">
       <div class="table-responsive">
-        <table class="table table-hover table-bordered" id="questions-table">
-          <thead class="table-light">
+        <table class="table table-hover align-middle table-bordered mb-0" id="questions-table">
+          <thead class="table-primary">
             <tr>
-              <th>Ordem</th>
+              <th style="width: 80px;">Ordem</th>
               <th>Texto</th>
-              <th>Tipo</th>
-              <th>Ações</th>
+              <th style="width: 120px;">Tipo</th>
+              <th style="width: 120px;">Ações</th>
             </tr>
           </thead>
-          <tbody></tbody>
+          <tbody style="background-color: #f8fafc;"></tbody>
         </table>
       </div>
     </div>
@@ -39,10 +42,10 @@
 <!-- Modal de cadastro/edição -->
 <div class="modal fade" id="questionModal" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title">Pergunta</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+    <div class="modal-content border-0 shadow">
+      <div class="modal-header bg-primary text-white">
+        <h5 class="modal-title"><i class="bi bi-pencil-square me-2"></i>Pergunta</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
       </div>
       <div class="modal-body">
         <form id="question-form">
@@ -50,15 +53,15 @@
           <input type="hidden" id="question-id">
           <input type="hidden" id="questionario-id" value="{{ questionario.pk }}">
           <div class="mb-3">
-            <label class="form-label">Texto</label>
-            <textarea class="form-control" id="question-text" rows="2" required></textarea>
+            <label class="form-label fw-semibold">Texto</label>
+            <textarea class="form-control" id="question-text" rows="2" required placeholder="Digite o texto da pergunta"></textarea>
           </div>
           <div class="mb-3">
-            <label class="form-label">Ordem</label>
+            <label class="form-label fw-semibold">Ordem</label>
             <input type="number" class="form-control" id="question-order" readonly>
           </div>
           <div class="mb-3">
-            <label class="form-label">Tipo</label>
+            <label class="form-label fw-semibold">Tipo</label>
             <select class="form-select" id="question-type">
               <option value="SN">Sim/Não</option>
               <option value="NU">Numérico</option>
@@ -67,9 +70,11 @@
           </div>
         </form>
       </div>
-      <div class="modal-footer">
-        <button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancelar</button>
-        <button class="btn btn-primary btn-sm" id="btn-save">Salvar</button>
+      <div class="modal-footer bg-light">
+        <button class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Cancelar</button>
+        <button class="btn btn-primary btn-sm" id="btn-save">
+          <i class="bi bi-save me-1"></i>Salvar
+        </button>
       </div>
     </div>
   </div>
@@ -98,17 +103,24 @@
         (data.results || data).forEach(q => {
           const tr = document.createElement('tr');
           tr.innerHTML = `
-            <td>${q.ordem}</td>
+            <td class="text-center fw-bold">${q.ordem}</td>
             <td>${q.texto}</td>
-            <td>${{ SN:'Sim/Não', NU:'Numérico', TX:'Texto' }[q.tipo_resposta] || q.tipo_resposta}</td>
-            <td>
-              <button class="btn btn-sm btn-warning me-1" onclick="openModal(${q.id})">
+            <td class="text-center">
+              <span class="badge ${
+                q.tipo_resposta === 'SN' ? 'bg-info text-dark' :
+                q.tipo_resposta === 'NU' ? 'bg-warning text-dark' :
+                'bg-secondary'
+              }">
+                ${ { SN:'Sim/Não', NU:'Numérico', TX:'Texto' }[q.tipo_resposta] || q.tipo_resposta }
+              </span>
+            </td>
+            <td class="text-center">
+              <button class="btn btn-sm btn-warning me-1" onclick="openModal(${q.id})" title="Editar">
                 <i class="bi bi-pencil-square"></i>
               </button>
-              <button class="btn btn-sm btn-danger" onclick="deleteQuestion(${q.id})">
+              <button class="btn btn-sm btn-danger" onclick="deleteQuestion(${q.id})" title="Excluir">
                 <i class="bi bi-trash"></i>
-              </button>               
-
+              </button>
             </td>`;
           tableBody.appendChild(tr);
         });

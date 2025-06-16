@@ -6,49 +6,46 @@
 {% block content %}
 <div class="container-fluid px-4">
   <div class="d-flex justify-content-between align-items-center mb-4">
-    <h1 class="mb-2" style="color: #10295d">Gerenciar Questionários</h1>
-    <div>
-      <a href="{% url 'fluxo_monitoramento_setores' %}" class="btn btn-success btn-sm">
-        <i class="bi bi-plus-circle"></i> Novo Questionário
-      </a>
-    </div>
+    <h1 class="mb-2 fw-bold" style="color: #10295d; letter-spacing: 0.5px;">Gerenciar Questionários</h1>
+    <a href="{% url 'fluxo_monitoramento_setores' %}" class="btn btn-success btn-sm shadow-sm">
+      <i class="bi bi-plus-circle"></i> Novo Questionário
+    </a>
   </div>
 
-  <div class="card shadow-sm">
+  <div class="card shadow border-0">
     <div class="card-body">
       <div class="table-responsive">
-        <table class="table table-hover table-bordered">
-          <thead class="table-light">
+        <table class="table table-hover table-bordered align-middle mb-0">
+          <thead class="tab</table>le-primary">
             <tr>
               <th style="width: 5%;">#</th>
-              <th style="width: 35%;">Título</th>
-              <th style="width: 40%;">Descrição</th>
-              <th style="width: 10%;">Data</th>
-              <th style="width: 10%;">Ações</th>
+              <th style="width: 30%;">Título</th>
+              <th style="width: 35%;">Descrição</th>
+              <th style="width: 15%;">Data</th>
+              <th style="width: 15%;" colspan="2" class="text-center">Ações</th>
             </tr>
           </thead>
           <tbody>
             {% for q in questionarios %}
             <tr>
-              <td>{{ forloop.counter }}</td>
-              <td>{{ q.titulo }}</td>
-              <td>{{ q.descricao|truncatechars:50 }}</td>
-              <td>{{ q.data_criacao|date:"d/m/Y" }}</td>
-              <td>
-                <a href="{% url 'gerenciar_perguntas' q.id %}" class="btn btn-sm btn-primary">
-                  <i class="bi bi-list-ul"></i> Perguntas
+              <td class="text-center">{{ forloop.counter }}</td>
+              <td class="fw-semibold">{{ q.titulo }}</td>
+              <td class="text-muted">{{ q.descricao|truncatechars:50 }}</td>
+              <td class="text-nowrap">{{ q.data_criacao|date:"d/m/Y" }}</td>
+              <td class="text-center">
+                <a href="{% url 'gerenciar_perguntas' q.id %}" class="btn btn-outline-primary btn-sm" title="Gerenciar Perguntas">
+                  <i class="bi bi-list-ul"></i>
                 </a>
               </td>
-              <td>
-                <a href="{% url 'visualizar_graficos_questionario' q.id %}" class="btn btn-primary">
-                  Ver Gráficos
+              <td class="text-center">
+                <a href="{% url 'visualizar_graficos_questionario' q.id %}" class="btn btn-outline-info btn-sm" title="Ver Gráficos">
+                  <i class="bi bi-bar-chart"></i>
                 </a>
-
               </td>
             </tr>
             {% empty %}
             <tr>
-              <td colspan="5" class="text-center">Nenhum questionário encontrado.</td>
+              <td colspan="6" class="text-center text-muted py-4">Nenhum questionário encontrado.</td>
             </tr>
             {% endfor %}
           </tbody>
@@ -56,7 +53,7 @@
       </div>
 
       {% if is_paginated %}
-      <nav>
+      <nav class="mt-4">
         <ul class="pagination justify-content-center">
           {% if page_obj.has_previous %}
           <li class="page-item">
@@ -67,25 +64,25 @@
           {% endif %}
 
           {% for num in paginator.page_range %}
-          {% if page_obj.number == num %}
-          <li class="page-item active"><span class="page-link">{{ num }}</span></li>
-          {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %} <li class="page-item">
-            <a class="page-link" href="?page={{ num }}">{{ num }}</a>
-            </li>
+            {% if page_obj.number == num %}
+              <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+            {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+              <li class="page-item">
+                <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+              </li>
             {% endif %}
-            {% endfor %}
+          {% endfor %}
 
-            {% if page_obj.has_next %}
-            <li class="page-item">
-              <a class="page-link" href="?page={{ page_obj.next_page_number }}">Próximo</a>
-            </li>
-            {% else %}
-            <li class="page-item disabled"><span class="page-link">Próximo</span></li>
-            {% endif %}
+          {% if page_obj.has_next %}
+          <li class="page-item">
+            <a class="page-link" href="?page={{ page_obj.next_page_number }}">Próximo</a>
+          </li>
+          {% else %}
+          <li class="page-item disabled"><span class="page-link">Próximo</span></li>
+          {% endif %}
         </ul>
       </nav>
       {% endif %}
-
     </div>
   </div>
 </div>
@@ -134,7 +131,7 @@
         card.className = 'col-md-6 mb-3';
         const imgUrl = escola.foto_fachada_url || "{% static 'images/default-school.jpeg' %}";
         card.innerHTML = `
-          <div class="card escola-card ${isSelected ? 'border-primary' : ''}" data-id="${escola.id}">
+          <div class="card escola-card ${isSelected ? 'border-primary shadow' : 'shadow-sm'}" data-id="${escola.id}" style="cursor:pointer;">
             <div class="row g-0">
               <div class="col-4">
                 <img src="${imgUrl}" class="img-fluid rounded-start" style="height: 100px; object-fit: cover;">
