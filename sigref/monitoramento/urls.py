@@ -43,10 +43,8 @@ urlpatterns = [
     path('questionarios/novo/<int:setor_id>/', views.criar_questionario_view, name='criar-questionario'),
     path('questionarios/gerenciar/', views.GerenciarQuestionariosView.as_view(), name='gerenciar_questionarios'),
     path('questionarios/<int:pk>/', views.DetalheMonitoramentoView.as_view(), name='detalhe_questionario'),
-
     path('questionarios/<int:pk>/perguntas/frontend/', views.GerenciarPerguntasView.as_view(), name='gerenciar_perguntas'),
     path('questionario/<int:questionario_id>/graficos/', views.visualizar_graficos_questionario, name='visualizar_graficos_questionario'),    # Escolas e respostas
-
     path('selecionar_escola/', views.SelecionarEscolaView.as_view(), name='selecionar_escola'),
     path('escola/<int:escola_id>/questionarios/', views.QuestionariosEscolaView.as_view(), name='questionarios_escola'),
     path('escola/<int:escola_id>/questionario/<int:questionario_id>/responder/', views.ResponderQuestionarioView.as_view(), name='responder_questionario'),    
@@ -69,9 +67,6 @@ urlpatterns = [
     path('', include(questionario_router.urls)),
     path('', include(monitoramento_router.urls)),
     path('', include('problemas.urls')),
-
-
-    
 ]
 
 # -----------------------------------------
