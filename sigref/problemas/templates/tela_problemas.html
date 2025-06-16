@@ -6,6 +6,7 @@ Problemas
 {% endblock %}
 
 {% block extra_style %}
+<<<<<<< HEAD
 <link rel="stylesheet" href="{% static 'css/tabelas.css' %}" />
 <style>
 /**/
@@ -22,12 +23,16 @@ table .form-select {
     transition: background-color 0.3s ease;  /* Transição suave para a cor */
 }
 </style>
+=======
+    <link rel="stylesheet" href="{% static 'css/tabelas.css' %}" />
+>>>>>>> parent of d768ece (Merge branch 'reclameaqui' into victor)
 {% endblock %}
 
 {% block content %}
-<div class="container mt-4">
-    <h3>Problemas ({{ total_problemas }}) </h3>
+    <div class="container mt-4">
+         <h3>Problemas ({{ total_problemas }}) </h3>
 
+<<<<<<< HEAD
     <div class="col-12">
         <div class="d-flex justify-content-between gap-2">
             <!-- Barra de pesquisa -->
@@ -38,46 +43,62 @@ table .form-select {
                     value="{{ request.GET.escola|default_if_none:'' }}" name="escola">
                 </div>
             </form>
+=======
+         <div class="col-12">
+            <div class="d-flex justify-content-between gap-2">
+                 <!-- Barra de pesquisa -->
+            <div class="input-group" style="width: 50%;">
+                <span class="input-group-text"><i class="fas fa-search"></i></span>
+                <input type="text" class="form-control" placeholder="Pesquise por Escola ...">
+            </div>
+>>>>>>> parent of d768ece (Merge branch 'reclameaqui' into victor)
 
             <div class="d-flex gap-2">
                 <!-- Filtros -->
-                <select class="form-select" name="data" aria-label="Filtro Data">
-                    <option value="" {% if not request.GET.data %}selected{% endif %}>Data</option>
-                    <option value="1" {% if request.GET.data == '1' %}selected{% endif %}>Última semana</option>
-                    <option value="2" {% if request.GET.data == '2' %}selected{% endif %}>Último mês</option>
-                    <option value="3" {% if request.GET.data == '3' %}selected{% endif %}>Último ano</option>
+                <select class="form-select" aria-label="Filtro Data">
+                    <option selected>Data</option>
+                    <option value="1">Última semana</option>
+                    <option value="2">Último mês</option>
+                    <option value="3">Último ano</option>
                 </select>
+<<<<<<< HEAD
                 <select class="form-select" name="status" aria-label="Filtro Status">
                     <option value="" {% if not request.GET.status %}selected{% endif %}>Status</option>
                     <option value="P" {% if request.GET.status == 'P' %} selected {% endif %}>Pendente</option>
                     <option value="R" {% if request.GET.status == 'R' %} selected {% endif %}>Resolvido</option>
                     <option value="E" {% if request.GET.status == 'E' %} selected {% endif %}>Em Andamento</option>
+=======
+                <select class="form-select" aria-label="Filtro Status">
+                    <option selected>Status</option>
+                    <option value="1">Resolvido</option>
+                    <option value="2">Em Andamento</option>
+                    <option value="3">Pendente</option>
+>>>>>>> parent of d768ece (Merge branch 'reclameaqui' into victor)
                 </select>
             </div>
 
             <div class="d-flex gap-2">
                 <!-- Botões de ação -->
-                <button class="btnAcao btn btn-info">Atualizar Status</button>
-                <button class="btnAcao btn btn-danger">Apagar Problemas</button>
+                <button class="btnAcao btn btn-info">Atualizar Status</button> 
+                <button class="btnAcao btn btn-danger">Apagar Problemas</button> 
             </div>
         </div>
 
-        <!-- Tabela de Problemas -->
-        <div class="table-responsive">
-            <table class="table table-striped mt-2">
-                <thead>
-                    <tr>
-                        <th><input type="checkbox"></th>
-                        <th class="text-start">Problema</th>
-                        <th class="text-start">Escola</th>
-                        <th class="text-start">Usuário</th>
-                        <th class="text-start">Setor Responsável</th>
-                        <th class="text-start">Data</th>
-                        <th class="text-start">Status</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for problema in problemas_page %}
+         <!-- Tabela de Problemas -->
+        <table class="table table-striped mt-2">
+            <thead>
+                <tr>
+                    <th><input type="checkbox"></th>
+                    <th class="text-start">Problema</th>
+                    <th class="text-start">Escola</th>
+                    <th class="text-start">Usuário</th>
+                    <th class="text-start">Setor Responsável</th>
+                    <th class="text-start">Data</th>
+                    <th class="text-start">Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                 {% for problema in problemas_page %}
                     <tr>
                         <td><input type="checkbox"></td>
                         <td class="text-start">{{ problema.descricao}}</td>
@@ -86,48 +107,49 @@ table .form-select {
                         <td class="text-start">{{ problema.setor.hierarquia_completa }}</td>
                         <td class="text-start">{{ problema.criado_em|date:"d/m/Y" }}</td>
                         <td>
-                            <select class="form-select" aria-label="Filtro Status" 
-                                data-problema-id="{{ problema.id }}"
-                                {% if problema.status == 'P' %} style="background-color: #ffcccc !important;" {% endif %} 
-                                {% if problema.status == 'R' %} style="background-color: #ccffcc !important;" {% endif %} 
-                                {% if problema.status == 'E' %} style="background-color: #ffffcc !important;" {% endif %}>
+                             <select class="form-select" aria-label="Filtro Status" data-problema-id="{{ problema.id }}">
                                 <option value="P" {% if problema.status == 'P' %} selected {% endif %}>Pendente</option>
                                 <option value="R" {% if problema.status == 'R' %} selected {% endif %}>Resolvido</option>
-                                <option value="E" {% if problema.status == 'E' %} selected {% endif %}>Em Andamento </option>
+                                <option value="E" {% if problema.status == 'E' %} selected {% endif %}>Em Andamento</option>
                             </select>
                         </td>
                     </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
+                {% endfor %}
+            </tbody>
+        </table>
     </div>
 
     <!-- Paginação -->
     <nav aria-label="Page navigation">
         <ul class="pagination justify-content-center">
             {% if problemas_page.has_previous %}
-            <li class="page-item"><a class="page-link" href="?page=1">&laquo; Primeiro</a></li>
-            <li class="page-item"><a class="page-link"
-                    href="?page={{ problemas_page.previous_page_number }}">Anterior</a></li>
+                <li class="page-item"><a class="page-link" href="?page=1">&laquo; Primeiro</a></li>
+                <li class="page-item"><a class="page-link" href="?page={{ problemas_page.previous_page_number }}">Anterior</a></li>
             {% endif %}
             {% for num in problemas_page.paginator.page_range %}
-            {% if problemas_page.number == num %}
-            <li class="page-item active"><span class="page-link">{{ num }}</span></li>
-            {% else %}
-            <li class="page-item"><a class="page-link" href="?page={{ num }}">{{ num }}</a></li>
-            {% endif %}
+                {% if problemas_page.number == num %}
+                    <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+                {% else %}
+                    <li class="page-item"><a class="page-link" href="?page={{ num }}">{{ num }}</a></li>
+                {% endif %}
             {% endfor %}
+<<<<<<< HEAD
             {% if problemas_page.has_next %}
             <li class="page-item"><a class="page-link" href="?page={{ problemas_page.next_page_number }}">Próximo</a>
             </li>
             <li class="page-item"><a class="page-link" href="?page={{ problemas_page.paginator.num_pages }}">Último
                     &raquo;</a></li>
+=======
+            {% if lacunas_page.has_next %}
+                <li class="page-item"><a class="page-link" href="?page={{ problemas_page.next_page_number }}">Próximo</a></li>
+                <li class="page-item"><a class="page-link" href="?page={{ problemas_page.paginator.num_pages }}">Último &raquo;</a></li>
+>>>>>>> parent of d768ece (Merge branch 'reclameaqui' into victor)
             {% endif %}
         </ul>
     </nav>
 </div>
 
+<<<<<<< HEAD
 <script>
     document.addEventListener("DOMContentLoaded", function () {
         const searchInput = document.querySelector("input[placeholder='Pesquise por Escola ...']");
@@ -164,4 +186,41 @@ table .form-select {
     });
 </script>
 
+=======
+     <script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const selects = document.querySelectorAll('select[name="status"]');
+
+        selects.forEach(select => {
+            select.addEventListener('change', function() {
+                const problemaId = this.getAttribute('data-problema-id');
+                const newStatus = this.value;
+
+                fetch(`/problema/${problemaId}/alterar_status/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                    },
+                    body: JSON.stringify({ 'status': newStatus })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status) {
+                        alert('Status atualizado com sucesso!');
+                    } else {
+                        alert('Erro ao atualizar o status!');
+                    }
+                })
+                .catch(error => {
+                    console.error('Erro:', error);
+                    alert('Erro ao atualizar o status!');
+                });
+            });
+        });
+    });
+</script>
+
+
+>>>>>>> parent of d768ece (Merge branch 'reclameaqui' into victor)
 {% endblock %}

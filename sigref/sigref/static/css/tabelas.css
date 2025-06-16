@@ -12,16 +12,6 @@
     width: 180px;
 }
 
-.btn-source {
-    width: 100px;
-    background-color: white;
-    border: none;
-}
-
-.btn-source:hover {
-    background-color: #f3f3f3;
-}
-
 .btn-info {
     background-color: #0cbbdf;
     color: white;
@@ -56,3 +46,4 @@
     padding: 11px;
 }
 
+/* Select de Status*/
