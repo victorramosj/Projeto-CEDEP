@@ -299,7 +299,6 @@ def tela_problema_view(request):
     return render(request, 'tela_problemas.html', context)
 
 
-
 # VIEWS AVISOS *********************************************************
 
 from django.shortcuts import render
