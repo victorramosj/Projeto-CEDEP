@@ -208,52 +208,106 @@ def problema_dashboard_view(request):
     return render(request, 'escolas/escola_dashboard.html', {'form': form})  # type: ignore
 
 
-
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.core.paginator import Paginator
 from django.db.models import Q
-from .models import Lacuna  # Certifique-se de que o modelo Lacuna está importado
+from django.utils import timezone
+from datetime import timedelta
+from django.http import JsonResponse
+import json
+from .models import Lacuna
 
 # TELA LACUNA CGAF/UDP
 def tela_lacuna_view(request):
     """
-    Esta view agora lida com a lógica de busca e paginação.
+    View atualizada para gerenciar filtros (GET) e ações em massa (POST).
     """
-    # 1. Obter o termo de busca a partir dos parâmetros GET da URL (ex: ?q=minha-busca)
-    search_query = request.GET.get('q', '')
+    if request.method == 'POST':
+        # --- LÓGICA PARA AÇÕES EM MASSA (APAGAR/ATUALIZAR) ---
+        lacuna_ids = request.POST.getlist('lacuna_ids')
+        action = request.POST.get('action')
 
-    # 2. Começar com a lista de todas as lacunas
-    # Usar select_related('escola') otimiza a consulta, evitando múltiplos acessos ao banco de dados para buscar o nome de cada escola.
+        if not lacuna_ids:
+            return redirect(request.META.get('HTTP_REFERER', 'tela_lacuna_view'))
+
+        if action == 'delete_selected':
+            Lacuna.objects.filter(id__in=lacuna_ids).delete()
+        
+        elif action == 'update_status_selected':
+            new_status = request.POST.get('bulk_status')
+            if new_status:
+                Lacuna.objects.filter(id__in=lacuna_ids).update(status=new_status)
+        
+        return redirect(request.META.get('HTTP_REFERER', 'tela_lacuna_view'))
+
+    # --- LÓGICA PARA FILTROS E BUSCA (GET) ---
     lacunas_list = Lacuna.objects.select_related('escola').all()
+    search_query = request.GET.get('q', '')
+    status_filter = request.GET.get('status_filter', '')
+    data_filter = request.GET.get('data_filter', '')
 
-    # 3. Se um termo de busca for fornecido, filtrar a lista
     if search_query:
-        # A busca é feita no nome da escola (escola__nome) E na disciplina.
-        # '__icontains' torna a busca case-insensitive (não diferencia maiúsculas de minúsculas).
-        # O objeto Q permite a condição OR (ou uma coisa OU outra).
-        lacunas_list = lacunas_list.filter(
-            Q(escola__nome__icontains=search_query) |
-            Q(disciplina__icontains=search_query)
-        ).distinct()
-
-    # Ordenar o resultado
-    lacunas_list = lacunas_list.order_by('-criado_em')
+        lacunas_list = lacunas_list.filter(Q(escola__nome__icontains=search_query) | Q(disciplina__icontains=search_query))
     
-    # Obter a contagem total DEPOIS de aplicar o filtro
-    todas_lacunas_count = lacunas_list.count()
+    if status_filter:
+        lacunas_list = lacunas_list.filter(status=status_filter)
 
-    # 4. Configurar a paginação
-    paginator = Paginator(lacunas_list, 9)  # 9 itens por página
+    if data_filter:
+        today = timezone.now()
+        if data_filter == 'semana':
+            start_date = today - timedelta(days=7)
+            lacunas_list = lacunas_list.filter(criado_em__gte=start_date)
+        elif data_filter == 'mes':
+            start_date = today - timedelta(days=30)
+            lacunas_list = lacunas_list.filter(criado_em__gte=start_date)
+        elif data_filter == 'ano':
+            start_date = today - timedelta(days=365)
+            lacunas_list = lacunas_list.filter(criado_em__gte=start_date)
+
+    lacunas_list = lacunas_list.order_by('-criado_em')
+    todas_lacunas_count = lacunas_list.count()
+    
+    paginator = Paginator(lacunas_list, 9)
     page_number = request.GET.get('page')
     lacunas_page = paginator.get_page(page_number)
 
-    # 5. Passar os dados para o template, incluindo o termo de busca
     context = {
         'lacunas_page': lacunas_page,
         'todas_lacunas': todas_lacunas_count,
-        'search_query': search_query,  # Essencial para manter o valor no input de busca
+        'search_query': search_query,
+        'status_filter': status_filter,
+        'data_filter': data_filter,
     }
     return render(request, 'tela_lacunas.html', context)
+
+# NOVA VIEW PARA ATUALIZAÇÃO DE STATUS INDIVIDUAL
+# Adicione esta nova view ao seu arquivo views.py
+def alterar_status_lacuna(request, lacuna_id):
+    """
+    Atualiza o status de uma única lacuna.
+    Esta view é chamada pela requisição Fetch do JavaScript.
+    """
+    if request.method == 'POST':
+        try:
+            lacuna = Lacuna.objects.get(pk=lacuna_id)
+            data = json.loads(request.body)
+            new_status = data.get('status')
+
+            if new_status in ['P', 'R', 'E']:
+                lacuna.status = new_status
+                lacuna.save()
+                return JsonResponse({'status': 'success', 'message': 'Status atualizado com sucesso!'})
+            else:
+                return JsonResponse({'status': 'error', 'error': 'Status inválido fornecido.'}, status=400)
+        except Lacuna.DoesNotExist:
+            return JsonResponse({'status': 'error', 'error': 'Lacuna não encontrada.'}, status=404)
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'error': str(e)}, status=500)
+    
+    return JsonResponse({'status': 'error', 'error': 'Método não permitido.'}, status=405)
+
+
+
 
 # TELA PROBLEMA CGAF/UDP
 def tela_problema_view(request):
