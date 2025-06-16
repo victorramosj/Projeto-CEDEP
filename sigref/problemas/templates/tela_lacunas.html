@@ -1,4 +1,3 @@
-{# Template com filtros e ações em massa funcionais e JavaScript robusto. #}
 {% extends "cedepe/base.html" %}
 {% load static %}
 
@@ -10,184 +9,149 @@ Lacunas
 <link rel="stylesheet" href="{% static 'css/tabelas.css' %}" />
 {% endblock %}
 
+
 {% block content %}
 <div class="container mt-4">
     <h3>Lacunas ({{ todas_lacunas }})</h3>
 
     <div class="col-12">
-        <!-- Formulário para os FILTROS (método GET) -->
-        <form method="GET" action="{% url 'tela_lacuna_view' %}" id="filters-form" class="d-flex justify-content-between gap-2 mb-3">
-            <div class="input-group" style="width: 40%;">
+        <div class="d-flex justify-content-between gap-2 mb-3">
+            
+            <!-- Barra de pesquisa (com a funcionalidade de busca) -->
+            <form method="GET" action="{% url 'tela_lacuna_view' %}" class="input-group" style="width: 50%;">
+                 {% csrf_token %}
                 <span class="input-group-text"><i class="fas fa-search"></i></span>
                 <input type="text" class="form-control" name="q" value="{{ search_query }}" placeholder="Pesquise por Escola ou Disciplina...">
-            </div>
+                <!-- Botão de busca implícito ao pressionar Enter ou pode ser adicionado um explícito -->
+            </form>
             
             <div class="d-flex gap-2">
-                <select class="form-select" name="data_filter" onchange="this.form.submit()">
-                    <option value="">Data</option>
-                    <option value="semana" {% if data_filter == 'semana' %}selected{% endif %}>Última semana</option>
-                    <option value="mes" {% if data_filter == 'mes' %}selected{% endif %}>Último mês</option>
-                    <option value="ano" {% if data_filter == 'ano' %}selected{% endif %}>Último ano</option>
+                <!-- Filtros -->
+                <select class="form-select" aria-label="Filtro Data">
+                    <option selected>Data</option>
+                    <option value="1">Última semana</option>
+                    <option value="2">Último mês</option>
+                    <option value="3">Último ano</option>
                 </select>
-                <select class="form-select" name="status_filter" onchange="this.form.submit()">
-                    <option value="">Status</option>
-                    <option value="R" {% if status_filter == 'R' %}selected{% endif %}>Resolvido</option>
-                    <option value="E" {% if status_filter == 'E' %}selected{% endif %}>Em Andamento</option>
-                    <option value="P" {% if status_filter == 'P' %}selected{% endif %}>Pendente</option>
+                <select class="form-select" aria-label="Filtro Status">
+                    <option selected>Status</option>
+                    <option value="1">Resolvido</option>
+                    <option value="2">Em Andamento</option>
+                    <option value="3">Pendente</option>
                 </select>
             </div>
-             <button class="btn btn-primary" type="submit">Filtrar</button>
-        </form>
 
-        <!-- Formulário para AÇÕES EM MASSA (método POST) -->
-        <form method="POST" action="{% url 'tela_lacuna_view' %}" id="actions-form">
-            {% csrf_token %}
-            <div class="d-flex justify-content-end gap-2 mb-2">
-                <select id="bulk-status-select" class="form-select form-select-sm" name="bulk_status" style="width: 150px;">
-                    <option value="P">Pendente</option>
-                    <option value="R">Resolvido</option>
-                    <option value="E">Em Andamento</option>
-                </select>
-                <button id="update-status-btn" type="submit" name="action" value="update_status_selected" class="btnAcao btn btn-info btn-sm" disabled>Atualizar Status</button> 
-                <button id="delete-lacunas-btn" type="submit" name="action" value="delete_selected" class="btnAcao btn btn-danger btn-sm" disabled>Apagar Lacunas</button> 
+            <div class="d-flex gap-2">
+                <!-- Botões de ação -->
+                <button class="btnAcao btn btn-info">Atualizar Status</button> 
+                <button class="btnAcao btn btn-danger">Apagar Lacunas</button> 
             </div>
+        </div>
 
-            <table class="table table-striped mt-2">
-                <thead>
+        <!-- Tabela de Lacunas -->
+        <table class="table table-striped mt-2">
+            <thead>
+                <tr>
+                    <th><input type="checkbox"></th>
+                    <th class="text-start">Escola</th>
+                    <th class="text-start">Disciplina</th>
+                    <th class="text-start">Carga H.</th>
+                    <th class="text-start">Data</th>
+                    <th class="text-start">Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for lacuna in lacunas_page %}
                     <tr>
-                        <th><input type="checkbox" id="select-all-checkbox"></th>
-                        <th class="text-start">Escola</th>
-                        <th class="text-start">Disciplina</th>
-                        <th class="text-start">Carga H.</th>
-                        <th class="text-start">Data</th>
-                        <th class="text-start">Status</th>
+                        <td><input type="checkbox"></td>
+                        <td class="text-start">{{ lacuna.escola.nome }}</td>
+                        <td class="text-start">{{ lacuna.disciplina }}</td>
+                        <td class="text-start">{{ lacuna.carga_horaria }}</td>
+                        <td class="text-start">{{ lacuna.criado_em|date:"d/m/Y" }}</td>
+                        <td>
+                            <select class="form-select" name="status" data-lacuna-id="{{ lacuna.id }}">
+                                <option value="P" {% if lacuna.status == 'P' %} selected {% endif %}>Pendente</option>
+                                <option value="R" {% if lacuna.status == 'R' %} selected {% endif %}>Resolvido</option>
+                                <option value="E" {% if lacuna.status == 'E' %} selected {% endif %}>Em Andamento</option>
+                            </select>
+                        </td>
                     </tr>
-                </thead>
-                <tbody>
-                    {% for lacuna in lacunas_page %}
-                        <tr>
-                            <td><input type="checkbox" name="lacuna_ids" value="{{ lacuna.id }}" class="lacuna-checkbox"></td>
-                            <td class="text-start">{{ lacuna.escola.nome }}</td>
-                            <td class="text-start">{{ lacuna.disciplina }}</td>
-                            <td class="text-start">{{ lacuna.carga_horaria }}</td>
-                            <td class="text-start">{{ lacuna.criado_em|date:"d/m/Y" }}</td>
-                            <td>
-                                <select class="form-select form-select-sm" name="status" data-lacuna-id="{{ lacuna.id }}">
-                                    <option value="P" {% if lacuna.status == 'P' %} selected {% endif %}>Pendente</option>
-                                    <option value="R" {% if lacuna.status == 'R' %} selected {% endif %}>Resolvido</option>
-                                    <option value="E" {% if lacuna.status == 'E' %} selected {% endif %}>Em Andamento</option>
-                                </select>
-                            </td>
-                        </tr>
-                    {% empty %}
-                        <tr>
-                            <td colspan="6" class="text-center p-4">Nenhuma lacuna encontrada.</td>
-                        </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </form>
+                {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-center p-4">Nenhuma lacuna encontrada.</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
     </div>
 
     <!-- Paginação -->
     <nav aria-label="Page navigation">
         <ul class="pagination justify-content-center">
             {% if lacunas_page.has_previous %}
-                <li class="page-item"><a class="page-link" href="?page=1&q={{ search_query }}&status_filter={{ status_filter }}&data_filter={{ data_filter }}">&laquo; Primeiro</a></li>
-                <li class="page-item"><a class="page-link" href="?page={{ lacunas_page.previous_page_number }}&q={{ search_query }}&status_filter={{ status_filter }}&data_filter={{ data_filter }}">Anterior</a></li>
+                <li class="page-item"><a class="page-link" href="?page=1&q={{ search_query }}">&laquo; Primeiro</a></li>
+                <li class="page-item"><a class="page-link" href="?page={{ lacunas_page.previous_page_number }}&q={{ search_query }}">Anterior</a></li>
             {% endif %}
+            
             {% for num in lacunas_page.paginator.page_range %}
-                <li class="page-item {% if lacunas_page.number == num %}active{% endif %}">
-                    <a class="page-link" href="?page={{ num }}&q={{ search_query }}&status_filter={{ status_filter }}&data_filter={{ data_filter }}">{{ num }}</a>
-                </li>
+                {% if lacunas_page.number == num %}
+                    <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+                {% else %}
+                    <li class="page-item"><a class="page-link" href="?page={{ num }}&q={{ search_query }}">{{ num }}</a></li>
+                {% endif %}
             {% endfor %}
+            
             {% if lacunas_page.has_next %}
-                <li class="page-item"><a class="page-link" href="?page={{ lacunas_page.next_page_number }}&q={{ search_query }}&status_filter={{ status_filter }}&data_filter={{ data_filter }}">Próximo</a></li>
-                <li class="page-item"><a class="page-link" href="?page={{ lacunas_page.paginator.num_pages }}&q={{ search_query }}&status_filter={{ status_filter }}&data_filter={{ data_filter }}">Último &raquo;</a></li>
+                <li class="page-item"><a class="page-link" href="?page={{ lacunas_page.next_page_number }}&q={{ search_query }}">Próximo</a></li>
+                <li class="page-item"><a class="page-link" href="?page={{ lacunas_page.paginator.num_pages }}&q={{ search_query }}">Último &raquo;</a></li>
             {% endif %}
         </ul>
     </nav>
 </div>
 
 <script>
-document.addEventListener("DOMContentLoaded", function() {
-    // --- LÓGICA PARA AÇÕES EM MASSA ---
-    const selectAllCheckbox = document.getElementById('select-all-checkbox');
-    const lacunaCheckboxes = document.querySelectorAll('.lacuna-checkbox');
-    const updateBtn = document.getElementById('update-status-btn');
-    const deleteBtn = document.getElementById('delete-lacunas-btn');
+    document.addEventListener("DOMContentLoaded", function() {
+        // Seleciona os 'selects' de status
+        const selects = document.querySelectorAll('select[name="status"]');
 
-    function toggleActionButtons() {
-        const anyChecked = document.querySelectorAll('.lacuna-checkbox:checked').length > 0;
-        updateBtn.disabled = !anyChecked;
-        deleteBtn.disabled = !anyChecked;
-    }
+        selects.forEach(select => {
+            select.addEventListener('change', function() {
+                const lacunaId = this.getAttribute('data-lacuna-id');
+                const newStatus = this.value;
+                // Busca pelo token CSRF no formulário
+                const csrfToken = document.querySelector('form [name=csrfmiddlewaretoken]').value;
 
-    if (selectAllCheckbox) {
-        selectAllCheckbox.addEventListener('change', function() {
-            lacunaCheckboxes.forEach(checkbox => {
-                checkbox.checked = this.checked;
-            });
-            toggleActionButtons();
-        });
-    }
 
-    lacunaCheckboxes.forEach(checkbox => {
-        checkbox.addEventListener('change', toggleActionButtons);
-    });
-
-    if (deleteBtn) {
-        deleteBtn.addEventListener('click', function(event) {
-            if (!confirm('Tem certeza que deseja apagar as lacunas selecionadas? Esta ação não pode ser desfeita.')) {
-                event.preventDefault();
-            }
-        });
-    }
-
-    // --- LÓGICA PARA ATUALIZAÇÃO DE STATUS INDIVIDUAL (JAVASCRIPT ATUALIZADO) ---
-    const statusSelects = document.querySelectorAll('select[name="status"]');
-    statusSelects.forEach(select => {
-        select.addEventListener('change', function() {
-            const lacunaId = this.getAttribute('data-lacuna-id');
-            const newStatus = this.value;
-            const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
-
-            fetch(`/lacuna/${lacunaId}/alterar_status/`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': csrfToken,
-                },
-                body: JSON.stringify({ 'status': newStatus })
-            })
-            .then(response => {
-                // Primeiro, verifica se a resposta do servidor foi bem-sucedida (status 2xx)
-                if (!response.ok) {
-                    // Se não foi, lança um erro com o status para ser pego pelo .catch()
-                    throw new Error(`Erro de Servidor: ${response.status}`);
-                }
-                // Tenta converter a resposta para JSON
-                return response.json();
-            })
-            .then(data => {
-                // Verifica a resposta da sua API
-                if (data.status === 'success') {
-                    console.log('Status individual atualizado!');
-                    // Opcional: Adicionar uma notificação de sucesso mais visível
-                } else {
-                    alert('Erro ao atualizar o status: ' + (data.error || 'Resposta inesperada da API.'));
-                }
-            })
-            .catch(error => {
-                console.error('Erro:', error);
-                alert('Erro de comunicação ao atualizar status! Verifique a consola do navegador (F12) para mais detalhes. A URL ou a view no servidor podem estar incorretas.');
+                fetch(`/lacuna/${lacunaId}/alterar_status/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': csrfToken,
+                    },
+                    body: JSON.stringify({ 'status': newStatus })
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Falha na resposta da rede');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.status === 'success') {
+                        // Idealmente, mostrar uma notificação mais amigável
+                        console.log('Status atualizado com sucesso!');
+                    } else {
+                        console.error('Erro ao atualizar o status:', data.error || 'Erro desconhecido');
+                        alert('Erro ao atualizar o status!');
+                    }
+                })
+                .catch(error => {
+                    console.error('Erro:', error);
+                    alert('Erro ao se comunicar com o servidor!');
+                });
             });
         });
     });
-
-    // Inicializa o estado dos botões
-    toggleActionButtons();
-});
 </script>
 
 {% endblock %}
