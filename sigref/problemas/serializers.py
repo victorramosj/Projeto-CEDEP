@@ -18,7 +18,7 @@ class LacunaSerializer(serializers.ModelSerializer):
             'status',
             'status_display'
         ]
-        read_only_fields = ['criado_em']
+        read_only_fields = ['criado_em','status']
 
 class ProblemaUsuarioSerializer(serializers.ModelSerializer):
     usuario = GREUserSerializer(read_only=True)
