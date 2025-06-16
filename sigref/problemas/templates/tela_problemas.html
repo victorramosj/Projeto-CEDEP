@@ -21,10 +21,8 @@ table .form-select {
     border: none;
     transition: background-color 0.3s ease;  /* Transição suave para a cor */
 }
-
 </style>
 {% endblock %}
-
 
 {% block content %}
 <div class="container mt-4">
@@ -33,10 +31,13 @@ table .form-select {
     <div class="col-12">
         <div class="d-flex justify-content-between gap-2">
             <!-- Barra de pesquisa -->
-            <div class="input-group" style="width: 50%;">
-                <span class="input-group-text"><i class="fas fa-search"></i></span>
-                <input type="text" class="form-control" placeholder="Pesquise por Escola ...">
-            </div>
+            <form method="get" action="{% url 'tela_problema' %}">
+                <div class="input-group" style="width: 70%;">
+                    <span class="input-group-text"><i class="fas fa-search"></i></span>
+                    <input type="text" class="form-control" placeholder="Pesquise por Escola ..."
+                    value="{{ request.GET.escola|default_if_none:'' }}" name="escola">
+                </div>
+            </form>
 
             <div class="d-flex gap-2">
                 <!-- Filtros -->
@@ -48,9 +49,9 @@ table .form-select {
                 </select>
                 <select class="form-select" name="status" aria-label="Filtro Status">
                     <option value="" {% if not request.GET.status %}selected{% endif %}>Status</option>
-                    <option value="P" {% if lacuna.status == 'P' %} selected {% endif %}>Pendente</option>
-                    <option value="R" {% if lacuna.status == 'R' %} selected {% endif %}>Resolvido</option>
-                    <option value="E" {% if lacuna.status == 'E' %} selected {% endif %}>Em Andamento</option>
+                    <option value="P" {% if request.GET.status == 'P' %} selected {% endif %}>Pendente</option>
+                    <option value="R" {% if request.GET.status == 'R' %} selected {% endif %}>Resolvido</option>
+                    <option value="E" {% if request.GET.status == 'E' %} selected {% endif %}>Em Andamento</option>
                 </select>
             </div>
 
@@ -117,7 +118,7 @@ table .form-select {
             <li class="page-item"><a class="page-link" href="?page={{ num }}">{{ num }}</a></li>
             {% endif %}
             {% endfor %}
-            {% if lacunas_page.has_next %}
+            {% if problemas_page.has_next %}
             <li class="page-item"><a class="page-link" href="?page={{ problemas_page.next_page_number }}">Próximo</a>
             </li>
             <li class="page-item"><a class="page-link" href="?page={{ problemas_page.paginator.num_pages }}">Último
@@ -129,37 +130,38 @@ table .form-select {
 
 <script>
     document.addEventListener("DOMContentLoaded", function () {
-        const selects = document.querySelectorAll('select[name="status"]');
+        const searchInput = document.querySelector("input[placeholder='Pesquise por Escola ...']");
+        const selectData = document.querySelector("select[name='data']");
+        const selectStatus = document.querySelector("select[name='status']");
 
-        selects.forEach(select => {
-            select.addEventListener('change', function () {
-                const problemaId = this.getAttribute('data-problema-id');
-                const newStatus = this.value;
+        // Função para atualizar a tabela com os parâmetros da URL
+        function updateTable() {
+            const searchQuery = searchInput.value;  // Captura o valor da pesquisa
+            const dataFilter = selectData.value;
+            const statusFilter = selectStatus.value;
 
-                fetch(`/problema/${problemaId}/alterar_status/`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
-                    },
-                    body: JSON.stringify({ 'status': newStatus })
-                })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.status) {
-                            alert('Status atualizado com sucesso!');
-                        } else {
-                            alert('Erro ao atualizar o status!');
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Erro:', error);
-                        alert('Erro ao atualizar o status!');
-                    });
-            });
-        });
+            const url = new URL(window.location.href);
+            const params = new URLSearchParams(url.search);
+
+            // Atualiza os parâmetros da URL para incluir os filtros
+            params.set('escola', searchQuery);
+            params.set('data', dataFilter);
+            params.set('status', statusFilter);
+
+            // Envia a requisição para a mesma página com os parâmetros atualizados
+            fetch(`${url.pathname}?${params.toString()}`)
+                .then(response => response.text())
+                .then(html => {
+                    // Atualiza a parte da tabela com os novos dados
+                    document.querySelector('.table-responsive').innerHTML = html;
+                });
+        }
+
+        // Adiciona evento de input na pesquisa
+        searchInput.addEventListener('input', updateTable);
+        selectData.addEventListener('change', updateTable);
+        selectStatus.addEventListener('change', updateTable);
     });
 </script>
-
 
 {% endblock %}

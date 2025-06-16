@@ -228,24 +228,44 @@ def tela_lacuna_view(request):
         'todas_lacunas': todas_lacunas,  # <--- ESSENCIAL
     })
 
-
+from datetime import datetime, timedelta
+from django.shortcuts import render
+from .models import ProblemaUsuario
 # TELA PROBLEMA CGAF/UDP
 def tela_problema_view(request):
-    # Obtém todas as lacunas da escola
     problemas_list = ProblemaUsuario.objects.all()
+    
+    # Filtros por parâmetros da URL
+    escola_query = request.GET.get('escola', '')  # Busca pela escola
+    data_filter = request.GET.get('data', '')
+    status_filter = request.GET.get('status', '')
+    
+    # Filtro por Escola
+    if escola_query:
+        problemas_list = problemas_list.filter(escola__nome__icontains=escola_query)  # Filtra pela escola
+    
+    # Filtro por Data
+    if data_filter == '1':  # Última semana
+        problemas_list = problemas_list.filter(criado_em__gte=datetime.now() - timedelta(weeks=1))
+    elif data_filter == '2':  # Último mês
+        problemas_list = problemas_list.filter(criado_em__gte=datetime.now() - timedelta(days=30))
+    elif data_filter == '3':  # Último ano
+        problemas_list = problemas_list.filter(criado_em__gte=datetime.now() - timedelta(days=365))
 
-    # Cria o objeto paginator para limitar a 9 lacunas por página
+    # Filtro por Status
+    if status_filter:
+        problemas_list = problemas_list.filter(status=status_filter)
+
     paginator = Paginator(problemas_list, 9)
-
     page_number = request.GET.get('page')
     problemas_page = paginator.get_page(page_number)
 
     total_problemas = problemas_list.count()
 
     # Passa as lacunas paginadas para o template
-    return render(request, 'tela_problemas.html',  {
+    return render(request, 'tela_problemas.html', {
         'problemas_page': problemas_page,
-        'total_problemas': total_problemas,  # <--- ESSENCIAL
+        'total_problemas': total_problemas,  # Total de problemas
     })
    
 
