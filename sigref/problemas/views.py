@@ -219,13 +219,13 @@ def tela_lacuna_view(request):
     """
     Esta view agora lida com a lógica de busca e paginação.
     """
-    # 1. Obter o termo de busca a partir dos parâmetros GET da URL (ex: ?q=minha-busca)
+    # Obter o termo de busca a partir dos parâmetros GET da URL (ex: ?q=minha-busca)
     search_query = request.GET.get('q', '')
 
-    # 2. Começar com a lista de todas as lacunas
+    # Começar com a lista de todas as lacunas
     lacunas_list = Lacuna.objects.select_related('escola').all()
 
-    # 3. Se um termo de busca for fornecido, filtrar a lista
+    # Se um termo de busca for fornecido, filtrar a lista
     if search_query:
         lacunas_list = lacunas_list.filter(
             Q(escola__nome__icontains=search_query) |
@@ -235,15 +235,15 @@ def tela_lacuna_view(request):
     # Ordenar o resultado
     lacunas_list = lacunas_list.order_by('-criado_em')
 
-    # 4. Obter a contagem total DEPOIS de aplicar o filtro
+    # Obter a contagem total DEPOIS de aplicar o filtro
     todas_lacunas_count = lacunas_list.count()
 
-    # 5. Configurar a paginação
+    # Configurar a paginação
     paginator = Paginator(lacunas_list, 9)  # 9 itens por página
     page_number = request.GET.get('page')
     lacunas_page = paginator.get_page(page_number)
 
-    # 6. Passar os dados para o template, incluindo o termo de busca
+    # Passar os dados para o template, incluindo o termo de busca
     context = {
         'lacunas_page': lacunas_page,
         'todas_lacunas': todas_lacunas_count,  # Agora a variável 'todas_lacunas' está definida corretamente
@@ -255,19 +255,21 @@ def tela_lacuna_view(request):
 from datetime import datetime, timedelta
 from django.shortcuts import render
 from .models import ProblemaUsuario
-# TELA PROBLEMA CGAF/UDP
+from django.core.paginator import Paginator
+from django.db.models import Q
+
 def tela_problema_view(request):
     problemas_list = ProblemaUsuario.objects.all()
-    
-    # Filtros por parâmetros da URL
-    escola_query = request.GET.get('escola', '')  # Busca pela escola
+
+    # Obter os parâmetros de filtro da URL (busca por escola, data e status)
+    escola_query = request.GET.get('escola', '')  # Pesquisa pela escola
     data_filter = request.GET.get('data', '')
     status_filter = request.GET.get('status', '')
-    
+
     # Filtro por Escola
     if escola_query:
-        problemas_list = problemas_list.filter(escola__nome__icontains=escola_query)  # Filtra pela escola
-    
+        problemas_list = problemas_list.filter(escola__nome__icontains=escola_query)
+
     # Filtro por Data
     if data_filter == '1':  # Última semana
         problemas_list = problemas_list.filter(criado_em__gte=datetime.now() - timedelta(weeks=1))
@@ -276,22 +278,26 @@ def tela_problema_view(request):
     elif data_filter == '3':  # Último ano
         problemas_list = problemas_list.filter(criado_em__gte=datetime.now() - timedelta(days=365))
 
-    # Filtro por Status
+    #  Filtro por Status
     if status_filter:
         problemas_list = problemas_list.filter(status=status_filter)
 
-    paginator = Paginator(problemas_list, 9)
+    # Paginação
+    paginator = Paginator(problemas_list, 9)  # 9 itens por página
     page_number = request.GET.get('page')
     problemas_page = paginator.get_page(page_number)
 
-    total_problemas = problemas_list.count()
+    total_problemas = problemas_list.count()  # Total de problemas filtrados
 
-    # Passa as lacunas paginadas para o template
-    return render(request, 'tela_problemas.html', {
+    # Passar os dados para o template
+    context = {
         'problemas_page': problemas_page,
-        'total_problemas': total_problemas,  # Total de problemas
-    })
-   
+        'total_problemas': total_problemas,  # Total de problemas filtrados
+        'search_query': escola_query,  # Termo de busca (para manter na barra de pesquisa)
+    }
+
+    return render(request, 'tela_problemas.html', context)
+
 
 
 # VIEWS AVISOS *********************************************************
