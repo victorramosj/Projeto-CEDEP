@@ -52,7 +52,7 @@
                         <input class="form-check-input" type="checkbox" id="selecionarTodosCheckbox">
                         <label class="form-check-label" for="selecionarTodosCheckbox">Selecionar Todos</label>
                     </div>
-                    <button type="button" id="btnApagarSelecionados" class="btn btn-danger btn-sm">
+                    <button type="submit" class="btn btn-danger btn-sm">
                         <i class="bi bi-trash"></i> Apagar Selecionados
                     </button>
                 </div>
@@ -61,13 +61,17 @@
                     {% for aviso in avisos %}
                     <div class="col">
                         <div class="card h-100 shadow-hover">
+                            
                             <div class="card-header d-flex justify-content-between align-items-center bg-white">
-                                <h6 class="card-title mb-0 fw-bold text-truncate" title="{{ aviso.titulo }}">{{ aviso.titulo }}</h6>
+                                <h6 class="card-title mb-0 fw-bold text-truncate" title="{{ aviso.titulo }}">
+                                    {{ aviso.titulo }}
+                                </h6>
                                 {% if aviso.prioridade == 'alta' %}<span class="badge bg-danger">Alta</span>
                                 {% elif aviso.prioridade == 'normal' %}<span class="badge bg-warning text-dark">Normal</span>
                                 {% else %}<span class="badge bg-success">Baixa</span>
                                 {% endif %}
                             </div>
+
                             <div class="card-body p-0">
                                 <ul class="list-group list-group-flush small">
                                     <li class="list-group-item d-flex align-items-center">
@@ -80,20 +84,25 @@
                                     </li>
                                 </ul>
                             </div>
+
                             <div class="card-footer d-flex align-items-center gap-2">
                                 <input class="form-check-input me-auto aviso-checkbox" type="checkbox" name="avisos_selecionados" value="{{ aviso.id }}" title="Selecionar para apagar">
+                                
                                 <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#viewAvisoModal"
-                                        data-titulo="{{ aviso.titulo }}" data-mensagem="{{ aviso.mensagem }}"
-                                        data-prioridade="{{ aviso.get_prioridade_display }}" data-escola="{{ aviso.escola.nome }}"
-                                        data-criado-por="{{ aviso.criado_por }}" data-data-criacao="{{ aviso.data_criacao|date:"d/m/Y H:i" }}"
+                                        data-titulo="{{ aviso.titulo }}" 
+                                        data-mensagem="{{ aviso.mensagem }}"
+                                        data-prioridade="{{ aviso.get_prioridade_display }}" 
+                                        data-escola="{{ aviso.escola.nome }}"
+                                        data-criado-por="{{ aviso.criado_por }}" 
+                                        data-data-criacao="{{ aviso.data_criacao|date:"d/m/Y H:i" }}"
                                         {% if aviso.imagem %}data-imagem-url="{{ aviso.imagem.url }}"{% endif %}>
                                     <i class="bi bi-eye-fill"></i> Visualizar
                                 </button>
+
                                 <button type="button" class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#editAvisoModal"
                                         data-id="{{ aviso.id }}" data-titulo="{{ aviso.titulo }}" data-mensagem="{{ aviso.mensagem }}"
                                         data-prioridade="{{ aviso.prioridade }}" data-escola-id="{{ aviso.escola.id }}"
-                                        data-criado-por-id="{{ aviso.criado_por.id }}" data-ativo="{{ aviso.ativo|yesno:'true,false' }}"
-                                        data-data-expiracao="{{ aviso.data_expiracao|date:'Y-m-d\TH:i' }}">
+                                        data-criado-por-id="{{ aviso.criado_por.id }}" data-ativo="{{ aviso.ativo|yesno:'true,false' }}">
                                     <i class="bi bi-pencil-square"></i> Editar
                                 </button>
                             </div>
@@ -104,7 +113,26 @@
             </form>
 
             <nav aria-label="Navegação de páginas" class="mt-5">
-                </nav>
+                <ul class="pagination justify-content-center">
+                    {% if avisos.has_previous %}
+                        <li class="page-item"><a class="page-link" href="?page=1{% if prioridade_atual %}&prioridade={{ prioridade_atual }}{% endif %}">&laquo;</a></li>
+                        <li class="page-item"><a class="page-link" href="?page={{ avisos.previous_page_number }}{% if prioridade_atual %}&prioridade={{ prioridade_atual }}{% endif %}">&lsaquo;</a></li>
+                    {% endif %}
+
+                    {% for num in avisos.paginator.page_range %}
+                        {% if avisos.number == num %}
+                            <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+                        {% elif num > avisos.number|add:'-3' and num < avisos.number|add:'3' %}
+                            <li class="page-item"><a class="page-link" href="?page={{ num }}{% if prioridade_atual %}&prioridade={{ prioridade_atual }}{% endif %}">{{ num }}</a></li>
+                        {% endif %}
+                    {% endfor %}
+
+                    {% if avisos.has_next %}
+                        <li class="page-item"><a class="page-link" href="?page={{ avisos.next_page_number }}{% if prioridade_atual %}&prioridade={{ prioridade_atual }}{% endif %}">&rsaquo;</a></li>
+                        <li class="page-item"><a class="page-link" href="?page={{ avisos.paginator.num_pages }}{% if prioridade_atual %}&prioridade={{ prioridade_atual }}{% endif %}">&raquo;</a></li>
+                    {% endif %}
+                </ul>
+            </nav>
 
             {% else %}
             <div class="text-center p-5">
@@ -118,72 +146,41 @@
     </div>
 </div>
 
-<div class="modal fade" id="viewAvisoModal" tabindex="-1" aria-labelledby="viewAvisoModalLabel" aria-hidden="true">
+<div class="modal fade" id="viewAvisoModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="viewAvisoModalTitle"></h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
+            <div class="modal-header"><h5 class="modal-title" id="viewAvisoModalTitle"></h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
             <div class="modal-body">
+                
                 <div id="viewAvisoModalImageContainer" class="text-center mb-3" style="display: none;">
-                    <img id="viewAvisoModalImage" src="" class="img-fluid rounded" style="max-height: 300px;" alt="Imagem do Aviso">
+                    <img id="viewAvisoModalImage" src="" class="img-fluid rounded" alt="Imagem do Aviso">
                 </div>
+                
                 <p><strong>Prioridade: </strong><span id="viewAvisoModalPriorityBadge"></span></p>
-                <p class="mb-1"><strong>Mensagem:</strong></p>
-                <div class="p-3 bg-light rounded" style="white-space: pre-wrap;" id="viewAvisoModalBodyContent"></div>
+                <p><strong>Mensagem:</strong></p>
+                <p id="viewAvisoModalBodyContent" style="white-space: pre-wrap;"></p>
                 <hr>
-                <small class="text-muted d-block"><strong>Escola:</strong> <span id="viewAvisoModalEscola"></span></small>
-                <small class="text-muted d-block"><strong>Criado por:</strong> <span id="viewAvisoModalCriadoPor"></span></small>
-                <small class="text-muted d-block"><strong>Publicado em:</strong> <span id="viewAvisoModalDataCriacao"></span></small>
+                <small class="text-muted"><strong>Escola:</strong> <span id="viewAvisoModalEscola"></span></small><br>
+                <small class="text-muted"><strong>Criado por:</strong> <span id="viewAvisoModalCriadoPor"></span></small><br>
+                <small class="text-muted"><strong>Publicado em:</strong> <span id="viewAvisoModalDataCriacao"></span></small>
             </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
-            </div>
+            <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button></div>
         </div>
     </div>
 </div>
 
-<div class="modal fade" id="editAvisoModal" tabindex="-1" aria-labelledby="editAvisoModalLabel" aria-hidden="true">
+<div class="modal fade" id="editAvisoModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="editAvisoModalLabel">Editar Aviso</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
+            <div class="modal-header"><h5 class="modal-title">Editar Aviso</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
             <div class="modal-body">
                 <form method="POST" action="" id="editAvisoForm">
                     {% csrf_token %}
-                    <input type="hidden" id="escola_modal_edit" name="escola">
-                    <input type="hidden" id="criado_por_modal_edit" name="criado_por">
-                    <input type="hidden" id="ativo_modal_edit" name="ativo">
-
-                    <div class="mb-3">
-                        <label for="titulo_modal_edit" class="form-label">Título</label>
-                        <input type="text" class="form-control" id="titulo_modal_edit" name="titulo" required>
-                    </div>
-                    <div class="mb-3">
-                        <label for="mensagem_modal_edit" class="form-label">Mensagem</label>
-                        <textarea class="form-control" id="mensagem_modal_edit" name="mensagem" rows="4" required></textarea>
-                    </div>
-
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label for="prioridade_modal_edit" class="form-label">Prioridade</label>
-                            <select class="form-select" id="prioridade_modal_edit" name="prioridade" required>
-                                <option value="baixa">Baixa</option>
-                                <option value="normal">Normal</option>
-                                <option value="alta">Alta</option>
-                            </select>
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label for="data_expiracao_modal_edit" class="form-label">Expira em</label>
-                            <input type="datetime-local" class="form-control" id="data_expiracao_modal_edit" name="data_expiracao" required>
-                        </div>
-                    </div>
-                    <div class="d-grid">
-                        <button type="submit" id="saveChangesBtn" class="btn btn-primary" disabled>Salvar Alterações</button>
-                    </div>
+                    <input type="hidden" id="escola_modal_edit" name="escola"><input type="hidden" id="criado_por_modal_edit" name="criado_por"><input type="hidden" id="ativo_modal_edit" name="ativo" value="true">
+                    <div class="mb-3"><label for="titulo_modal_edit" class="form-label">Título</label><input type="text" class="form-control" id="titulo_modal_edit" name="titulo" required></div>
+                    <div class="mb-3"><label for="mensagem_modal_edit" class="form-label">Mensagem</label><textarea class="form-control" id="mensagem_modal_edit" name="mensagem" rows="4" required></textarea></div>
+                    <div class="mb-3"><label for="prioridade_modal_edit" class="form-label">Prioridade</label><select class="form-select" id="prioridade_modal_edit" name="prioridade" required><option value="baixa">Baixa</option><option value="normal">Normal</option><option value="alta">Alta</option></select></div>
+                    <div class="d-grid"><button type="submit" id="saveChangesBtn" class="btn btn-primary">Salvar Alterações</button></div>
                 </form>
             </div>
         </div>
@@ -194,7 +191,6 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // ---- Script para o Modal de Visualização ----
     const viewAvisoModal = document.getElementById('viewAvisoModal');
     if (viewAvisoModal) {
         viewAvisoModal.addEventListener('show.bs.modal', event => {
@@ -205,9 +201,11 @@ document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('viewAvisoModalEscola').textContent = button.getAttribute('data-escola');
             document.getElementById('viewAvisoModalCriadoPor').textContent = button.getAttribute('data-criado-por');
             document.getElementById('viewAvisoModalDataCriacao').textContent = button.getAttribute('data-data-criacao');
+            
             const imageUrl = button.getAttribute('data-imagem-url');
             const imageContainer = document.getElementById('viewAvisoModalImageContainer');
             const imageView = document.getElementById('viewAvisoModalImage');
+
             if (imageUrl) {
                 imageView.src = imageUrl;
                 imageContainer.style.display = 'block';
@@ -217,67 +215,45 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // ---- Script para o Modal de Edição (COM A VALIDAÇÃO APRIMORADA) ----
     const editAvisoModal = document.getElementById('editAvisoModal');
     if (editAvisoModal) {
         editAvisoModal.addEventListener('show.bs.modal', event => {
             const button = event.relatedTarget;
             const form = document.getElementById('editAvisoForm');
-            form.action = `/problemas/avisos/editar/${button.getAttribute('data-id')}/`; // Ajuste esta URL se necessário
-
+            form.action = `/problemas/avisos/editar/${button.getAttribute('data-id')}/`;
             const inputTitulo = document.getElementById('titulo_modal_edit');
             const textareaMensagem = document.getElementById('mensagem_modal_edit');
             const selectPrioridade = document.getElementById('prioridade_modal_edit');
-            const inputDataExpiracao = document.getElementById('data_expiracao_modal_edit');
-            
             inputTitulo.value = button.getAttribute('data-titulo');
             textareaMensagem.value = button.getAttribute('data-mensagem');
             selectPrioridade.value = button.getAttribute('data-prioridade');
-            inputDataExpiracao.value = button.getAttribute('data-data-expiracao');
-
             document.getElementById('escola_modal_edit').value = button.getAttribute('data-escola-id');
             document.getElementById('criado_por_modal_edit').value = button.getAttribute('data-criado-por-id');
             document.getElementById('ativo_modal_edit').value = button.getAttribute('data-ativo');
-
-            const saveChangesBtn = document.getElementById('saveChangesBtn');
-            const originalData = {
-                titulo: inputTitulo.value,
-                mensagem: textareaMensagem.value,
-                prioridade: selectPrioridade.value,
-                data_expiracao: inputDataExpiracao.value
-            };
-            saveChangesBtn.disabled = true;
-
-            const checkForChanges = () => {
-                const hasChanged = inputTitulo.value !== originalData.titulo ||
-                                  textareaMensagem.value !== originalData.mensagem ||
-                                  selectPrioridade.value !== originalData.prioridade ||
-                                  inputDataExpiracao.value !== originalData.data_expiracao;
-
-                const isInvalid = inputTitulo.value.trim() === '' ||
-                                  textareaMensagem.value.trim() === '' ||
-                                  inputDataExpiracao.value === '';
-
-                saveChangesBtn.disabled = !hasChanged || isInvalid;
-            };
             
+            const saveChangesBtn = document.getElementById('saveChangesBtn');
+            const originalData = { titulo: inputTitulo.value, mensagem: textareaMensagem.value, prioridade: selectPrioridade.value };
+            saveChangesBtn.disabled = true;
+            
+            const checkForChanges = () => {
+                const isChanged = inputTitulo.value !== originalData.titulo || textareaMensagem.value !== originalData.mensagem || selectPrioridade.value !== originalData.prioridade;
+                saveChangesBtn.disabled = !isChanged;
+            };
             form.addEventListener('input', checkForChanges);
         });
     }
 
-    // ---- Script para Seleção em Massa ----
     const masterCheckbox = document.getElementById('selecionarTodosCheckbox');
     if (masterCheckbox) {
         masterCheckbox.addEventListener('change', function() {
-            document.querySelectorAll('.aviso-checkbox').forEach(checkbox => { checkbox.checked = this.checked; });
+            const noticeCheckboxes = document.querySelectorAll('.aviso-checkbox');
+            noticeCheckboxes.forEach(checkbox => { checkbox.checked = this.checked; });
         });
     }
 
-    // ---- Script para Apagar em Massa ----
     const deleteForm = document.getElementById('deleteMultipleForm');
-    const btnApagarSelecionados = document.getElementById('btnApagarSelecionados');
-    if (btnApagarSelecionados && deleteForm) {
-        btnApagarSelecionados.addEventListener('click', function(event) {
+    if (deleteForm) {
+        deleteForm.addEventListener('submit', function(event) {
             event.preventDefault();
             const selectedCount = document.querySelectorAll('.aviso-checkbox:checked').length;
             if (selectedCount === 0) {
@@ -295,13 +271,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 cancelButtonText: 'Cancelar'
             }).then((result) => {
                 if (result.isConfirmed) {
-                    deleteForm.submit();
+                    event.target.submit();
                 }
             });
         });
     }
-
-    // ---- Script para Verificação Automática de Avisos Expirados ----
+ 
     function getCsrfToken() {
         return document.querySelector('[name=csrfmiddlewaretoken]').value;
     }
@@ -310,56 +285,38 @@ document.addEventListener('DOMContentLoaded', function() {
         try {
             const response = await fetch("{% url 'verificar_avisos_automaticos' %}");
             const data = await response.json();
+
             if (data.avisos_para_apagar && data.avisos_para_apagar.length > 0) {
                 const avisos = data.avisos_para_apagar;
                 const total = avisos.length;
-                let carouselIndicators = '';
-                let carouselItems = '';
-                avisos.forEach((aviso, index) => {
-                    const activeClass = index === 0 ? 'active' : '';
-                    carouselIndicators += `<button type="button" data-bs-target="#expiradosCarousel" data-bs-slide-to="${index}" class="${activeClass}" aria-current="true"></button>`;
-                    carouselItems += `
-                        <div class="carousel-item ${activeClass}">
-                            <div class="aviso-expirado-card">
-                                <h6 class="fw-bold text-truncate">${aviso.titulo || 'Sem Título'}</h6>
-                                <p class="mb-1"><i class="bi bi-building me-2"></i><strong>Escola:</strong> ${aviso.escola_nome || 'N/A'}</p>
-                                <p class="mb-0"><i class="bi bi-calendar-x me-2"></i><strong>Expirou em:</strong> ${new Date(aviso.data_expiracao).toLocaleString('pt-BR')}</p>
-                            </div>
-                        </div>`;
-                });
-                const carouselHtml = `
-                    <div id="expiradosCarousel" class="carousel slide carousel-dark" data-bs-ride="carousel">
-                        <div class="carousel-indicators">${carouselIndicators}</div>
-                        <div class="carousel-inner">${carouselItems}</div>
-                        <button class="carousel-control-prev" type="button" data-bs-target="#expiradosCarousel" data-bs-slide="prev"><span class="carousel-control-prev-icon"></span></button>
-                        <button class="carousel-control-next" type="button" data-bs-target="#expiradosCarousel" data-bs-slide="next"><span class="carousel-control-next-icon"></span></button>
-                    </div>`;
+                
                 const result = await Swal.fire({
-                    title: `Encontramos ${total} aviso(s) expirado(s)`,
-                    html: carouselHtml,
-                    icon: 'warning',
+                    title: `Encontramos ${total} aviso(s) automático(s) expirado(s).`,
+                    text: 'Deseja apagá-los agora?',
+                    icon: 'question',
                     showCancelButton: true,
-                    confirmButtonText: 'Sim, apagar todos!',
+                    confirmButtonText: 'Sim, apagar!',
                     cancelButtonText: 'Cancelar',
-                    confirmButtonColor: '#d33',
-                    customClass: { htmlContainer: 'swal-html-container-custom' },
-                    didOpen: () => {
-                        const carouselElement = document.getElementById('expiradosCarousel');
-                        if (carouselElement) { new bootstrap.Carousel(carouselElement); }
-                    }
+                    confirmButtonColor: '#d33'
                 });
+
                 if (result.isConfirmed) {
                     const deleteResponse = await fetch("{% url 'apagar_avisos_automaticos' %}", {
                         method: 'POST',
-                        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCsrfToken() },
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': getCsrfToken()
+                        },
                         body: JSON.stringify({ 'aviso_ids': avisos.map(a => a.id) })
                     });
+
                     const deleteData = await deleteResponse.json();
+
                     if (deleteData.status === 'success') {
                         await Swal.fire('Sucesso!', deleteData.message, 'success');
                         window.location.reload();
                     } else {
-                        await Swal.fire('Erro!', deleteData.message || 'Ocorreu um erro ao apagar.', 'error');
+                        await Swal.fire('Erro!', deleteData.message || 'Ocorreu um erro ao apagar os avisos.', 'error');
                     }
                 }
             }
@@ -367,18 +324,18 @@ document.addEventListener('DOMContentLoaded', function() {
             console.error('Erro ao verificar/apagar avisos automáticos:', error);
         }
     }
+ 
     verificarEApagarAvisosAutomaticos();
 });
 </script>
 
 <style>
-.shadow-hover { transition: box-shadow 0.2s ease-in-out; }
-.shadow-hover:hover { box-shadow: 0 .5rem 1rem rgba(0,0,0,.15)!important; }
-.swal-html-container-custom { overflow: hidden !important; }
-.aviso-expirado-card { padding: 1.5rem; background-color: #f8f9fa; border: 1px solid #dee2e6; border-radius: .5rem; text-align: left; color: #212529; }
-#expiradosCarousel .carousel-indicators button { background-color: #555; }
-#expiradosCarousel .carousel-control-prev-icon,
-#expiradosCarousel .carousel-control-next-icon { filter: invert(0.6) grayscale(100); }
+.shadow-hover {
+    transition: box-shadow 0.2s ease-in-out;
+}
+.shadow-hover:hover {
+    box-shadow: 0 .5rem 1rem rgba(0,0,0,.15)!important;
+}
 </style>
 
 {% endblock %}
