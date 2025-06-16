@@ -21,7 +21,8 @@
 
         <!-- Corpo do Formulário -->
         <div class="card-body" style="padding-bottom: 100px;"> <!-- Espaço para os botões -->
-            <form method="post" enctype="multipart/form-data" class="needs-validation" novalidate>
+            <form id="mainForm" method="post" enctype="multipart/form-data" class="needs-validation" novalidate>
+
                 {% csrf_token %}
                 
                 <!-- Lista de Perguntas -->

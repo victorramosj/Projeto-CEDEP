@@ -106,3 +106,7 @@ class AvisoImportante(models.Model):
 
     def ainda_valido(self):
         return self.ativo and (self.data_expiracao is None or self.data_expiracao >= timezone.now())
+    
+
+
+

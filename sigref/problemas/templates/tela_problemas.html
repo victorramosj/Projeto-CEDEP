@@ -21,62 +21,61 @@ table .form-select {
     border: none;
     transition: background-color 0.3s ease;  /* Transição suave para a cor */
 }
-
 </style>
 {% endblock %}
 
-
 {% block content %}
-<div class="container mt-4">
-    <h3>Problemas ({{ total_problemas }}) </h3>
+    <div class="container mt-4">
+         <h3>Problemas ({{ total_problemas }})</h3>
 
     <div class="col-12">
-        <div class="d-flex justify-content-between gap-2">
-            <!-- Barra de pesquisa -->
-            <div class="input-group" style="width: 50%;">
+        <div class="d-flex justify-content-between gap-2 mb-3">
+            
+            <!-- Barra de pesquisa (com a funcionalidade de busca) -->
+            <form method="GET" action="{% url 'tela_problema' %}" class="input-group" style="width: 50%;">
+                {% csrf_token %}
                 <span class="input-group-text"><i class="fas fa-search"></i></span>
-                <input type="text" class="form-control" placeholder="Pesquise por Escola ...">
-            </div>
-
+                <input type="text" class="form-control" name="escola" value="{{ search_query }}" placeholder="Pesquise por Escola...">
+            </form>
+            
             <div class="d-flex gap-2">
                 <!-- Filtros -->
                 <select class="form-select" name="data" aria-label="Filtro Data">
-                    <option value="" {% if not request.GET.data %}selected{% endif %}>Data</option>
-                    <option value="1" {% if request.GET.data == '1' %}selected{% endif %}>Última semana</option>
-                    <option value="2" {% if request.GET.data == '2' %}selected{% endif %}>Último mês</option>
-                    <option value="3" {% if request.GET.data == '3' %}selected{% endif %}>Último ano</option>
+                    <option value="" {% if not request.GET.data %} selected {% endif %}>Data</option>
+                    <option value="1" {% if request.GET.data == '1' %} selected {% endif %}>Última semana</option>
+                    <option value="2" {% if request.GET.data == '2' %} selected {% endif %}>Último mês</option>
+                    <option value="3" {% if request.GET.data == '3' %} selected {% endif %}>Último ano</option>
                 </select>
                 <select class="form-select" name="status" aria-label="Filtro Status">
                     <option value="" {% if not request.GET.status %}selected{% endif %}>Status</option>
-                    <option value="P" {% if lacuna.status == 'P' %} selected {% endif %}>Pendente</option>
-                    <option value="R" {% if lacuna.status == 'R' %} selected {% endif %}>Resolvido</option>
-                    <option value="E" {% if lacuna.status == 'E' %} selected {% endif %}>Em Andamento</option>
+                    <option value="P" {% if request.GET.status == 'P' %} selected {% endif %}>Pendente</option>
+                    <option value="R" {% if request.GET.status == 'R' %} selected {% endif %}>Resolvido</option>
+                    <option value="E" {% if request.GET.status == 'E' %} selected {% endif %}>Em Andamento</option>
                 </select>
             </div>
 
             <div class="d-flex gap-2">
                 <!-- Botões de ação -->
-                <button class="btnAcao btn btn-info">Atualizar Status</button>
-                <button class="btnAcao btn btn-danger">Apagar Problemas</button>
+                <button class="btnAcao btn btn-info">Atualizar Status</button> 
+                <button class="btnAcao btn btn-danger">Apagar Problemas</button> 
             </div>
         </div>
 
         <!-- Tabela de Problemas -->
-        <div class="table-responsive">
-            <table class="table table-striped mt-2">
-                <thead>
-                    <tr>
-                        <th><input type="checkbox"></th>
-                        <th class="text-start">Problema</th>
-                        <th class="text-start">Escola</th>
-                        <th class="text-start">Usuário</th>
-                        <th class="text-start">Setor Responsável</th>
-                        <th class="text-start">Data</th>
-                        <th class="text-start">Status</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for problema in problemas_page %}
+        <table class="table table-striped mt-2">
+            <thead>
+                <tr>
+                    <th><input type="checkbox"></th>
+                    <th class="text-start">Problema</th>
+                    <th class="text-start">Escola</th>
+                    <th class="text-start">Usuário</th>
+                    <th class="text-start">Setor Responsável</th>
+                    <th class="text-start">Data</th>
+                    <th class="text-start">Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for problema in problemas_page %}
                     <tr>
                         <td><input type="checkbox"></td>
                         <td class="text-start">{{ problema.descricao}}</td>
@@ -85,81 +84,80 @@ table .form-select {
                         <td class="text-start">{{ problema.setor.hierarquia_completa }}</td>
                         <td class="text-start">{{ problema.criado_em|date:"d/m/Y" }}</td>
                         <td>
-                            <select class="form-select" aria-label="Filtro Status" 
-                                data-problema-id="{{ problema.id }}"
-                                {% if problema.status == 'P' %} style="background-color: #ffcccc !important;" {% endif %} 
-                                {% if problema.status == 'R' %} style="background-color: #ccffcc !important;" {% endif %} 
-                                {% if problema.status == 'E' %} style="background-color: #ffffcc !important;" {% endif %}>
+                             <select class="form-select" aria-label="Filtro Status" data-problema-id="{{ problema.id }}">
                                 <option value="P" {% if problema.status == 'P' %} selected {% endif %}>Pendente</option>
                                 <option value="R" {% if problema.status == 'R' %} selected {% endif %}>Resolvido</option>
-                                <option value="E" {% if problema.status == 'E' %} selected {% endif %}>Em Andamento </option>
+                                <option value="E" {% if problema.status == 'E' %} selected {% endif %}>Em Andamento</option>
                             </select>
                         </td>
                     </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
+                {% empty %}
+                    <tr>
+                        <td colspan="7" class="text-center p-4">Nenhum problema encontrado.</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
     </div>
 
     <!-- Paginação -->
     <nav aria-label="Page navigation">
         <ul class="pagination justify-content-center">
             {% if problemas_page.has_previous %}
-            <li class="page-item"><a class="page-link" href="?page=1">&laquo; Primeiro</a></li>
-            <li class="page-item"><a class="page-link"
-                    href="?page={{ problemas_page.previous_page_number }}">Anterior</a></li>
+                <li class="page-item"><a class="page-link" href="?page=1&q={{ search_query }}">&laquo; Primeiro</a></li>
+                <li class="page-item"><a class="page-link" href="?page={{ problemas_page.previous_page_number }}&q={{ search_query }}">Anterior</a></li>
             {% endif %}
+            
             {% for num in problemas_page.paginator.page_range %}
-            {% if problemas_page.number == num %}
-            <li class="page-item active"><span class="page-link">{{ num }}</span></li>
-            {% else %}
-            <li class="page-item"><a class="page-link" href="?page={{ num }}">{{ num }}</a></li>
-            {% endif %}
+                {% if problemas_page.number == num %}
+                    <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+                {% else %}
+                    <li class="page-item"><a class="page-link" href="?page={{ num }}&q={{ search_query }}">{{ num }}</a></li>
+                {% endif %}
             {% endfor %}
-            {% if lacunas_page.has_next %}
-            <li class="page-item"><a class="page-link" href="?page={{ problemas_page.next_page_number }}">Próximo</a>
-            </li>
-            <li class="page-item"><a class="page-link" href="?page={{ problemas_page.paginator.num_pages }}">Último
-                    &raquo;</a></li>
+            
+            {% if problemas_page.has_next %}
+                <li class="page-item"><a class="page-link" href="?page={{ problemas_page.next_page_number }}&q={{ search_query }}">Próximo</a></li>
+                <li class="page-item"><a class="page-link" href="?page={{ problemas_page.paginator.num_pages }}&q={{ search_query }}">Último &raquo;</a></li>
             {% endif %}
         </ul>
     </nav>
 </div>
 
 <script>
-    document.addEventListener("DOMContentLoaded", function () {
-        const selects = document.querySelectorAll('select[name="status"]');
+    document.addEventListener("DOMContentLoaded", function() {
+        const searchInput = document.querySelector("input[placeholder='Pesquise por Escola ...']");
+        const selectData = document.querySelector("select[name='data']");
+        const selectStatus = document.querySelector("select[name='status']");
 
-        selects.forEach(select => {
-            select.addEventListener('change', function () {
-                const problemaId = this.getAttribute('data-problema-id');
-                const newStatus = this.value;
+        // Função para atualizar a tabela com os parâmetros da URL
+        function updateTable() {
+            const searchQuery = searchInput.value;  // Captura o valor da pesquisa
+            const dataFilter = selectData.value;
+            const statusFilter = selectStatus.value;
 
-                fetch(`/problema/${problemaId}/alterar_status/`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
-                    },
-                    body: JSON.stringify({ 'status': newStatus })
-                })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.status) {
-                            alert('Status atualizado com sucesso!');
-                        } else {
-                            alert('Erro ao atualizar o status!');
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Erro:', error);
-                        alert('Erro ao atualizar o status!');
-                    });
-            });
-        });
+            const url = new URL(window.location.href);
+            const params = new URLSearchParams(url.search);
+
+            // Atualiza os parâmetros da URL para incluir os filtros
+            params.set('escola', searchQuery);
+            params.set('data', dataFilter);
+            params.set('status', statusFilter);
+
+            // Envia a requisição para a mesma página com os parâmetros atualizados
+            fetch(`${url.pathname}?${params.toString()}`)
+                .then(response => response.text())
+                .then(html => {
+                    // Atualiza a parte da tabela com os novos dados
+                    document.querySelector('.table-responsive').innerHTML = html;
+                });
+        }
+
+        // Adiciona evento de input na pesquisa
+        searchInput.addEventListener('input', updateTable);
+        selectData.addEventListener('change', updateTable);
+        selectStatus.addEventListener('change', updateTable);
     });
 </script>
-
 
 {% endblock %}

@@ -2,22 +2,54 @@
 {% load static %}
 
 {% block content %}
-<h2>{{ questionario.titulo }} - Gráficos</h2>
+<h2 style="text-align:center; margin-bottom: 32px;">{{ questionario.titulo }} - Gráficos</h2>
 
-<div id="graficos-container"></div>
+<div id="graficos-container" style="max-width: 900px; margin: auto; background: #fff; border-radius: 12px; box-shadow: 0 2px 16px rgba(0,0,0,0.07); padding: 32px 24px 24px 24px;"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
     const dadosGraficos = JSON.parse('{{ dados_graficos|safe }}');
     const container = document.getElementById('graficos-container');
 
-    dadosGraficos.forEach((item, index) => {
-        const canvas = document.createElement('canvas');
-        canvas.id = `grafico-${index}`;
-        container.appendChild(document.createElement('h4')).innerText = item.pergunta;
-        container.appendChild(canvas);
+    if (dadosGraficos.length === 0) {
+        container.innerHTML = "<p style='text-align:center; color:#888; font-size:1.1em;'>Nenhum dado disponível para exibir gráficos.</p>";
+    }
 
+    dadosGraficos.forEach((item, index) => {
+        // Pergunta
+        const pergunta = document.createElement('h4');
+        pergunta.innerText = item.pergunta;
+        pergunta.style.marginTop = "32px";
+        pergunta.style.marginBottom = "8px";
+        pergunta.style.color = "#222";
+        pergunta.style.fontWeight = "600";
+        container.appendChild(pergunta);
+
+        // Descrição (se houver)
+        if (item.descricao) {
+            const desc = document.createElement('p');
+            desc.innerText = item.descricao;
+            desc.style.color = "#666";
+            desc.style.fontSize = "0.97em";
+            desc.style.marginBottom = "12px";
+            container.appendChild(desc);
+        }
+
+        // Gráfico ou lista
         if (item.tipo === 'SN') {
+            const card = document.createElement('div');
+            card.style.background = "#f6fef7";
+            card.style.border = "1px solid #e0f2e9";
+            card.style.borderRadius = "8px";
+            card.style.padding = "18px 12px 8px 12px";
+            card.style.marginBottom = "18px";
+            card.style.boxShadow = "0 1px 6px rgba(40,167,69,0.06)";
+            const canvas = document.createElement('canvas');
+            canvas.id = `grafico-${index}`;
+            canvas.height = 180;
+            card.appendChild(canvas);
+            container.appendChild(card);
+
             new Chart(canvas, {
                 type: 'pie',
                 data: {
@@ -26,9 +58,29 @@
                         data: item.dados.values,
                         backgroundColor: ['#28a745', '#dc3545'],
                     }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: { position: 'bottom', labels: { font: { size: 14 } } },
+                        title: { display: false }
+                    }
                 }
             });
         } else if (item.tipo === 'NU') {
+            const card = document.createElement('div');
+            card.style.background = "#f7f9ff";
+            card.style.border = "1px solid #e3eafc";
+            card.style.borderRadius = "8px";
+            card.style.padding = "18px 12px 8px 12px";
+            card.style.marginBottom = "18px";
+            card.style.boxShadow = "0 1px 6px rgba(0,123,255,0.06)";
+            const canvas = document.createElement('canvas');
+            canvas.id = `grafico-${index}`;
+            canvas.height = 200;
+            card.appendChild(canvas);
+            container.appendChild(card);
+
             new Chart(canvas, {
                 type: 'bar',
                 data: {
@@ -36,15 +88,38 @@
                     datasets: [{
                         label: 'Valor',
                         data: item.dados.valores,
-                        backgroundColor: '#007bff'
+                        backgroundColor: '#007bff',
+                        borderRadius: 6,
+                        maxBarThickness: 36
                     }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: { display: false },
+                        title: { display: false }
+                    },
+                    scales: {
+                        x: { grid: { display: false }, ticks: { font: { size: 13 } } },
+                        y: { beginAtZero: true, grid: { color: "#e3eafc" }, ticks: { font: { size: 13 } } }
+                    }
                 }
             });
         } else if (item.tipo === 'TX') {
-            const texto = item.dados.exemplos.map(t => `<li>${t}</li>`).join('');
-            const div = document.createElement('div');
-            div.innerHTML = `<ul>${texto}</ul>`;
-            container.appendChild(div);
+            const card = document.createElement('div');
+            card.style.background = "#f8f9fa";
+            card.style.padding = "16px 22px";
+            card.style.borderRadius = "8px";
+            card.style.marginBottom = "18px";
+            card.style.marginTop = "8px";
+            card.style.border = "1px solid #e9ecef";
+            card.style.boxShadow = "0 1px 6px rgba(0,0,0,0.04)";
+            if (item.dados.exemplos.length > 0) {
+                card.innerHTML = `<ul style="margin:0; padding-left:22px; color:#333; font-size:1.04em;">${item.dados.exemplos.map(t => `<li style="margin-bottom:6px;">${t}</li>`).join('')}</ul>`;
+            } else {
+                card.innerHTML = "<em style='color:#888;'>Nenhuma resposta textual registrada.</em>";
+            }
+            container.appendChild(card);
         }
     });
 </script>

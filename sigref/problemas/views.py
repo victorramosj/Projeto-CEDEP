@@ -209,45 +209,94 @@ def problema_dashboard_view(request):
 
 
 
+from django.shortcuts import render
+from django.core.paginator import Paginator
+from django.db.models import Q
+from .models import Lacuna  # Certifique-se de que o modelo Lacuna está importado
+
 # TELA LACUNA CGAF/UDP
 def tela_lacuna_view(request):
-    # Obtém todas as lacunas da escola
-    lacunas_list = Lacuna.objects.all()
+    """
+    Esta view agora lida com a lógica de busca e paginação.
+    """
+    # Obter o termo de busca a partir dos parâmetros GET da URL (ex: ?q=minha-busca)
+    search_query = request.GET.get('q', '')
 
-    # Cria o objeto paginator para limitar a 9 lacunas por página
-    paginator = Paginator(lacunas_list, 9)
+    # Começar com a lista de todas as lacunas
+    lacunas_list = Lacuna.objects.select_related('escola').all()
 
+    # Se um termo de busca for fornecido, filtrar a lista
+    if search_query:
+        lacunas_list = lacunas_list.filter(
+            Q(escola__nome__icontains=search_query) |
+            Q(disciplina__icontains=search_query)
+        ).distinct()
+
+    # Ordenar o resultado
+    lacunas_list = lacunas_list.order_by('-criado_em')
+
+    # Obter a contagem total DEPOIS de aplicar o filtro
+    todas_lacunas_count = lacunas_list.count()
+
+    # Configurar a paginação
+    paginator = Paginator(lacunas_list, 9)  # 9 itens por página
     page_number = request.GET.get('page')
     lacunas_page = paginator.get_page(page_number)
 
-    todas_lacunas = lacunas_list.count()
-
-    # Passa as lacunas paginadas para o template
-    return render(request, 'tela_lacunas.html', {
+    # Passar os dados para o template, incluindo o termo de busca
+    context = {
         'lacunas_page': lacunas_page,
-        'todas_lacunas': todas_lacunas,  # <--- ESSENCIAL
-    })
+        'todas_lacunas': todas_lacunas_count,  # Agora a variável 'todas_lacunas' está definida corretamente
+    }
+
+    return render(request, 'tela_lacunas.html', context)
 
 
-# TELA PROBLEMA CGAF/UDP
+from datetime import datetime, timedelta
+from django.shortcuts import render
+from .models import ProblemaUsuario
+from django.core.paginator import Paginator
+from django.db.models import Q
+
 def tela_problema_view(request):
-    # Obtém todas as lacunas da escola
     problemas_list = ProblemaUsuario.objects.all()
 
-    # Cria o objeto paginator para limitar a 9 lacunas por página
-    paginator = Paginator(problemas_list, 9)
+    # Obter os parâmetros de filtro da URL (busca por escola, data e status)
+    escola_query = request.GET.get('escola', '')  # Pesquisa pela escola
+    data_filter = request.GET.get('data', '')
+    status_filter = request.GET.get('status', '')
 
+    # Filtro por Escola
+    if escola_query:
+        problemas_list = problemas_list.filter(escola__nome__icontains=escola_query)
+
+    # Filtro por Data
+    if data_filter == '1':  # Última semana
+        problemas_list = problemas_list.filter(criado_em__gte=datetime.now() - timedelta(weeks=1))
+    elif data_filter == '2':  # Último mês
+        problemas_list = problemas_list.filter(criado_em__gte=datetime.now() - timedelta(days=30))
+    elif data_filter == '3':  # Último ano
+        problemas_list = problemas_list.filter(criado_em__gte=datetime.now() - timedelta(days=365))
+
+    #  Filtro por Status
+    if status_filter:
+        problemas_list = problemas_list.filter(status=status_filter)
+
+    # Paginação
+    paginator = Paginator(problemas_list, 9)  # 9 itens por página
     page_number = request.GET.get('page')
     problemas_page = paginator.get_page(page_number)
 
-    total_problemas = problemas_list.count()
+    total_problemas = problemas_list.count()  # Total de problemas filtrados
 
-    # Passa as lacunas paginadas para o template
-    return render(request, 'tela_problemas.html',  {
+    # Passar os dados para o template
+    context = {
         'problemas_page': problemas_page,
-        'total_problemas': total_problemas,  # <--- ESSENCIAL
-    })
-   
+        'total_problemas': total_problemas,  # Total de problemas filtrados
+        'search_query': escola_query,  # Termo de busca (para manter na barra de pesquisa)
+    }
+
+    return render(request, 'tela_problemas.html', context)
 
 
 # VIEWS AVISOS *********************************************************
@@ -471,43 +520,26 @@ from django.utils import timezone
 import json
 from .models import AvisoImportante # <-- NOME CORRIGIDO AQUI
 
-# Em seu arquivo views.py
-
-from django.http import JsonResponse
-from django.utils import timezone
-from .models import AvisoImportante # Nome do seu modelo
+# ... suas outras views
 
 def verificar_avisos_automaticos(request):
     """
-    Verifica avisos que estão ativos mas cuja data de expiração já passou
-    e retorna os dados completos para o front-end.
+    Verifica avisos que estão ativos mas cuja data de expiração já passou.
+    Esta lógica é mais precisa, usando os campos do seu modelo.
     """
-    # A sua consulta para buscar os avisos expirados está correta.
+    # Filtra por avisos que ainda estão marcados como ativos
+    # e cuja data de expiração já passou (é menor que o tempo atual).
     avisos_expirados = AvisoImportante.objects.filter(
         ativo=True,
-        data_expiracao__isnull=False,
+        data_expiracao__isnull=False, # Garante que o campo de expiração não é nulo
         data_expiracao__lt=timezone.now()
-    ).select_related('escola') # Otimização: busca a escola relacionada na mesma consulta
-
-    # --- INÍCIO DA CORREÇÃO ---
-    # Em vez de usar .values(), vamos construir a lista manualmente
-    # para incluir todos os campos necessários e formatar a data.
+    )
     
-    avisos_para_apagar = []
-    for aviso in avisos_expirados:
-        avisos_para_apagar.append({
-            'id': aviso.id,
-            'titulo': aviso.titulo,
-            # Acessa o nome da escola através da relação e trata caso não haja escola
-            'escola_nome': aviso.escola.nome if aviso.escola else 'Não especificada',
-            # Converte a data para o formato ISO 8601, que o JavaScript entende
-            'data_expiracao': aviso.data_expiracao.isoformat()
-        })
-    # --- FIM DA CORREÇÃO ---
+    # Prepara a lista de avisos para ser enviada como JSON
+    avisos_para_apagar = list(avisos_expirados.values('id', 'titulo'))
     
     return JsonResponse({'avisos_para_apagar': avisos_para_apagar})
 
-# ... suas outras views, como a de apagar avisos, etc.
 
 @require_POST
 def apagar_avisos_automaticos(request):

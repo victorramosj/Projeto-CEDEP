@@ -4,7 +4,7 @@
 
 {% block content %}
 <style>
-    /* Estilos para o visual do formulário e componentes */
+    /* Seus estilos CSS permanecem os mesmos */
     .badge-wrap {
         white-space: normal;
         word-break: break-word;
@@ -103,7 +103,7 @@
                         <label for="prioridade" class="form-label fw-semibold">Prioridade</label>
                         <div class="input-group">
                             <span class="input-group-text"><i class="bi bi-tags"></i></span>
-                            <select name="prioridade" id="prioridade" class="form-select" required>
+                            <select name="prioridade" id="prioridade" class="form-select">
                                 <option value="baixa" {% if request.POST.prioridade == 'baixa' %}selected{% endif %}>Baixa</option>
                                 <option value="normal" {% if not request.POST.prioridade or request.POST.prioridade == 'normal' %}selected{% endif %}>Normal</option>
                                 <option value="alta" {% if request.POST.prioridade == 'alta' %}selected{% endif %}>Alta</option>
@@ -114,10 +114,10 @@
                         <label for="data_expiracao" class="form-label fw-semibold">Data e Hora de Expiração</label>
                         <div class="input-group">
                             <span class="input-group-text"><i class="bi bi-calendar-event"></i></span>
-                            <input type="datetime-local" name="data_expiracao" id="data_expiracao" class="form-control" required value="{{ request.POST.data_expiracao }}" placeholder="Selecione a data e hora">
+                            <input type="datetime-local" name="data_expiracao" id="data_expiracao" class="form-control" required value="{{ request.POST.data_expiracao }}">
                         </div>
-                        <div class="form-text">Escolha a data e hora em que o aviso deixará de ser visível.</div>
                     </div>
+
                 </div>
 
                 <hr class="my-4">
@@ -179,8 +179,7 @@
 </div>
 
 <div class="modal fade" id="modalConfirmacao" tabindex="-1" aria-labelledby="modalConfirmacaoLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered modal-lg">
-        <div class="modal-content">
+    <div class="modal-dialog modal-dialog-centered modal-lg"> <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="modalConfirmacaoLabel">Confirmar Publicação</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
@@ -203,165 +202,122 @@
 </div>
 
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    const form = document.getElementById('avisoForm');
-    
-    // --- Elementos do formulário ---
-    const tituloInput = document.getElementById('titulo');
-    const mensagemInput = document.getElementById('mensagem');
-    const dataExpiracaoInput = document.getElementById('data_expiracao');
-    const imagemInput = document.getElementById('imagem');
-    const imagePreview = document.getElementById('imagePreview');
-    const btnPublicar = document.getElementById('btnPublicar');
-    const btnConfirmarPublicacao = document.getElementById('confirmarPublicacao');
+// Todo o seu JavaScript existente...
+// Adicionamos o listener para o preview da imagem.
 
-    // --- Funções ---
+// Função de busca 
+function filtrarListaEscolas() {
+    const termoBuscaInput = document.getElementById('termo_busca_checkbox');
+    const termo = termoBuscaInput.value.toLowerCase().trim();
+    document.querySelectorAll('.escola-item').forEach(item => {
+        const nome = item.dataset.nome;
+        const inep = item.dataset.inep;
+        item.style.display = (nome.includes(termo) || (inep && inep.includes(termo))) ? '' : 'none';
+    });
+}
 
-    /**
-     * Filtra a lista de escolas com base no texto digitado no campo de busca.
-     */
-    window.filtrarListaEscolas = function() {
-        const termo = document.getElementById('termo_busca_checkbox').value.toLowerCase().trim();
-        document.querySelectorAll('.escola-item').forEach(item => {
-            const nome = item.dataset.nome || '';
-            const inep = item.dataset.inep || '';
-            const isVisible = nome.includes(termo) || inep.includes(termo);
-            item.style.display = isVisible ? '' : 'none';
-        });
-    }
-
-    /**
-     * Atualiza o display das escolas selecionadas, o contador e o estado do botão de publicar.
-     * Esta é a função central de validação do formulário.
-     */
-    function atualizarEstadoFormulario() {
-        const carouselContainer = document.getElementById('carouselEscolasContainer');
-        const modalEscolasContainer = document.getElementById('modalConfirmacaoEscolas');
-        const contadorEscolasSpan = document.getElementById('contadorEscolas');
-        const modalContadorEscolasSpan = document.getElementById('modalContadorEscolas');
-        
-        carouselContainer.innerHTML = '';
-        modalEscolasContainer.innerHTML = '';
-
-        const checkedCheckboxes = Array.from(document.querySelectorAll('.escola-checkbox:checked'));
-        const totalEscolasNoSistema = document.querySelectorAll('.escola-checkbox').length;
-        const numSelecionadas = checkedCheckboxes.length;
-
-        contadorEscolasSpan.textContent = numSelecionadas;
-        modalContadorEscolasSpan.textContent = `${numSelecionadas} escola(s)`;
-
-        if (numSelecionadas === 0) {
-            carouselContainer.innerHTML = `<div class="p-3 border rounded bg-light text-muted text-center">Nenhuma escola selecionada.</div>`;
-            modalEscolasContainer.innerHTML = `<div class="text-muted text-center">Nenhuma escola selecionada.</div>`;
-        } else if (numSelecionadas === totalEscolasNoSistema && totalEscolasNoSistema > 0) {
-            const badgeTodas = `<div class="p-3 border rounded bg-light text-center"><span class="badge bg-primary fs-6 fw-normal badge-wrap">Todas as ${totalEscolasNoSistema} escolas do sistema selecionadas</span></div>`;
-            carouselContainer.innerHTML = badgeTodas;
-            modalEscolasContainer.innerHTML = badgeTodas;
-        } else {
-            // Constrói a lista de badges para o modal
-            const modalBadgesHtml = checkedCheckboxes.map(checkbox => {
+function atualizarDisplayEscolasSelecionadas() {
+    const carouselContainer = document.getElementById('carouselEscolasContainer');
+    const modalEscolasContainer = document.getElementById('modalConfirmacaoEscolas');
+    const contadorEscolasSpan = document.getElementById('contadorEscolas');
+    const modalContadorEscolasSpan = document.getElementById('modalContadorEscolas');
+    carouselContainer.innerHTML = '';
+    modalEscolasContainer.innerHTML = '';
+    const checkedCheckboxes = Array.from(document.querySelectorAll('.escola-checkbox:checked'));
+    const totalEscolasNoSistema = document.querySelectorAll('.escola-checkbox').length;
+    const numSelecionadas = checkedCheckboxes.length;
+    contadorEscolasSpan.textContent = numSelecionadas;
+    modalContadorEscolasSpan.textContent = `${numSelecionadas} escola(s)`;
+    if (numSelecionadas === 0) {
+        carouselContainer.innerHTML = `<div class="p-3 border rounded bg-light text-muted text-center">Nenhuma escola selecionada.</div>`;
+        modalEscolasContainer.innerHTML = `<div class="text-muted text-center">Nenhuma escola selecionada.</div>`;
+    } else if (numSelecionadas === totalEscolasNoSistema) {
+        const badgeTodas = `<div class="p-3 border rounded bg-light text-center"><span class="badge bg-primary fs-6 fw-normal badge-wrap">Todas as ${totalEscolasNoSistema} escolas do sistema selecionadas</span></div>`;
+        carouselContainer.innerHTML = badgeTodas;
+        modalEscolasContainer.innerHTML = badgeTodas;
+    } else {
+        const modalBadgesHtml = checkedCheckboxes.map(checkbox => {
+            const escolaNome = checkbox.nextElementSibling.textContent.trim();
+            return `<span class="badge text-bg-info badge-wrap m-1">${escolaNome}</span>`;
+        }).join('');
+        modalEscolasContainer.innerHTML = `<div class="modal-escolas-container d-flex flex-wrap justify-content-center">${modalBadgesHtml}</div>`;
+        const escolasPorSlide = 8;
+        const numSlides = Math.ceil(numSelecionadas / escolasPorSlide);
+        const carouselId = 'escolasSelecionadasCarousel';
+        let indicatorsHtml = '';
+        let slidesHtml = '';
+        for (let i = 0; i < numSlides; i++) {
+            const activeClass = (i === 0) ? 'active' : '';
+            indicatorsHtml += `<button type="button" data-bs-target="#${carouselId}" data-bs-slide-to="${i}" class="${activeClass}" aria-current="${activeClass ? 'true' : 'false'}"></button>`;
+            const slideItems = checkedCheckboxes.slice(i * escolasPorSlide, (i + 1) * escolasPorSlide);
+            const slideContent = slideItems.map(checkbox => {
                 const escolaNome = checkbox.nextElementSibling.textContent.trim();
-                return `<span class="badge text-bg-info badge-wrap m-1">${escolaNome}</span>`;
+                return `<span class="badge text-bg-info badge-wrap">${escolaNome}</span>`;
             }).join('');
-            modalEscolasContainer.innerHTML = `<div class="modal-escolas-container d-flex flex-wrap justify-content-center">${modalBadgesHtml}</div>`;
-
-            // Constrói o carrossel para o formulário
-            const escolasPorSlide = 8;
-            const numSlides = Math.ceil(numSelecionadas / escolasPorSlide);
-            const carouselId = 'escolasSelecionadasCarousel';
-            let indicatorsHtml = '';
-            let slidesHtml = '';
-
-            for (let i = 0; i < numSlides; i++) {
-                const activeClass = (i === 0) ? 'active' : '';
-                indicatorsHtml += `<button type="button" data-bs-target="#${carouselId}" data-bs-slide-to="${i}" class="${activeClass}" aria-current="${activeClass ? 'true' : 'false'}"></button>`;
-                
-                const slideItems = checkedCheckboxes.slice(i * escolasPorSlide, (i + 1) * escolasPorSlide);
-                const slideContent = slideItems.map(checkbox => {
-                    const escolaNome = checkbox.nextElementSibling.textContent.trim();
-                    return `<span class="badge text-bg-info badge-wrap">${escolaNome}</span>`;
-                }).join('');
-
-                slidesHtml += `<div class="carousel-item ${activeClass}"><div class="carousel-item-content">${slideContent}</div></div>`;
-            }
-
-            const controlsHtml = numSlides > 1 ? `
-                <button class="carousel-control-prev" type="button" data-bs-target="#${carouselId}" data-bs-slide="prev"><span class="carousel-control-prev-icon" aria-hidden="true"></span><span class="visually-hidden">Anterior</span></button>
-                <button class="carousel-control-next" type="button" data-bs-target="#${carouselId}" data-bs-slide="next"><span class="carousel-control-next-icon" aria-hidden="true"></span><span class="visually-hidden">Próximo</span></button>` : '';
-            
-            const indicatorsContainerHtml = numSlides > 1 ? `<div class="carousel-indicators">${indicatorsHtml}</div>` : '';
-            
-            carouselContainer.innerHTML = `
-                <div id="${carouselId}" class="carousel carousel-dark slide" data-bs-ride="false">
-                    ${indicatorsContainerHtml}
-                    <div class="carousel-inner">${slidesHtml}</div>
-                    ${controlsHtml}
+            slidesHtml += `
+                <div class="carousel-item ${activeClass}">
+                    <div class="carousel-item-content">${slideContent}</div>
                 </div>`;
         }
-        
-        // --- LÓGICA DE VALIDAÇÃO PRINCIPAL ---
-        const tituloValido = tituloInput.value.trim() !== '';
-        const mensagemValida = mensagemInput.value.trim() !== '';
-        const dataValida = dataExpiracaoInput.value !== '';
-        const escolasSelecionadas = numSelecionadas > 0;
-
-        // Habilita ou desabilita o botão com base na validação
-        btnPublicar.disabled = !(tituloValido && mensagemValida && dataValida && escolasSelecionadas);
+        const controlsHtml = numSlides > 1 ? `
+            <button class="carousel-control-prev" type="button" data-bs-target="#${carouselId}" data-bs-slide="prev"><span class="carousel-control-prev-icon" aria-hidden="true"></span><span class="visually-hidden">Anterior</span></button>
+            <button class="carousel-control-next" type="button" data-bs-target="#${carouselId}" data-bs-slide="next"><span class="carousel-control-next-icon" aria-hidden="true"></span><span class="visually-hidden">Próximo</span></button>
+        ` : '';
+        const indicatorsContainerHtml = numSlides > 1 ? `<div class="carousel-indicators">${indicatorsHtml}</div>` : '';
+        carouselContainer.innerHTML = `
+            <div id="${carouselId}" class="carousel carousel-dark slide" data-bs-ride="false">
+                ${indicatorsContainerHtml}
+                <div class="carousel-inner">${slidesHtml}</div>
+                ${controlsHtml}
+            </div>`;
     }
+    const titulo = document.getElementById('titulo').value.trim();
+    const mensagem = document.getElementById('mensagem').value.trim();
+    document.getElementById('btnPublicar').disabled = !(titulo && mensagem && numSelecionadas > 0);
+}
 
-    // --- Event Listeners ---
-
-    // Adiciona "ouvintes" para os campos principais para revalidar o formulário em tempo real
-    tituloInput.addEventListener('input', atualizarEstadoFormulario);
-    mensagemInput.addEventListener('input', atualizarEstadoFormulario);
-    dataExpiracaoInput.addEventListener('input', atualizarEstadoFormulario);
-
-    // Adiciona "ouvintes" para todos os checkboxes de escola
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('avisoForm');
+    document.getElementById('titulo').addEventListener('input', atualizarDisplayEscolasSelecionadas);
+    document.getElementById('mensagem').addEventListener('input', atualizarDisplayEscolasSelecionadas);
     document.querySelectorAll('.escola-checkbox').forEach(checkbox => {
-        checkbox.addEventListener('change', atualizarEstadoFormulario);
+        checkbox.addEventListener('change', atualizarDisplayEscolasSelecionadas);
     });
-
-    // Botão "Marcar Todas"
     document.getElementById('btnMarcarTodasEscolasSistema').addEventListener('click', () => {
         document.querySelectorAll('.escola-item').forEach(item => {
-            if (item.style.display !== 'none') { // Marca apenas as visíveis (respeita o filtro)
+            if (item.style.display !== 'none') {
                 item.querySelector('.escola-checkbox').checked = true;
             }
         });
-        atualizarEstadoFormulario();
+        atualizarDisplayEscolasSelecionadas();
     });
-
-    // Botão "Limpar Seleção"
     document.getElementById('btnLimparSelecaoEscolas').addEventListener('click', () => {
         document.querySelectorAll('.escola-checkbox:checked').forEach(c => { c.checked = false; });
-        atualizarEstadoFormulario();
+        atualizarDisplayEscolasSelecionadas();
     });
-    
-    // Funcionalidade de Preview da Imagem
-    imagemInput.addEventListener('change', function(event) {
-        if (event.target.files && event.target.files[0]) {
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                imagePreview.src = e.target.result;
-                imagePreview.style.display = 'block';
-            };
-            reader.readAsDataURL(event.target.files[0]);
-        } else {
-            imagePreview.src = '#';
-            imagePreview.style.display = 'none';
-        }
-    });
-
-    // Ação de confirmar publicação no Modal
-    btnConfirmarPublicacao.addEventListener('click', function() {
+    document.getElementById('confirmarPublicacao').addEventListener('click', function() {
         this.disabled = true;
         this.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Publicando...';
         form.submit();
     });
 
-    // --- Inicialização ---
-    // Chama a função uma vez no carregamento para definir o estado inicial correto do botão
-    atualizarEstadoFormulario();
+    // [NOVO] Listener para o preview da imagem
+    const imageInput = document.getElementById('imagem');
+    const imagePreview = document.getElementById('imagePreview');
+    imageInput.addEventListener('change', function() {
+        if (this.files && this.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                imagePreview.src = e.target.result;
+                imagePreview.style.display = 'block';
+            }
+            reader.readAsDataURL(this.files[0]);
+        } else {
+            imagePreview.style.display = 'none';
+        }
+    });
+
+    atualizarDisplayEscolasSelecionadas();
 });
 </script>
 
