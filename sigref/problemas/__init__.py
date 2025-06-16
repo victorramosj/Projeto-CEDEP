@@ -24,3 +24,7 @@
 
 #teste
 # python popular.py
+
+
+#apagar avisos
+# python manage.py remover_avisos_expirados

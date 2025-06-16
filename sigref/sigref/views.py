@@ -9,23 +9,58 @@ from monitoramento.models import GREUser
 
 
 from django.shortcuts import redirect, render
-from monitoramento.models import GREUser 
+from monitoramento.models import GREUser
+from problemas.models import Lacuna, ProblemaUsuario
 
 def dashboard(request):
     if not request.user.is_authenticated:
         return render(request, "cedepe/home.html")
 
     try:
-        gre_user = GREUser.objects.get(user=request.user)
+        # Obtendo o usuário logado
+        gre_user = request.user.greuser
+        
+        # Obter o setor do usuário (se for um "Chefe de Setor" ou "Coordenador")
+        setor_do_usuario = gre_user.setor
+        escolas = gre_user.escolas.all()  # Obtendo as escolas do usuário, caso ele tenha várias
 
+        # Filtrar lacunas para as escolas do usuário
+        lacunas_pendentes = Lacuna.objects.filter(escola__in=escolas, status='P')
+
+        # Filtrar problemas para o setor do usuário
+        problemas_pendentes = ProblemaUsuario.objects.filter(setor=setor_do_usuario, status='P')
+
+        # Criar alertas para lacunas e problemas pendentes
+        alerts = []
+
+        # Se houver lacunas pendentes
+        if lacunas_pendentes.exists():
+            alerts.append({
+                'type': 'lacuna',
+                'count': lacunas_pendentes.count(),
+                'url': 'tela_lacunas',  # URL para a tela de lacunas
+                'text': f"Você tem {lacunas_pendentes.count()} lacuna(s) pendente(s)."
+            })
+
+        # Se houver problemas pendentes
+        if problemas_pendentes.exists():
+            alerts.append({
+                'type': 'problema',
+                'count': problemas_pendentes.count(),
+                'url': 'tela_problemas',  # URL para a tela de problemas
+                'text': f"Você tem {problemas_pendentes.count()} problema(s) pendente(s)."
+            })
+
+        # Verificar se o usuário é da escola e redirecionar para o dashboard da escola
         if gre_user.is_escola():
-            return redirect('escola_dashboard')  # 🔁 redireciona para a view específica
+            return redirect('escola_dashboard')
 
-        # 👇 para qualquer outro tipo de usuário
-        return render(request, "cedepe/home.html")
+        # Para qualquer outro tipo de usuário, renderizar a página principal com os alertas
+        return render(request, "cedepe/home.html", {"alerts": alerts})
 
     except GREUser.DoesNotExist:
         return render(request, "cedepe/home.html")
+
 
 
 
