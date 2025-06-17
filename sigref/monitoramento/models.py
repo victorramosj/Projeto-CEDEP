@@ -241,6 +241,7 @@ from django.db import models
 from django.utils import timezone
 from django.contrib.auth import get_user_model
 from dateutil.relativedelta import relativedelta
+import datetime
 
 User = get_user_model()
 
@@ -272,11 +273,14 @@ class Monitoramento(models.Model):
     )
     @classmethod
     def contagem_hoje(cls, escola, questionario):
-        hoje = timezone.now().date()
+        agora = timezone.now()
+        inicio_hoje = agora.replace(hour=0, minute=0, second=0, microsecond=0)
+        fim_hoje = agora.replace(hour=23, minute=59, second=59, microsecond=999999)
+        
         return cls.objects.filter(
             escola=escola,
             questionario=questionario,
-            criado_em__date=hoje
+            criado_em__range=(inicio_hoje, fim_hoje)
         ).count()
     
     class Meta:
