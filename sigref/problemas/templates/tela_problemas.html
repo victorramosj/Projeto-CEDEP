@@ -26,7 +26,7 @@ table .form-select {
 
 {% block content %}
     <div class="container mt-4">
-         <h3>Problemas ({{ total_problemas }})</h3>
+        <h3>Problemas ({{ total_problemas }})</h3>
 
     <div class="col-12">
         <div class="d-flex justify-content-between gap-2 mb-3">
@@ -84,7 +84,10 @@ table .form-select {
                         <td class="text-start">{{ problema.setor.hierarquia_completa }}</td>
                         <td class="text-start">{{ problema.criado_em|date:"d/m/Y" }}</td>
                         <td>
-                             <select class="form-select" aria-label="Filtro Status" data-problema-id="{{ problema.id }}">
+                            <select class="form-select" aria-label="Filtro Status" data-problema-id="{{ problema.id }}" 
+                                {% if problema.status == 'P' %} style="background-color: #ffcccc !important;" {% endif %} 
+                                {% if problema.status == 'R' %} style="background-color: #ccffcc !important;" {% endif %} 
+                                {% if problema.status == 'E' %} style="background-color: #ffffcc !important;" {% endif %}>
                                 <option value="P" {% if problema.status == 'P' %} selected {% endif %}>Pendente</option>
                                 <option value="R" {% if problema.status == 'R' %} selected {% endif %}>Resolvido</option>
                                 <option value="E" {% if problema.status == 'E' %} selected {% endif %}>Em Andamento</option>

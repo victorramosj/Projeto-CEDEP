@@ -69,7 +69,10 @@ Lacunas
                         <td class="text-start">{{ lacuna.carga_horaria }}</td>
                         <td class="text-start">{{ lacuna.criado_em|date:"d/m/Y" }}</td>
                         <td>
-                            <select class="form-select" name="status" data-lacuna-id="{{ lacuna.id }}">
+                            <select class="form-select" name="status" data-lacuna-id="{{ lacuna.id }}"
+                                {% if lacuna.status == 'P' %} style="background-color: #ffcccc !important;" {% endif %} 
+                                {% if lacuna.status == 'R' %} style="background-color: #ccffcc !important;" {% endif %} 
+                                {% if lacuna.status == 'E' %} style="background-color: #ffffcc !important;" {% endif %}>>
                                 <option value="P" {% if lacuna.status == 'P' %} selected {% endif %}>Pendente</option>
                                 <option value="R" {% if lacuna.status == 'R' %} selected {% endif %}>Resolvido</option>
                                 <option value="E" {% if lacuna.status == 'E' %} selected {% endif %}>Em Andamento</option>
