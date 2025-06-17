@@ -18,6 +18,14 @@ table .form-select {
     border: none;
     transition: background-color 0.3s ease;
 }
+
+/* Estilo para o select de status quando o problema é atualizado */
+.status-atualizado td {
+    /* Azul claro suave */
+    background-color: #d1e7fd !important; 
+    transition: background-color 0.5s ease-out;
+    }
+
 </style>
 {% endblock %}
 
@@ -28,36 +36,41 @@ table .form-select {
     <div class="col-12">
         <div class="d-flex justify-content-between gap-2 mb-3">
             
-            <div class="input-group" style="width: 50%;">
-                <input type="text" id="search-input" class="form-control" name="escola" value="{{ search_query }}" placeholder="Pesquise por Escola...">
-            </div>
+            <!-- Barra de pesquisa -->
+            <form method="GET" action="{% url 'tela_problemas' %}" class="input-group" style="width: 50%;">
+                {% csrf_token %}
+                <span class="input-group-text"><i class="fas fa-search"></i></span>
+                <input type="text" class="form-control" name="escola" value="{{ search_query }}" placeholder="Pesquise por Escola...">
+            </form>
             
             <div class="d-flex gap-2">
-                <select class="form-select" id="date-filter" aria-label="Filtro Data">
-                    <option value="">Data (Todas)</option>
-                    <option value="1" {% if request.GET.data == '1' %}selected{% endif %}>Última semana</option>
-                    <option value="2" {% if request.GET.data == '2' %}selected{% endif %}>Último mês</option>
-                    <option value="3" {% if request.GET.data == '3' %}selected{% endif %}>Último ano</option>
+                <!-- Filtros -->
+                <select class="form-select" name="data" aria-label="Filtro Data">
+                    <option value="" {% if not request.GET.data %} selected {% endif %}>Data (Todas)</option>
+                    <option value="1" {% if request.GET.data == '1' %} selected {% endif %}>Última semana</option>
+                    <option value="2" {% if request.GET.data == '2' %} selected {% endif %}>Último mês</option>
+                    <option value="3" {% if request.GET.data == '3' %} selected {% endif %}>Último ano</option>
                 </select>
-                <select class="form-select" id="status-filter" aria-label="Filtro Status">
-                    <option value="">Status (Todos)</option>
-                    <option value="P" {% if request.GET.status == 'P' %}selected{% endif %}>Pendente</option>
-                    <option value="R" {% if request.GET.status == 'R' %}selected{% endif %}>Resolvido</option>
-                    <option value="E" {% if request.GET.status == 'E' %}selected{% endif %}>Em Andamento</option>
+                <select class="form-select" name="status" aria-label="Filtro Status">
+                    <option value="" {% if not request.GET.status %}selected{% endif %}>Status (Todos)</option>
+                    <option value="P" {% if request.GET.status == 'P' %} selected {% endif %}>Pendente</option>
+                    <option value="R" {% if request.GET.status == 'R' %} selected {% endif %}>Resolvido</option>
+                    <option value="E" {% if request.GET.status == 'E' %} selected {% endif %}>Em Andamento</option>
                 </select>
             </div>
 
             <div class="d-flex gap-2">
-                <button class="btnAcao btn btn-info">Atualizar Status</button> 
+                <!-- Botões de ação -->
                 <button class="btnAcao btn btn-danger">Apagar Problemas</button> 
             </div>
         </div>
 
-        <div id="problemas-table-wrapper">
+        <!-- Tabela de Problemas -->
+        <div class="table-responsive">
             <table class="table table-striped mt-2">
                 <thead>
                     <tr>
-                        <th><input type="checkbox" id="select-all-checkbox"></th>
+                        <th><input type="checkbox"></th>
                         <th class="text-start">Problema</th>
                         <th class="text-start">Escola</th>
                         <th class="text-start">Usuário</th>
@@ -68,21 +81,20 @@ table .form-select {
                 </thead>
                 <tbody>
                     {% for problema in problemas_page %}
-                        <tr>
-                            <td><input type="checkbox" class="problema-checkbox" name="problema_ids" value="{{ problema.id }}"></td>
-                            <td class="text-start">{{ problema.descricao }}</td>
+                        <tr id="problema-row-{{ problema.id }}">
+                            <td><input type="checkbox"></td>
+                            <td class="text-start">{{ problema.descricao}}</td>
                             <td class="text-start">{{ problema.escola.nome }}</td>
                             <td class="text-start">{{ problema.usuario }}</td>
                             <td class="text-start">{{ problema.setor.hierarquia_completa }}</td>
                             <td class="text-start">{{ problema.criado_em|date:"d/m/Y" }}</td>
                             <td>
-                                <select class="form-select" aria-label="Filtro Status" data-problema-id="{{ problema.id }}" 
-                                    {% if problema.status == 'P' %} style="background-color: #ffcccc !important;" {% endif %} 
-                                    {% if problema.status == 'R' %} style="background-color: #ccffcc !important;" {% endif %} 
-                                    {% if problema.status == 'E' %} style="background-color: #ffffcc !important;" {% endif %}>
-                                    <option value="P" {% if problema.status == 'P' %} selected {% endif %}>Pendente</option>
-                                    <option value="R" {% if problema.status == 'R' %} selected {% endif %}>Resolvido</option>
-                                    <option value="E" {% if problema.status == 'E' %} selected {% endif %}>Em Andamento</option>
+                                <select class="form-select status-updater" data-problema-id="{{ problema.id }}" aria-label="Alterar Status">
+                                    {% for value, display in status_choices %}
+                                        <option value="{{ value }}" {% if problema.status == value %}selected{% endif %}>
+                                            {{ display }}
+                                        </option>
+                                    {% endfor %}
                                 </select>
                             </td>
                         </tr>
@@ -93,79 +105,99 @@ table .form-select {
                     {% endfor %}
                 </tbody>
             </table>
-            
-            {% if problemas_page.paginator.num_pages > 1 %}
-            <nav aria-label="Page navigation">
-                <ul class="pagination justify-content-center">
-                    {% if problemas_page.has_previous %}
-                        <li class="page-item"><a class="page-link" href="?page={{ problemas_page.previous_page_number }}&escola={{ search_query }}&data={{ request.GET.data }}&status={{ request.GET.status }}">Anterior</a></li>
-                    {% endif %}
-                    <li class="page-item disabled"><span class="page-link">Página {{ problemas_page.number }} de {{ problemas_page.paginator.num_pages }}</span></li>
-                    {% if problemas_page.has_next %}
-                        <li class="page-item"><a class="page-link" href="?page={{ problemas_page.next_page_number }}&escola={{ search_query }}&data={{ request.GET.data }}&status={{ request.GET.status }}">Próximo</a></li>
-                    {% endif %}
-                </ul>
-            </nav>
-            {% endif %}
-        </div>
+        </div>    
     </div>
 </div>
 
 <script>
-document.addEventListener("DOMContentLoaded", function() {
-    // --- LÓGICA DE FILTRAGEM DINÂMICA (FUNCIONAL) ---
-    const searchInput = document.getElementById('search-input');
-    const dateFilter = document.getElementById('date-filter');
-    const statusFilter = document.getElementById('status-filter');
-    const tableWrapper = document.getElementById('problemas-table-wrapper');
-    const problemasCountSpan = document.getElementById('problemas-count');
+document.addEventListener('DOMContentLoaded', () => {
 
-    const fetchAndReplace = async () => {
-        const query = searchInput.value;
-        const date = dateFilter.value;
-        const status = statusFilter.value;
+    // ==================================================================
+    // PARTE 1: LÓGICA PARA OS FILTROS (MÉTODO MAIS SIMPLES E ROBUSTO)
+    // ==================================================================
+    const searchInput = document.querySelector("input[name='escola']");
+    const selectData = document.querySelector("select[name='data']");
+    const selectStatus = document.querySelector("select[name='status']");
+    
+    function aplicarFiltros() {
+        // Pega a URL base sem parâmetros
+        const baseUrl = window.location.origin + window.location.pathname;
+        
+        // Cria os parâmetros de busca
+        const params = new URLSearchParams();
+        params.set('escola', searchInput.value);
+        params.set('data', selectData.value);
+        params.set('status', selectStatus.value);
+        
+        // Redireciona para a página com os filtros corretos.
+        // Isso causa um recarregamento limpo da página, garantindo que tudo funcione.
+        window.location.href = `${baseUrl}?${params.toString()}`;
+    }
 
-        // Constrói a URL para a view com os parâmetros de filtro
-        const url = `{% url 'tela_problema' %}?escola=${encodeURIComponent(query)}&data=${date}&status=${status}`;
+    // Adiciona o evento para aplicar os filtros ao clicar num botão ou ao mudar a seleção
+    // Sugestão: adicione um botão de "Filtrar" no seu HTML para acionar isso
+    selectData.addEventListener('change', aplicarFiltros);
+    selectStatus.addEventListener('change', aplicarFiltros);
+    // Para a barra de busca, o ideal é usar um botão de submit no form,
+    // mas se quiser que filtre ao digitar, a lógica abaixo funcionaria, 
+    // embora possa ser ineficiente. A melhoria seria usar o submit do form.
 
-        try {
-            const response = await fetch(url);
-            const textResponse = await response.text();
-            
-            // Converte o texto da resposta em um documento HTML temporário
-            const parser = new DOMParser();
-            const doc = parser.parseFromString(textResponse, 'text/html');
 
-            // Encontra a nova tabela e o novo contador no documento temporário
-            const newTableWrapper = doc.querySelector('#problemas-table-wrapper');
-            const newCount = doc.querySelector('#problemas-count');
+    // ==================================================================
+    // PARTE 2: LÓGICA PARA ATUALIZAÇÃO DE STATUS (COM DELEGAÇÃO DE EVENTOS)
+    // ==================================================================
+    const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+    const tabelaContainer = document.querySelector('.table-responsive');
 
-            // Substitui o conteúdo na página atual
-            if (newTableWrapper) tableWrapper.innerHTML = newTableWrapper.innerHTML;
-            if (newCount) problemasCountSpan.textContent = newCount.textContent;
-
-        } catch (error) {
-            console.error('Erro ao buscar problemas:', error);
-        }
+    const statusColors = {
+        'P': '#ffcccc', 'R': '#ccffcc', 'E': '#ffffcc'
     };
 
-    // Adiciona um delay na busca para não sobrecarregar o servidor
-    let searchTimeout;
-    searchInput.addEventListener('input', () => {
-        clearTimeout(searchTimeout);
-        searchTimeout = setTimeout(fetchAndReplace, 300);
-    });
+    function setSelectColor(selectElement) {
+        selectElement.style.backgroundColor = statusColors[selectElement.value] || '#ffffff';
+    }
 
-    // Adiciona os gatilhos para os filtros de data e status
-    dateFilter.addEventListener('change', fetchAndReplace);
-    statusFilter.addEventListener('change', fetchAndReplace);
+    // Aplica a cor inicial a todos os selects que já estão na página
+    document.querySelectorAll('.status-updater').forEach(setSelectColor);
 
-    // --- LÓGICA PARA CHECKBOX "SELECIONAR TODOS" (ÚTIL PARA O FUTURO) ---
-    document.body.addEventListener('change', function(event) {
-        if (event.target.id === 'select-all-checkbox') {
-            const checkboxes = document.querySelectorAll('.problema-checkbox');
-            checkboxes.forEach(checkbox => {
-                checkbox.checked = event.target.checked;
+    // DELEGAÇÃO DE EVENTO: O "ouvinte" fica no container da tabela, que não é destruído.
+    tabelaContainer.addEventListener('change', function(event) {
+        
+        // Verifica se o elemento que disparou o evento é um select de atualização
+        if (event.target.matches('.status-updater')) {
+            const selectElement = event.target;
+            const problemaId = selectElement.dataset.problemaId;
+            const novoStatus = selectElement.value;
+
+            setSelectColor(selectElement);
+
+            const url = `{% url 'api_atualizar_status_problema' 0 %}`.replace('0', problemaId);
+
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrftoken
+                },
+                body: JSON.stringify({ status: novoStatus })
+            })
+            .then(response => {
+                if (!response.ok) throw new Error('Falha na API');
+                return response.json();
+            })
+            .then(data => {
+                console.log('Status atualizado com sucesso:', data);
+                const linhaTabela = document.getElementById(`problema-row-${problemaId}`);
+                if (linhaTabela) {
+                    linhaTabela.classList.add('status-atualizado');
+                    setTimeout(() => {
+                        linhaTabela.classList.remove('status-atualizado');
+                    }, 2000);
+                }
+            })
+            .catch(error => {
+                console.error('Erro ao atualizar status:', error);
+                alert('Ocorreu um erro ao atualizar o status.');
             });
         }
     });
