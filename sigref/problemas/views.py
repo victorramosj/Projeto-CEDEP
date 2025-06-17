@@ -103,7 +103,6 @@ class EscolaDashboardView(LoginRequiredMixin, TemplateView):
                 'problemas_pendentes': problemas_pendentes,
                 'problemas_andamento': problemas_andamento,
                 'problemas_este_mes': problemas_este_mes,
-               
             })
 
         return context
@@ -213,33 +212,34 @@ from django.shortcuts import render
 from django.core.paginator import Paginator
 from django.db.models import Q
 from .models import Lacuna
-from datetime import timedelta
 from django.utils import timezone
+from datetime import datetime, timedelta
+from .models import ProblemaUsuario, STATUS_CHOICES
 
 # Não precisamos mais de JsonResponse ou render_to_string aqui.
 
 def tela_lacuna_view(request):
+    lacunas_list = Lacuna.objects.select_related('escola').all()
+    
     # Pega os parâmetros da URL, exatamente como antes.
     search_query = request.GET.get('q', '')
-    date_filter = request.GET.get('date_filter', '')
-    status_filter = request.GET.get('status_filter', '')
-
-    lacunas_list = Lacuna.objects.select_related('escola').all()
-
-    # Aplica os filtros, exatamente como antes.
+    data_filter = request.GET.get('data', '')
+    status_filter = request.GET.get('status', '')
+    # Filtro por Escola
     if search_query:
-        lacunas_list = lacunas_list.filter(
-            Q(escola__nome__icontains=search_query) |
-            Q(disciplina__icontains=search_query)
-        ).distinct()
+        lacunas_list = lacunas_list.filter(escola__nome__icontains=search_query)
 
+    # Filtro por Data
+    if data_filter == '1':  # Última semana
+        lacunas_list = lacunas_list.filter(criado_em__gte=datetime.now() - timedelta(weeks=1))
+    elif data_filter == '2':  # Último mês
+        lacunas_list = lacunas_list.filter(criado_em__gte=datetime.now() - timedelta(days=30))
+    elif data_filter == '3':  # Último ano
+        lacunas_list = lacunas_list.filter(criado_em__gte=datetime.now() - timedelta(days=365))
+
+    #  Filtro por Status
     if status_filter:
         lacunas_list = lacunas_list.filter(status=status_filter)
-
-    if date_filter and date_filter.isdigit():
-        days = int(date_filter)
-        start_date = timezone.now() - timedelta(days=days)
-        lacunas_list = lacunas_list.filter(criado_em__gte=start_date)
 
     lacunas_list = lacunas_list.order_by('-criado_em')
     
@@ -253,19 +253,16 @@ def tela_lacuna_view(request):
         'lacunas_page': lacunas_page,
         'todas_lacunas': paginator.count, # Usar paginator.count é mais eficiente aqui.
         'search_query': search_query,
-        'date_filter': date_filter,
+        'data_filter': data_filter,
         'status_filter': status_filter,
+        'request': request,
+        'status_choices': STATUS_CHOICES,
     }
 
     # A view agora SEMPRE renderiza o template completo. Sem ifs.
     return render(request, 'tela_lacunas.html', context)
 
-from datetime import datetime, timedelta
-from django.shortcuts import render
-from .models import ProblemaUsuario
-from django.core.paginator import Paginator
-from django.db.models import Q
-from .models import ProblemaUsuario, STATUS_CHOICES
+
 
 def tela_problema_view(request):
     problemas_list = ProblemaUsuario.objects.select_related('escola', 'usuario__user', 'setor').all()

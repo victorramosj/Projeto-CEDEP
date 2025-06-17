@@ -39,7 +39,7 @@ table .form-select {
     <div class="col-12">
         <div class="d-flex justify-content-between gap-2 mb-3">
             
-            <!-- Barra de pesquisa (com a funcionalidade de busca) -->
+            <!-- Barra de pesquisa -->
             <form method="GET" action="{% url 'tela_problemas' %}" class="input-group" style="width: 50%;">
                 {% csrf_token %}
                 <span class="input-group-text"><i class="fas fa-search"></i></span>
@@ -49,13 +49,13 @@ table .form-select {
             <div class="d-flex gap-2">
                 <!-- Filtros -->
                 <select class="form-select" name="data" aria-label="Filtro Data">
-                    <option value="" {% if not request.GET.data %} selected {% endif %}>Data</option>
+                    <option value="" {% if not request.GET.data %} selected {% endif %}>Data (Todas)</option>
                     <option value="1" {% if request.GET.data == '1' %} selected {% endif %}>Última semana</option>
                     <option value="2" {% if request.GET.data == '2' %} selected {% endif %}>Último mês</option>
                     <option value="3" {% if request.GET.data == '3' %} selected {% endif %}>Último ano</option>
                 </select>
                 <select class="form-select" name="status" aria-label="Filtro Status">
-                    <option value="" {% if not request.GET.status %}selected{% endif %}>Status</option>
+                    <option value="" {% if not request.GET.status %}selected{% endif %}>Status (Todos)</option>
                     <option value="P" {% if request.GET.status == 'P' %} selected {% endif %}>Pendente</option>
                     <option value="R" {% if request.GET.status == 'R' %} selected {% endif %}>Resolvido</option>
                     <option value="E" {% if request.GET.status == 'E' %} selected {% endif %}>Em Andamento</option>
