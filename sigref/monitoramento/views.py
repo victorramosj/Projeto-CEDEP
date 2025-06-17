@@ -168,7 +168,7 @@ class DetalheMonitoramentoView(DetailView):
 
 
 
-#Dashboard
+# Dashboard view atualizada
 def dashboard_monitoramentos(request):
     user = request.user.greuser
 
@@ -200,6 +200,33 @@ def dashboard_monitoramentos(request):
 
     # Últimos monitoramentos
     upcoming_monitoramentos = monitoramentos.order_by('-id')[:5]
+    
+    # Obter setores com contagens
+    setores = Setor.objects.annotate(
+        num_questionarios=Count('questionario'),
+        num_monitoramentos=Count('questionario__monitoramentos')
+    ).prefetch_related(
+        Prefetch('questionario_set', queryset=Questionario.objects.annotate(
+            num_monitoramentos=Count('monitoramentos')
+        ))
+    )
+
+    # Obter monitoramentos recentes por setor
+    monitoramentos_recentes = Monitoramento.objects.select_related(
+        'escola', 'questionario'
+    ).order_by('-criado_em')
+    
+    # Agrupar monitoramentos por setor
+    monitoramentos_por_setor = {}
+    for setor in setores:
+        # Limitar a 5 monitoramentos por setor
+        monitoramentos_por_setor[setor.id] = list(
+            monitoramentos_recentes.filter(questionario__setor=setor)[:5]
+        )
+    
+    # Adicionar monitoramentos recentes a cada setor
+    for setor in setores:
+        setor.monitoramentos_recentes = monitoramentos_por_setor.get(setor.id, [])
 
     context = {
         'escolas': escolas,
@@ -212,11 +239,11 @@ def dashboard_monitoramentos(request):
         'status_values': [
             total_monitoramentos - monitoramentos_pendentes,
             monitoramentos_pendentes
-        ]
+        ],
+        'setores': setores,
     }
 
     return render(request, 'monitoramentos/dashboard_monitoramentos.html', context)
-
 
 
     
@@ -527,15 +554,22 @@ class ResponderQuestionarioView(LoginRequiredMixin, View):
             'hoje': timezone.now().date(),  # Adicione esta linha
             'erro': 'Verifique os campos destacados'
         })
-
-from django.shortcuts import render, get_object_or_404
-from .models import Questionario, Pergunta, Resposta
-from collections import Counter
+    
 import json
+import numpy as np
+from django.db.models import Avg, Min, Max, Count
+from django.shortcuts import render, get_object_or_404
+from .models import Questionario, Pergunta, Resposta, Escola, Monitoramento
+from collections import Counter
 
 def visualizar_graficos_questionario(request, questionario_id):
     questionario = get_object_or_404(Questionario, pk=questionario_id)
     perguntas = questionario.pergunta_set.all().order_by('ordem')
+
+    # Obter todas as escolas que responderam este questionário
+    escolas = Escola.objects.filter(
+        monitoramentos__questionario=questionario
+    ).distinct().values_list('nome', flat=True)
 
     dados_graficos = []
 
@@ -543,25 +577,57 @@ def visualizar_graficos_questionario(request, questionario_id):
         respostas = pergunta.respostas.all()
         tipo = pergunta.tipo_resposta
         dados = {}
+        total_respostas = respostas.count()
 
         if tipo == 'SN':
             contagem = Counter(r.resposta_sn for r in respostas if r.resposta_sn)
+            total_sim = contagem.get('S', 0)
+            total_nao = contagem.get('N', 0)
+            
+            # Calcular porcentagens
+            perc_sim = (total_sim / total_respostas * 100) if total_respostas else 0
+            perc_nao = (total_nao / total_respostas * 100) if total_respostas else 0
+            
             dados = {
-                'labels': list(contagem.keys()),
-                'values': list(contagem.values())
+                'labels': ['Sim', 'Não'],
+                'values': [perc_sim, perc_nao],
+                'total_respostas': total_respostas,
+                'total_sim': total_sim,
+                'total_nao': total_nao,
+                'perc_sim': round(perc_sim, 1),
+                'perc_nao': round(perc_nao, 1),
             }
 
         elif tipo == 'NU':
             valores = [r.resposta_num for r in respostas if r.resposta_num is not None]
+            
+            # Usar numpy se houver valores, caso contrário definir padrões
+            if valores:
+                valores_np = np.array(valores)
+                media = np.mean(valores_np).item()
+                mediana = np.median(valores_np).item()
+                minimo = np.min(valores_np).item()
+                maximo = np.max(valores_np).item()
+                desvio_padrao = np.std(valores_np).item()
+            else:
+                media = mediana = minimo = maximo = desvio_padrao = 0
+                
             dados = {
-                'media': sum(valores) / len(valores) if valores else 0,
-                'valores': valores
+                'valores': valores,
+                'total_respostas': total_respostas,
+                'media': media,
+                'mediana': mediana,
+                'min': minimo,
+                'max': maximo,
+                'desvio_padrao': desvio_padrao,
             }
 
         elif tipo == 'TX':
-            # Para texto você pode contar palavras ou exibir exemplos
             exemplos = [r.resposta_texto for r in respostas if r.resposta_texto]
-            dados = {'exemplos': exemplos[:5]}  # mostra os 5 primeiros exemplos
+            dados = {
+                'exemplos': exemplos[:10],  # Limitar a 10 exemplos
+                'total_respostas': total_respostas,
+            }
 
         dados_graficos.append({
             'pergunta': pergunta.texto,
@@ -569,9 +635,18 @@ def visualizar_graficos_questionario(request, questionario_id):
             'dados': dados
         })
 
+    # Obter estatísticas gerais do questionário
+    total_monitoramentos = Monitoramento.objects.filter(questionario=questionario).count()
+    escolas_respondentes = Monitoramento.objects.filter(
+        questionario=questionario
+    ).values('escola__nome').annotate(total=Count('id')).order_by('-total')
+
     context = {
         'questionario': questionario,
-        'dados_graficos': json.dumps(dados_graficos)
+        'dados_graficos': json.dumps(dados_graficos, default=str),
+        'escolas': list(escolas),
+        'total_monitoramentos': total_monitoramentos,
+        'escolas_respondentes': list(escolas_respondentes),
     }
 
     return render(request, 'graficos/graficos_questionario.html', context)
@@ -643,4 +718,5 @@ class MinhasEscolasView(APIView):
         return Response(serializer.data)
     
     from django.contrib.auth.mixins import LoginRequiredMixin
+
 

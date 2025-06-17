@@ -287,7 +287,11 @@ class Monitoramento(models.Model):
         verbose_name_plural = "Monitoramentos"
         ordering = ['-criado_em']  # Ordena do mais recente para o mais antigo
         get_latest_by = 'criado_em'
-
+    @property
+    def monitoramentos_recentes(self):
+        return Monitoramento.objects.filter(
+            questionario__setor=self
+        ).select_related('escola', 'questionario').order_by('-criado_em')[:5]
     def __str__(self):
         return f"{self.escola} - {self.questionario} ({self.criado_em:%d/%m/%Y %H:%M})"
     
