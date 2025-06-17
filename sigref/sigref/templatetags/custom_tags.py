@@ -31,3 +31,14 @@ def average(lista):
         return round(sum(lista) / len(lista), 2)
     except:
         return 'N/A'
+    
+@register.filter(name='sub')
+def subtract(value, arg):
+    """Subtrai o argumento do valor."""
+    try:
+        return int(value) - int(arg)
+    except (ValueError, TypeError):
+        try:
+            return value - arg
+        except Exception:
+            return ''

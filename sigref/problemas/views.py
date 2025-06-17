@@ -212,45 +212,53 @@ def problema_dashboard_view(request):
 from django.shortcuts import render
 from django.core.paginator import Paginator
 from django.db.models import Q
-from .models import Lacuna  # Certifique-se de que o modelo Lacuna está importado
+from .models import Lacuna
+from datetime import timedelta
+from django.utils import timezone
 
-# TELA LACUNA CGAF/UDP
+# Não precisamos mais de JsonResponse ou render_to_string aqui.
+
 def tela_lacuna_view(request):
-    """
-    Esta view agora lida com a lógica de busca e paginação.
-    """
-    # Obter o termo de busca a partir dos parâmetros GET da URL (ex: ?q=minha-busca)
+    # Pega os parâmetros da URL, exatamente como antes.
     search_query = request.GET.get('q', '')
+    date_filter = request.GET.get('date_filter', '')
+    status_filter = request.GET.get('status_filter', '')
 
-    # Começar com a lista de todas as lacunas
     lacunas_list = Lacuna.objects.select_related('escola').all()
 
-    # Se um termo de busca for fornecido, filtrar a lista
+    # Aplica os filtros, exatamente como antes.
     if search_query:
         lacunas_list = lacunas_list.filter(
             Q(escola__nome__icontains=search_query) |
             Q(disciplina__icontains=search_query)
         ).distinct()
 
-    # Ordenar o resultado
+    if status_filter:
+        lacunas_list = lacunas_list.filter(status=status_filter)
+
+    if date_filter and date_filter.isdigit():
+        days = int(date_filter)
+        start_date = timezone.now() - timedelta(days=days)
+        lacunas_list = lacunas_list.filter(criado_em__gte=start_date)
+
     lacunas_list = lacunas_list.order_by('-criado_em')
-
-    # Obter a contagem total DEPOIS de aplicar o filtro
-    todas_lacunas_count = lacunas_list.count()
-
-    # Configurar a paginação
-    paginator = Paginator(lacunas_list, 9)  # 9 itens por página
+    
+    # Paginação, como antes.
+    paginator = Paginator(lacunas_list, 9)
     page_number = request.GET.get('page')
     lacunas_page = paginator.get_page(page_number)
 
-    # Passar os dados para o template, incluindo o termo de busca
+    # Prepara o contexto para o template.
     context = {
         'lacunas_page': lacunas_page,
-        'todas_lacunas': todas_lacunas_count,  # Agora a variável 'todas_lacunas' está definida corretamente
+        'todas_lacunas': paginator.count, # Usar paginator.count é mais eficiente aqui.
+        'search_query': search_query,
+        'date_filter': date_filter,
+        'status_filter': status_filter,
     }
 
+    # A view agora SEMPRE renderiza o template completo. Sem ifs.
     return render(request, 'tela_lacunas.html', context)
-
 
 from datetime import datetime, timedelta
 from django.shortcuts import render
