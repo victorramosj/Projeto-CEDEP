@@ -1,61 +1,32 @@
 {% extends 'cedepe/base.html' %}
 {% load static %}
-{% block extra_style %}
-<style>
-    .pergunta-card {
-        transition: all 0.3s ease;
-        border-left: 4px solid #0d6efd;
-    }
-    
-    .pergunta-card:hover {
-        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
-    }
-    
-    .resposta-btn-group .btn {
-        flex: 1;
-    }
-    
-    .image-preview-container {
-        position: relative;
-        max-width: 300px;
-        margin-top: 20px;
-    }
-    
-    .image-preview {
-        max-width: 100%;
-        border-radius: 5px;
-        display: none;
-    }
-    
-    .btn-remove-image {
-        position: absolute;
-        top: -10px;
-        right: -10px;
-        border-radius: 50%;
-        padding: 5px 10px;
-    }
-    
-    .progress-container {
-        position: sticky;
-        top: 20px;
-        z-index: 100;
-    }
-</style>
-{% endblock %}
-
-
 {% block content %}
 <div class="container py-4">
     <div class="row">
-        <div class="col-lg-8 mx-auto">
+        <div class="col-lg-12 mx-auto">
             <!-- Header -->
             <header class="mb-4 border-bottom pb-3">
-                <div class="d-flex align-items-center justify-content-between mb-2">
-                    <h1 class="h3 mb-0">Responder Questionário</h1>
-                    <span class="badge bg-primary">{{ hoje|date:"d/m/Y" }}</span>
+                <div class="row align-items-center mb-3 g-2">
+                    <div class="col-12 col-lg-8">
+                        <h1 class="h3 mb-1 fw-bold text-primary d-flex align-items-center">
+                            <i class="bi bi-ui-checks-grid me-2"></i>
+                            <span>Responder Questionário</span>
+                        </h1>
+                        <div class="d-flex flex-wrap align-items-center gap-2 mt-2">
+                            <span class="h6 text-muted mb-0 d-flex align-items-center">
+                                <i class="bi bi-building me-1"></i>{{ escola.nome }}
+                            </span>
+                            <span class="badge bg-primary bg-opacity-75 ms-0 ms-lg-2">
+                                <i class="bi bi-calendar-event me-1"></i>{{ hoje|date:"d/m/Y" }}
+                            </span>
+                        </div>
+                    </div>
+                    <div class="col-12 col-lg-4 text-lg-end mt-3 mt-lg-0">
+                        <span class="badge bg-info text-dark fs-6 px-3 py-2 shadow-sm w-100 w-lg-auto d-block d-lg-inline-block">
+                            {{ questionario.titulo }}
+                        </span>
+                    </div>
                 </div>
-                <h2 class="h5 text-muted">{{ escola.nome }}</h2>
-                <h3 class="h4">{{ questionario.titulo }}</h3>
             </header>
 
             <!-- Progress Bar -->
@@ -70,15 +41,15 @@
             </div>
 
             {% if erro %}
-                <div class="alert alert-danger d-flex align-items-center">
-                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
-                    {{ erro }}
-                </div>
+            <div class="alert alert-danger d-flex align-items-center">
+                <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                {{ erro }}
+            </div>
             {% endif %}
 
             <form method="post" enctype="multipart/form-data" id="questionario-form">
                 {% csrf_token %}
-                
+
                 <!-- Questions -->
                 <div class="accordion mb-4" id="questionsAccordion">
                     {% for form in formset %}
@@ -86,47 +57,42 @@
                     <div class="card mb-2 pergunta-card">
                         <div class="card-header bg-light" id="heading{{ forloop.counter }}">
                             <div class="d-flex justify-content-between align-items-center">
-                                <button class="btn btn-link text-decoration-none text-dark p-0" 
-                                        type="button" 
-                                        data-bs-toggle="collapse" 
-                                        data-bs-target="#collapse{{ forloop.counter }}"
-                                        aria-expanded="true" 
-                                        aria-controls="collapse{{ forloop.counter }}">
+                                <button class="btn btn-link text-decoration-none text-dark p-0" type="button"
+                                    data-bs-toggle="collapse" data-bs-target="#collapse{{ forloop.counter }}"
+                                    aria-expanded="true" aria-controls="collapse{{ forloop.counter }}">
                                     <strong>Pergunta #{{ forloop.counter }}</strong>
                                 </button>
                                 <span class="badge bg-secondary">{{ pergunta.get_tipo_resposta_display }}</span>
                             </div>
                         </div>
-                        
-                        <div id="collapse{{ forloop.counter }}" 
-                             class="collapse show" 
-                             aria-labelledby="heading{{ forloop.counter }}"
-                             data-bs-parent="#questionsAccordion">
+
+                        <div id="collapse{{ forloop.counter }}" class="collapse show"
+                            aria-labelledby="heading{{ forloop.counter }}" data-bs-parent="#questionsAccordion">
                             <div class="card-body">
                                 <p class="card-text mb-3">{{ pergunta.texto }}</p>
-                                
+
                                 {{ form.pergunta }}
-                                
+
                                 {% if pergunta.tipo_resposta == 'SN' %}
-                                    <div class="resposta-btn-group btn-group w-100" role="group">
-                                        {{ form.resposta_sn }}
-                                    </div>
-                                
+                                <div class="resposta-btn-group btn-group w-100" role="group">
+                                    {{ form.resposta_sn }}
+                                </div>
+
                                 {% elif pergunta.tipo_resposta == 'NU' %}
-                                    <div class="input-group">
-                                        {{ form.resposta_num }}
-                                    </div>
-                                
+                                <div class="input-group">
+                                    {{ form.resposta_num }}
+                                </div>
+
                                 {% else %}
-                                    {{ form.resposta_texto }}
+                                {{ form.resposta_texto }}
                                 {% endif %}
-                                
+
                                 {% if form.errors %}
-                                    <div class="mt-2 text-danger">
-                                        {% for error in form.errors %}
-                                            {{ error }}
-                                        {% endfor %}
-                                    </div>
+                                <div class="mt-2 text-danger">
+                                    {% for error in form.errors %}
+                                    {{ error }}
+                                    {% endfor %}
+                                </div>
                                 {% endif %}
                             </div>
                         </div>
@@ -134,70 +100,63 @@
                     {% endwith %}
                     {% endfor %}
                 </div>
-                
-                <!-- Photo Upload -->
-<div class="card mb-4">
-    <div class="card-header bg-light d-flex justify-content-between align-items-center">
-        <strong>Foto Comprovante</strong>
-        <div>
-            <button type="button" class="btn btn-outline-primary btn-sm" id="download-modelo">
-                <i class="bi bi-file-earmark-pdf me-1"></i>Baixar Modelo
-            </button>
-        </div>
-    </div>
-    <div class="card-body">
-        <!-- Botões de ação -->
-        <div class="d-flex gap-2 mb-3 flex-wrap">
-            <button type="button" class="btn btn-primary" id="abrir-camera">
-                <i class="bi bi-camera me-1"></i>Abrir Câmera
-            </button>
-            <button type="button" class="btn btn-outline-secondary" id="selecionar-arquivo">
-                <i class="bi bi-folder me-1"></i>Selecionar Arquivo
-            </button>
-        </div>
-        
-        <!-- Área da câmera (inicialmente oculta) -->
-        <div id="camera-container" class="mb-3 d-none">
-            <div class="ratio ratio-16x9 position-relative mb-2 rounded" style="background: #000;">
-                <video id="camera-preview" autoplay playsinline class="w-100 h-100" style="background: transparent; object-fit: cover;"></video>
-                <button type="button" id="fechar-camera" class="btn btn-danger btn-sm position-absolute top-0 end-0 m-2">
-                    <i class="bi bi-x-lg"></i>
-                </button>
-            </div>
-            <button type="button" id="capturar-foto" class="btn btn-success w-100">
-                <i class="bi bi-camera me-1"></i>Capturar Foto
-            </button>
-        </div>
-        
-        <!-- Input de arquivo (estilizado) -->
-        <div class="mb-3">
-            <input type="file" 
-                   class="form-control d-none" 
-                   id="foto-comprovante"
-                   name="foto_comprovante"
-                   accept="image/*">
-            <div class="form-text">
-                Tamanho máximo: 2 MB. Formatos: JPG, PNG.
-            </div>
-        </div>
-        
-        <!-- Preview da imagem -->
-        <div class="image-preview-container">
-            <img id="image-preview" class="image-preview rounded border" src="#" alt="Preview da imagem">
-            <button type="button" 
-                    class="btn btn-danger btn-sm btn-remove-image" 
-                    id="remove-image">
-                <i class="bi bi-trash"></i>
-            </button>
-        </div>
-    </div>
-</div>
-                
+
+                <div class="card-body">
+                    <!-- Botões de ação -->
+                    <div class="d-flex gap-2 mb-3 flex-wrap">
+                        <button type="button" class="btn btn-primary" id="abrir-camera">
+                            <i class="bi bi-camera me-1"></i>Abrir Câmera
+                        </button>
+                        <button type="button" class="btn btn-outline-secondary" id="selecionar-arquivo">
+                            <i class="bi bi-folder me-1"></i>Selecionar Arquivo
+                        </button>
+                    </div>
+
+                    <!-- Área da câmera simplificada -->
+                    <div id="camera-container" class="mb-3 d-none">
+                        <div class="ratio ratio-16x9 position-relative mb-2 rounded" style="background: #000;">
+                            <video id="camera-preview" autoplay playsinline class="w-100 h-100"
+                                style="background: transparent; object-fit: cover;"></video>
+
+
+                            <button type="button" id="fechar-camera" class="btn btn-danger btn-sm">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="white"
+                                    viewBox="0 0 16 16">
+                                    <path d="M2.146 2.146a.5.5 0 0 1 .708 0L8 7.293l5.146-5.147a.5.5 0 0 1 
+             .708.708L8.707 8l5.147 5.146a.5.5 0 0 1-.708.708L8 8.707l-5.146 5.147a.5.5 
+             0 0 1-.708-.708L7.293 8 2.146 2.854a.5.5 0 0 1 0-.708z" />
+                                </svg>
+                            </button>
+
+
+
+                        </div>
+                        <button type="button" id="capturar-foto" class="btn btn-success w-100">
+                            <i class="bi bi-camera me-1"></i>Capturar Foto
+                        </button>
+                    </div>
+
+                    <!-- Input de arquivo -->
+                    <div class="mb-3">
+                        <input type="file" class="form-control d-none" id="foto-comprovante" name="foto_comprovante"
+                            accept="image/*">
+                        <div class="form-text">
+                            Tamanho máximo: 2 MB. Formatos: JPG, PNG.
+                        </div>
+                    </div>
+
+                    <!-- Preview da imagem -->
+                    <div class="image-preview-container">
+                        <img id="image-preview" class="image-preview rounded border" src="#" alt="Preview da imagem">
+                        <button type="button" class="btn btn-danger btn-sm btn-remove-image" id="remove-image">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </div>
+                </div>
+
                 <!-- Submit Button -->
                 <div class="d-grid">
-                    <button type="submit" 
-                            class="btn btn-primary btn-lg" 
-                            id="submit-button">
+                    <button type="submit" class="btn btn-primary btn-lg" id="submit-button">
                         <i class="bi bi-send-check"></i> Enviar Respostas
                     </button>
                 </div>
@@ -207,11 +166,90 @@
 </div>
 
 <style>
+    .pergunta-card {
+        transition: all 0.3s ease;
+        border-left: 4px solid #0d6efd;
+    }
+
+    .pergunta-card:hover {
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+    }
+
+    .resposta-btn-group .btn {
+        flex: 1;
+    }
+
+    .image-preview-container {
+        position: relative;
+        max-width: 300px;
+        margin-top: 20px;
+    }
+
+    .image-preview {
+        max-width: 100%;
+        border-radius: 5px;
+        display: none;
+    }
+
+    .btn-remove-image {
+        position: absolute;
+        top: -10px;
+        right: -10px;
+        border-radius: 50%;
+        padding: 5px 10px;
+        display: none;
+    }
+
+    .progress-container {
+        position: sticky;
+        top: 20px;
+        z-index: 100;
+    }
+
+    /* Estilos corrigidos para a câmera */
+    #camera-container {
+        background: transparent !important;
+        border: none;
+    }
+
+    #camera-preview {
+        background: transparent !important;
+        object-fit: cover;
+    }
+
+    .camera-overlay {
+        display: none !important;
+    }
+
+
+    .camera-loading {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        color: white;
+        font-size: 1.5rem;
+        text-align: center;
+    }
+
+    .device-check {
+        font-size: 0.85rem;
+        margin-top: 5px;
+    }
+
+    .device-check.valid {
+        color: #198754;
+    }
+
+    .device-check.invalid {
+        color: #dc3545;
+    }
+
     .btn-group-vertical .btn {
         transition: all 0.2s ease;
     }
 
-    .btn-group-vertical input[type="radio"]:checked + label {
+    .btn-group-vertical input[type="radio"]:checked+label {
         background-color: #0d6efd;
         color: white;
     }
@@ -220,7 +258,7 @@
         .card-header h4 {
             font-size: 1.2rem;
         }
-        
+
         .card-body {
             padding: 1rem;
         }
@@ -230,7 +268,7 @@
         .card-header h4 {
             font-size: 1.1rem;
         }
-        
+
         .btn-group-vertical .btn {
             padding: 0.75rem;
             font-size: 0.9rem;
@@ -240,7 +278,45 @@
     #previewContainer img {
         max-width: 200px;
         border-radius: 10px;
-        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Adicionando estilos para os novos elementos */
+    .camera-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(255, 0, 0, 0.3);
+        display: none;
+        pointer-events: none;
+    }
+
+    .camera-loading {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        color: white;
+        font-size: 1.5rem;
+        text-align: center;
+        display: none;
+    }
+
+    #fechar-camera {
+        position: absolute;
+        /* se o container for position: relative */
+        top: 0;
+        right: 0;
+        width: 36px;
+        height: 36px;
+        padding: 0;
+        z-index: 10;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
     }
 </style>
 {% endblock %}
@@ -249,110 +325,107 @@
 <script>
     // Funções para a câmera
     let cameraStream = null;
-    
+
     // Abrir câmera
-    document.getElementById('abrir-camera').addEventListener('click', async function() {
+    document.getElementById('abrir-camera').addEventListener('click', async function () {
         try {
-            // Esconder outros elementos
+            // Mostrar container da câmera
             document.getElementById('camera-container').classList.remove('d-none');
-            
+
             // Obter acesso à câmera
-            cameraStream = await navigator.mediaDevices.getUserMedia({ 
-                video: { facingMode: 'environment' } // Usar câmera traseira
+            cameraStream = await navigator.mediaDevices.getUserMedia({
+                video: { facingMode: 'environment' }
             });
-            
+
             // Exibir preview da câmera
             const video = document.getElementById('camera-preview');
             video.srcObject = cameraStream;
-            video.style.background = 'transparent';
             video.play();
-            
+
         } catch (error) {
-            alert('Não foi possível acessar a câmera: ' + error.message);
             console.error('Erro na câmera:', error);
+            alert('Não foi possível acessar a câmera: ' + error.message);
+            document.getElementById('camera-container').classList.add('d-none');
         }
     });
-    
+
     // Fechar câmera
-    document.getElementById('fechar-camera').addEventListener('click', function() {
+    document.getElementById('fechar-camera').addEventListener('click', function () {
+        closeCamera();
+    });
+
+    function closeCamera() {
         if (cameraStream) {
             cameraStream.getTracks().forEach(track => track.stop());
             cameraStream = null;
         }
         document.getElementById('camera-container').classList.add('d-none');
-    });
-    
+    }
+
     // Capturar foto da câmera
-    document.getElementById('capturar-foto').addEventListener('click', function() {
+    document.getElementById('capturar-foto').addEventListener('click', function () {
+        if (!cameraStream) return;
+
         const video = document.getElementById('camera-preview');
         const canvas = document.createElement('canvas');
         const context = canvas.getContext('2d');
-        
+
         // Configurar canvas com as dimensões do vídeo
         canvas.width = video.videoWidth;
         canvas.height = video.videoHeight;
-        
+
         // Desenhar frame atual no canvas
         context.drawImage(video, 0, 0, canvas.width, canvas.height);
-        
+
         // Converter para blob e criar arquivo
-        canvas.toBlob(function(blob) {
+        canvas.toBlob(function (blob) {
             // Criar arquivo a partir do blob
             const file = new File([blob], 'foto_capturada.jpg', {
                 type: 'image/jpeg',
                 lastModified: Date.now()
             });
-            
+
             // Criar um DataTransfer para simular input de arquivo
             const dataTransfer = new DataTransfer();
             dataTransfer.items.add(file);
-            
+
             // Atribuir ao input de arquivo
             const fileInput = document.getElementById('foto-comprovante');
             fileInput.files = dataTransfer.files;
-            
             // Mostrar preview
             showImagePreview(file);
-            
+
             // Fechar câmera
-            document.getElementById('fechar-camera').click();
-            
-        }, 'image/jpeg', 0.9);
+            closeCamera();
+
+        }, 'image/jpeg', 0.85);
     });
-    
+
     // Acionar input de arquivo quando clicar no botão
-    document.getElementById('selecionar-arquivo').addEventListener('click', function() {
+    document.getElementById('selecionar-arquivo').addEventListener('click', function () {
         document.getElementById('foto-comprovante').click();
     });
-    
+
     // Baixar modelo PDF
-    document.getElementById('download-modelo').addEventListener('click', function() {
-        // URL do modelo PDF (substitua pela URL real)
-        const pdfUrl = "{% static 'modelos/formulario_modelo.pdf' %}";
-        
-        // Criar link temporário para download
-        const link = document.createElement('a');
-        link.href = pdfUrl;
-        link.download = 'modelo_formulario.pdf';
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
+    document.getElementById('download-modelo').addEventListener('click', function () {
+        alert('Download do modelo iniciado!');
+        // Em um sistema real, aqui viria o código para baixar o PDF
     });
-    
+
     // Mostrar preview da imagem selecionada
     function showImagePreview(file) {
         if (!file) return;
-        
+
         // Verificar tamanho
         const maxSize = 2 * 1024 * 1024; // 2MB
         if (file.size > maxSize) {
             alert('A imagem é muito grande. O tamanho máximo permitido é 2 MB.');
             return;
         }
-        
+
         // Criar preview
         const reader = new FileReader();
-        reader.onload = function(e) {
+        reader.onload = function (e) {
             const preview = document.getElementById('image-preview');
             preview.src = e.target.result;
             preview.style.display = 'block';
@@ -360,34 +433,43 @@
         };
         reader.readAsDataURL(file);
     }
-    
+
     // Ouvir mudanças no input de arquivo
-    document.getElementById('foto-comprovante').addEventListener('change', function(e) {
+    document.getElementById('foto-comprovante').addEventListener('change', function (e) {
         showImagePreview(e.target.files[0]);
     });
-    
+
     // Remover imagem
-    document.getElementById('remove-image').addEventListener('click', function() {
+    document.getElementById('remove-image').addEventListener('click', function () {
         const preview = document.getElementById('image-preview');
         const fileInput = document.getElementById('foto-comprovante');
-        
+
         preview.style.display = 'none';
         this.style.display = 'none';
         preview.src = '#';
         fileInput.value = '';
     });
+
+    // Fechar a câmera se o usuário sair da página
+    window.addEventListener('beforeunload', () => {
+        if (cameraStream) {
+            cameraStream.getTracks().forEach(track => track.stop());
+        }
+    });
+
+
 </script>
 <script>
     // Função para atualizar o progresso
     function updateProgress() {
         let answeredQuestions = 0;
         const totalQuestions = Number("{{ formset|length }}");
-        
+
         // Contar perguntas respondidas
         document.querySelectorAll('.pergunta-card').forEach(card => {
             const tipo = card.querySelector('.badge').textContent.trim();
             let answered = false;
-            
+
             if (tipo === 'Sim/Não') {
                 answered = card.querySelector('input[type="radio"]:checked') !== null;
             } else if (tipo === 'Numérico') {
@@ -395,39 +477,39 @@
             } else {
                 answered = card.querySelector('textarea').value.trim() !== '';
             }
-            
+
             if (answered) answeredQuestions++;
         });
-        
+
         const progressPercentage = (answeredQuestions / totalQuestions) * 100;
-        
+
         document.getElementById('progress-bar').style.width = `${progressPercentage}%`;
         document.getElementById('progress-count').textContent = `${answeredQuestions}/${totalQuestions}`;
     }
 
     // Ativar botões de resposta Sim/Não
     document.querySelectorAll('input[type="radio"]').forEach(radio => {
-        radio.addEventListener('change', function() {
+        radio.addEventListener('change', function () {
             // Encontra o grupo de botões
             const group = this.closest('.resposta-btn-group');
-            
+
             // Remove classes ativas de todos os botões do grupo
             group.querySelectorAll('.btn').forEach(btn => {
                 btn.classList.remove('active', 'btn-success', 'btn-danger');
                 btn.classList.add('btn-outline-success', 'btn-outline-danger');
             });
-            
+
             // Adiciona classes ao botão selecionado
             const label = this.nextElementSibling;
             label.classList.remove('btn-outline-success', 'btn-outline-danger');
             label.classList.add('active');
-            
+
             if (this.value === 'S') {
                 label.classList.add('btn-success');
             } else {
                 label.classList.add('btn-danger');
             }
-            
+
             updateProgress();
         });
     });
@@ -441,8 +523,8 @@
     const photoInput = document.getElementById('foto-comprovante');
     const imagePreview = document.getElementById('image-preview');
     const removeImageBtn = document.getElementById('remove-image');
-    
-    photoInput.addEventListener('change', function() {
+
+    photoInput.addEventListener('change', function () {
         if (this.files && this.files[0]) {
             // Validação de tamanho
             const maxSize = 2 * 1024 * 1024; // 2 MB
@@ -451,10 +533,10 @@
                 this.value = '';
                 return;
             }
-            
+
             // Mostrar preview
             const reader = new FileReader();
-            reader.onload = function(e) {
+            reader.onload = function (e) {
                 imagePreview.src = e.target.result;
                 imagePreview.style.display = 'block';
                 removeImageBtn.style.display = 'block';
@@ -462,22 +544,22 @@
             reader.readAsDataURL(this.files[0]);
         }
     });
-    
+
     // Remover imagem
-    removeImageBtn.addEventListener('click', function() {
+    removeImageBtn.addEventListener('click', function () {
         photoInput.value = '';
         imagePreview.style.display = 'none';
         this.style.display = 'none';
     });
 
     // Validação antes do envio
-    document.getElementById('questionario-form').addEventListener('submit', function(e) {
+    document.getElementById('questionario-form').addEventListener('submit', function (e) {
         let valid = true;
-        
+
         document.querySelectorAll('.pergunta-card').forEach(card => {
             const tipo = card.querySelector('.badge').textContent.trim();
             let answered = false;
-            
+
             if (tipo === 'Sim/Não') {
                 answered = card.querySelector('input[type="radio"]:checked') !== null;
                 if (!answered) {
@@ -490,7 +572,7 @@
                 answered = card.querySelector('textarea').value.trim() !== '';
             }
         });
-        
+
         if (!valid) {
             e.preventDefault();
             alert('Por favor, responda todas as perguntas obrigatórias.');
@@ -503,14 +585,14 @@
         const label = radio.nextElementSibling;
         label.classList.remove('btn-outline-success', 'btn-outline-danger');
         label.classList.add('active');
-        
+
         if (radio.value === 'S') {
             label.classList.add('btn-success');
         } else {
             label.classList.add('btn-danger');
         }
     });
-    
+
     updateProgress();
 </script>
 
