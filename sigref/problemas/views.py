@@ -265,9 +265,10 @@ from django.shortcuts import render
 from .models import ProblemaUsuario
 from django.core.paginator import Paginator
 from django.db.models import Q
+from .models import ProblemaUsuario, STATUS_CHOICES
 
 def tela_problema_view(request):
-    problemas_list = ProblemaUsuario.objects.all()
+    problemas_list = ProblemaUsuario.objects.select_related('escola', 'usuario__user', 'setor').all()
 
     # Obter os parâmetros de filtro da URL (busca por escola, data e status)
     escola_query = request.GET.get('escola', '')  # Pesquisa pela escola
@@ -294,7 +295,6 @@ def tela_problema_view(request):
     paginator = Paginator(problemas_list, 9)  # 9 itens por página
     page_number = request.GET.get('page')
     problemas_page = paginator.get_page(page_number)
-
     total_problemas = problemas_list.count()  # Total de problemas filtrados
 
     # Passar os dados para o template
@@ -302,6 +302,8 @@ def tela_problema_view(request):
         'problemas_page': problemas_page,
         'total_problemas': total_problemas,  # Total de problemas filtrados
         'search_query': escola_query,  # Termo de busca (para manter na barra de pesquisa)
+        'request': request, # Passa o request para o template
+        'status_choices': STATUS_CHOICES, #Passa as opções para o template
     }
 
     return render(request, 'tela_problemas.html', context)

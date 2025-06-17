@@ -44,8 +44,8 @@ urlpatterns = [
     # API Tela Lacuna
     path('lacuna/<int:lacuna_id>/alterar_status/', UpdateStatusLacuna.as_view(), name='alterar_status_lacuna'),
     # API Tela Problema
-    path('problema/problemas/', views.tela_problema_view, name='tela_problema'),
-    
+    path('api/problema/atualizar-status/<int:problema_id>/', UpdateStatusProblema.as_view(), name='api_atualizar_status_problema'),
+        
     # AVISOS
     path('avisos/criar/', criar_aviso_view, name='criar_aviso'),
     # URL para listar avisos (apenas uma vez)
