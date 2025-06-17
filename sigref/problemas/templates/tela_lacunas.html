@@ -35,7 +35,7 @@ table .form-select {
             <form method="GET" action="{% url 'tela_lacunas' %}" class="input-group" style="width: 50%;">
                 {% csrf_token %}
                 <span class="input-group-text"><i class="fas fa-search"></i></span>
-                <input type="text" class="form-control" name="escola" value="{{ search_query }}" placeholder="Pesquise por Escola...">
+                <input type="text" class="form-control" name="q" value="{{ search_query }}" placeholder="Pesquise por Escola...">
             </form>
             
             <div class="d-flex gap-2">
