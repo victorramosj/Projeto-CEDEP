@@ -288,7 +288,7 @@ def tela_problema_view(request):
     problemas_page = paginator.get_page(page_number)
 
     total_problemas = problemas_list.count()  # Total de problemas filtrados
-
+   
     # Passar os dados para o template
     context = {
         'problemas_page': problemas_page,

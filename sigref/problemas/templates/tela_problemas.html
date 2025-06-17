@@ -38,7 +38,7 @@ table .form-select {
                 <input type="text" class="form-control" name="escola" value="{{ search_query }}" placeholder="Pesquise por Escola...">
             </form>
             
-            <div class="d-flex gap-2">
+            <div class="d-flex gap-2" class="table-responsive">
                 <!-- Filtros -->
                 <select class="form-select" name="data" aria-label="Filtro Data">
                     <option value="" {% if not request.GET.data %} selected {% endif %}>Data</option>
@@ -126,38 +126,39 @@ table .form-select {
 
 <script>
     document.addEventListener("DOMContentLoaded", function() {
-        const searchInput = document.querySelector("input[placeholder='Pesquise por Escola ...']");
-        const selectData = document.querySelector("select[name='data']");
-        const selectStatus = document.querySelector("select[name='status']");
+    const searchInput = document.querySelector("input[placeholder='Pesquise por Escola ...']");
+    const selectData = document.querySelector("select[name='data']");
+    const selectStatus = document.querySelector("select[name='status']");
 
-        // Função para atualizar a tabela com os parâmetros da URL
-        function updateTable() {
-            const searchQuery = searchInput.value;  // Captura o valor da pesquisa
-            const dataFilter = selectData.value;
-            const statusFilter = selectStatus.value;
+    // Função para atualizar a tabela com os parâmetros da URL
+    function updateTable() {
+        const searchQuery = searchInput.value;  // Captura o valor da pesquisa
+        const dataFilter = selectData.value;
+        const statusFilter = selectStatus.value;
 
-            const url = new URL(window.location.href);
-            const params = new URLSearchParams(url.search);
+        const url = new URL(window.location.href);
+        const params = new URLSearchParams(url.search);
 
-            // Atualiza os parâmetros da URL para incluir os filtros
-            params.set('escola', searchQuery);
-            params.set('data', dataFilter);
-            params.set('status', statusFilter);
+        // Atualiza os parâmetros da URL para incluir os filtros
+        params.set('escola', searchQuery);
+        params.set('data', dataFilter);
+        params.set('status', statusFilter);
 
-            // Envia a requisição para a mesma página com os parâmetros atualizados
-            fetch(`${url.pathname}?${params.toString()}`)
-                .then(response => response.text())
-                .then(html => {
-                    // Atualiza a parte da tabela com os novos dados
-                    document.querySelector('.table-responsive').innerHTML = html;
-                });
-        }
+        // Recarrega a tabela com os dados filtrados
+        fetch(`${url.pathname}?${params.toString()}`)
+            .then(response => response.json())  // Alterado para receber a resposta JSON
+            .then(data => {
+                // Atualiza a parte da tabela com os novos dados
+                document.querySelector('tbody').innerHTML = data.html;  // Atualiza o conteúdo da tabela
+            });
+    }
 
-        // Adiciona evento de input na pesquisa
-        searchInput.addEventListener('input', updateTable);
-        selectData.addEventListener('change', updateTable);
-        selectStatus.addEventListener('change', updateTable);
-    });
+    // Adiciona evento de input na pesquisa
+    searchInput.addEventListener('input', updateTable);
+    selectData.addEventListener('change', updateTable);
+    selectStatus.addEventListener('change', updateTable);
+});
+
 </script>
 
 {% endblock %}
