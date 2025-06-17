@@ -392,35 +392,81 @@ class GerenciarQuestionariosView(LoginRequiredMixin, TemplateView):
         return context
     
 
+from django.shortcuts import render, get_object_or_404
+from django.views import View
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.db.models import Count, Q
+from django.utils import timezone
+from django.core.exceptions import PermissionDenied
+from .models import Escola, Questionario, Monitoramento, Setor
+
 class QuestionariosEscolaView(LoginRequiredMixin, View):
     def get(self, request, escola_id):
         escola = get_object_or_404(Escola, id=escola_id)
-        if not request.user.greuser.pode_acessar_escola(escola):
+        user = request.user
+        if not user.greuser.pode_acessar_escola(escola):
             raise PermissionDenied()
 
+        # Obtém o intervalo do dia atual no fuso horário local
+        agora = timezone.localtime(timezone.now())
+        inicio_hoje = agora.replace(hour=0, minute=0, second=0, microsecond=0)
+        fim_hoje = agora.replace(hour=23, minute=59, second=59, microsecond=999999)
+        
+        # Monitoramentos do usuário logado
+        meus_monitoramentos = Monitoramento.objects.filter(
+            escola=escola,
+            respondido_por=user
+        )
+        
+        meus_monitoramentos_hoje = meus_monitoramentos.filter(
+            criado_em__range=(inicio_hoje, fim_hoje)
+        ).count()
+        
+        meus_monitoramentos_total = meus_monitoramentos.count()
+        
+        # Setores que o usuário já respondeu questionários HOJE
+        setores_respondidos_hoje = Setor.objects.filter(
+            questionario__monitoramentos__escola=escola,
+            questionario__monitoramentos__respondido_por=user,
+            questionario__monitoramentos__criado_em__range=(inicio_hoje, fim_hoje)
+        ).distinct()
+        
+        # Questionários que o usuário já respondeu HOJE
+        questionarios_respondidos_hoje = Questionario.objects.filter(
+            monitoramentos__escola=escola,
+            monitoramentos__respondido_por=user,
+            monitoramentos__criado_em__range=(inicio_hoje, fim_hoje)
+        ).distinct()
+        
+        # Filtra os questionários da escola
         questionarios = Questionario.objects.filter(
             escolas_destino=escola
         ).annotate(
             total_respostas=Count('monitoramentos'),
-        ).prefetch_related('monitoramentos')
-
-        hoje = timezone.now().date()
-        total_hoje = 0
-        ultima_resposta_geral = None
+            respostas_hoje=Count(
+                'monitoramentos', 
+                filter=Q(monitoramentos__criado_em__range=(inicio_hoje, fim_hoje))
+            )
+        )
         
-        for q in questionarios:
-            q.respostas_hoje = Monitoramento.contagem_hoje(escola, q)
-            total_hoje += q.respostas_hoje
-            ultima = q.monitoramentos.order_by('-criado_em').first()
-            if ultima and (not ultima_resposta_geral or ultima.criado_em > ultima_resposta_geral):
-                ultima_resposta_geral = ultima.criado_em
+        total_hoje = sum(q.respostas_hoje for q in questionarios)
+        total_geral = sum(q.total_respostas for q in questionarios)
+        
+        ultima_resposta_geral = Monitoramento.objects.filter(
+            escola=escola
+        ).order_by('-criado_em').values_list('criado_em', flat=True).first()
 
         return render(request, 'monitoramentos/questionarios_escola.html', {
             'escola': escola,
             'questionarios': questionarios,
             'total_hoje': total_hoje,
-            'total_geral': sum(q.total_respostas for q in questionarios),
-            'ultima_resposta_geral': ultima_resposta_geral
+            'total_geral': total_geral,
+            'ultima_resposta_geral': ultima_resposta_geral,
+            'hoje': agora.date(),
+            'meus_monitoramentos_hoje': meus_monitoramentos_hoje,
+            'meus_monitoramentos_total': meus_monitoramentos_total,
+            'setores_respondidos': setores_respondidos_hoje,
+            'questionarios_respondidos': questionarios_respondidos_hoje
         })
 from django.shortcuts      import render, get_object_or_404
 from django.views          import View

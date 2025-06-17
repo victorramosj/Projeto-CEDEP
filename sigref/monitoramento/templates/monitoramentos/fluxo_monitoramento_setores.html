@@ -158,12 +158,16 @@
                                     {% if questionario_selecionado %}
                                     <h5>{{ questionario_selecionado.titulo }}</h5>
                                     <p class="small">{{ questionario_selecionado.descricao }}</p>
-                                    <div class="d-grid gap-2">
+                                    <div class="d-flex gap-2">
                                         <a href="{% url 'gerenciar_perguntas' questionario_selecionado.id %}"
-                                            class="btn btn-outline-primary btn-sm">
+                                            class="btn btn-outline-primary btn-sm flex-fill">
                                             <i class="fas fa-edit"></i> Editar Perguntas
                                         </a>
+                                        <a href="{% url 'visualizar_graficos_questionario' questionario_selecionado.id %}" class="btn btn-outline-info btn-sm flex-fill" title="Ver Gráficos">
+                                            <i class="bi bi-bar-chart"></i>
+                                        </a>
                                     </div>
+                                    
 
                                     {% endif %}
                                 </div>

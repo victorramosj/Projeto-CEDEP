@@ -241,6 +241,7 @@ from django.db import models
 from django.utils import timezone
 from django.contrib.auth import get_user_model
 from dateutil.relativedelta import relativedelta
+import datetime
 
 User = get_user_model()
 
@@ -272,11 +273,14 @@ class Monitoramento(models.Model):
     )
     @classmethod
     def contagem_hoje(cls, escola, questionario):
-        hoje = timezone.now().date()
+        agora = timezone.now()
+        inicio_hoje = agora.replace(hour=0, minute=0, second=0, microsecond=0)
+        fim_hoje = agora.replace(hour=23, minute=59, second=59, microsecond=999999)
+        
         return cls.objects.filter(
             escola=escola,
             questionario=questionario,
-            criado_em__date=hoje
+            criado_em__range=(inicio_hoje, fim_hoje)
         ).count()
     
     class Meta:
@@ -287,7 +291,6 @@ class Monitoramento(models.Model):
     def __str__(self):
         return f"{self.escola} - {self.questionario} ({self.criado_em:%d/%m/%Y %H:%M})"
     
-
 
 class Resposta(models.Model):
     monitoramento = models.ForeignKey(
@@ -301,8 +304,8 @@ class Resposta(models.Model):
         related_name='respostas'
     )
     resposta_sn = models.CharField(
-        max_length=3, 
-        choices=[('Sim', 'Sim'), ('Nao', 'Não')], 
+        max_length=1,  # Alterado para 1 caractere
+        choices=[('S', 'Sim'), ('N', 'Não')],  # Valores corrigidos
         blank=True, 
         null=True
     )
@@ -312,7 +315,8 @@ class Resposta(models.Model):
 
     def resposta_formatada(self):
         if self.pergunta.tipo_resposta == 'SN':
-            return self.resposta_sn
+            # Retorna o display name baseado nas choices
+            return dict(self._meta.get_field('resposta_sn').choices).get(self.resposta_sn, '')
         elif self.pergunta.tipo_resposta == 'NU':
             return str(self.resposta_num)
         return self.resposta_texto
