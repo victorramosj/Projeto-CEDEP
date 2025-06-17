@@ -219,18 +219,14 @@ def tela_lacuna_view(request):
     """
     Esta view agora lida com a lógica de busca e paginação.
     """
-    # 1. Obter o termo de busca a partir dos parâmetros GET da URL (ex: ?q=minha-busca)
+    # Obter o termo de busca a partir dos parâmetros GET da URL (ex: ?q=minha-busca)
     search_query = request.GET.get('q', '')
 
-    # 2. Começar com a lista de todas as lacunas
-    # Usar select_related('escola') otimiza a consulta, evitando múltiplos acessos ao banco de dados para buscar o nome de cada escola.
+    # Começar com a lista de todas as lacunas
     lacunas_list = Lacuna.objects.select_related('escola').all()
 
-    # 3. Se um termo de busca for fornecido, filtrar a lista
+    # Se um termo de busca for fornecido, filtrar a lista
     if search_query:
-        # A busca é feita no nome da escola (escola__nome) E na disciplina.
-        # '__icontains' torna a busca case-insensitive (não diferencia maiúsculas de minúsculas).
-        # O objeto Q permite a condição OR (ou uma coisa OU outra).
         lacunas_list = lacunas_list.filter(
             Q(escola__nome__icontains=search_query) |
             Q(disciplina__icontains=search_query)
@@ -238,42 +234,69 @@ def tela_lacuna_view(request):
 
     # Ordenar o resultado
     lacunas_list = lacunas_list.order_by('-criado_em')
-    
+
     # Obter a contagem total DEPOIS de aplicar o filtro
     todas_lacunas_count = lacunas_list.count()
 
-    # 4. Configurar a paginação
+    # Configurar a paginação
     paginator = Paginator(lacunas_list, 9)  # 9 itens por página
     page_number = request.GET.get('page')
     lacunas_page = paginator.get_page(page_number)
 
-    # 5. Passar os dados para o template, incluindo o termo de busca
+    # Passar os dados para o template, incluindo o termo de busca
     context = {
         'lacunas_page': lacunas_page,
-        'todas_lacunas': todas_lacunas_count,
-        'search_query': search_query,  # Essencial para manter o valor no input de busca
+        'todas_lacunas': todas_lacunas_count,  # Agora a variável 'todas_lacunas' está definida corretamente
     }
+
     return render(request, 'tela_lacunas.html', context)
 
-# TELA PROBLEMA CGAF/UDP
+
+from datetime import datetime, timedelta
+from django.shortcuts import render
+from .models import ProblemaUsuario
+from django.core.paginator import Paginator
+from django.db.models import Q
+
 def tela_problema_view(request):
-    # Obtém todas as lacunas da escola
     problemas_list = ProblemaUsuario.objects.all()
 
-    # Cria o objeto paginator para limitar a 9 lacunas por página
-    paginator = Paginator(problemas_list, 9)
+    # Obter os parâmetros de filtro da URL (busca por escola, data e status)
+    escola_query = request.GET.get('escola', '')  # Pesquisa pela escola
+    data_filter = request.GET.get('data', '')
+    status_filter = request.GET.get('status', '')
 
+    # Filtro por Escola
+    if escola_query:
+        problemas_list = problemas_list.filter(escola__nome__icontains=escola_query)
+
+    # Filtro por Data
+    if data_filter == '1':  # Última semana
+        problemas_list = problemas_list.filter(criado_em__gte=datetime.now() - timedelta(weeks=1))
+    elif data_filter == '2':  # Último mês
+        problemas_list = problemas_list.filter(criado_em__gte=datetime.now() - timedelta(days=30))
+    elif data_filter == '3':  # Último ano
+        problemas_list = problemas_list.filter(criado_em__gte=datetime.now() - timedelta(days=365))
+
+    #  Filtro por Status
+    if status_filter:
+        problemas_list = problemas_list.filter(status=status_filter)
+
+    # Paginação
+    paginator = Paginator(problemas_list, 9)  # 9 itens por página
     page_number = request.GET.get('page')
     problemas_page = paginator.get_page(page_number)
 
-    total_problemas = problemas_list.count()
+    total_problemas = problemas_list.count()  # Total de problemas filtrados
 
-    # Passa as lacunas paginadas para o template
-    return render(request, 'tela_problemas.html',  {
+    # Passar os dados para o template
+    context = {
         'problemas_page': problemas_page,
-        'total_problemas': total_problemas,  # <--- ESSENCIAL
-    })
-   
+        'total_problemas': total_problemas,  # Total de problemas filtrados
+        'search_query': escola_query,  # Termo de busca (para manter na barra de pesquisa)
+    }
+
+    return render(request, 'tela_problemas.html', context)
 
 
 # VIEWS AVISOS *********************************************************
@@ -583,4 +606,5 @@ def dashboard(request):
         return render(request, "cedepe/home.html", {"alerts": alerts})
 
     except GREUser.DoesNotExist:
+        
         return render(request, "cedepe/home.html")
