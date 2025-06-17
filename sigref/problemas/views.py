@@ -739,6 +739,4 @@ def dashboard(request):
     except GREUser.DoesNotExist:
        
         return render(request, "cedepe/home.html")
-
-
-
+    
