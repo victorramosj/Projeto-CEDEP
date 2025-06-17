@@ -22,7 +22,7 @@ from django.core.paginator import Paginator
 
 from monitoramento.models import GREUser, Escola, Setor
 
-
+#PRECISAMOSSS AJEITAR  ESSA VIEWS
 
 
 
