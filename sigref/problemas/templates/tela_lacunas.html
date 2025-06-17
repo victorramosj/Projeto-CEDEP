@@ -16,13 +16,10 @@ Lacunas
     <div class="col-12">
         <div class="d-flex justify-content-between gap-2 mb-3">
             
-            <!-- Barra de pesquisa (com a funcionalidade de busca) -->
-            <form method="GET" action="{% url 'tela_lacuna_view' %}" class="input-group" style="width: 50%;">
-                {% csrf_token %}
-                <span class="input-group-text"><i class="fas fa-search"></i></span>
-                <input type="text" class="form-control" name="q" value="{{ search_query }}" placeholder="Pesquise por Escola ou Disciplina...">
-                <!-- Botão de busca implícito ao pressionar Enter ou pode ser adicionado um explícito -->
-            </form>
+            <!--Barra de Pesquisa-->
+            <div class="input-group" style="width: 50%;">
+                <input type="text" id="search-input" class="form-control" name="q" value="{{ search_query }}" placeholder="Pesquise por Escola ou Disciplina...">
+            </div>
             
             <div class="d-flex gap-2">
                 <select class="form-select" id="date-filter" aria-label="Filtro Data">
@@ -45,12 +42,13 @@ Lacunas
             </div>
         </div>
 
-        <!-- Tabela de Lacunas -->
-        <div class="table-responsive"> 
+
+        <!--Tabela-->
+        <div id="lacunas-table-wrapper">
             <table class="table table-striped mt-2">
                 <thead>
                     <tr>
-                        <th><input type="checkbox"></th>
+                        <th><input type="checkbox" id="select-all-checkbox"></th>
                         <th class="text-start">Escola</th>
                         <th class="text-start">Disciplina</th>
                         <th class="text-start">Carga H.</th>
@@ -61,7 +59,7 @@ Lacunas
                 <tbody>
                     {% for lacuna in lacunas_page %}
                         <tr>
-                            <td><input type="checkbox"></td>
+                            <td><input type="checkbox" class="lacuna-checkbox" name="lacuna_ids" value="{{ lacuna.id }}"></td>
                             <td class="text-start">{{ lacuna.escola.nome }}</td>
                             <td class="text-start">{{ lacuna.disciplina }}</td>
                             <td class="text-start">{{ lacuna.carga_horaria }}</td>
@@ -70,7 +68,7 @@ Lacunas
                                 <select class="form-select" name="status" data-lacuna-id="{{ lacuna.id }}"
                                     {% if lacuna.status == 'P' %} style="background-color: #ffcccc !important;" {% endif %} 
                                     {% if lacuna.status == 'R' %} style="background-color: #ccffcc !important;" {% endif %} 
-                                    {% if lacuna.status == 'E' %} style="background-color: #ffffcc !important;" {% endif %}>>
+                                    {% if lacuna.status == 'E' %} style="background-color: #ffffcc !important;" {% endif %}>
                                     <option value="P" {% if lacuna.status == 'P' %} selected {% endif %}>Pendente</option>
                                     <option value="R" {% if lacuna.status == 'R' %} selected {% endif %}>Resolvido</option>
                                     <option value="E" {% if lacuna.status == 'E' %} selected {% endif %}>Em Andamento</option>
@@ -84,8 +82,6 @@ Lacunas
                     {% endfor %}
                 </tbody>
             </table>
-        </div>
-    </div>
 
             {% if lacunas_page.paginator.num_pages > 1 %}
             <nav aria-label="Page navigation">
