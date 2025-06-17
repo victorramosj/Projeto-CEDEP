@@ -26,7 +26,7 @@ table .form-select {
 
 {% block content %}
     <div class="container mt-4">
-         <h3>Problemas ({{ total_problemas }})</h3>
+        <h3>Problemas ({{ total_problemas }})</h3>
 
     <div class="col-12">
         <div class="d-flex justify-content-between gap-2 mb-3">
@@ -62,42 +62,47 @@ table .form-select {
         </div>
 
         <!-- Tabela de Problemas -->
-        <table class="table table-striped mt-2">
-            <thead>
-                <tr>
-                    <th><input type="checkbox"></th>
-                    <th class="text-start">Problema</th>
-                    <th class="text-start">Escola</th>
-                    <th class="text-start">Usuário</th>
-                    <th class="text-start">Setor Responsável</th>
-                    <th class="text-start">Data</th>
-                    <th class="text-start">Status</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for problema in problemas_page %}
+        <div class="table-responsive">
+            <table class="table table-striped mt-2">
+                <thead>
                     <tr>
-                        <td><input type="checkbox"></td>
-                        <td class="text-start">{{ problema.descricao}}</td>
-                        <td class="text-start">{{ problema.escola.nome }}</td>
-                        <td class="text-start">{{ problema.usuario }}</td>
-                        <td class="text-start">{{ problema.setor.hierarquia_completa }}</td>
-                        <td class="text-start">{{ problema.criado_em|date:"d/m/Y" }}</td>
-                        <td>
-                             <select class="form-select" aria-label="Filtro Status" data-problema-id="{{ problema.id }}">
-                                <option value="P" {% if problema.status == 'P' %} selected {% endif %}>Pendente</option>
-                                <option value="R" {% if problema.status == 'R' %} selected {% endif %}>Resolvido</option>
-                                <option value="E" {% if problema.status == 'E' %} selected {% endif %}>Em Andamento</option>
-                            </select>
-                        </td>
+                        <th><input type="checkbox"></th>
+                        <th class="text-start">Problema</th>
+                        <th class="text-start">Escola</th>
+                        <th class="text-start">Usuário</th>
+                        <th class="text-start">Setor Responsável</th>
+                        <th class="text-start">Data</th>
+                        <th class="text-start">Status</th>
                     </tr>
-                {% empty %}
-                    <tr>
-                        <td colspan="7" class="text-center p-4">Nenhum problema encontrado.</td>
-                    </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+                </thead>
+                <tbody>
+                    {% for problema in problemas_page %}
+                        <tr>
+                            <td><input type="checkbox"></td>
+                            <td class="text-start">{{ problema.descricao}}</td>
+                            <td class="text-start">{{ problema.escola.nome }}</td>
+                            <td class="text-start">{{ problema.usuario }}</td>
+                            <td class="text-start">{{ problema.setor.hierarquia_completa }}</td>
+                            <td class="text-start">{{ problema.criado_em|date:"d/m/Y" }}</td>
+                            <td>
+                                <select class="form-select" aria-label="Filtro Status" data-problema-id="{{ problema.id }}" 
+                                    {% if problema.status == 'P' %} style="background-color: #ffcccc !important;" {% endif %} 
+                                    {% if problema.status == 'R' %} style="background-color: #ccffcc !important;" {% endif %} 
+                                    {% if problema.status == 'E' %} style="background-color: #ffffcc !important;" {% endif %}>
+                                    <option value="P" {% if problema.status == 'P' %} selected {% endif %}>Pendente</option>
+                                    <option value="R" {% if problema.status == 'R' %} selected {% endif %}>Resolvido</option>
+                                    <option value="E" {% if problema.status == 'E' %} selected {% endif %}>Em Andamento</option>
+                                </select>
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="7" class="text-center p-4">Nenhum problema encontrado.</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
     </div>
 
     <!-- Paginação -->

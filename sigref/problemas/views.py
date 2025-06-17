@@ -606,4 +606,5 @@ def dashboard(request):
         return render(request, "cedepe/home.html", {"alerts": alerts})
 
     except GREUser.DoesNotExist:
+        
         return render(request, "cedepe/home.html")

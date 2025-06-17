@@ -9,7 +9,6 @@ Lacunas
 <link rel="stylesheet" href="{% static 'css/tabelas.css' %}" />
 {% endblock %}
 
-
 {% block content %}
 <div class="container mt-4">
     <h3>Lacunas ({{ todas_lacunas }})</h3>
@@ -19,7 +18,7 @@ Lacunas
             
             <!-- Barra de pesquisa (com a funcionalidade de busca) -->
             <form method="GET" action="{% url 'tela_lacuna_view' %}" class="input-group" style="width: 50%;">
-                 {% csrf_token %}
+                {% csrf_token %}
                 <span class="input-group-text"><i class="fas fa-search"></i></span>
                 <input type="text" class="form-control" name="q" value="{{ search_query }}" placeholder="Pesquise por Escola ou Disciplina...">
                 <!-- Botão de busca implícito ao pressionar Enter ou pode ser adicionado um explícito -->
@@ -49,40 +48,45 @@ Lacunas
         </div>
 
         <!-- Tabela de Lacunas -->
-        <table class="table table-striped mt-2">
-            <thead>
-                <tr>
-                    <th><input type="checkbox"></th>
-                    <th class="text-start">Escola</th>
-                    <th class="text-start">Disciplina</th>
-                    <th class="text-start">Carga H.</th>
-                    <th class="text-start">Data</th>
-                    <th class="text-start">Status</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for lacuna in lacunas_page %}
+        <div class="table-responsive"> 
+            <table class="table table-striped mt-2">
+                <thead>
                     <tr>
-                        <td><input type="checkbox"></td>
-                        <td class="text-start">{{ lacuna.escola.nome }}</td>
-                        <td class="text-start">{{ lacuna.disciplina }}</td>
-                        <td class="text-start">{{ lacuna.carga_horaria }}</td>
-                        <td class="text-start">{{ lacuna.criado_em|date:"d/m/Y" }}</td>
-                        <td>
-                            <select class="form-select" name="status" data-lacuna-id="{{ lacuna.id }}">
-                                <option value="P" {% if lacuna.status == 'P' %} selected {% endif %}>Pendente</option>
-                                <option value="R" {% if lacuna.status == 'R' %} selected {% endif %}>Resolvido</option>
-                                <option value="E" {% if lacuna.status == 'E' %} selected {% endif %}>Em Andamento</option>
-                            </select>
-                        </td>
+                        <th><input type="checkbox"></th>
+                        <th class="text-start">Escola</th>
+                        <th class="text-start">Disciplina</th>
+                        <th class="text-start">Carga H.</th>
+                        <th class="text-start">Data</th>
+                        <th class="text-start">Status</th>
                     </tr>
-                {% empty %}
-                    <tr>
-                        <td colspan="6" class="text-center p-4">Nenhuma lacuna encontrada.</td>
-                    </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+                </thead>
+                <tbody>
+                    {% for lacuna in lacunas_page %}
+                        <tr>
+                            <td><input type="checkbox"></td>
+                            <td class="text-start">{{ lacuna.escola.nome }}</td>
+                            <td class="text-start">{{ lacuna.disciplina }}</td>
+                            <td class="text-start">{{ lacuna.carga_horaria }}</td>
+                            <td class="text-start">{{ lacuna.criado_em|date:"d/m/Y" }}</td>
+                            <td>
+                                <select class="form-select" name="status" data-lacuna-id="{{ lacuna.id }}"
+                                    {% if lacuna.status == 'P' %} style="background-color: #ffcccc !important;" {% endif %} 
+                                    {% if lacuna.status == 'R' %} style="background-color: #ccffcc !important;" {% endif %} 
+                                    {% if lacuna.status == 'E' %} style="background-color: #ffffcc !important;" {% endif %}>>
+                                    <option value="P" {% if lacuna.status == 'P' %} selected {% endif %}>Pendente</option>
+                                    <option value="R" {% if lacuna.status == 'R' %} selected {% endif %}>Resolvido</option>
+                                    <option value="E" {% if lacuna.status == 'E' %} selected {% endif %}>Em Andamento</option>
+                                </select>
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="6" class="text-center p-4">Nenhuma lacuna encontrada.</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
     </div>
 
     <!-- Paginação -->
