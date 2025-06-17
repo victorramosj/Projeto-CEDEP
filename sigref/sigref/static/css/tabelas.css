@@ -47,3 +47,8 @@
 }
 
 /* Select de Status*/
+
+.form-select {
+    width: 160px;
+}
+/* Estilo para o select de status */

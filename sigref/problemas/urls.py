@@ -42,7 +42,7 @@ urlpatterns = [
     path('tela_problemas/', views.tela_problema_view, name='tela_problemas'),
 
     # API Tela Lacuna
-    path('lacuna/<int:lacuna_id>/alterar_status/', UpdateStatusLacuna.as_view(), name='alterar_status_lacuna'),
+    path('api/lacuna/atualizar-status/<int:lacuna_id>/', UpdateStatusLacuna.as_view(), name='api_atualizar_status_lacuna'),
     # API Tela Problema
     path('problema/problemas/', views.tela_problema_view, name='tela_problema'),
     
