@@ -476,7 +476,6 @@ def editar_aviso_view(request, aviso_id):
 
 
 
-
 from django.shortcuts import get_object_or_404, redirect
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
