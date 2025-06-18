@@ -16,6 +16,7 @@ from .views import (
     tela_lacuna_view,
     tela_problema_view,
     deletar_lacunas_api,
+    confirmar_visualizacao_aviso,
 )
 
 # Criando o roteador para as views baseadas em viewsets
@@ -59,11 +60,12 @@ urlpatterns = [
     # URL para apagar vários avisos
     path('apagar_varios_avisos/', views.apagar_varios_avisos, name='apagar_varios_avisos'),
 
-
     # NOVAS URLS
     path('problemas/avisos/verificar-automaticos/', views.verificar_avisos_automaticos, name='verificar_avisos_automaticos'),
     path('problemas/avisos/apagar-automaticos/', views.apagar_avisos_automaticos, name='apagar_avisos_automaticos'),
 
+    # Confirmação de visualização do aviso
+    path('confirmar-visualizacao/<int:aviso_id>/', confirmar_visualizacao_aviso, name='confirmar_visualizacao_aviso'),
 ]
 
 urlpatterns += router.urls

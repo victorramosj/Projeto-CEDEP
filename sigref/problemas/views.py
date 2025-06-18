@@ -212,11 +212,7 @@ class AvisoImportanteViewSet(viewsets.ModelViewSet):
     queryset = AvisoImportante.objects.all()
     serializer_class = AvisoImportanteSerializer
 
-
-
-
 # sigref/problemas/views.py
-
 
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponseForbidden
@@ -461,7 +457,7 @@ def criar_aviso_view(request):
         prioridade = request.POST.get('prioridade', 'normal')
         data_expiracao_str = request.POST.get('data_expiracao')
         escolas_ids = request.POST.getlist('escola_id')
-       
+        
         # [NOVO] Obtém o arquivo de imagem do request. Será 'None' se nenhum for enviado.
         imagem_aviso = request.FILES.get('imagem')
 
@@ -502,7 +498,7 @@ def criar_aviso_view(request):
         for escola_id in escolas_ids:
             try:
                 escola = Escola.objects.get(id=escola_id)
-               
+                
                 # Prepara um dicionário com os dados comuns
                 dados_aviso = {
                     'titulo': titulo,
@@ -541,14 +537,6 @@ def criar_aviso_view(request):
 
 
 
-
-from django.shortcuts import get_object_or_404, redirect
-from django.contrib import messages
-from django.contrib.auth.decorators import login_required
-from .models import AvisoImportante
-from .forms import AvisoForm
-
-
 from django.shortcuts import get_object_or_404, render, redirect
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
@@ -560,7 +548,7 @@ from .models import AvisoImportante
 def editar_aviso_view(request, aviso_id):
     aviso = get_object_or_404(AvisoImportante, id=aviso_id)
     gre_user = request.user.greuser
-   
+    
     # Verificação de permissão para garantir que o usuário possa editar o aviso
     if aviso.criado_por != gre_user and not gre_user.is_admin():
         messages.error(request, "Você não tem permissão para editar este aviso.")
@@ -577,7 +565,7 @@ def editar_aviso_view(request, aviso_id):
         else:
             messages.error(request, "Houve um erro ao editar o aviso.")
             return render(request, 'avisos/editar_aviso.html', {'form': form, 'aviso': aviso})
-   
+    
     # Se for um GET, mostramos o formulário de edição
     form = AvisoForm(instance=aviso)
     return render(request, 'problemas/listar_avisos.html', {'form': form, 'aviso': aviso})
@@ -705,7 +693,7 @@ def apagar_avisos_automaticos(request):
         return JsonResponse({'status': 'error', 'message': 'Formato de requisição inválido.'}, status=400)
     except Exception as e:
         return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
-   
+    
 
 
 
@@ -753,6 +741,31 @@ def dashboard(request):
 
 
     except GREUser.DoesNotExist:
-       
+        
         return render(request, "cedepe/home.html")
     
+
+
+
+# Em problemas/views.py
+from django.shortcuts import get_object_or_404, redirect
+from .models import AvisoImportante
+
+@login_required
+def confirmar_visualizacao_aviso(request, aviso_id):
+    # Recupera o aviso com o ID fornecido
+    aviso = get_object_or_404(AvisoImportante, id=aviso_id)
+
+    # Cria ou atualiza a confirmação do aviso
+    confirmacao, created = ConfirmacaoAviso.objects.get_or_create(
+        aviso=aviso,
+        escola=request.user.greuser.escolas.first()  # Associando a escola do usuário
+    )
+
+    # Caso ainda não tenha sido visualizado, muda o status
+    if confirmacao.status == 'pendente':
+        confirmacao.confirmar_visualizado()
+
+    return redirect('listar_avisos')  # Redireciona para a página de avisos ou a página desejada
+
+
