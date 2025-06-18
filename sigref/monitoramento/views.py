@@ -24,8 +24,6 @@ from django.db.models import Count
 from .models import *
 from .serializers import *
 
-
-
 # View auxiliar que retorna as escolas relacionadas a um questionário específico
 class QuestionarioEscolasView(APIView):
     def get(self, request, pk):
@@ -167,8 +165,8 @@ class DetalheMonitoramentoView(DetailView):
         return super().dispatch(request, *args, **kwargs)
 
 
+from .models import GREUser
 
-# Dashboard view atualizada
 def dashboard_monitoramentos(request):
     user = request.user.greuser
 
@@ -228,6 +226,16 @@ def dashboard_monitoramentos(request):
     for setor in setores:
         setor.monitoramentos_recentes = monitoramentos_por_setor.get(setor.id, [])
 
+    # Adicionar greusers e seus nomes completos ao contexto
+    greusers = GREUser.objects.all().select_related('user').order_by('nome_completo', 'user__username')
+    greusers_info = [
+        {
+            'id': greuser.user.id,
+            'nome_completo': greuser.nome_completo.strip() or (greuser.user.get_full_name() or greuser.user.username)
+        }
+        for greuser in greusers
+    ]
+
     context = {
         'escolas': escolas,
         'questionarios': questionarios,
@@ -241,10 +249,10 @@ def dashboard_monitoramentos(request):
             monitoramentos_pendentes
         ],
         'setores': setores,
+        'greusers': greusers_info,
     }
 
     return render(request, 'monitoramentos/dashboard_monitoramentos.html', context)
-
 
     
 
@@ -418,7 +426,7 @@ class GerenciarQuestionariosView(LoginRequiredMixin, TemplateView):
         ).order_by('-data_criacao')
         return context
     
-
+from django.db.models import Count, Prefetch
 from django.shortcuts import render, get_object_or_404
 from django.views import View
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -651,72 +659,161 @@ def visualizar_graficos_questionario(request, questionario_id):
 
     return render(request, 'graficos/graficos_questionario.html', context)
 
+#Relatórios
 
-# Views relacionadas a problemas e escolas
 
-class TipoProblemaViewSet(viewsets.ModelViewSet):
-    queryset = TipoProblema.objects.all()
-    serializer_class = TipoProblemaSerializer
-    permission_classes = [permissions.IsAuthenticated]
 
-class RelatoProblemaViewSet(viewsets.ModelViewSet):
-    serializer_class = RelatoProblemaSerializer
-    permission_classes = [permissions.IsAuthenticated]    
-    
-    queryset = RelatoProblema.objects.none()  # Valor inicial vazio
-    
-    def get_queryset(self):
-        # Sobrescreve o queryset padrão
-        return RelatoProblema.objects.filter(gestor=self.request.user.greuser)
+from django.shortcuts import render, get_object_or_404
+from django.views import View
+from django.utils import timezone
+from django.db.models import Prefetch
+from .models import Escola, Questionario, Monitoramento, Resposta
 
-    def perform_create(self, serializer):
-        serializer.save(gestor=self.request.user.greuser)
+class RelatorioDiarioView(View):
+    def get(self, request, escola_id):
+        escola = get_object_or_404(Escola, id=escola_id)
+        agora = timezone.localtime(timezone.now())
+        hoje = agora.date()
+        
+        # Obtém o intervalo do dia atual no fuso horário local
+        inicio_hoje = agora.replace(hour=0, minute=0, second=0, microsecond=0)
+        fim_hoje = agora.replace(hour=23, minute=59, second=59, microsecond=999999)
+        
+        # Busca todos os questionários respondidos hoje na escola
+        questionarios = Questionario.objects.filter(
+            monitoramentos__escola=escola,
+            monitoramentos__criado_em__range=(inicio_hoje, fim_hoje)
+        ).distinct().prefetch_related(
+            Prefetch(
+                'monitoramentos',
+                queryset=Monitoramento.objects.filter(
+                    criado_em__range=(inicio_hoje, fim_hoje)
+                ).prefetch_related(
+                    Prefetch(
+                        'respostas',
+                        queryset=Resposta.objects.select_related('pergunta').order_by('pergunta__ordem')
+                    )
+                ).order_by('criado_em')
+            )
+        ).order_by('setor__nome', 'titulo')
+        
+        # Calcula estatísticas para o relatório
+        total_questionarios = questionarios.count()
+        total_monitoramentos = Monitoramento.objects.filter(
+            escola=escola,
+            criado_em__range=(inicio_hoje, fim_hoje)
+        ).count()
+        
+        setores_envolvidos = set()
+        usuarios_envolvidos = set()
+        
+        for q in questionarios:
+            setores_envolvidos.add(q.setor.nome)
+            for m in q.monitoramentos.all():
+                if m.respondido_por:
+                    if m.respondido_por.greuser and m.respondido_por.greuser.nome_completo:
+                        usuarios_envolvidos.add(m.respondido_por.greuser.nome_completo)
+                    else:
+                        usuarios_envolvidos.add(m.respondido_por.username)
+        
+        context = {
+            'escola': escola,
+            'data': hoje,
+            'questionarios': questionarios,
+            'total_questionarios': total_questionarios,
+            'total_monitoramentos': total_monitoramentos,
+            'setores_envolvidos': len(setores_envolvidos),
+            'usuarios_envolvidos': len(usuarios_envolvidos),
+        }
+        
+        return render(request, 'monitoramentos/relatorio.html', context)
+from .models import Escola, Questionario, Monitoramento, Resposta, Setor
 
-class RelatosProblemasView(View):
-    @method_decorator(login_required)
+class RelatorioMonitoramentosView(View):
     def get(self, request):
-        user = request.user.greuser
-        problemas = RelatoProblema.objects.all()
+        escola_id = request.GET.get('escola_id')
+        user_id = request.GET.get('user_id')
+        setor_id = request.GET.get('setor_id')
+        quantidade = int(request.GET.get('quantidade', 10))  # padrão: 10
 
-        if user.is_admin() or user.is_coordenador():
-            problemas = problemas
-        elif user.is_chefe_setor():
-            problemas = problemas.filter(tipo_problema__setor=user.setor)
-        else:
-            problemas = problemas.filter(gestor=user)
+        monitoramento_filter = Q()
+        escola = None
+        usuario = None
+        setor = None
 
-        return render(request, 'monitoramentos/relatos.html', {
-            'problemas': problemas.order_by('-data_relato'),
-            'prioridade_choices': dict(RelatoProblema.PRIORIDADE_CHOICES),
-            'section': 'relatos_problemas'
-        })
-from django.views.generic import CreateView
-from django.urls import reverse_lazy
+        if escola_id and str(escola_id).isdigit():
+            escola = get_object_or_404(Escola, id=int(escola_id))
+            monitoramento_filter &= Q(escola=escola)
+        if user_id and str(user_id).isdigit():
+            usuario = get_object_or_404(User, id=int(user_id))
+            monitoramento_filter &= Q(respondido_por=usuario)
+        if setor_id and str(setor_id).isdigit():
+            setor = get_object_or_404(Setor, id=int(setor_id))
+            monitoramento_filter &= Q(questionario__setor=setor)
 
-class RelatoProblemaCreateView(LoginRequiredMixin, CreateView):
-    model = RelatoProblema
-    fields = ['tipo_problema', 'descricao_adicional', 'prioridade', 'foto']
-    template_name = 'escolas/relatar_problema.html'
-    success_url = reverse_lazy('escola_dashboard')
+        monitoramentos = Monitoramento.objects.filter(
+            monitoramento_filter
+        ).select_related('escola', 'questionario', 'respondido_por').order_by('-criado_em')[:quantidade]
 
-    def form_valid(self, form):
-        escola = self.request.user.greuser.escolas.first()
-        form.instance.escola = escola
-        form.instance.gestor = self.request.user.greuser
-        return super().form_valid(form)
-    
-from rest_framework.views import APIView
-from rest_framework.response import Response
+        escolas_relacionadas = list({m.escola for m in monitoramentos if m.escola is not None})
 
-class MinhasEscolasView(APIView):
-    permission_classes = [permissions.IsAuthenticated]
+        monitoramento_ids = monitoramentos.values_list('id', flat=True)
+        questionario_ids = Monitoramento.objects.filter(
+            id__in=monitoramento_ids
+        ).values_list('questionario_id', flat=True).distinct()
+        questionarios = Questionario.objects.filter(
+            id__in=questionario_ids
+        ).prefetch_related(
+            Prefetch(
+                'monitoramentos',
+                queryset=Monitoramento.objects.filter(
+                    id__in=monitoramento_ids
+                ).prefetch_related(
+                    Prefetch(
+                        'respostas',
+                        queryset=Resposta.objects.select_related('pergunta').order_by('pergunta__ordem')
+                    )
+                ).order_by('criado_em')
+            )
+        ).order_by('setor__nome', 'titulo')
 
-    def get(self, request):
-        user = request.user.greuser
-        escolas = user.escolas.all()
-        serializer = EscolaSerializer(escolas, many=True)
-        return Response(serializer.data)
-    
-    from django.contrib.auth.mixins import LoginRequiredMixin
+        setores_envolvidos = set()
+        usuarios_envolvidos = set()
+        for q in questionarios:
+            setores_envolvidos.add(q.setor.nome)
+            for m in q.monitoramentos.all():
+                if m.respondido_por:
+                    if hasattr(m.respondido_por, 'greuser') and m.respondido_por.greuser.nome_completo:
+                        usuarios_envolvidos.add(m.respondido_por.greuser.nome_completo)
+                    else:
+                        usuarios_envolvidos.add(m.respondido_por.username)
 
+        # Para popular o select de setores no modal
+        setores = Setor.objects.all().order_by('nome')
 
+        context = {
+            'escola': escola,
+            'escolas_relacionadas': escolas_relacionadas,
+            'usuario': usuario,
+            'setor': setor,
+            'setores': setores,
+            'data': timezone.localdate(),
+            'questionarios': questionarios,
+            'total_questionarios': questionarios.count(),
+            'total_monitoramentos': monitoramentos.count(),
+            'setores_envolvidos': len(setores_envolvidos),
+            'usuarios_envolvidos': usuarios_envolvidos,
+            'quantidade': quantidade,
+        }
+        return render(request, 'monitoramentos/relatorio.html', context)
+from django.http import JsonResponse
+from .models import GREUser
+
+def greuser_search(request):
+    q = request.GET.get('q', '')
+    users = GREUser.objects.filter(nome_completo__icontains=q).order_by('nome_completo')[:20]
+    results = [
+        {"id": u.user.id, "text": u.nome_completo or u.user.username}
+        for u in users
+    ]
+    return JsonResponse({"results": results})

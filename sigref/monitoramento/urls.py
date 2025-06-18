@@ -4,6 +4,7 @@ from rest_framework_nested import routers
 from django.conf import settings
 from django.conf.urls.static import static
 from . import views
+from .views import RelatorioDiarioView
 
 # -----------------------------------------
 # DRF: Registro de ViewSets principais
@@ -14,9 +15,6 @@ router.register(r'setores', views.SetorViewSet, basename='setores')
 router.register(r'usuarios', views.GREUserViewSet, basename='usuarios')
 router.register(r'questionarios', views.QuestionarioViewSet, basename='questionarios')
 router.register(r'monitoramentos', views.MonitoramentoViewSet, basename='monitoramentos')
-router.register(r'tipos-problema', views.TipoProblemaViewSet, basename='tipos-problema')
-router.register(r'relatos-problema', views.RelatoProblemaViewSet, basename='relatos-problema')
-
 # -----------------------------------------
 # DRF: Rotas aninhadas (Nested Routers)
 # -----------------------------------------
@@ -33,11 +31,19 @@ urlpatterns = [
     # -----------------------------------------
     # Views baseadas em templates (front-end)
     # -----------------------------------------
-    path('minhas-escolas/', views.MinhasEscolasView.as_view(), name='minhas-escolas'),
+   
     path('dashboard/', views.dashboard_monitoramentos, name='dashboard_monitoramentos'),
-    path('relatos/problemas/', views.RelatosProblemasView.as_view(), name='relatos_problemas'),
-    path('monitoramentos/<int:pk>/', views.DetalheMonitoramentoView.as_view(), name='detalhe_monitoramento'),
+    
+    #relatórios
+    path('escola/<int:escola_id>/relatorio-diario/', RelatorioDiarioView.as_view(), 
+         name='relatorio_diario'),
+    path('detalhes/<int:pk>/', views.DetalheMonitoramentoView.as_view(), name='detalhe_monitoramento'),
+    path('relatorio-monitoramentos/', views.RelatorioMonitoramentosView.as_view(), name='relatorio_monitoramentos'),
+    
+    
+    # passo a passo para criação de questionários
     path('fluxo/', views.fluxo_monitoramento, name='fluxo_monitoramento_setores'),
+    
     
     # Questionários
     path('questionarios/novo/<int:setor_id>/', views.criar_questionario_view, name='criar-questionario'),
@@ -50,8 +56,6 @@ urlpatterns = [
     path('escola/<int:escola_id>/questionario/<int:questionario_id>/responder/', views.ResponderQuestionarioView.as_view(), name='responder_questionario'),    
 
 
-    # Dashboard da escola
-    path('escola/relatar-problema/', views.RelatoProblemaCreateView.as_view(), name='relatar_problema'),
 
     # -----------------------------------------
     # Endpoints AJAX / API customizadas
@@ -59,7 +63,7 @@ urlpatterns = [
     path('api/questionarios/create/', views.QuestionarioCreateAPI.as_view(), name='questionarios-add'),
     path('api/questionarios/<int:pk>/assign_escolas/', views.AssignEscolasQuestionario.as_view(), name='assign_escolas'),
     path('api/questionarios/<int:pk>/escolas/', views.QuestionarioEscolasView.as_view(), name='questionario-escolas'),
-
+    path('api/greuser-search/', views.greuser_search, name='greuser_search'),
     # -----------------------------------------
     # DRF: Inclusão de ViewSets e Nested Routers
     # -----------------------------------------
