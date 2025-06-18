@@ -476,7 +476,10 @@
     </div>
 
     <div class="mt-5">
-        <h5 class="mb-3 titulo-secao">HISTÓRICO DE PROBLEMAS</h5>
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="titulo-secao mb-0">HISTÓRICO DE PROBLEMAS</h5>
+            <a href="{% url 'tela_problemas' %}" class="btn btn-relatar" style="width: auto;">Ver Mais</a>
+        </div>
         <div class="row g-4">
             <div class="col-xl-3 col-md-6">
                 <div class="card-status resolvidos">
@@ -506,7 +509,10 @@
     </div>
 
     <div class="mt-5">
-        <h5 class="mb-3 titulo-secao">HISTÓRICO DE LACUNAS</h5>
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="titulo-secao mb-0">HISTÓRICO DE LACUNAS</h5>
+            <a href="{% url 'tela_lacunas' %}" class="btn btn-relatar" style="width: auto;">Ver Mais</a>
+        </div>
         <div class="row g-4">
             <div class="col-xl-3 col-md-6">
                 <div class="card-status resolvidos">
@@ -680,12 +686,12 @@
                                <i class="fas fa-eye me-2"></i> Visualizar Mensagem
                            </button>
                            
-                           {% comment %} Botão para marcar como visualizado, visível apenas se não foi visualizado {% endcomment %}
-                           {% if not aviso.confirmado_visualizado %}
+                            {% comment %} Botão para marcar como visualizado, visível apenas se não foi visualizado {% endcomment %}
+                            {% if not aviso.confirmado_visualizado %}
                                <button class="btn btn-sm btn-success ms-2 marcar-como-visualizado-btn" type="button" data-aviso-id="{{ aviso.id }}">
                                    <i class="fas fa-check-circle me-2"></i> Marcar como Visualizado
                                </button>
-                           {% endif %}
+                            {% endif %}
 
                            <div class="collapse mt-3" id="collapseAviso{{ aviso.id }}">
                                 {% if aviso.imagem %}
@@ -763,7 +769,6 @@
         </div>
     </div>
 </div>
-{# A tag `{% endblock %}` final para o `{% block content %}` estava faltando aqui. #}
 {% endblock %} 
 
 {% block extra_script %}
