@@ -418,7 +418,7 @@ class GerenciarQuestionariosView(LoginRequiredMixin, TemplateView):
         ).order_by('-data_criacao')
         return context
     
-
+from django.db.models import Count, Prefetch
 from django.shortcuts import render, get_object_or_404
 from django.views import View
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -718,5 +718,6 @@ class MinhasEscolasView(APIView):
         return Response(serializer.data)
     
     from django.contrib.auth.mixins import LoginRequiredMixin
+
 
 
