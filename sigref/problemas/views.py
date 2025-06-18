@@ -585,8 +585,7 @@ def editar_aviso_view(request, aviso_id):
    
     # Se for um GET, mostramos o formulário de edição
     form = AvisoForm(instance=aviso)
-    return render(request, 'avisos/editar_aviso.html', {'form': form, 'aviso': aviso})
-
+    return render(request, 'problemas/listar_avisos.html', {'form': form, 'aviso': aviso})
 
 
 
