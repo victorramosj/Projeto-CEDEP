@@ -32,6 +32,11 @@ from .forms import AvisoForm, LacunaForm, ProblemaUsuarioForm
 from .models import (AvisoImportante, ConfirmacaoAviso, Lacuna,ProblemaUsuario, STATUS_CHOICES)
 from .serializers import (AvisoImportanteSerializer, LacunaSerializer,ProblemaUsuarioSerializer)
 
+# ADICIONADO DEPOIS 
+from django.shortcuts import get_object_or_404, redirect
+from django.http import JsonResponse
+from django.contrib.auth.decorators import login_required
+from .models import AvisoImportante, ConfirmacaoAviso, GREUser # Importe GREUser
 
 # =============================================================================
 #  VIEW DA DASHBOARD
@@ -622,19 +627,50 @@ def dashboard(request):
 # =============================================================================
 #  VIEW DA CONFIRMAÇÃO DE VISUALIZAÇÃO DE AVISO
 # =============================================================================
+# Em problemas/views.py
+
 @login_required
 def confirmar_visualizacao_aviso(request, aviso_id):
-    # Recupera o aviso com o ID fornecido
-    aviso = get_object_or_404(AvisoImportante, id=aviso_id)
+    # 1. Verifica se o método da requisição é POST
+    if request.method == 'POST':
+        # 2. **CONTROLE DE PERMISSÃO: Verifica se o usuário logado é do tipo "escola"**
+        # Pelo seu model, request.user.greuser.is_escola é a forma correta.
+        # Adicione um try-except para caso o greuser não exista, evitando erro 500.
+        try:
+            if not request.user.greuser.is_escola:
+                return JsonResponse({'status': 'error', 'message': 'Permissão negada. Apenas usuários do tipo escola podem marcar avisos como visualizados.'}, status=403)
+        except GREUser.DoesNotExist:
+            return JsonResponse({'status': 'error', 'message': 'Perfil de usuário não encontrado.'}, status=400)
+        except AttributeError: # Caso request.user.greuser não exista
+            return JsonResponse({'status': 'error', 'message': 'Perfil de usuário inválido ou não associado.'}, status=400)
 
-    # Cria ou atualiza a confirmação do aviso
-    confirmacao, created = ConfirmacaoAviso.objects.get_or_create(
-        aviso=aviso,
-        escola=request.user.greuser.escolas.first() 	# Associando a escola do usuário
-    )
 
-    # Caso ainda não tenha sido visualizado, muda o status
-    if confirmacao.status == 'pendente':
-        confirmacao.confirmar_visualizado()
+        # Recupera o aviso com o ID fornecido
+        aviso = get_object_or_404(AvisoImportante, id=aviso_id)
 
-    return redirect('listar_avisos') 	# Redireciona para a página de avisos ou a página desejada
+        # Assumindo que request.user.greuser.escolas.first() retorne a escola correta para o usuário logado
+        escola_do_usuario = request.user.greuser.escolas.first() 
+
+        if not escola_do_usuario:
+            return JsonResponse({'status': 'error', 'message': 'Escola do usuário não encontrada ou não associada. Não é possível marcar o aviso.'}, status=400)
+        
+        # Opcional: Você pode adicionar uma verificação extra aqui para garantir que o aviso pertence a essa escola
+        if aviso.escola != escola_do_usuario:
+            return JsonResponse({'status': 'error', 'message': 'Permissão negada. Este aviso não é para sua escola.'}, status=403)
+
+
+        # Tenta recuperar a confirmação existente ou cria uma nova
+        confirmacao, created = ConfirmacaoAviso.objects.get_or_create(
+            aviso=aviso,
+            escola=escola_do_usuario
+        )
+
+        # Caso ainda não tenha sido visualizado, muda o status
+        if confirmacao.status == 'pendente':
+            confirmacao.confirmar_visualizado()
+            return JsonResponse({'status': 'success', 'message': 'Aviso marcado como visualizado.'})
+        else:
+            return JsonResponse({'status': 'already_viewed', 'message': 'Aviso já havia sido visualizado.'})
+    
+    # Se a requisição não for POST, retorne um erro de método não permitido
+    return JsonResponse({'status': 'error', 'message': 'Método não permitido.'}, status=405)
