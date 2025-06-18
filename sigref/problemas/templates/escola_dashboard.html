@@ -658,20 +658,34 @@
 
                 <div id="avisos-container">
                     {% for aviso in avisos %}
-                    <div class="card mb-3 shadow-sm aviso-item aviso-item-modal rounded-3" data-prioridade="{{ aviso.prioridade }}" data-timestamp="{{ aviso.data_criacao.timestamp }}">
+                    <div class="card mb-3 shadow-sm aviso-item aviso-item-modal rounded-3" data-prioridade="{{ aviso.prioridade }}" data-timestamp="{{ aviso.data_criacao.timestamp }}" data-aviso-id="{{ aviso.id }}">
                         <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
                             <strong class="text-truncate text-dark">{{ aviso.titulo }}</strong>
-                            <div>
+                            <div class="d-flex align-items-center">
                                 {% if aviso.prioridade == 'alta' %}<span class="badge bg-danger">Alta</span>
                                 {% elif aviso.prioridade == 'normal' %}<span class="badge bg-warning text-dark">Normal</span>
                                 {% else %}<span class="badge bg-success">Baixa</span>
                                 {% endif %}
+                                {% comment %} Adiciona um indicador visual de "Visto" se o aviso já foi visualizado pela escola {% endcomment %}
+                                {% if aviso.confirmado_visualizado %}
+                                    <span class="badge bg-success ms-2" id="status-aviso-{{ aviso.id }}">Visto <i class="fas fa-check"></i></span>
+                                {% else %}
+                                    <span class="badge bg-secondary ms-2" id="status-aviso-{{ aviso.id }}">Pendente</span>
+                                {% endif %}
                             </div>
                         </div>
                         <div class="card-body py-3">
-                           <button class="btn btn-sm btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#collapseAviso{{ aviso.id }}" aria-expanded="false" aria-controls="collapseAviso{{ aviso.id }}">
+                           <button class="btn btn-sm btn-outline-primary visualizar-aviso-btn" type="button" data-bs-toggle="collapse" data-bs-target="#collapseAviso{{ aviso.id }}" aria-expanded="false" aria-controls="collapseAviso{{ aviso.id }}" data-aviso-id="{{ aviso.id }}">
                                <i class="fas fa-eye me-2"></i> Visualizar Mensagem
                            </button>
+                           
+                           {% comment %} Botão para marcar como visualizado, visível apenas se não foi visualizado {% endcomment %}
+                           {% if not aviso.confirmado_visualizado %}
+                               <button class="btn btn-sm btn-success ms-2 marcar-como-visualizado-btn" type="button" data-aviso-id="{{ aviso.id }}">
+                                   <i class="fas fa-check-circle me-2"></i> Marcar como Visualizado
+                               </button>
+                           {% endif %}
+
                            <div class="collapse mt-3" id="collapseAviso{{ aviso.id }}">
                                 {% if aviso.imagem %}
                                     <img src="{{ aviso.imagem.url }}" class="img-fluid rounded my-3" alt="Imagem do Aviso" style="max-height: 250px;">
@@ -785,6 +799,8 @@ document.addEventListener('DOMContentLoaded', function() {
             if (sortByRecent) {
                 filteredAvisos.sort((a, b) => b.dataset.timestamp - a.dataset.timestamp);
             } else {
+                // Se não está ordenando por recentes, mantenha a ordem original (ou redefina)
+                // Neste caso, se "Todos" está ativo e não "Mais Recentes", a ordem é a padrão do backend
                 filteredAvisos = allAvisos.filter(aviso => {
                     const prioridade = aviso.dataset.prioridade;
                     return activeFilter === 'todos' || prioridade === activeFilter;
@@ -825,11 +841,108 @@ document.addEventListener('DOMContentLoaded', function() {
         modalAvisos.addEventListener('shown.bs.modal', function () {
             const allButton = modalAvisos.querySelector('[data-filter="todos"]');
             if (allButton && !allButton.classList.contains('active')) {
-                 modalAvisos.querySelectorAll('.filter-btn-group .btn.active').forEach(b => b.classList.remove('active'));
+                   modalAvisos.querySelectorAll('.filter-btn-group .btn.active').forEach(b => b.classList.remove('active'));
                 allButton.classList.add('active');
             }
             applyFiltersAndSort();
         });
+
+        // Event listener para o clique no botão "Visualizar Mensagem" (automação)
+        avisosContainer.addEventListener('click', function(event) {
+            const visualizarBtn = event.target.closest('.visualizar-aviso-btn');
+            if (visualizarBtn) {
+                const avisoId = visualizarBtn.dataset.avisoId;
+                const collapseElement = document.getElementById(`collapseAviso${avisoId}`);
+                
+                // Verifica se o collapse está sendo aberto (e não fechado)
+                if (!collapseElement.classList.contains('show')) {
+                    // Chame a função para marcar, mesmo que seja por expansão
+                    marcarAvisoComoVisualizado(avisoId);
+                }
+            }
+        });
+
+        // NOVO: Event listener para o botão "Marcar como Visualizado" (ação explícita)
+        avisosContainer.addEventListener('click', function(event) {
+            const marcarBtn = event.target.closest('.marcar-como-visualizado-btn');
+            if (marcarBtn) {
+                const avisoId = marcarBtn.dataset.avisoId;
+                marcarAvisoComoVisualizado(avisoId);
+                // Remove o botão após o clique para evitar cliques duplicados e feedback visual
+                marcarBtn.remove(); 
+            }
+        });
+    }
+
+    // Função para marcar o aviso como visualizado via AJAX
+    function marcarAvisoComoVisualizado(avisoId) {
+        fetch(`{% url 'confirmar_visualizacao_aviso' 0 %}`.replace('0', avisoId), {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken'),
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({}) // Envia um corpo vazio, se necessário
+        })
+        .then(response => response.json()) // Espera uma resposta JSON
+        .then(data => {
+            if (data.status === 'success') {
+                // Atualiza o status visualmente no frontend
+                const statusBadge = document.getElementById(`status-aviso-${avisoId}`);
+                if (statusBadge) {
+                    statusBadge.textContent = 'Visto';
+                    statusBadge.classList.remove('bg-secondary');
+                    statusBadge.classList.add('bg-success');
+                    statusBadge.innerHTML += ' <i class="fas fa-check"></i>'; // Adiciona o ícone de check
+
+                    // Opcional: Remover o botão "Marcar como Visualizado" se ele existir
+                    const marcarBtn = document.querySelector(`.marcar-como-visualizado-btn[data-aviso-id="${avisoId}"]`);
+                    if (marcarBtn) {
+                        marcarBtn.remove();
+                    }
+                }
+            } else if (data.status === 'already_viewed') {
+                // console.log('Aviso já havia sido visualizado.');
+                // Se o aviso já foi visualizado, garante que o badge esteja correto e o botão oculto
+                const statusBadge = document.getElementById(`status-aviso-${avisoId}`);
+                if (statusBadge) {
+                    statusBadge.textContent = 'Visto';
+                    statusBadge.classList.remove('bg-secondary');
+                    statusBadge.classList.add('bg-success');
+                    if (!statusBadge.innerHTML.includes('<i class="fas fa-check"></i>')) {
+                        statusBadge.innerHTML += ' <i class="fas fa-check"></i>';
+                    }
+                }
+                const marcarBtn = document.querySelector(`.marcar-como-visualizado-btn[data-aviso-id="${avisoId}"]`);
+                if (marcarBtn) {
+                    marcarBtn.remove();
+                }
+            } else {
+                console.error('Erro ao marcar aviso como visualizado:', data.message);
+                alert('Ocorreu um erro ao tentar marcar o aviso como visualizado. Tente novamente.');
+            }
+        })
+        .catch(error => {
+            console.error('Erro na requisição AJAX para marcar aviso:', error);
+            alert('Ocorreu um erro de rede ao tentar marcar o aviso como visualizado.');
+        });
+    }
+
+    // Função auxiliar para obter o CSRF token
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                // Does this cookie string begin with the name we want?
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
     }
 });
 </script>

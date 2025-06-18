@@ -72,12 +72,6 @@ class ProblemaUsuario(models.Model):
         return f"{self.usuario.user.username} → {setor_nome}"
 
 # seu_app/models.py
-
-from django.db import models
-from django.utils import timezone
-# Supondo que seus outros modelos (Setor, Escola, GREUser) estão importados corretamente
-# from .models import Setor, Escola, GREUser 
-
 class AvisoImportante(models.Model):
     PRIORIDADES = [
         ('baixa', 'Baixa'),
@@ -100,13 +94,38 @@ class AvisoImportante(models.Model):
     data_expiracao = models.DateTimeField(null=True, blank=True)
     ativo = models.BooleanField(default=True)
     data_exclusao = models.DateTimeField(null=True, blank=True)
+    visualizado = models.BooleanField(default=False)  # Campo adicionado
 
     def __str__(self):
         return f"[{self.escola.nome}] {self.titulo}"
 
     def ainda_valido(self):
         return self.ativo and (self.data_expiracao is None or self.data_expiracao >= timezone.now())
+
     
+
+from django.db import models
+from .models import AvisoImportante, Escola  # Certifique-se de importar as models relacionadas
+
+class ConfirmacaoAviso(models.Model):
+    STATUS = [
+        ('pendente', 'Pendente'),
+        ('visualizado', 'Visualizado'),
+    ]
+    
+    aviso = models.ForeignKey(AvisoImportante, on_delete=models.CASCADE, related_name='confirmacoes')
+    escola = models.ForeignKey(Escola, on_delete=models.CASCADE, related_name='confirmacoes')
+    data_recebimento = models.DateTimeField(auto_now_add=True)
+    status = models.CharField(max_length=15, choices=STATUS, default='pendente')
+    
+    def __str__(self):
+        return f"Status de {self.escola.nome} para o aviso: {self.aviso.titulo} - {self.status}"
+    
+    def confirmar_visualizado(self):
+        """Método para confirmar que a escola visualizou o aviso"""
+        self.status = 'visualizado'
+        self.save()
+
 
 
 
