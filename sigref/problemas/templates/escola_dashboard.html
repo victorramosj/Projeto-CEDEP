@@ -643,23 +643,20 @@
             </div>
             <div class="modal-body bg-light p-4">
                 <div class="d-flex justify-content-center flex-wrap gap-2 mb-4 filter-btn-group">
-                    <button class="btn btn-outline-primary active" data-filter="todos">Todos</button>
-                    <button class="btn btn-outline-primary" data-sort="recentes">Mais Recentes</button>
-                    <div class="btn-group">
-                        <button type="button" class="btn btn-outline-primary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
-                            Prioridade
-                        </button>
-                        <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href="#" data-filter="alta">Alta</a></li>
-                            <li><a class="dropdown-item" href="#" data-filter="normal">Normal</a></li>
-                            <li><a class="dropdown-item" href="#" data-filter="baixa">Baixa</a></li>
-                        </ul>
-                    </div>
+                    {# Novos botões de filtro por Status #}
+                    <button class="btn btn-outline-primary active" data-filter-status="todos">Todos</button>
+                    <button class="btn btn-outline-primary" data-filter-status="pendente">Pendentes</button>
+                    <button class="btn btn-outline-primary" data-filter-status="visualizado">Visualizados</button>
+                    {# Removido: Filtro de Prioridade e Mais Recentes #}
                 </div>
 
                 <div id="avisos-container">
                     {% for aviso in avisos %}
-                    <div class="card mb-3 shadow-sm aviso-item aviso-item-modal rounded-3" data-prioridade="{{ aviso.prioridade }}" data-timestamp="{{ aviso.data_criacao.timestamp }}" data-aviso-id="{{ aviso.id }}">
+                    <div class="card mb-3 shadow-sm aviso-item aviso-item-modal rounded-3" 
+                         data-prioridade="{{ aviso.prioridade }}" 
+                         data-timestamp="{{ aviso.data_criacao.timestamp }}" 
+                         data-aviso-id="{{ aviso.id }}"
+                         data-status="{{ aviso.confirmado_visualizado|yesno:'visualizado,pendente' }}"> {# Adicionado data-status #}
                         <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
                             <strong class="text-truncate text-dark">{{ aviso.titulo }}</strong>
                             <div class="d-flex align-items-center">
@@ -763,7 +760,6 @@
         </div>
     </div>
 </div>
-{# A tag `{% endblock %}` final para o `{% block content %}` estava faltando aqui. #}
 {% endblock %} 
 
 {% block extra_script %}
@@ -781,34 +777,28 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // ---- Script para o modal de Avisos (filtros e ordenação) ----
+    // ---- Script para o modal de Avisos (filtros por Status e ordenação por data) ----
     const modalAvisos = document.getElementById('modalAvisos');
     if (modalAvisos) {
-        const filterButtons = modalAvisos.querySelectorAll('.filter-btn-group .btn, .filter-btn-group .dropdown-item');
+        const filterStatusButtons = modalAvisos.querySelectorAll('.filter-btn-group .btn'); // Seleciona apenas os botões de filtro
         const avisosContainer = modalAvisos.querySelector('#avisos-container');
-        let allAvisos = Array.from(avisosContainer.querySelectorAll('.aviso-item'));
+        // allAvisos é a lista inicial de todos os avisos, em sua ordem original do backend.
+        // Usamos ele para refiltrar, garantindo que não perdemos nenhum aviso.
+        const originalAllAvisos = Array.from(avisosContainer.querySelectorAll('.aviso-item'));
 
         function applyFiltersAndSort() {
-            allAvisos = Array.from(avisosContainer.querySelectorAll('.aviso-item'));
+            // A prioridade agora é filtrar por status. Manter a ordenação por data_criacao para consistência.
+            const activeStatusFilter = modalAvisos.querySelector('.filter-btn-group .btn.active')?.dataset.filterStatus || 'todos';
 
-            const activeFilter = modalAvisos.querySelector('.filter-btn-group .btn.active')?.dataset.filter || 'todos';
-            const sortByRecent = modalAvisos.querySelector('[data-sort="recentes"]')?.classList.contains('active');
-
-            let filteredAvisos = allAvisos.filter(aviso => {
-                const prioridade = aviso.dataset.prioridade;
-                return activeFilter === 'todos' || prioridade === activeFilter;
+            let filteredAvisos = originalAllAvisos.filter(aviso => {
+                const status = aviso.dataset.status; // 'visualizado' ou 'pendente'
+                return activeStatusFilter === 'todos' || status === activeStatusFilter;
             });
 
-            if (sortByRecent) {
-                filteredAvisos.sort((a, b) => b.dataset.timestamp - a.dataset.timestamp);
-            } else {
-                filteredAvisos = Array.from(avisosContainer.querySelectorAll('.aviso-item')).filter(aviso => {
-                    const prioridade = aviso.dataset.prioridade;
-                    return activeFilter === 'todos' || prioridade === activeFilter;
-                });
-            }
+            // Sempre ordenar por data de criação (mais recentes primeiro)
+            filteredAvisos.sort((a, b) => b.dataset.timestamp - a.dataset.timestamp);
             
-            avisosContainer.innerHTML = '';
+            avisosContainer.innerHTML = ''; // Limpa o container
             if (filteredAvisos.length > 0) {
                 filteredAvisos.forEach(aviso => avisosContainer.appendChild(aviso));
             } else {
@@ -821,28 +811,26 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
 
-        filterButtons.forEach(button => {
+        filterStatusButtons.forEach(button => {
             button.addEventListener('click', function(e) {
                 e.preventDefault();
 
+                // Remove a classe 'active' de todos os botões de filtro de status
                 modalAvisos.querySelectorAll('.filter-btn-group .btn.active').forEach(b => b.classList.remove('active'));
-                modalAvisos.querySelectorAll('.filter-btn-group .dropdown-item.active').forEach(b => b.classList.remove('active'));
 
-                if (this.classList.contains('dropdown-item')) {
-                    this.classList.add('active');
-                    this.closest('.btn-group').querySelector('.btn').classList.add('active'); 
-                } else {
-                    this.classList.add('active');
-                }
+                // Adiciona a classe 'active' ao botão clicado
+                this.classList.add('active');
                 
-                applyFiltersAndSort();
+                applyFiltersAndSort(); // Aplica os filtros e ordena novamente
             });
         });
         
+        // Garante que os filtros sejam aplicados quando o modal é aberto
         modalAvisos.addEventListener('shown.bs.modal', function () {
-            const allButton = modalAvisos.querySelector('[data-filter="todos"]');
+            // Garante que o filtro 'Todos' esteja ativo por padrão ao abrir o modal
+            const allButton = modalAvisos.querySelector('[data-filter-status="todos"]');
             if (allButton && !allButton.classList.contains('active')) {
-                   modalAvisos.querySelectorAll('.filter-btn-group .btn.active').forEach(b => b.classList.remove('active'));
+                modalAvisos.querySelectorAll('.filter-btn-group .btn.active').forEach(b => b.classList.remove('active'));
                 allButton.classList.add('active');
             }
             applyFiltersAndSort();
@@ -856,6 +844,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 const collapseElement = document.getElementById(`collapseAviso${avisoId}`);
                 
                 // Verifica se o collapse está sendo aberto (e não fechado)
+                // Usamos 'bs.collapse' para o evento real de colapso para maior precisão
+                // Mas um clique no botão de visualizar já é um bom gatilho inicial
                 if (!collapseElement.classList.contains('show')) {
                     marcarAvisoComoVisualizado(avisoId);
                 }
@@ -867,14 +857,15 @@ document.addEventListener('DOMContentLoaded', function() {
             const marcarBtn = event.target.closest('.marcar-como-visualizado-btn');
             if (marcarBtn) {
                 const avisoId = marcarBtn.dataset.avisoId;
+                console.log(`[Depuração]: Botão 'Marcar como Visualizado' clicado. Chamando marcarAvisoComoVisualizado para Aviso ID: ${avisoId}`);
                 marcarAvisoComoVisualizado(avisoId);
-                // A remoção do botão e atualização do badge é feita dentro de marcarAvisoComoVisualizado
             }
         });
     }
 
     // Função para marcar o aviso como visualizado via AJAX
     function marcarAvisoComoVisualizado(avisoId) {
+        console.log(`[Depuração]: Função marcarAvisoComoVisualizado iniciada para Aviso ID: ${avisoId}`);
         fetch(`{% url 'confirmar_visualizacao_aviso' 0 %}`.replace('0', avisoId), {
             method: 'POST',
             headers: {
@@ -883,11 +874,25 @@ document.addEventListener('DOMContentLoaded', function() {
             },
             body: JSON.stringify({})
         })
-        .then(response => response.json())
+        .then(response => {
+            console.log(`[Depuração]: Resposta da requisição recebida para Aviso ID ${avisoId}. Status: ${response.status}`);
+            if (!response.ok) { // Trata respostas HTTP que não são 2xx
+                // Tenta ler o corpo da resposta para mais detalhes do erro
+                return response.json().catch(() => {
+                    throw new Error(`Erro HTTP: ${response.status} ${response.statusText}`);
+                }).then(errorData => {
+                    throw new Error(`Erro HTTP: ${response.status} - ${errorData.message || response.statusText}`);
+                });
+            }
+            return response.json();
+        })
         .then(data => {
+            console.log(`[Depuração]: Dados JSON da resposta para Aviso ID ${avisoId}:`, data);
             if (data.status === 'success' || data.status === 'already_viewed') {
-                // Atualiza o status visualmente no frontend
                 const statusBadge = document.getElementById(`status-aviso-${avisoId}`);
+                console.log(`[Depuração]: Buscando badge de status com ID: status-aviso-${avisoId}. Encontrado:`, statusBadge);
+
+                // ATUALIZAÇÃO DO BADGE
                 if (statusBadge) {
                     statusBadge.textContent = 'Visto';
                     statusBadge.classList.remove('bg-secondary');
@@ -895,22 +900,35 @@ document.addEventListener('DOMContentLoaded', function() {
                     if (!statusBadge.innerHTML.includes('<i class="fas fa-check"></i>')) { // Evita duplicar o ícone
                         statusBadge.innerHTML += ' <i class="fas fa-check"></i>';
                     }
+                    console.log(`[Depuração]: Badge de status para Aviso ID ${avisoId} atualizado.`);
                 }
                 
-                // Remove o botão "Marcar como Visualizado"
+                // ATUALIZAÇÃO DO BOTÃO E DO DATA-STATUS DO CARD
                 const marcarBtn = document.querySelector(`.marcar-como-visualizado-btn[data-aviso-id="${avisoId}"]`);
+                console.log(`[Depuração]: Buscando botão 'Marcar como Visualizado' para Aviso ID ${avisoId}. Encontrado:`, marcarBtn);
                 if (marcarBtn) {
-                    marcarBtn.remove();
+                    marcarBtn.remove(); // Remove o botão explicitamente
+                    console.log(`[Depuração]: Botão 'Marcar como Visualizado' para Aviso ID ${avisoId} removido.`);
                 }
 
+                // Importante: Atualiza o data-status do card para que o filtro funcione corretamente
+                const avisoCard = document.querySelector(`.aviso-item[data-aviso-id="${avisoId}"]`);
+                if(avisoCard) {
+                    avisoCard.dataset.status = 'visualizado';
+                    console.log(`[Depuração]: data-status do card para Aviso ID ${avisoId} atualizado para 'visualizado'.`);
+                }
+
+                // Opcional: Reaplicar filtros para que o aviso seja movido se o filtro de status estiver ativo
+                applyFiltersAndSort();
+
             } else {
-                console.error('Erro ao marcar aviso como visualizado:', data.message);
-                alert('Ocorreu um erro ao tentar marcar o aviso como visualizado. Tente novamente.');
+                console.error(`[Depuração]: Erro na lógica do servidor para Aviso ID ${avisoId}:`, data.message);
+                alert(`Ocorreu um erro ao tentar marcar o aviso como visualizado: ${data.message || 'Erro desconhecido'}. Tente novamente.`);
             }
         })
         .catch(error => {
-            console.error('Erro na requisição AJAX para marcar aviso:', error);
-            alert('Ocorreu um erro de rede ao tentar marcar o aviso como visualizado.');
+            console.error(`[Depuração]: Erro na requisição AJAX para Aviso ID ${avisoId}:`, error);
+            alert(`Ocorreu um erro de rede ou processamento ao tentar marcar o aviso como visualizado. Por favor, verifique sua conexão ou tente novamente. Detalhes: ${error.message}`);
         });
     }
 
