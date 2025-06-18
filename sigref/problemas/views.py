@@ -636,5 +636,4 @@ def confirmar_visualizacao_aviso(request, aviso_id):
     # Caso ainda não tenha sido visualizado, muda o status
     if confirmacao.status == 'pendente':
         confirmacao.confirmar_visualizado()
-
     return redirect('listar_avisos') 	# Redireciona para a página de avisos ou a página desejada
