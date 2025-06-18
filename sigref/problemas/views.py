@@ -1,33 +1,27 @@
+
+# -----------------------------------------------------------------------------
+# Imports do Python e Django
+# -----------------------------------------------------------------------------
 from rest_framework import viewsets, permissions
 from .models import Lacuna, ProblemaUsuario, AvisoImportante
 from .serializers import LacunaSerializer, ProblemaUsuarioSerializer
 from .forms import ProblemaUsuarioForm, LacunaForm, AvisoForm # importe seu formulário
-
-
 from django.shortcuts import render, redirect, get_object_or_404
 from django.utils import timezone
 from django.db.models import Q
 from django.http import HttpResponseRedirect
 from django.http import HttpResponse
 from django.utils import timezone
-
-
 from django.views.generic import TemplateView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.decorators import login_required
-
-
 from django.core.paginator import Paginator
-
-
 from monitoramento.models import GREUser, Escola, Setor
 
-#PRECISAMOSSS AJEITAR  ESSA VIEWS
 
-
-
-
-# View da DASHBOARD
+# =============================================================================
+#  VIEW DA DASHBOARD
+# =============================================================================
 class EscolaDashboardView(LoginRequiredMixin, TemplateView):
     template_name = 'escola_dashboard.html'
 
@@ -36,16 +30,13 @@ class EscolaDashboardView(LoginRequiredMixin, TemplateView):
         context = super().get_context_data(**kwargs)
         gre_user = self.request.user.greuser
 
-
         # Inicializar a variável escola
         escola = None
-
 
         # Se o usuário for do tipo 'escola', redireciona para sua própria escola
         if gre_user.is_escola():
             escola = gre_user.escolas.first()
             context['escola'] = escola
-
 
         # Caso contrário, tenta buscar a escola pelo ID passado na URL
         else:
@@ -71,11 +62,9 @@ class EscolaDashboardView(LoginRequiredMixin, TemplateView):
            
             agora = timezone.now()
 
-
             # Estatísticas de lacunas
             todas_lacunas = Lacuna.objects.all()
             lacunas_total = todas_lacunas.count()
-
 
             total_lacunas = Lacuna.objects.filter(escola=escola).count() # Contagem de lacunas para a escola
             lacunas_resolvidas = Lacuna.objects.filter(escola= escola, status='R').count()
@@ -94,7 +83,6 @@ class EscolaDashboardView(LoginRequiredMixin, TemplateView):
             problemas_pendentes = problemas.filter(status='P').count()
             problemas_andamento = problemas.filter(status='E').count()
 
-
             # Contexto enviado ao template
             context.update({
                 'gre_user': gre_user,
@@ -106,14 +94,12 @@ class EscolaDashboardView(LoginRequiredMixin, TemplateView):
                 'todas_lacunas': todas_lacunas,
                 'lacunas_total': lacunas_total,  # Total de lacunas geral
 
-
                 #CONTEXTO DE LACUNAS ESPECIFICO POR ESCOLA
                 'total_lacunas': total_lacunas, # Total de lacuna especifico por escola
                 'lacunas_resolvidas': lacunas_resolvidas,
                 'lacunas_pendentes': lacunas_pendentes,
                 'lacunas_andamento': lacunas_andamento,
                 'lacunas_este_mes': lacunas_este_mes,
-
 
                 #CONTEXTO DE PROBLEMAS ESPECIFICO POR ESCOLA
                 'total_problemas': total_problemas,
@@ -132,7 +118,9 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 
-
+# =============================================================================
+#  VIEW DO UPDATE STATUS
+# =============================================================================
 class UpdateStatusLacuna(APIView):
     def post(self, request, lacuna_id):
         lacuna = get_object_or_404(Lacuna, id=lacuna_id)
@@ -147,7 +135,9 @@ class UpdateStatusLacuna(APIView):
             return Response({"detail": "Status inválido"}, status=status.HTTP_400_BAD_REQUEST)
        
 
-
+# =============================================================================
+#  VIEW DO UPDATE STATUS PROBLEMA
+# =============================================================================
 class UpdateStatusProblema(APIView):
     def post(self, request, problema_id):
         problema = get_object_or_404(ProblemaUsuario, id=problema_id)
@@ -162,18 +152,22 @@ class UpdateStatusProblema(APIView):
             return Response({"detail": "Status inválido"}, status=status.HTTP_400_BAD_REQUEST)
        
 
-
 # views.py
 from rest_framework import viewsets
 from .models import Lacuna, ProblemaUsuario, AvisoImportante
 from .serializers import LacunaSerializer, ProblemaUsuarioSerializer, AvisoImportanteSerializer
 
-
+# =============================================================================
+#  VIEW DA LACUNA
+# =============================================================================
 class LacunaViewSet(viewsets.ModelViewSet):
     queryset = Lacuna.objects.all()
     serializer_class = LacunaSerializer
 
 
+# =============================================================================
+#  VIEW DO PROBLEMA USUARIO
+# =============================================================================
 class ProblemaUsuarioViewSet(viewsets.ModelViewSet):
     queryset = ProblemaUsuario.objects.all()
     serializer_class = ProblemaUsuarioSerializer
@@ -181,6 +175,9 @@ class ProblemaUsuarioViewSet(viewsets.ModelViewSet):
     def get_serializer_context(self):
         return {'request': self.request}
 
+# =============================================================================
+#  VIEW DO AVISO IMPORTANTE
+# =============================================================================
 
 class AvisoImportanteViewSet(viewsets.ModelViewSet):
     queryset = AvisoImportante.objects.all()
