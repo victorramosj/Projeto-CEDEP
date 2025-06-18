@@ -216,12 +216,15 @@ document.addEventListener('DOMContentLoaded', () => {
     // ==================================================================
 
     const selectAllCheckbox = document.getElementById('selectAllCheckboxes');
-    const lacunaCheckboxes = document.querySelectorAll('input[name="selected_lacunas"]');
+    let lacunaCheckboxes = document.querySelectorAll('input[name="selected_lacunas"]');
     const botaoApagar = document.querySelector('.btnAcao');
     const lacunasCount = document.getElementById('lacunas-count');
 
     // Função para atualizar o estado do botão de apagar
     function atualizarBotaoApagar() {
+        // Verifica se o botão de apagar existe
+        lacunaCheckboxes = document.querySelectorAll('input[name="selected_lacunas"]'); 
+
         const anyCheckboxSelected = Array.from(lacunaCheckboxes).some(checkbox => checkbox.checked);
         botaoApagar.disabled = !anyCheckboxSelected;
     }

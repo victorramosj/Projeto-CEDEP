@@ -16,7 +16,7 @@ from .views import (
     tela_lacuna_view,
     tela_problema_view,
     deletar_lacunas_api,
-    confirmar_visualizacao_aviso,  # Importação da função
+    confirmar_visualizacao_aviso,
 )
 
 # Criando o roteador para as views baseadas em viewsets

@@ -730,6 +730,8 @@ class RelatorioDiarioView(View):
         return render(request, 'monitoramentos/relatorio.html', context)
 from .models import Escola, Questionario, Monitoramento, Resposta, Setor
 
+
+# Relatório de monitoramentos/ ADICIONAR PROBLEMAS E LACUNAS 
 class RelatorioMonitoramentosView(View):
     def get(self, request):
         escola_id = request.GET.get('escola_id')

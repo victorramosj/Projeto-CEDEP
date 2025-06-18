@@ -201,6 +201,7 @@ class ProblemaUsuarioViewSet(viewsets.ModelViewSet):
 # =============================================================================
 #  VIEW DE AVISO IMPORTANTE
 # =============================================================================
+
 class AvisoImportanteViewSet(viewsets.ModelViewSet):
     queryset = AvisoImportante.objects.all()
     serializer_class = AvisoImportanteSerializer
