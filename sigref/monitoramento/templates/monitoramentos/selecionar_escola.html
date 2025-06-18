@@ -78,7 +78,7 @@
         <p class="text-muted">Nenhuma escola encontrada.</p>
     </div>
     {% endfor %}
-    <!-- Modal ÚNICO (fora do loop) -->
+        <!-- Modal ÚNICO (fora do loop) -->
     <div class="modal fade" id="relatorioMonitoramentosModal" tabindex="-1"
         aria-labelledby="relatorioMonitoramentosModalLabel" aria-hidden="true">
         <div class="modal-dialog">
@@ -94,6 +94,15 @@
                         <!-- Campo oculto para armazenar o ID -->
                         <input type="hidden" name="escola_id" id="modal-escola-id" value="">
                         <div class="mb-3">
+                            <label for="setor_id" class="form-label">Setor</label>
+                            <select id="setor_id" name="setor_id" class="form-select">
+                                <option value="">Todos</option>
+                                {% for setor in setores %}
+                                    <option value="{{ setor.id }}">{{ setor.nome }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="mb-3">
                             <label for="quantidade" class="form-label">Quantidade de Monitoramentos</label>
                             <input type="number" class="form-control" id="quantidade" name="quantidade" min="1"
                                 max="100" value="10" required>
@@ -108,18 +117,18 @@
             </form>
         </div>
     </div>
-
+    
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             var relatorioModal = document.getElementById('relatorioMonitoramentosModal');
-
+    
             relatorioModal.addEventListener('show.bs.modal', function (event) {
                 // Botão que acionou o modal
                 var button = event.relatedTarget;
-
+    
                 // Extrair ID do atributo data-escola-id
                 var escolaId = button.getAttribute('data-escola-id');
-
+    
                 // Atualizar campo oculto no formulário
                 document.getElementById('modal-escola-id').value = escolaId;
             });
