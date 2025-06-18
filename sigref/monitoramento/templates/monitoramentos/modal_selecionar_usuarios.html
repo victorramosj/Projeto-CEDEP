@@ -1,22 +1,30 @@
-
-<!-- Modal Selecionar Usuário e Quantidade -->
+<!-- Modal Selecionar Usuário, Setor e Quantidade -->
 <div class="modal fade" id="relatorioMonitoramentosModal" tabindex="-1" aria-labelledby="relatorioMonitoramentosModalLabel" aria-hidden="true">
   <div class="modal-dialog">
     <form method="get" action="{% url 'relatorio_monitoramentos' %}">
       <div class="modal-content">
         <div class="modal-header">
           <h5 class="modal-title" id="relatorioMonitoramentosModalLabel">
-            Gerar Relatório por Usuário
+            Gerar Relatório de Monitoramentos
           </h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
         </div>
         <div class="modal-body">
           <div class="mb-3">
             <label for="user_id" class="form-label">Usuário (nome completo)</label>
-            <select id="user_id" name="user_id" class="form-select" style="width:100%;" required>
-              <option value="">Selecione um usuário</option>
+            <select id="user_id" name="user_id" class="form-select" style="width:100%;">
+              <option value="">Todos</option>
               {% for greuser in greusers %}
                 <option value="{{ greuser.id }}">{{ greuser.nome_completo }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="mb-3">
+            <label for="setor_id" class="form-label">Setor</label>
+            <select id="setor_id" name="setor_id" class="form-select">
+              <option value="">Todos</option>
+              {% for setor in setores %}
+                <option value="{{ setor.id }}">{{ setor.nome }}</option>
               {% endfor %}
             </select>
           </div>
