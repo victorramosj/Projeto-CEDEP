@@ -80,23 +80,37 @@
     <!-- Cabeçalho com Botões -->
     <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-2">
         <h2 class="mb-0">Dashboard de Monitoramentos</h2>
-        <div class="d-flex gap-2">
-            <a href="{% url 'selecionar_escola' %}" 
-               class="btn btn-success btn-sm">
-                <i class="fas fa-plus me-2"></i>Novo Monitoramento
-            </a>
-            <div class="dropdown">
-                <button class="btn btn-light btn-sm dropdown-toggle" type="button" id="actionsDropdown" 
-                        data-bs-toggle="dropdown" aria-expanded="false">
-                    <i class="fas fa-cog me-1"></i> Ações
-                </button>
-                <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="actionsDropdown">
-                    <li><a class="dropdown-item" href="{% url 'fluxo_monitoramento_setores' %}">Fluxo de Monitoramentos</a></li>
-                    <li><a class="dropdown-item" href="{% url 'gerenciar_questionarios' %}">Gerenciar Questionários</a></li>
-                    <li><a class="dropdown-item" href="{% url 'relatos_problemas' %}">Relatos de Problemas</a></li>
-                </ul>
-            </div>
-        </div>
+        <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
+    <!-- Botão: Novo Monitoramento -->
+    <a href="{% url 'selecionar_escola' %}" class="btn btn-success btn-sm d-flex align-items-center">
+        <i class="fas fa-plus me-2"></i> Novo Monitoramento
+    </a>
+
+    <!-- Botão: Gerar relatório por usuário -->
+    <button class="btn btn-outline-primary btn-sm d-flex align-items-center" 
+            data-bs-toggle="modal" data-bs-target="#relatorioMonitoramentosModal">
+        <i class="fas fa-file-alt me-2"></i> Gerar relatório por usuário
+    </button>
+    
+    {% include "monitoramentos/modal_selecionar_usuarios.html" %}
+
+    <!-- Dropdown: Ações -->
+    <div class="dropdown">
+        <button class="btn btn-light btn-sm dropdown-toggle d-flex align-items-center" 
+                type="button" id="actionsDropdown" 
+                data-bs-toggle="dropdown" aria-expanded="false">
+            <i class="fas fa-cog me-2"></i> Ações
+        </button>
+        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="actionsDropdown">
+            <li><a class="dropdown-item" href="{% url 'fluxo_monitoramento_setores' %}">Fluxo de Monitoramentos</a></li>
+            <li><a class="dropdown-item" href="{% url 'gerenciar_questionarios' %}">Gerenciar Questionários</a></li>
+            <li><a class="dropdown-item" href="{% url 'tela_lacunas' %}">Lacunas</a></li>
+            <li><a class="dropdown-item" href="{% url 'tela_problemas' %}">Problemas</a></li>
+            <li><a class="dropdown-item" href="{% url 'listar_avisos' %}">Avisos</a></li>
+        </ul>
+    </div>
+</div>
+
     </div>
 
     <!-- Cards de Resumo -->
