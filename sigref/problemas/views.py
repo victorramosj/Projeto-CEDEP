@@ -118,9 +118,13 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 
-# =============================================================================
-#  VIEW DO UPDATE STATUS
-# =============================================================================
+import json
+from django.http import JsonResponse
+from django.views.decorators.http import require_POST
+
+# APIs-------------------------------------------------------------------------------------------
+
+#Tela Lacuna
 class UpdateStatusLacuna(APIView):
     def post(self, request, lacuna_id):
         lacuna = get_object_or_404(Lacuna, id=lacuna_id)
@@ -138,6 +142,30 @@ class UpdateStatusLacuna(APIView):
 # =============================================================================
 #  VIEW DO UPDATE STATUS PROBLEMA
 # =============================================================================
+# API para deletar lacunas
+@require_POST
+def deletar_lacunas_api(request):
+    try:
+        data = json.loads(request.body)
+        lacuna_ids = data.get('ids', []) # <-- AQUI! Ela espera 'ids'
+        
+        if not lacuna_ids:
+            return JsonResponse({'error': 'Nenhum ID de lacuna fornecido.'}, status=400)
+
+        # Apagar as lacunas
+        deleted_count, _ = Lacuna.objects.filter(id__in=lacuna_ids).delete()
+
+        return JsonResponse({
+            'message': f'{deleted_count} lacuna(s) apagada(s) com sucesso.',
+            'deleted_ids': lacuna_ids
+        }, status=200)
+
+    except json.JSONDecodeError:
+        return JsonResponse({'error': 'Requisição JSON inválida.'}, status=400)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+# Tela Problema
 class UpdateStatusProblema(APIView):
     def post(self, request, problema_id):
         problema = get_object_or_404(ProblemaUsuario, id=problema_id)
