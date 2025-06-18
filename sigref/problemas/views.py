@@ -770,6 +770,9 @@ def dashboard(request):
 from django.shortcuts import get_object_or_404, redirect
 from .models import AvisoImportante
 
+# =============================================================================
+#  VIEW DA CONFIRMAÇÃO DE VISUALIZAÇÃO DE AVISO
+# =============================================================================
 @login_required
 def confirmar_visualizacao_aviso(request, aviso_id):
     # Recupera o aviso com o ID fornecido
