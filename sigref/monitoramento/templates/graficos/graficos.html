@@ -1,0 +1,527 @@
+{% extends 'cedepe/base.html' %}
+{% load static %}
+
+{% block extra_style %}
+{{ block.super }}
+<style>
+    .graficos-container {
+        max-width: 1000px;
+        margin: 40px auto;
+        background: #fff;
+        border-radius: 16px;
+        box-shadow: 0 8px 30px rgba(0,0,0,0.08);
+        padding: 32px;
+    }
+    
+    .header-container {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 24px;
+        margin-bottom: 32px;
+        padding-bottom: 24px;
+        border-bottom: 1px solid #f0f0f0;
+    }
+    
+    .questionario-title {
+        margin: 0;
+        font-size: 1.8rem;
+        font-weight: 700;
+        color: #2c3e50;
+        flex-grow: 1;
+        min-width: 300px;
+    }
+    
+    .controls-container {
+        display: flex;
+        gap: 16px;
+        flex-wrap: wrap;
+    }
+    
+    .btn-control {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 16px;
+        border-radius: 8px;
+        font-weight: 500;
+        transition: all 0.2s ease;
+        border: none;
+        cursor: pointer;
+    }
+    
+    .btn-back {
+        background: #f8f9fa;
+        color: #495057;
+    }
+    
+    .btn-back:hover {
+        background: #e9ecef;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+    }
+    
+    .btn-export {
+        background: #e3f2fd;
+        color: #0d6efd;
+    }
+    
+    .btn-export:hover {
+        background: #d0e2ff;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(13, 110, 253, 0.1);
+    }
+    
+    .filters-container {
+        display: flex;
+        gap: 16px;
+        margin-bottom: 28px;
+        flex-wrap: wrap;
+    }
+    
+    .filter-card {
+        flex: 1;
+        min-width: 200px;
+        background: #f8f9fa;
+        border-radius: 10px;
+        padding: 16px;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.03);
+    }
+    
+    .filter-label {
+        display: block;
+        font-size: 0.9rem;
+        color: #6c757d;
+        margin-bottom: 8px;
+        font-weight: 500;
+    }
+    
+    .filter-select {
+        width: 100%;
+        padding: 10px 12px;
+        border-radius: 8px;
+        border: 1px solid #dee2e6;
+        background: #fff;
+        font-size: 0.95rem;
+        transition: all 0.2s ease;
+    }
+    
+    .filter-select:focus {
+        border-color: #86b7fe;
+        box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+        outline: none;
+    }
+    
+    .grafico-card {
+        background: #fff;
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        margin-bottom: 32px;
+        border: 1px solid #f0f0f0;
+        overflow: hidden;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    
+    .grafico-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+    }
+    
+    .grafico-header {
+        padding: 20px 24px;
+        background: #f8f9fa;
+        border-bottom: 1px solid #f0f0f0;
+    }
+    
+    .pergunta-title {
+        margin: 0;
+        font-size: 1.2rem;
+        font-weight: 600;
+        color: #212529;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+    
+    .tipo-indicator {
+        display: inline-block;
+        padding: 4px 10px;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        background: #e9ecef;
+    }
+    
+    .tipo-SN { background: #d4edda; color: #155724; }
+    .tipo-NU { background: #cce5ff; color: #004085; }
+    .tipo-TX { background: #fff3cd; color: #856404; }
+    
+    .pergunta-desc {
+        margin: 12px 0 0;
+        color: #495057;
+        font-size: 1rem;
+        line-height: 1.5;
+    }
+    
+    .grafico-content {
+        padding: 24px;
+    }
+    
+    .no-data-container {
+        text-align: center;
+        padding: 40px 20px;
+    }
+    
+    .no-data-icon {
+        font-size: 3.5rem;
+        color: #dee2e6;
+        margin-bottom: 16px;
+    }
+    
+    .no-data-title {
+        font-size: 1.4rem;
+        color: #6c757d;
+        margin-bottom: 12px;
+    }
+    
+    .no-data-text {
+        color: #adb5bd;
+        max-width: 500px;
+        margin: 0 auto;
+        line-height: 1.6;
+    }
+    
+    .text-responses-container {
+        background: #f8f9fa;
+        border-radius: 8px;
+        padding: 20px;
+        max-height: 300px;
+        overflow-y: auto;
+    }
+    
+    .text-response {
+        padding: 12px;
+        background: #fff;
+        border-radius: 8px;
+        margin-bottom: 12px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+        border-left: 4px solid #0d6efd;
+    }
+    
+    .text-response:last-child {
+        margin-bottom: 0;
+    }
+    
+    .stats-container {
+        display: flex;
+        gap: 16px;
+        margin-top: 20px;
+        flex-wrap: wrap;
+    }
+    
+    .stat-card {
+        flex: 1;
+        min-width: 150px;
+        background: #f8f9fa;
+        border-radius: 8px;
+        padding: 16px;
+        text-align: center;
+    }
+    
+    .stat-value {
+        font-size: 1.8rem;
+        font-weight: 700;
+        color: #2c3e50;
+        margin-bottom: 8px;
+    }
+    
+    .stat-label {
+        font-size: 0.9rem;
+        color: #6c757d;
+    }
+    
+    @media (max-width: 768px) {
+        .graficos-container {
+            padding: 24px 16px;
+            margin: 20px auto;
+        }
+        
+        .header-container {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+        
+        .controls-container {
+            width: 100%;
+        }
+        
+        .btn-control {
+            flex: 1;
+            justify-content: center;
+        }
+        
+        .filters-container {
+            flex-direction: column;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="graficos-container">
+    <div class="header-container">
+        <h1 class="questionario-title">{{ questionario.titulo }} - Análise de Respostas</h1>
+        <div class="controls-container">
+            <button class="btn-control btn-back" onclick="history.back()">
+                <i class="bi bi-arrow-left"></i>
+                Voltar
+            </button>
+            <button class="btn-control btn-export" id="exportBtn">
+                <i class="bi bi-download"></i>
+                Exportar Dados
+            </button>
+        </div>
+    </div>
+    
+    <div class="filters-container">
+        <div class="filter-card">
+            <label class="filter-label">Filtrar por Escola</label>
+            <select class="filter-select" id="escolaFilter">
+                <option value="all">Todas as Escolas</option>
+                <!-- Escolas seriam carregadas dinamicamente -->
+                <option value="escola1">Escola A</option>
+                <option value="escola2">Escola B</option>
+            </select>
+        </div>
+        
+        <div class="filter-card">
+            <label class="filter-label">Período</label>
+            <select class="filter-select" id="periodoFilter">
+                <option value="all">Todo o Período</option>
+                <option value="7">Últimos 7 dias</option>
+                <option value="30">Últimos 30 dias</option>
+                <option value="90">Últimos 90 dias</option>
+            </select>
+        </div>
+        
+        <div class="filter-card">
+            <label class="filter-label">Ordenar por</label>
+            <select class="filter-select" id="ordenarFilter">
+                <option value="recentes">Mais Recentes</option>
+                <option value="antigos">Mais Antigos</option>
+                <option value="alfabetico">Ordem Alfabética</option>
+            </select>
+        </div>
+    </div>
+    
+    <div id="graficos-content">
+        {% if dados_graficos|length > 0 %}
+            {% for item in dados_graficos %}
+            <div class="grafico-card">
+                <div class="grafico-header">
+                    <h2 class="pergunta-title">
+                        <span class="tipo-indicator tipo-{{ item.tipo }}">{{ item.tipo }}</span>
+                        {{ item.pergunta }}
+                    </h2>
+                    {% if item.descricao %}
+                    <p class="pergunta-desc">{{ item.descricao }}</p>
+                    {% endif %}
+                </div>
+                
+                <div class="grafico-content">
+                    {% if item.tipo == 'SN' %}
+                        <canvas id="grafico-{{ forloop.counter0 }}" height="220"></canvas>
+                        
+                        <div class="stats-container">
+                            <div class="stat-card">
+                                <div class="stat-value">{{ item.dados.values.0|floatformat:"0" }}%</div>
+                                <div class="stat-label">Respostas Sim</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-value">{{ item.dados.values.1|floatformat:"0" }}%</div>
+                                <div class="stat-label">Respostas Não</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-value">{{ item.dados.total_respostas }}</div>
+                                <div class="stat-label">Total de Respostas</div>
+                            </div>
+                        </div>
+                    
+                    {% elif item.tipo == 'NU' %}
+                        <canvas id="grafico-{{ forloop.counter0 }}" height="260"></canvas>
+                        
+                        <div class="stats-container">
+                            <div class="stat-card">
+                                <div class="stat-value">{{ item.dados.media|floatformat:"1" }}</div>
+                                <div class="stat-label">Média</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-value">{{ item.dados.mediana|floatformat:"1" }}</div>
+                                <div class="stat-label">Mediana</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-value">{{ item.dados.min|floatformat:"1" }} - {{ item.dados.max|floatformat:"1" }}</div>
+                                <div class="stat-label">Min - Max</div>
+                            </div>
+                        </div>
+                    
+                    {% elif item.tipo == 'TX' %}
+                        <div class="text-responses-container">
+                            {% if item.dados.exemplos|length > 0 %}
+                                {% for resposta in item.dados.exemplos %}
+                                <div class="text-response">
+                                    {{ resposta }}
+                                </div>
+                                {% endfor %}
+                            {% else %}
+                                <div class="no-data-container">
+                                    <i class="bi bi-chat-left-text no-data-icon"></i>
+                                    <h3 class="no-data-title">Nenhuma resposta textual</h3>
+                                    <p class="no-data-text">Não há respostas textuais registradas para esta pergunta.</p>
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="stats-container">
+                            <div class="stat-card">
+                                <div class="stat-value">{{ item.dados.total_respostas }}</div>
+                                <div class="stat-label">Total de Respostas</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-value">{{ item.dados.exemplos|length }}</div>
+                                <div class="stat-label">Exemplos Selecionados</div>
+                            </div>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="no-data-container">
+                <i class="bi bi-bar-chart no-data-icon"></i>
+                <h2 class="no-data-title">Nenhum dado disponível para análise</h2>
+                <p class="no-data-text">
+                    Este questionário ainda não possui respostas registradas. 
+                    Quando as respostas estiverem disponíveis, os gráficos e análises serão exibidos aqui.
+                </p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const dadosGraficos = JSON.parse('{{ dados_graficos|safe }}');
+        
+        // Renderizar gráficos apenas se houver dados
+        if (dadosGraficos.length > 0) {
+            dadosGraficos.forEach((item, index) => {
+                const canvas = document.getElementById(`grafico-${index}`);
+                if (!canvas) return;
+                
+                if (item.tipo === 'SN') {
+                    new Chart(canvas, {
+                        type: 'doughnut',
+                        data: {
+                            labels: item.dados.labels,
+                            datasets: [{
+                                data: item.dados.values,
+                                backgroundColor: ['#28a745', '#dc3545'],
+                                borderWidth: 0
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: { 
+                                    position: 'bottom', 
+                                    labels: { 
+                                        font: { size: 14 },
+                                        padding: 20
+                                    } 
+                                },
+                                tooltip: {
+                                    callbacks: {
+                                        label: function(context) {
+                                            return `${context.label}: ${context.raw}%`;
+                                        }
+                                    }
+                                }
+                            },
+                            cutout: '65%'
+                        }
+                    });
+                } 
+                else if (item.tipo === 'NU') {
+                    new Chart(canvas, {
+                        type: 'bar',
+                        data: {
+                            labels: item.dados.valores.map((_, i) => `Resposta ${i + 1}`),
+                            datasets: [{
+                                label: 'Valor',
+                                data: item.dados.valores,
+                                backgroundColor: '#0d6efd',
+                                borderRadius: 6,
+                                maxBarThickness: 36
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: { display: false }
+                            },
+                            scales: {
+                                x: { 
+                                    grid: { display: false }, 
+                                    ticks: { font: { size: 13 } } 
+                                },
+                                y: { 
+                                    beginAtZero: true, 
+                                    grid: { color: "#f0f0f0" }, 
+                                    ticks: { font: { size: 13 } } 
+                                }
+                            }
+                        }
+                    });
+                }
+            });
+        }
+        
+        // Botão de exportação
+        document.getElementById('exportBtn').addEventListener('click', function() {
+            // Simulação de exportação
+            this.innerHTML = '<i class="bi bi-check-circle"></i> Exportado!';
+            this.style.background = '#d4edda';
+            this.style.color = '#155724';
+            
+            setTimeout(() => {
+                this.innerHTML = '<i class="bi bi-download"></i> Exportar Dados';
+                this.style.background = '#e3f2fd';
+                this.style.color = '#0d6efd';
+            }, 2000);
+        });
+        
+        // Filtros interativos
+        const filters = document.querySelectorAll('.filter-select');
+        filters.forEach(filter => {
+            filter.addEventListener('change', function() {
+                // Simulação de filtro
+                document.querySelectorAll('.grafico-card').forEach(card => {
+                    card.style.opacity = '0.7';
+                    card.style.transition = 'opacity 0.3s ease';
+                });
+                
+                setTimeout(() => {
+                    document.querySelectorAll('.grafico-card').forEach(card => {
+                        card.style.opacity = '1';
+                    });
+                }, 300);
+            });
+        });
+    });
+</script>
+{% endblock %}
