@@ -110,6 +110,11 @@
                         <button type="button" class="btn btn-outline-secondary" id="selecionar-arquivo">
                             <i class="bi bi-folder me-1"></i>Selecionar Arquivo
                         </button>
+                         <button type="button" class="btn btn-outline-info" id="download-modelo">
+                             <i class="bi bi-file-earmark-arrow-down text-primary"></i> Baixar Modelo de Formulário (PDF)
+                        </button>
+                        <a href="{% static 'modelos/formulario_modelo.pdf' %}" id="modelo-pdf-link" class="d-none" download></a>
+                        
                     </div>
 
                     <!-- Área da câmera simplificada -->
@@ -135,7 +140,10 @@
                             <i class="bi bi-camera me-1"></i>Capturar Foto
                         </button>
                     </div>
-
+                    <!-- Botão para baixar modelo PDF -->
+                    <div class="mb-3">
+                       
+                    </div>
                     <!-- Input de arquivo -->
                     <div class="mb-3">
                         <input type="file" class="form-control d-none" id="foto-comprovante" name="foto_comprovante"
@@ -408,8 +416,7 @@
 
     // Baixar modelo PDF
     document.getElementById('download-modelo').addEventListener('click', function () {
-        alert('Download do modelo iniciado!');
-        // Em um sistema real, aqui viria o código para baixar o PDF
+        document.getElementById('modelo-pdf-link').click();
     });
 
     // Mostrar preview da imagem selecionada

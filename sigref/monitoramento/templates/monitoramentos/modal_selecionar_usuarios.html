@@ -1,0 +1,45 @@
+
+<!-- Modal Selecionar Usuário e Quantidade -->
+<div class="modal fade" id="relatorioMonitoramentosModal" tabindex="-1" aria-labelledby="relatorioMonitoramentosModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <form method="get" action="{% url 'relatorio_monitoramentos' %}">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="relatorioMonitoramentosModalLabel">
+            Gerar Relatório por Usuário
+          </h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+        </div>
+        <div class="modal-body">
+          <div class="mb-3">
+            <label for="user_id" class="form-label">Usuário (nome completo)</label>
+            <select id="user_id" name="user_id" class="form-select" style="width:100%;" required>
+              <option value="">Selecione um usuário</option>
+              {% for greuser in greusers %}
+                <option value="{{ greuser.id }}">{{ greuser.nome_completo }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="mb-3">
+            <label for="quantidade" class="form-label">Quantidade de Monitoramentos</label>
+            <input type="number" class="form-control" id="quantidade" name="quantidade" min="1" max="100" value="10" required>
+            <div class="form-text">Informe quantos últimos monitoramentos deseja incluir no relatório.</div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-primary">Gerar Relatório</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+$(document).ready(function() {
+  $('#user_id').select2({
+    theme: "bootstrap-5",
+    placeholder: 'Digite o nome do usuário...',
+    allowClear: true
+  });
+});
+</script>
