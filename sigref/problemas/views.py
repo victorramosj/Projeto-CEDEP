@@ -272,11 +272,6 @@ def problema_dashboard_view(request):
     form = ProblemaUsuarioForm()
     return render(request, 'escolas/escola_dashboard.html', {'form': form})  # type: ignore
 
-
-
-
-
-
 from django.shortcuts import render
 from django.core.paginator import Paginator
 from django.db.models import Q
@@ -672,10 +667,10 @@ def verificar_avisos_automaticos(request):
         data_expiracao__isnull=False, # Garante que o campo de expiração não é nulo
         data_expiracao__lt=timezone.now()
     )
-   
+    
     # Prepara a lista de avisos para ser enviada como JSON
     avisos_para_apagar = list(avisos_expirados.values('id', 'titulo'))
-   
+    
     return JsonResponse({'avisos_para_apagar': avisos_para_apagar})
 
 
