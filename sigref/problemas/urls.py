@@ -15,6 +15,7 @@ from .views import (
     UpdateStatusProblema,
     tela_lacuna_view,
     tela_problema_view,
+    deletar_lacunas_api,
     confirmar_visualizacao_aviso,  # Importação da função
 )
 
@@ -35,19 +36,20 @@ urlpatterns = [
     path('dashboard/', views.problema_dashboard_view, name='problemas'),
     path('relatar-problema/<int:escola_id>/', views.relatar_problema_view, name='relatar_problema'),
     path('relatar-lacuna/<int:escola_id>/', views.relatar_lacuna_view, name='relatar_lacuna'),  
-    path('problemas/lacunas/', views.tela_lacuna_view, name='tela_lacunas'),
-    path('problema/problemas/', views.tela_problema_view, name='tela_problemas'),
 
     path('alertas/', views.dashboard, name='alertas'),
-    path('tela_lacunas/', views.tela_lacuna_view, name='tela_lacunas'),
-    path('tela_problemas/', views.tela_problema_view, name='tela_problemas'),
+    path('lacunas/', views.tela_lacuna_view, name='tela_lacunas'),
+    path('problemas/', views.tela_problema_view, name='tela_problemas'),
 
-    # API Tela Lacuna
+    # APIs ---------------------------------------------------------------------------------
+    # Tela Lacuna
     path('api/lacuna/atualizar-status/<int:lacuna_id>/', UpdateStatusLacuna.as_view(), name='api_atualizar_status_lacuna'),
-    # API Tela Problema
+    path('api/lacunas/deletar/', views.deletar_lacunas_api, name='api_deletar_lacunas'),
+    
+    # Tela Problema
     path('api/problema/atualizar-status/<int:problema_id>/', UpdateStatusProblema.as_view(), name='api_atualizar_status_problema'),
-        
-    # AVISOS
+
+    # AVISOS---------------------------------------------------------------------------------
     path('avisos/criar/', criar_aviso_view, name='criar_aviso'),
     # URL para listar avisos (apenas uma vez)
     path('avisos/', views.listar_avisos_view, name='listar_avisos'),
@@ -61,8 +63,6 @@ urlpatterns = [
     # NOVAS URLS
     path('problemas/avisos/verificar-automaticos/', views.verificar_avisos_automaticos, name='verificar_avisos_automaticos'),
     path('problemas/avisos/apagar-automaticos/', views.apagar_avisos_automaticos, name='apagar_avisos_automaticos'),
-    
-    path('tela_lacunas/', views.tela_lacuna_view, name='tela_lacuna_view'),
 
     # Confirmação de visualização do aviso
     path('confirmar-visualizacao/<int:aviso_id>/', confirmar_visualizacao_aviso, name='confirmar_visualizacao_aviso'),
