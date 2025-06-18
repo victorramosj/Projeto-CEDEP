@@ -180,6 +180,30 @@ class UpdateStatusProblema(APIView):
         else:
             return Response({"detail": "Status inválido"}, status=status.HTTP_400_BAD_REQUEST)
 
+# =============================================================================
+#  API PARA DELETAR PROBLEMAS
+# =============================================================================
+@require_POST
+def deletar_problemas_api(request):
+    try:
+        data = json.loads(request.body)
+        problema_ids = data.get('ids', []) # <-- AQUI! Ela espera 'ids'
+
+        if not problema_ids:
+            return JsonResponse({'error': 'Nenhum ID de problema fornecido.'}, status=400)
+
+        # Apagar os problemas
+        deleted_count, _ = ProblemaUsuario.objects.filter(id__in=problema_ids).delete()
+
+        return JsonResponse({
+            'message': f'{deleted_count} problema(s) apagado(s) com sucesso.',
+            'deleted_ids': problema_ids
+        }, status=200)
+
+    except json.JSONDecodeError:
+        return JsonResponse({'error': 'Requisição JSON inválida.'}, status=400)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
 
 # =============================================================================
 #  VIEWSETS PARA A API REST

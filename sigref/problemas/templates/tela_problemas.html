@@ -63,7 +63,7 @@ table .form-select {
             <table class="table table-striped mt-2">
                 <thead>
                     <tr>
-                        <th><input type="checkbox"></th>
+                        <th><input type="checkbox" id="selectAllCheckboxes"></th>
                         <th class="text-start">Problema</th>
                         <th class="text-start">Escola</th>
                         <th class="text-start">Usuário</th>
@@ -75,7 +75,7 @@ table .form-select {
                 <tbody>
                     {% for problema in problemas_page %}
                         <tr id="problema-row-{{ problema.id }}">
-                            <td><input type="checkbox"></td>
+                            <td><input type="checkbox" name="selected_problemas" value="{{ problema.id }}"></td>
                             <td class="text-start">{{ problema.descricao}}</td>
                             <td class="text-start">{{ problema.escola.nome }}</td>
                             <td class="text-start">{{ problema.usuario }}</td>
@@ -194,6 +194,121 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
     });
+
+    // ==================================================================
+    // PARTE 3: LÓGICA PARA APAGAR PROBLEMAS SELECIONADOS
+    // ==================================================================
+
+    const selectAllCheckbox = document.getElementById('selectAllCheckboxes');
+    let problemaCheckboxes = document.querySelectorAll('input[name="selected_problemas"]');
+    const botaoApagar = document.querySelector('.btnAcao');
+    const problemasCount = document.getElementById('problemas-count');
+
+    // Função para atualizar o estado do botão de apagar
+    function atualizarBotaoApagar() {
+        // Verifica se o botão de apagar existe
+        problemaCheckboxes = document.querySelectorAll('input[name="selected_problemas"]');
+
+        const anyCheckboxSelected = Array.from(problemaCheckboxes).some(checkbox => checkbox.checked);
+        botaoApagar.disabled = !anyCheckboxSelected;
+    }
+
+    // Inicializa o estado do botão
+    atualizarBotaoApagar();
+
+    // Evento para selecionar/deselecionar todos os checkboxes
+    if (selectAllCheckboxes){
+        selectAllCheckboxes.addEventListener('change', () => {
+            problemaCheckboxes.forEach(checkbox => {
+                checkbox.checked = selectAllCheckboxes.checked;
+            });
+            atualizarBotaoApagar();
+        });    
+    }
+
+    // Evento para atualizar o estado do botão ao alterar qualquer checkbox
+    problemaCheckboxes.forEach(checkbox => {
+        checkbox.addEventListener('change',() => {
+
+            // Se algum checkbox for desmarcado, desmarca o "selecionar todos"
+            if (!checkbox.checked) {
+                if (selectAllCheckboxes){
+                    selectAllCheckboxes.checked = false;
+                }
+            }
+
+            // Se algum checkbox individuais forem marcados, marca o "selecionar todos"
+            const allChecked = Array.from(problemaCheckboxes).every(checkbox => checkbox.checked);
+            if (selectAllCheckboxes) {
+                selectAllCheckboxes.checked = allChecked;
+            }
+
+            atualizarBotaoApagar();
+        });
+    });
+
+    // Evento para apagar problemas selecionadas
+
+    if( botaoApagar ) {
+        botaoApagar.addEventListener('click', async () => {
+            const selectedProblemas = Array.from(problemaCheckboxes)
+                .filter(checkbox => checkbox.checked)
+                .map(checkbox => checkbox.value);
+
+            if (selectedProblemas.length === 0) {
+                alert('Selecione pelo menos um problema para apagar.');
+                return;
+            }
+            if (!confirm(`Você tem certeza que deseja apagar ${selectedProblemas.length} problema(s)?`)) {
+                return;
+            }
+
+            try {
+                const response = await fetch("{% url 'api_deletar_problemas' %}", {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': csrftoken
+                    },
+                    body: JSON.stringify({ ids: selectedProblemas })
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || 'Erro ao apagar problemas.');
+                }
+
+                const data = await response.json();
+                console.log('Problemas apagados com sucesso:', data);
+                alert(data.message);
+
+                // Remover as linhas da tabela para os problemas apagados
+
+                selectedProblemas.forEach(id => {
+                    const row = document.getElementById(`problema-row-${id}`);
+                    if (row) {
+                        row.remove();
+                    }
+                });
+
+                // Atualizar a contagem de problemas
+                const currentCount = parseInt(problemasCount.textContent);
+                problemasCount.textContent = currentCount - selectedProblemas.length;
+
+                //Limpar seleção e desabilitar botão
+                if (selectAllCheckboxes) {
+                    selectAllCheckboxes.checked = false;
+                }
+
+                atualizarBotaoApagar();
+
+            } catch (error) {
+                console.error('Erro ao apagar problemas:', error);
+                alert(`Erro: ${error.message}`);
+            }
+        });
+    }
+    
 });
 </script>
 
