@@ -123,7 +123,7 @@ from django.http import JsonResponse
 from django.views.decorators.http import require_POST
 
 # =============================================================================
-#  VIEW DO UPDATE STATUS
+#  VIEW DA ATUALIZAÇÃO DE STATUS DA LACUNA
 # =============================================================================
 class UpdateStatusLacuna(APIView):
     def post(self, request, lacuna_id):
@@ -138,6 +138,9 @@ class UpdateStatusLacuna(APIView):
         else:
             return Response({"detail": "Status inválido"}, status=status.HTTP_400_BAD_REQUEST)
 
+# =============================================================================
+#  VIEW DO UPDATE STATUS PROBLEMA
+# =============================================================================
 
 
 # API para deletar lacunas
@@ -165,7 +168,7 @@ def deletar_lacunas_api(request):
 
 # Tela Problema
 # =============================================================================
-#  VIEW DO UPDATE STATUS PROBLEMA
+#  VIEW DA ATUALIZAÇÃO DE STATUS DO PROBLEMA
 # =============================================================================
 class UpdateStatusProblema(APIView):
     def post(self, request, problema_id):
@@ -179,7 +182,6 @@ class UpdateStatusProblema(APIView):
             return Response(ProblemaUsuarioSerializer(problema).data, status=status.HTTP_200_OK)
         else:
             return Response({"detail": "Status inválido"}, status=status.HTTP_400_BAD_REQUEST)
-
 
 # views.py
 from rest_framework import viewsets
@@ -221,7 +223,9 @@ from .forms import AvisoForm
 from .models import AvisoImportante
 
 
-# RELATAR LACUNA
+# =============================================================================
+#  VIEW DA RELATAR LACUNA
+# =============================================================================
 def relatar_lacuna_view(request, escola_id):
     escola = get_object_or_404(Escola, id=escola_id)  # Obtém a escola com o ID da URL
 
@@ -242,13 +246,12 @@ def relatar_lacuna_view(request, escola_id):
 
 
 
-# RELATAR PROBLEMA
+# =============================================================================
+#  VIEW DA RELATAR PROBLEMA
+# =============================================================================
 def relatar_problema_view(request, escola_id):
     escola = get_object_or_404(Escola,id= escola_id)
-
-
-
-
+    # Verifica se o usuário está autenticado
     if request.method == 'POST':
         form = ProblemaUsuarioForm(request.POST, request.FILES)
         if form.is_valid():
@@ -263,7 +266,9 @@ def relatar_problema_view(request, escola_id):
 
 
 
-
+# =============================================================================
+#  VIEW DO PROBLEMA DASHBOARD
+# =============================================================================
 def problema_dashboard_view(request):
     form = ProblemaUsuarioForm()
     return render(request, 'escolas/escola_dashboard.html', {'form': form})  # type: ignore
@@ -277,9 +282,11 @@ from datetime import datetime, timedelta
 from .models import ProblemaUsuario, STATUS_CHOICES
 
 
-# Não precisamos mais de JsonResponse ou render_to_string aqui.
 
 
+# =============================================================================
+#  VIEW DA TELA LACUNA
+# =============================================================================
 def tela_lacuna_view(request):
     lacunas_list = Lacuna.objects.select_related('escola').all()
     
@@ -329,6 +336,12 @@ def tela_lacuna_view(request):
     # A view agora SEMPRE renderiza o template completo. Sem ifs.
     return render(request, 'tela_lacunas.html', context)
 
+
+
+
+# =============================================================================
+#  VIEW DA TELA PROBLEMA
+# =============================================================================
 # Tela Problema
 def tela_problema_view(request):
     problemas_list = ProblemaUsuario.objects.select_related('escola', 'usuario__user', 'setor').all()
@@ -389,7 +402,9 @@ from django.contrib.auth.decorators import login_required
 from .models import AvisoImportante # Certifique-se que o import está correto
 from django.core.paginator import Paginator
 
-
+# =============================================================================
+#  VIEW DA LISTAGEM DE AVISOS
+# =============================================================================
 @login_required
 def listar_avisos_view(request):
     gre_user = request.user.greuser
@@ -434,7 +449,9 @@ from django.utils import timezone
 from .models import AvisoImportante, Escola
 from django.contrib.auth.decorators import login_required
 
-
+# =============================================================================
+#  VIEW DA CRIAÇÃO DE AVISO
+# =============================================================================
 @login_required
 def criar_aviso_view(request):
     gre_user = request.user.greuser
@@ -543,7 +560,9 @@ from django.contrib.auth.decorators import login_required
 from .forms import AvisoForm
 from .models import AvisoImportante
 
-
+# =============================================================================
+#  VIEW DA EDIÇÃO DE AVISO
+# =============================================================================
 @login_required
 def editar_aviso_view(request, aviso_id):
     aviso = get_object_or_404(AvisoImportante, id=aviso_id)
@@ -581,7 +600,9 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from .models import AvisoImportante
 
-
+# =============================================================================
+#  VIEW DA EXCLUSÃO DE AVISO
+# =============================================================================
 @login_required
 def apagar_aviso_view(request, aviso_id):
     aviso = get_object_or_404(AvisoImportante, id=aviso_id)
@@ -603,7 +624,9 @@ from django.shortcuts import redirect
 from django.contrib import messages
 from .models import AvisoImportante
 
-
+# =============================================================================
+#  VIEW DE APAGAR VÁRIOS AVISOS
+# =============================================================================
 def apagar_varios_avisos(request):
     if request.method == 'POST':
         # Pega os IDs dos avisos selecionados
@@ -621,14 +644,6 @@ def apagar_varios_avisos(request):
     return redirect('listar_avisos')
 
 
-
-
-
-
-
-
-
-
 # seu_app/views.py
 # problemas/views.py
 
@@ -639,10 +654,9 @@ from django.utils import timezone
 import json
 from .models import AvisoImportante # <-- NOME CORRIGIDO AQUI
 
-
-# ... suas outras views
-
-
+# =============================================================================
+#  VIEW DA VERIFICAÇÃO DE AVISOS AUTOMÁTICOS
+# =============================================================================
 def verificar_avisos_automaticos(request):
     """
     Verifica avisos que estão ativos mas cuja data de expiração já passou.
@@ -663,7 +677,9 @@ def verificar_avisos_automaticos(request):
 
 
 
-
+# =============================================================================
+#  VIEW DA EXCLUSÃO DE AVISOS AUTOMÁTICOS
+# =============================================================================
 @require_POST
 def apagar_avisos_automaticos(request):
     """
@@ -702,17 +718,17 @@ from django.shortcuts import render
 from problemas.models import Lacuna, ProblemaUsuario
 from monitoramento.models import GREUser
 
-
+# =============================================================================
+#  VIEW DA DASHBOARD- CEDEPE(NOTIFICAÇÃO)
+# =============================================================================
 def dashboard(request):
     if not request.user.is_authenticated:
         return render(request, "cedepe/home.html")
-
 
     try:
         gre_user = request.user.greuser
         setor = gre_user.setor
         escolas = gre_user.escolas.all()
-
 
         # Filtrar lacunas apenas das escolas do usuário
         lacunas_pendentes = Lacuna.objects.filter(escola__in=escolas, status='P')
@@ -739,11 +755,9 @@ def dashboard(request):
 
         return render(request, "cedepe/home.html", {"alerts": alerts})
 
-
     except GREUser.DoesNotExist:
         
         return render(request, "cedepe/home.html")
-    
 
 
 
@@ -751,6 +765,9 @@ def dashboard(request):
 from django.shortcuts import get_object_or_404, redirect
 from .models import AvisoImportante
 
+# =============================================================================
+#  VIEW DA CONFIRMAÇÃO DE VISUALIZAÇÃO DE AVISO
+# =============================================================================
 @login_required
 def confirmar_visualizacao_aviso(request, aviso_id):
     # Recupera o aviso com o ID fornecido

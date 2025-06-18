@@ -365,6 +365,7 @@ class SelecionarEscolaView(LoginRequiredMixin, ListView):
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
         ctx['q'] = self.request.GET.get('q', '')
+        ctx['setores'] = Setor.objects.all().order_by('nome')
         return ctx
 
 
