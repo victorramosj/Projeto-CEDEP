@@ -180,6 +180,7 @@
             box-shadow: 0 4px 10px rgba(0,0,0,0.08);
             display: flex;
             flex-direction: column;
+            justify-content: space-between; /* Alterado para empurrar o botão para baixo */
             transition: transform 0.3s ease, box-shadow 0.3s ease;
         }
         .avisos-importantes:hover {
@@ -762,8 +763,8 @@
         </div>
     </div>
 </div>
-
-{% endblock %}
+{# A tag `{% endblock %}` final para o `{% block content %}` estava faltando aqui. #}
+{% endblock %} 
 
 {% block extra_script %}
 <script>
@@ -785,9 +786,11 @@ document.addEventListener('DOMContentLoaded', function() {
     if (modalAvisos) {
         const filterButtons = modalAvisos.querySelectorAll('.filter-btn-group .btn, .filter-btn-group .dropdown-item');
         const avisosContainer = modalAvisos.querySelector('#avisos-container');
-        const allAvisos = Array.from(avisosContainer.querySelectorAll('.aviso-item'));
+        let allAvisos = Array.from(avisosContainer.querySelectorAll('.aviso-item'));
 
         function applyFiltersAndSort() {
+            allAvisos = Array.from(avisosContainer.querySelectorAll('.aviso-item'));
+
             const activeFilter = modalAvisos.querySelector('.filter-btn-group .btn.active')?.dataset.filter || 'todos';
             const sortByRecent = modalAvisos.querySelector('[data-sort="recentes"]')?.classList.contains('active');
 
@@ -799,9 +802,7 @@ document.addEventListener('DOMContentLoaded', function() {
             if (sortByRecent) {
                 filteredAvisos.sort((a, b) => b.dataset.timestamp - a.dataset.timestamp);
             } else {
-                // Se não está ordenando por recentes, mantenha a ordem original (ou redefina)
-                // Neste caso, se "Todos" está ativo e não "Mais Recentes", a ordem é a padrão do backend
-                filteredAvisos = allAvisos.filter(aviso => {
+                filteredAvisos = Array.from(avisosContainer.querySelectorAll('.aviso-item')).filter(aviso => {
                     const prioridade = aviso.dataset.prioridade;
                     return activeFilter === 'todos' || prioridade === activeFilter;
                 });
@@ -856,20 +857,18 @@ document.addEventListener('DOMContentLoaded', function() {
                 
                 // Verifica se o collapse está sendo aberto (e não fechado)
                 if (!collapseElement.classList.contains('show')) {
-                    // Chame a função para marcar, mesmo que seja por expansão
                     marcarAvisoComoVisualizado(avisoId);
                 }
             }
         });
 
-        // NOVO: Event listener para o botão "Marcar como Visualizado" (ação explícita)
+        // Event listener para o botão "Marcar como Visualizado" (ação explícita)
         avisosContainer.addEventListener('click', function(event) {
             const marcarBtn = event.target.closest('.marcar-como-visualizado-btn');
             if (marcarBtn) {
                 const avisoId = marcarBtn.dataset.avisoId;
                 marcarAvisoComoVisualizado(avisoId);
-                // Remove o botão após o clique para evitar cliques duplicados e feedback visual
-                marcarBtn.remove(); 
+                // A remoção do botão e atualização do badge é feita dentro de marcarAvisoComoVisualizado
             }
         });
     }
@@ -882,41 +881,28 @@ document.addEventListener('DOMContentLoaded', function() {
                 'X-CSRFToken': getCookie('csrftoken'),
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({}) // Envia um corpo vazio, se necessário
+            body: JSON.stringify({})
         })
-        .then(response => response.json()) // Espera uma resposta JSON
+        .then(response => response.json())
         .then(data => {
-            if (data.status === 'success') {
+            if (data.status === 'success' || data.status === 'already_viewed') {
                 // Atualiza o status visualmente no frontend
                 const statusBadge = document.getElementById(`status-aviso-${avisoId}`);
                 if (statusBadge) {
                     statusBadge.textContent = 'Visto';
                     statusBadge.classList.remove('bg-secondary');
                     statusBadge.classList.add('bg-success');
-                    statusBadge.innerHTML += ' <i class="fas fa-check"></i>'; // Adiciona o ícone de check
-
-                    // Opcional: Remover o botão "Marcar como Visualizado" se ele existir
-                    const marcarBtn = document.querySelector(`.marcar-como-visualizado-btn[data-aviso-id="${avisoId}"]`);
-                    if (marcarBtn) {
-                        marcarBtn.remove();
-                    }
-                }
-            } else if (data.status === 'already_viewed') {
-                // console.log('Aviso já havia sido visualizado.');
-                // Se o aviso já foi visualizado, garante que o badge esteja correto e o botão oculto
-                const statusBadge = document.getElementById(`status-aviso-${avisoId}`);
-                if (statusBadge) {
-                    statusBadge.textContent = 'Visto';
-                    statusBadge.classList.remove('bg-secondary');
-                    statusBadge.classList.add('bg-success');
-                    if (!statusBadge.innerHTML.includes('<i class="fas fa-check"></i>')) {
+                    if (!statusBadge.innerHTML.includes('<i class="fas fa-check"></i>')) { // Evita duplicar o ícone
                         statusBadge.innerHTML += ' <i class="fas fa-check"></i>';
                     }
                 }
+                
+                // Remove o botão "Marcar como Visualizado"
                 const marcarBtn = document.querySelector(`.marcar-como-visualizado-btn[data-aviso-id="${avisoId}"]`);
                 if (marcarBtn) {
                     marcarBtn.remove();
                 }
+
             } else {
                 console.error('Erro ao marcar aviso como visualizado:', data.message);
                 alert('Ocorreu um erro ao tentar marcar o aviso como visualizado. Tente novamente.');
