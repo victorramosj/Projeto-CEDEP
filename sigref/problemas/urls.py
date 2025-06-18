@@ -16,6 +16,7 @@ from .views import (
     tela_lacuna_view,
     tela_problema_view,
     deletar_lacunas_api,
+    deletar_problemas_api,
     confirmar_visualizacao_aviso,
 )
 
@@ -45,9 +46,9 @@ urlpatterns = [
     # Tela Lacuna
     path('api/lacuna/atualizar-status/<int:lacuna_id>/', UpdateStatusLacuna.as_view(), name='api_atualizar_status_lacuna'),
     path('api/lacunas/deletar/', views.deletar_lacunas_api, name='api_deletar_lacunas'),
-    
     # Tela Problema
     path('api/problema/atualizar-status/<int:problema_id>/', UpdateStatusProblema.as_view(), name='api_atualizar_status_problema'),
+    path('api/problemas/deletar/', views.deletar_problemas_api, name='api_deletar_problemas'),
 
     # AVISOS---------------------------------------------------------------------------------
     path('avisos/criar/', criar_aviso_view, name='criar_aviso'),
