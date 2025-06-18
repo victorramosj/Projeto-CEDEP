@@ -437,11 +437,6 @@ def criar_aviso_view(request):
     return render(request, 'avisos/criar_aviso.html', context)
 
 
-from django.shortcuts import get_object_or_404, redirect
-from django.contrib import messages
-from django.contrib.auth.decorators import login_required
-from .models import AvisoImportante
-from .forms import AvisoForm
 
 from django.shortcuts import get_object_or_404, render, redirect
 from django.contrib import messages
@@ -614,3 +609,28 @@ def dashboard(request):
     except GREUser.DoesNotExist:
         
         return render(request, "cedepe/home.html")
+
+
+
+# Em problemas/views.py
+from django.shortcuts import get_object_or_404, redirect
+from .models import AvisoImportante
+
+@login_required
+def confirmar_visualizacao_aviso(request, aviso_id):
+    # Recupera o aviso com o ID fornecido
+    aviso = get_object_or_404(AvisoImportante, id=aviso_id)
+
+    # Cria ou atualiza a confirmação do aviso
+    confirmacao, created = ConfirmacaoAviso.objects.get_or_create(
+        aviso=aviso,
+        escola=request.user.greuser.escolas.first()  # Associando a escola do usuário
+    )
+
+    # Caso ainda não tenha sido visualizado, muda o status
+    if confirmacao.status == 'pendente':
+        confirmacao.confirmar_visualizado()
+
+    return redirect('listar_avisos')  # Redireciona para a página de avisos ou a página desejada
+
+
