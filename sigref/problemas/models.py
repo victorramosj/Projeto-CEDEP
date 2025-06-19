@@ -104,8 +104,7 @@ class AvisoImportante(models.Model):
 
     
 
-from django.db import models
-from .models import AvisoImportante, Escola  # Certifique-se de importar as models relacionadas
+# cedepe/models.py
 
 class ConfirmacaoAviso(models.Model):
     STATUS = [
@@ -124,8 +123,7 @@ class ConfirmacaoAviso(models.Model):
     def confirmar_visualizado(self):
         """Método para confirmar que a escola visualizou o aviso"""
         self.status = 'visualizado'
-        self.save()
-
+        self.save()  # <--- ADICIONE ESTA LINHA!
 
 
 
