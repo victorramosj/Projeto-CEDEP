@@ -29,7 +29,7 @@ from rest_framework.views import APIView
 from monitoramento.models import Escola, GREUser, Setor
 
 from .forms import AvisoForm, LacunaForm, ProblemaUsuarioForm
-from .models import (AvisoImportante, ConfirmacaoAviso, Lacuna, ProblemaUsuario, Setor, STATUS_CHOICES)
+from .models import (AvisoImportante, ConfirmacaoAviso, Lacuna,ProblemaUsuario, STATUS_CHOICES)
 from .serializers import (AvisoImportanteSerializer, LacunaSerializer,ProblemaUsuarioSerializer)
 
 # ADICIONADO DEPOIS 
@@ -41,7 +41,10 @@ from .models import AvisoImportante, ConfirmacaoAviso, GREUser # Importe GREUser
 # =============================================================================
 #  VIEW DA DASHBOARD
 # =============================================================================
+
 class EscolaDashboardView(LoginRequiredMixin, TemplateView):
+    # O nome do template que esta view irá renderizar.
+    # O seu pode ser 'escola_dashboard.html' ou 'cedepe/escola_dashboard.html', ajuste se necessário.
     template_name = 'escola_dashboard.html'
 
     def get_context_data(self, **kwargs):
@@ -51,73 +54,90 @@ class EscolaDashboardView(LoginRequiredMixin, TemplateView):
         # Inicializar a variável escola
         escola = None
 
-        # Se o usuário for do tipo 'escola', redireciona para sua própria escola
+        # Se o usuário for do tipo 'escola', usa a sua própria escola
         if gre_user.is_escola():
             escola = gre_user.escolas.first()
             context['escola'] = escola
-
-        # Caso contrário, tenta buscar a escola pelo ID passado na URL
+        # Caso contrário, busca a escola pelo ID passado na URL (para admins, etc.)
         else:
             escola_id = self.kwargs.get('escola_id')
             if escola_id:
                 escola = get_object_or_404(Escola, id=escola_id)
                 context['escola'] = escola
 
-        # Verifique se a variável escola foi atribuída corretamente
+        # Verifique se a variável escola foi atribuída corretamente antes de prosseguir
         if escola is None:
             context['error_message'] = "Escola não encontrada ou não associada ao usuário."
         else:
+            # =================================================================
+            # LÓGICA DE AVISOS - INÍCIO DA CORREÇÃO
+            # =================================================================
 
-            # ::AVISOS:: Buscar avisos válidos da escola
-            avisos = AvisoImportante.objects.filter(
+            # 1. Pega todos os avisos válidos para a escola (seu código original, que está correto)
+            avisos_queryset = AvisoImportante.objects.filter(
                 escola=escola,
                 ativo=True
             ).filter(
                 Q(data_expiracao__isnull=True) | Q(data_expiracao__gte=timezone.now())
             ).order_by('-prioridade', '-data_criacao')
+
+            # 2. Busca os IDs de todos os avisos que ESTA escola já marcou como 'visualizado'
+            # Usamos set() para uma verificação de 'in' muito mais rápida.
+            avisos_visualizados_ids = set(ConfirmacaoAviso.objects.filter(
+                escola=escola,
+                status='visualizado'
+            ).values_list('aviso_id', flat=True))
+
+            # 3. Percorre a lista de avisos e adiciona um novo atributo "ja_visualizado"
+            # Este atributo será True ou False e poderá ser usado diretamente no template
+            for aviso in avisos_queryset:
+                aviso.ja_visualizado = aviso.id in avisos_visualizados_ids
             
+            # AGORA, a variável 'avisos_queryset' contém a informação de visualização.
+            
+            # =================================================================
+            # LÓGICA DE AVISOS - FIM DA CORREÇÃO
+            # =================================================================
+
             agora = timezone.now()
 
+            # O restante do seu código para estatísticas permanece exatamente igual
             # Estatísticas de lacunas
             todas_lacunas = Lacuna.objects.all()
             lacunas_total = todas_lacunas.count()
-
-            total_lacunas = Lacuna.objects.filter(escola=escola).count() # Contagem de lacunas para a escola
-            lacunas_resolvidas = Lacuna.objects.filter(escola= escola, status='R').count()
-            lacunas_pendentes = Lacuna.objects.filter(escola= escola,status='P').count()
-            lacunas_andamento = Lacuna.objects.filter(escola= escola,status='E').count()
-            # Contagem de problemas criados neste mês
-            lacunas_este_mes = Lacuna.objects.filter(escola= escola,criado_em__month=agora.month, criado_em__year=agora.year).count()
+            total_lacunas = Lacuna.objects.filter(escola=escola).count()
+            lacunas_resolvidas = Lacuna.objects.filter(escola=escola, status='R').count()
+            lacunas_pendentes = Lacuna.objects.filter(escola=escola, status='P').count()
+            lacunas_andamento = Lacuna.objects.filter(escola=escola, status='E').count()
+            lacunas_este_mes = Lacuna.objects.filter(escola=escola, criado_em__month=agora.month, criado_em__year=agora.year).count()
             
             # Estatísticas de problemas
-            total_problemas = ProblemaUsuario.objects.filter(escola=escola).count() # Contagem de problemas dos usuários associados à escola9
+            total_problemas = ProblemaUsuario.objects.filter(escola=escola).count()
             problemas = ProblemaUsuario.objects.filter(escola=escola)
-            # Contagem de problemas criados neste mês
             problemas_este_mes = problemas.filter(criado_em__month=agora.month, criado_em__year=agora.year).count()
-            # Contagem por status de problemas
             problemas_resolvidos = problemas.filter(status='R').count()
             problemas_pendentes = problemas.filter(status='P').count()
             problemas_andamento = problemas.filter(status='E').count()
 
-            # Contexto enviado ao template
+            # Contexto final enviado ao template
             context.update({
                 'gre_user': gre_user,
                 'escola': escola,
-                'avisos': avisos,
+                'avisos': avisos_queryset,  # Passa a lista de avisos JÁ MODIFICADA
                 'setor': Setor.objects.all(),
                 'form_problema': ProblemaUsuarioForm(),
                 'form_lacuna': LacunaForm(),
                 'todas_lacunas': todas_lacunas,
-                'lacunas_total': lacunas_total, 	# Total de lacunas geral
+                'lacunas_total': lacunas_total,
 
-                #CONTEXTO DE LACUNAS ESPECIFICO POR ESCOLA
-                'total_lacunas': total_lacunas, # Total de lacuna especifico por escola
+                # CONTEXTO DE LACUNAS ESPECIFICO POR ESCOLA
+                'total_lacunas': total_lacunas,
                 'lacunas_resolvidas': lacunas_resolvidas,
                 'lacunas_pendentes': lacunas_pendentes,
                 'lacunas_andamento': lacunas_andamento,
                 'lacunas_este_mes': lacunas_este_mes,
 
-                #CONTEXTO DE PROBLEMAS ESPECIFICO POR ESCOLA
+                # CONTEXTO DE PROBLEMAS ESPECIFICO POR ESCOLA
                 'total_problemas': total_problemas,
                 'problemas_resolvidos': problemas_resolvidos,
                 'problemas_pendentes': problemas_pendentes,
@@ -357,15 +377,6 @@ def tela_problema_view(request):
     if status_filter:
         problemas_list = problemas_list.filter(status=status_filter)
 
-    # Filtro por Setor
-    setor_filter = request.GET.get('setor', '')
-    if setor_filter:
-        #filtra pela chave primária do setor
-        problemas_list = problemas_list.filter(setor__id=setor_filter)
-
-    # Obter todos os setores para popular o dropdown no template
-    todos_os_setores = Setor.objects.all().order_by('nome')
-    
     # Paginação
     paginator = Paginator(problemas_list, 9) 	# 9 itens por página
     page_number = request.GET.get('page')
@@ -374,9 +385,8 @@ def tela_problema_view(request):
 
     # Passar os dados para o template
     context = {
-        'problemas_page': problemas_page,     # Lista de problemas paginada
+        'problemas_page': problemas_page,
         'total_problemas': total_problemas, 	# Total de problemas filtrados
-        'todos_os_setores': todos_os_setores,     # Passa todos os setores para o template
         'search_query': escola_query, 	# Termo de busca (para manter na barra de pesquisa)
         'request': request, # Passa o request para o template
         'status_choices': STATUS_CHOICES, #Passa as opções para o template
@@ -388,28 +398,60 @@ def tela_problema_view(request):
 # =============================================================================
 #  VIEWS DE AVISOS
 # =============================================================================
+# Em seu arquivo views.py
+
 @login_required
 def listar_avisos_view(request):
     gre_user = request.user.greuser
 
+    # --- LÓGICA DE FILTRAGEM INICIAL (DATABASE) ---
     if gre_user.is_admin():
-        avisos_queryset = AvisoImportante.objects.all()
+        avisos_queryset = AvisoImportante.objects.select_related('escola', 'criado_por__user').all()
     else:
-        avisos_queryset = AvisoImportante.objects.filter(criado_por=gre_user)
+        avisos_queryset = AvisoImportante.objects.select_related('escola', 'criado_por__user').filter(criado_por=gre_user)
 
-    prioridade_filtro = request.GET.get('prioridade', None)
+    # 1. NOVO: Recebe os parâmetros de filtro da URL
+    prioridade_filtro = request.GET.get('prioridade', '')
+    status_filtro = request.GET.get('status', '')
+    escola_filtro = request.GET.get('q_escola', '')
 
-    if prioridade_filtro and prioridade_filtro in ['alta', 'normal', 'baixa']:
+    # 2. Aplica filtros que podem ser feitos no banco de dados
+    if prioridade_filtro:
         avisos_queryset = avisos_queryset.filter(prioridade=prioridade_filtro)
-    avisos_ordenados = avisos_queryset.order_by('-data_criacao')
+    if escola_filtro:
+        avisos_queryset = avisos_queryset.filter(escola__nome__icontains=escola_filtro)
 
-    paginator = Paginator(avisos_ordenados, 9) 	
+    avisos_ordenados = list(avisos_queryset.order_by('-data_criacao'))
+
+    # --- LÓGICA DE ANOTAÇÃO DE STATUS (PYTHON) ---
+    confirmacoes = ConfirmacaoAviso.objects.filter(
+        aviso__in=avisos_ordenados,
+        status='visualizado'
+    ).values('aviso_id')
+    
+    avisos_visualizados_ids = {conf['aviso_id'] for conf in confirmacoes}
+
+    for aviso in avisos_ordenados:
+        aviso.foi_visualizado = aviso.id in avisos_visualizados_ids
+
+    # 3. NOVO: Aplica o filtro de status que depende da anotação em Python
+    if status_filtro:
+        if status_filtro == 'visualizado':
+            avisos_ordenados = [aviso for aviso in avisos_ordenados if aviso.foi_visualizado]
+        elif status_filtro == 'pendente':
+            avisos_ordenados = [aviso for aviso in avisos_ordenados if not aviso.foi_visualizado]
+
+    # --- PAGINAÇÃO ---
+    paginator = Paginator(avisos_ordenados, 9)
     page_number = request.GET.get('page')
     avisos_paginated = paginator.get_page(page_number)
 
+    # 4. NOVO: Passa os filtros atuais de volta para o template
     context = {
         'avisos': avisos_paginated,
         'prioridade_atual': prioridade_filtro,
+        'status_atual': status_filtro,
+        'search_query': escola_filtro,
     }
 
     return render(request, 'problemas/listar_avisos.html', context)

@@ -1,4 +1,5 @@
 {% extends "cedepe/base.html" %}
+{% load static %}
 
 {% block title %}Painel de Avisos{% endblock %}
 
@@ -26,22 +27,35 @@
                 {% endfor %}
             {% endif %}
 
-            <div class="d-flex justify-content-center mb-4">
-                <div class="btn-group" role="group" aria-label="Filtro de Prioridade">
-                    <a href="{% url 'listar_avisos' %}" class="btn {% if not prioridade_atual %}btn-primary{% else %}btn-outline-primary{% endif %}">
-                        Todas
-                    </a>
-                    <a href="?prioridade=alta" class="btn {% if prioridade_atual == 'alta' %}btn-danger{% else %}btn-outline-danger{% endif %}">
-                        <i class="bi bi-exclamation-triangle-fill me-1"></i> Alta
-                    </a>
-                    <a href="?prioridade=normal" class="btn {% if prioridade_atual == 'normal' %}btn-warning text-dark{% else %}btn-outline-warning text-dark{% endif %}">
-                        <i class="bi bi-tag-fill me-1"></i> Normal
-                    </a>
-                    <a href="?prioridade=baixa" class="btn {% if prioridade_atual == 'baixa' %}btn-success{% else %}btn-outline-success{% endif %}">
-                        <i class="bi bi-check-circle-fill me-1"></i> Baixa
-                    </a>
+            <form method="GET" action="{% url 'listar_avisos' %}" class="mb-4">
+                <div class="row g-2 justify-content-center align-items-center">
+                    
+                    <div class="col-12 col-md-4 mb-2 mb-md-0">
+                        <div class="input-group">
+                            <input type="text" name="q_escola" class="form-control" placeholder="Pesquisar por nome da escola..." value="{{ search_query|default:'' }}">
+                            <button class="btn btn-outline-secondary" type="submit"><i class="bi bi-search"></i></button>
+                        </div>
+                    </div>
+
+                    <div class="col-auto">
+                        <div class="btn-group" role="group">
+                            <a href="?status={{ status_atual }}&q_escola={{ search_query }}" class="btn btn-sm {% if not prioridade_atual %}btn-primary{% else %}btn-outline-primary{% endif %}">Todas Prioridades</a>
+                            <a href="?prioridade=alta&status={{ status_atual }}&q_escola={{ search_query }}" class="btn btn-sm {% if prioridade_atual == 'alta' %}btn-danger{% else %}btn-outline-danger{% endif %}">Alta</a>
+                            <a href="?prioridade=normal&status={{ status_atual }}&q_escola={{ search_query }}" class="btn btn-sm {% if prioridade_atual == 'normal' %}btn-warning text-dark{% else %}btn-outline-warning text-dark{% endif %}">Normal</a>
+                            <a href="?prioridade=baixa&status={{ status_atual }}&q_escola={{ search_query }}" class="btn btn-sm {% if prioridade_atual == 'baixa' %}btn-success{% else %}btn-outline-success{% endif %}">Baixa</a>
+                        </div>
+                    </div>
+
+                    <div class="col-auto">
+                        <div class="btn-group" role="group">
+                             <a href="?prioridade={{ prioridade_atual }}&q_escola={{ search_query }}" class="btn btn-sm {% if not status_atual %}btn-primary{% else %}btn-outline-primary{% endif %}">Todos Status</a>
+                             <a href="?status=visualizado&prioridade={{ prioridade_atual }}&q_escola={{ search_query }}" class="btn btn-sm {% if status_atual == 'visualizado' %}btn-success{% else %}btn-outline-success{% endif %}">Visualizados</a>
+                             <a href="?status=pendente&prioridade={{ prioridade_atual }}&q_escola={{ search_query }}" class="btn btn-sm {% if status_atual == 'pendente' %}btn-secondary{% else %}btn-outline-secondary{% endif %}">Pendentes</a>
+                        </div>
+                    </div>
+
                 </div>
-            </div>
+            </form>
             <hr>
 
             {% if avisos %}
@@ -63,9 +77,7 @@
                         <div class="card h-100 shadow-hover">
                             
                             <div class="card-header d-flex justify-content-between align-items-center bg-white">
-                                <h6 class="card-title mb-0 fw-bold text-truncate" title="{{ aviso.titulo }}">
-                                    {{ aviso.titulo }}
-                                </h6>
+                                <h6 class="card-title mb-0 fw-bold text-truncate" title="{{ aviso.titulo }}">{{ aviso.titulo }}</h6>
                                 {% if aviso.prioridade == 'alta' %}<span class="badge bg-danger">Alta</span>
                                 {% elif aviso.prioridade == 'normal' %}<span class="badge bg-warning text-dark">Normal</span>
                                 {% else %}<span class="badge bg-success">Baixa</span>
@@ -74,37 +86,22 @@
 
                             <div class="card-body p-0">
                                 <ul class="list-group list-group-flush small">
+                                    <li class="list-group-item d-flex align-items-center"><i class="bi bi-building me-2 text-muted"></i><strong class="me-2">Escola:</strong> {{ aviso.escola.nome }}</li>
+                                    <li class="list-group-item d-flex align-items-center"><i class="bi bi-calendar-event me-2 text-muted"></i><strong class="me-2">Publicado:</strong> {{ aviso.data_criacao|date:"d/m/Y H:i" }}</li>
                                     <li class="list-group-item d-flex align-items-center">
-                                        <i class="bi bi-building me-2 text-muted"></i>
-                                        <strong class="me-2">Escola(s):</strong> {{ aviso.escola.nome }}
-                                    </li>
-                                    <li class="list-group-item d-flex align-items-center">
-                                        <i class="bi bi-calendar-event me-2 text-muted"></i>
-                                        <strong class="me-2">Publicado em:</strong> {{ aviso.data_criacao|date:"d/m/Y H:i" }}
+                                        {% if aviso.foi_visualizado %}
+                                            <i class="bi bi-check-circle-fill me-2 text-success"></i><strong class="me-2">Status:</strong><span class="badge bg-success">Visualizado</span>
+                                        {% else %}
+                                            <i class="bi bi-hourglass-split me-2 text-secondary"></i><strong class="me-2">Status:</strong><span class="badge bg-secondary">Pendente</span>
+                                        {% endif %}
                                     </li>
                                 </ul>
                             </div>
 
                             <div class="card-footer d-flex align-items-center gap-2">
                                 <input class="form-check-input me-auto aviso-checkbox" type="checkbox" name="avisos_selecionados" value="{{ aviso.id }}" title="Selecionar para apagar">
-                                
-                                <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#viewAvisoModal"
-                                        data-titulo="{{ aviso.titulo }}" 
-                                        data-mensagem="{{ aviso.mensagem }}"
-                                        data-prioridade="{{ aviso.get_prioridade_display }}" 
-                                        data-escola="{{ aviso.escola.nome }}"
-                                        data-criado-por="{{ aviso.criado_por }}" 
-                                        data-data-criacao="{{ aviso.data_criacao|date:"d/m/Y H:i" }}"
-                                        {% if aviso.imagem %}data-imagem-url="{{ aviso.imagem.url }}"{% endif %}>
-                                    <i class="bi bi-eye-fill"></i> Visualizar
-                                </button>
-
-                                <button type="button" class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#editAvisoModal"
-                                        data-id="{{ aviso.id }}" data-titulo="{{ aviso.titulo }}" data-mensagem="{{ aviso.mensagem }}"
-                                        data-prioridade="{{ aviso.prioridade }}" data-escola-id="{{ aviso.escola.id }}"
-                                        data-criado-por-id="{{ aviso.criado_por.id }}" data-ativo="{{ aviso.ativo|yesno:'true,false' }}">
-                                    <i class="bi bi-pencil-square"></i> Editar
-                                </button>
+                                <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#viewAvisoModal" data-titulo="{{ aviso.titulo }}" data-mensagem="{{ aviso.mensagem }}" data-prioridade="{{ aviso.get_prioridade_display }}" data-escola="{{ aviso.escola.nome }}" data-criado-por="{{ aviso.criado_por.user.get_full_name|default:aviso.criado_por.user.username }}" data-data-criacao="{{ aviso.data_criacao|date:"d/m/Y H:i" }}" {% if aviso.imagem %}data-imagem-url="{{ aviso.imagem.url }}"{% endif %}><i class="bi bi-eye-fill"></i></button>
+                                <button type="button" class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#editAvisoModal" data-id="{{ aviso.id }}" data-titulo="{{ aviso.titulo }}" data-mensagem="{{ aviso.mensagem }}" data-prioridade="{{ aviso.prioridade }}" data-escola-id="{{ aviso.escola.id }}" data-criado-por-id="{{ aviso.criado_por.id }}" data-ativo="{{ aviso.ativo|yesno:'true,false' }}"><i class="bi bi-pencil-square"></i></button>
                             </div>
                         </div>
                     </div>
@@ -115,30 +112,27 @@
             <nav aria-label="Navegação de páginas" class="mt-5">
                 <ul class="pagination justify-content-center">
                     {% if avisos.has_previous %}
-                        <li class="page-item"><a class="page-link" href="?page=1{% if prioridade_atual %}&prioridade={{ prioridade_atual }}{% endif %}">&laquo;</a></li>
-                        <li class="page-item"><a class="page-link" href="?page={{ avisos.previous_page_number }}{% if prioridade_atual %}&prioridade={{ prioridade_atual }}{% endif %}">&lsaquo;</a></li>
+                        <li class="page-item"><a class="page-link" href="?page=1&prioridade={{ prioridade_atual }}&status={{ status_atual }}&q_escola={{ search_query }}">&laquo;</a></li>
+                        <li class="page-item"><a class="page-link" href="?page={{ avisos.previous_page_number }}&prioridade={{ prioridade_atual }}&status={{ status_atual }}&q_escola={{ search_query }}">&lsaquo;</a></li>
                     {% endif %}
-
                     {% for num in avisos.paginator.page_range %}
                         {% if avisos.number == num %}
                             <li class="page-item active"><span class="page-link">{{ num }}</span></li>
                         {% elif num > avisos.number|add:'-3' and num < avisos.number|add:'3' %}
-                            <li class="page-item"><a class="page-link" href="?page={{ num }}{% if prioridade_atual %}&prioridade={{ prioridade_atual }}{% endif %}">{{ num }}</a></li>
+                            <li class="page-item"><a class="page-link" href="?page={{ num }}&prioridade={{ prioridade_atual }}&status={{ status_atual }}&q_escola={{ search_query }}">{{ num }}</a></li>
                         {% endif %}
                     {% endfor %}
-
                     {% if avisos.has_next %}
-                        <li class="page-item"><a class="page-link" href="?page={{ avisos.next_page_number }}{% if prioridade_atual %}&prioridade={{ prioridade_atual }}{% endif %}">&rsaquo;</a></li>
-                        <li class="page-item"><a class="page-link" href="?page={{ avisos.paginator.num_pages }}{% if prioridade_atual %}&prioridade={{ prioridade_atual }}{% endif %}">&raquo;</a></li>
+                        <li class="page-item"><a class="page-link" href="?page={{ avisos.next_page_number }}&prioridade={{ prioridade_atual }}&status={{ status_atual }}&q_escola={{ search_query }}">&rsaquo;</a></li>
+                        <li class="page-item"><a class="page-link" href="?page={{ avisos.paginator.num_pages }}&prioridade={{ prioridade_atual }}&status={{ status_atual }}&q_escola={{ search_query }}">&raquo;</a></li>
                     {% endif %}
                 </ul>
             </nav>
-
             {% else %}
             <div class="text-center p-5">
                 <i class="bi bi-bell-slash fs-1 text-muted"></i>
                 <h4 class="mt-3">Nenhum aviso encontrado</h4>
-                <p class="text-muted">Verifique o filtro de prioridade ou crie um novo aviso.</p>
+                <p class="text-muted">Verifique os filtros aplicados ou crie um novo aviso.</p>
                 <a href="{% url 'criar_aviso' %}" class="btn btn-primary mt-2"><i class="bi bi-plus-circle me-2"></i>Criar Primeiro Aviso</a>
             </div>
             {% endif %}
@@ -151,11 +145,9 @@
         <div class="modal-content">
             <div class="modal-header"><h5 class="modal-title" id="viewAvisoModalTitle"></h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
             <div class="modal-body">
-                
                 <div id="viewAvisoModalImageContainer" class="text-center mb-3" style="display: none;">
-                    <img id="viewAvisoModalImage" src="" class="img-fluid rounded" alt="Imagem do Aviso">
+                    <img id="viewAvisoModalImage" src="" class="img-fluid rounded" alt="Imagem do Aviso" style="max-height: 300px;">
                 </div>
-                
                 <p><strong>Prioridade: </strong><span id="viewAvisoModalPriorityBadge"></span></p>
                 <p><strong>Mensagem:</strong></p>
                 <p id="viewAvisoModalBodyContent" style="white-space: pre-wrap;"></p>
@@ -186,11 +178,13 @@
         </div>
     </div>
 </div>
+{% endblock %}
 
+{% block extra_script %}
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    // ---- MODAL DE VISUALIZAÇÃO ----
     const viewAvisoModal = document.getElementById('viewAvisoModal');
     if (viewAvisoModal) {
         viewAvisoModal.addEventListener('show.bs.modal', event => {
@@ -215,39 +209,27 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
+    // ---- MODAL DE EDIÇÃO ----
     const editAvisoModal = document.getElementById('editAvisoModal');
     if (editAvisoModal) {
         editAvisoModal.addEventListener('show.bs.modal', event => {
             const button = event.relatedTarget;
             const form = document.getElementById('editAvisoForm');
             form.action = `/problemas/avisos/editar/${button.getAttribute('data-id')}/`;
-            const inputTitulo = document.getElementById('titulo_modal_edit');
-            const textareaMensagem = document.getElementById('mensagem_modal_edit');
-            const selectPrioridade = document.getElementById('prioridade_modal_edit');
-            inputTitulo.value = button.getAttribute('data-titulo');
-            textareaMensagem.value = button.getAttribute('data-mensagem');
-            selectPrioridade.value = button.getAttribute('data-prioridade');
+            document.getElementById('titulo_modal_edit').value = button.getAttribute('data-titulo');
+            document.getElementById('mensagem_modal_edit').value = button.getAttribute('data-mensagem');
+            document.getElementById('prioridade_modal_edit').value = button.getAttribute('data-prioridade');
             document.getElementById('escola_modal_edit').value = button.getAttribute('data-escola-id');
             document.getElementById('criado_por_modal_edit').value = button.getAttribute('data-criado-por-id');
             document.getElementById('ativo_modal_edit').value = button.getAttribute('data-ativo');
-            
-            const saveChangesBtn = document.getElementById('saveChangesBtn');
-            const originalData = { titulo: inputTitulo.value, mensagem: textareaMensagem.value, prioridade: selectPrioridade.value };
-            saveChangesBtn.disabled = true;
-            
-            const checkForChanges = () => {
-                const isChanged = inputTitulo.value !== originalData.titulo || textareaMensagem.value !== originalData.mensagem || selectPrioridade.value !== originalData.prioridade;
-                saveChangesBtn.disabled = !isChanged;
-            };
-            form.addEventListener('input', checkForChanges);
         });
     }
 
+    // ---- LÓGICA DE SELEÇÃO E EXCLUSÃO ----
     const masterCheckbox = document.getElementById('selecionarTodosCheckbox');
     if (masterCheckbox) {
         masterCheckbox.addEventListener('change', function() {
-            const noticeCheckboxes = document.querySelectorAll('.aviso-checkbox');
-            noticeCheckboxes.forEach(checkbox => { checkbox.checked = this.checked; });
+            document.querySelectorAll('.aviso-checkbox').forEach(checkbox => { checkbox.checked = this.checked; });
         });
     }
 
@@ -276,56 +258,8 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         });
     }
- 
-    function getCsrfToken() {
-        return document.querySelector('[name=csrfmiddlewaretoken]').value;
-    }
 
-    async function verificarEApagarAvisosAutomaticos() {
-        try {
-            const response = await fetch("{% url 'verificar_avisos_automaticos' %}");
-            const data = await response.json();
-
-            if (data.avisos_para_apagar && data.avisos_para_apagar.length > 0) {
-                const avisos = data.avisos_para_apagar;
-                const total = avisos.length;
-                
-                const result = await Swal.fire({
-                    title: `Encontramos ${total} aviso(s) automático(s) expirado(s).`,
-                    text: 'Deseja apagá-los agora?',
-                    icon: 'question',
-                    showCancelButton: true,
-                    confirmButtonText: 'Sim, apagar!',
-                    cancelButtonText: 'Cancelar',
-                    confirmButtonColor: '#d33'
-                });
-
-                if (result.isConfirmed) {
-                    const deleteResponse = await fetch("{% url 'apagar_avisos_automaticos' %}", {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRFToken': getCsrfToken()
-                        },
-                        body: JSON.stringify({ 'aviso_ids': avisos.map(a => a.id) })
-                    });
-
-                    const deleteData = await deleteResponse.json();
-
-                    if (deleteData.status === 'success') {
-                        await Swal.fire('Sucesso!', deleteData.message, 'success');
-                        window.location.reload();
-                    } else {
-                        await Swal.fire('Erro!', deleteData.message || 'Ocorreu um erro ao apagar os avisos.', 'error');
-                    }
-                }
-            }
-        } catch (error) {
-            console.error('Erro ao verificar/apagar avisos automáticos:', error);
-        }
-    }
- 
-    verificarEApagarAvisosAutomaticos();
+    // O script de verificação automática pode ser mantido se desejado
 });
 </script>
 
@@ -335,6 +269,9 @@ document.addEventListener('DOMContentLoaded', function() {
 }
 .shadow-hover:hover {
     box-shadow: 0 .5rem 1rem rgba(0,0,0,.15)!important;
+}
+.list-group-item {
+    padding: 0.75rem 1rem;
 }
 </style>
 
