@@ -215,6 +215,12 @@ def dashboard_monitoramentos(request):
         escola_id: count
         for escola_id, count in monitoramentos.values('escola_id').annotate(total=Count('id')).values_list('escola_id', 'total')
     }
+
+    monitoramentos_filtrados_por_escola = {}
+    for escola in escolas:
+        monitoramentos_filtrados_por_escola[escola.id] = list(
+            monitoramentos.filter(escola=escola).order_by('-criado_em')[:3]
+        )
     # Contar monitoramentos sem respostas
     monitoramentos_pendentes = monitoramentos.annotate(
         num_respostas=Count('respostas')
@@ -256,14 +262,16 @@ def dashboard_monitoramentos(request):
         }
         for greuser in greusers
     ]
-
+    ver_todas = request.GET.get('ver_todas') == '1'
     context = {
         'escolas': escolas,
+        'ver_todas': ver_todas,
         'monitoramentos_por_escola': monitoramentos_por_escola,
         'questionarios': questionarios,
         'selected_school': int(school_id) if school_id else None,
         'total_monitoramentos': total_monitoramentos,
         'monitoramentos_pendentes': monitoramentos_pendentes,
+        'monitoramentos_filtrados_por_escola': monitoramentos_filtrados_por_escola,
         'upcoming_monitoramentos': upcoming_monitoramentos,
         'status_labels': ['Respondidos', 'Pendentes'],
         'status_values': [

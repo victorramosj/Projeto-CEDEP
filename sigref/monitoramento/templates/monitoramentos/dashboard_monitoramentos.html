@@ -361,67 +361,109 @@
         </div>
     </div>
     <div class="card-body">
-        <div class="card-body">
-            {% if escolas %}
-            <div class="dashboard-grid">
-                {% for escola in escolas|slice:":6" %}
-                <div class="card sector-card h-100" style="border-left-color: {{ forloop.counter|color_rotate }}">
-                    <div class="card-body">
-                        <div class="d-flex justify-content-between align-items-start mb-3">
-                            <div>
-                                <h6 class="card-title mb-1">{{ escola.nome }}</h6>
-                                <small class="text-muted">{{ escola.endereco|truncatechars:30 }}</small>
-                            </div>
-                            <span class="badge bg-light text-dark">
-                                {{ monitoramentos_por_escola|dict_get:escola.id }} monitoramentos
-                            </span>
-                        </div>
-                        <div class="mb-3">
-                            {% with monitoramentos=monitoramentos_filtrados_por_escola|dict_get:escola.id %}
-                            {% if monitoramentos %}
-                                {% for monitoramento in monitoramentos %}
-                                <div class="d-flex justify-content-between align-items-center mb-2">
-                                    <div>
-                                        <span class="d-block small text-truncate" style="max-width: 150px;">
-                                            {{ monitoramento.questionario.titulo }}
-                                        </span>
-                                        <small class="text-muted">
-                                            {{ monitoramento.criado_em|date:"d/m/Y" }}
-                                        </small>
-                                    </div>
-                                    <a href="{% url 'detalhe_monitoramento' monitoramento.id %}"
-                                        class="btn btn-sm btn-outline-{% if monitoramento.respostas.exists %}primary{% else %}secondary{% endif %}">
-                                        <i
-                                            class="fas fa-{% if monitoramento.respostas.exists %}eye{% else %}edit{% endif %}"></i>
-                                    </a>
+    {% if escolas %}
+        <div class="dashboard-grid" style="{% if ver_todas %}max-height: 600px; overflow-y: auto;{% endif %}">
+            {% if ver_todas %}
+                {% for escola in escolas %}
+                    <div class="card sector-card h-100" style="border-left-color: {{ forloop.counter|color_rotate }}">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start mb-3">
+                                <div>
+                                    <h6 class="card-title mb-1">{{ escola.nome }}</h6>
+                                    <small class="text-muted">{{ escola.endereco|truncatechars:30 }}</small>
                                 </div>
-                                {% empty %}
-                                <div class="text-muted small">Nenhum monitoramento no período.</div>
-                                {% endfor %}
-                            {% else %}
-                                <div class="text-muted small">Nenhum monitoramento no período.</div>
-                            {% endif %}
-                            {% endwith %}
+                                <span class="badge bg-light text-dark">
+                                    {{ monitoramentos_por_escola|dict_get:escola.id }} monitoramentos
+                                </span>
+                            </div>
+                            <div class="mb-3">
+                                {% with monitoramentos=monitoramentos_filtrados_por_escola|dict_get:escola.id %}
+                                    {% if monitoramentos %}
+                                        {% for monitoramento in monitoramentos %}
+                                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                                <div>
+                                                    <span class="d-block small text-truncate" style="max-width: 150px;">
+                                                        {{ monitoramento.questionario.titulo }}
+                                                    </span>
+                                                    <small class="text-muted">
+                                                        {{ monitoramento.criado_em|date:"d/m/Y" }}
+                                                    </small>
+                                                </div>
+                                                <a href="{% url 'detalhe_monitoramento' monitoramento.id %}"
+                                                   class="btn btn-sm btn-outline-{% if monitoramento.respostas.exists %}primary{% else %}secondary{% endif %}">
+                                                    <i class="fas fa-{% if monitoramento.respostas.exists %}eye{% else %}edit{% endif %}"></i>
+                                                </a>
+                                            </div>
+                                        {% empty %}
+                                            <div class="text-muted small">Nenhum monitoramento no período.</div>
+                                        {% endfor %}
+                                    {% else %}
+                                        <div class="text-muted small">Nenhum monitoramento no período.</div>
+                                    {% endif %}
+                                {% endwith %}
+                            </div>
                         </div>
                     </div>
-                </div>
                 {% endfor %}
-            </div>
-            {% if escolas.count > 6 %}
+            {% else %}
+                {% for escola in escolas|slice:":8" %}
+                    <div class="card sector-card h-100" style="border-left-color: {{ forloop.counter|color_rotate }}">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start mb-3">
+                                <div>
+                                    <h6 class="card-title mb-1">{{ escola.nome }}</h6>
+                                    <small class="text-muted">{{ escola.endereco|truncatechars:30 }}</small>
+                                </div>
+                                <span class="badge bg-light text-dark">
+                                    {{ monitoramentos_por_escola|dict_get:escola.id }} monitoramentos
+                                </span>
+                            </div>
+                            <div class="mb-3">
+                                {% with monitoramentos=monitoramentos_filtrados_por_escola|dict_get:escola.id %}
+                                    {% if monitoramentos %}
+                                        {% for monitoramento in monitoramentos %}
+                                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                                <div>
+                                                    <span class="d-block small text-truncate" style="max-width: 150px;">
+                                                        {{ monitoramento.questionario.titulo }}
+                                                    </span>
+                                                    <small class="text-muted">
+                                                        {{ monitoramento.criado_em|date:"d/m/Y" }}
+                                                    </small>
+                                                </div>
+                                                <a href="{% url 'detalhe_monitoramento' monitoramento.id %}"
+                                                   class="btn btn-sm btn-outline-{% if monitoramento.respostas.exists %}primary{% else %}secondary{% endif %}">
+                                                    <i class="fas fa-{% if monitoramento.respostas.exists %}eye{% else %}edit{% endif %}"></i>
+                                                </a>
+                                            </div>
+                                        {% empty %}
+                                            <div class="text-muted small">Nenhum monitoramento no período.</div>
+                                        {% endfor %}
+                                    {% else %}
+                                        <div class="text-muted small">Nenhum monitoramento no período.</div>
+                                    {% endif %}
+                                {% endwith %}
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        </div>
+        {% if not ver_todas and escolas.count > 8 %}
             <div class="text-center mt-4">
-                <a href="{% url 'selecionar_escola' %}" class="btn btn-outline-primary">
+                <a href="?{% if request.GET.period %}period={{ request.GET.period }}&{% endif %}ver_todas=1" class="btn btn-outline-primary">
                     <i class="fas fa-school me-1"></i>Ver todas as escolas
                 </a>
             </div>
-            {% endif %}
-            {% else %}
-            <div class="no-data-message">
-                <i class="fas fa-school no-data-icon"></i>
-                <h5>Nenhuma escola disponível</h5>
-                <p class="text-muted">Você não tem permissão para visualizar escolas ou não há escolas cadastradas</p>
-            </div>
-            {% endif %}
+        {% endif %}
+    {% else %}
+        <div class="no-data-message">
+            <i class="fas fa-school no-data-icon"></i>
+            <h5>Nenhuma escola disponível</h5>
+            <p class="text-muted">Você não tem permissão para visualizar escolas ou não há escolas cadastradas</p>
         </div>
+    {% endif %}
+</div>
     </div>
 
     <!-- Gráfico de Status -->
@@ -437,7 +479,7 @@
                         <canvas id="statusChart"></canvas>
                     </div>
                     {% else %}
-                    <div class="no-data-message">
+         </div>           <div class="no-data-message">
                         <i class="fas fa-chart-pie no-data-icon"></i>
                         <h5>Nenhum dado disponível</h5>
                         <p class="text-muted">Ainda não há monitoramentos realizados</p>
