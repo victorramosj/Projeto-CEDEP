@@ -11,9 +11,9 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
 
     <style>
-        /* ---------------------------------- */
+        /* --------------------------------------------- */
         /* ----- PALETA DE CORES E ESTILOS GERAIS ----- */
-        /* ---------------------------------- */
+        /* --------------------------------------------*/
         :root {
             --primary-color: #26326D; /* Azul escuro principal */
             --accent-color: #E53935; /* Vermelho para avisos */
@@ -398,8 +398,10 @@
         }
     </style>
 {% endblock %}
-
 {% block content %}
+<!-- ==================================================================
+    Dashboard da Escola
+    ================================================================== -->
 <div class="container mt-4">
     <div class="header-escola">
         <div class="info-escola">
@@ -423,6 +425,10 @@
             {% endif %}
         </a>
     </div>
+
+    <!-- ==================================================================
+    Indicadores de Lacunas e Problemas
+    ================================================================== -->
 
     <div class="row">
         <div class="col-lg-8 mb-4 mb-lg-0">
@@ -475,10 +481,15 @@
         </div>
     </div>
 
+
+    <!-- ==================================================================
+    Histórico de Problemas 
+    ================================================================== -->
     <div class="mt-5">
         <div class="d-flex justify-content-between align-items-center mb-3">
             <h5 class="titulo-secao mb-0">HISTÓRICO DE PROBLEMAS</h5>
-            <a href="{% url 'tela_problemas' %}" class="btn btn-relatar" style="width: auto;">Ver Mais</a>
+            <a href="{% url 'lista_problemas_escola'   escola_id=escola.id %}" class="btn btn-relatar" style="width: auto;">Ver Mais</a>
+            
         </div>
         <div class="row g-4">
             <div class="col-xl-3 col-md-6">
@@ -508,10 +519,14 @@
         </div>
     </div>
 
+    <!-- ==================================================================
+    Histórico de Lacunas
+    ================================================================== -->
     <div class="mt-5">
         <div class="d-flex justify-content-between align-items-center mb-3">
             <h5 class="titulo-secao mb-0">HISTÓRICO DE LACUNAS</h5>
-            <a href="{% url 'tela_lacunas' %}" class="btn btn-relatar" style="width: auto;">Ver Mais</a>
+            <a href="{% url 'lista_lacunas_escola' escola_id=escola.id %}" class="btn btn-relatar" style="width: auto;">Ver Mais</a>
+
         </div>
         <div class="row g-4">
             <div class="col-xl-3 col-md-6">
@@ -542,6 +557,9 @@
     </div>
 </div>
 
+<!-- ==================================================================
+    Modal para exibir a imagem da escola 
+    ================================================================== -->
 <div class="modal fade" id="schoolImageModal" tabindex="-1" aria-labelledby="schoolImageModalLabel" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered modal-lg">
     <div class="modal-content">
@@ -556,7 +574,9 @@
   </div>
 </div>
 
-
+<!-- ==================================================================
+    Modal para relatar lacuna
+    ================================================================== -->
 <div class="modal fade" id="modalRelatarLacuna" tabindex="-1" aria-labelledby="modalLacunaLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
@@ -596,6 +616,9 @@
     </div>
 </div>
 
+<!-- ==================================================================
+    Modal para relatar problema
+    ================================================================== -->
 <div class="modal fade" id="modalRelatarProblema" tabindex="-1" aria-labelledby="modalProblemaLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
@@ -640,6 +663,9 @@
     </div>
 </div>
 
+<!-- ==================================================================
+    Modal para exibir todos os avisos
+    ================================================================== -->
 <div class="modal fade" id="modalAvisos" tabindex="-1" aria-labelledby="modalAvisosLabel" aria-hidden="true">
     <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
         <div class="modal-content">
@@ -723,6 +749,9 @@
     </div>
 </div>
 
+<!-- ==================================================================
+    Modal para criar novo aviso
+    ================================================================== -->
 <div class="modal fade" id="modalCriarAviso" tabindex="-1" aria-labelledby="modalCriarAvisoLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
@@ -770,7 +799,6 @@
     </div>
 </div>
 {% endblock %} 
-
 {% block extra_script %}
 <script>
 document.addEventListener('DOMContentLoaded', function() {

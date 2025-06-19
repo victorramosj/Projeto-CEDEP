@@ -29,7 +29,7 @@ from rest_framework.views import APIView
 from monitoramento.models import Escola, GREUser, Setor
 
 from .forms import AvisoForm, LacunaForm, ProblemaUsuarioForm
-from .models import (AvisoImportante, ConfirmacaoAviso, Lacuna, ProblemaUsuario, Setor, STATUS_CHOICES)
+from .models import (AvisoImportante, ConfirmacaoAviso, Lacuna,ProblemaUsuario, STATUS_CHOICES)
 from .serializers import (AvisoImportanteSerializer, LacunaSerializer,ProblemaUsuarioSerializer)
 
 
@@ -352,15 +352,6 @@ def tela_problema_view(request):
     if status_filter:
         problemas_list = problemas_list.filter(status=status_filter)
 
-    # Filtro por Setor
-    setor_filter = request.GET.get('setor', '')
-    if setor_filter:
-        #filtra pela chave primária do setor
-        problemas_list = problemas_list.filter(setor__id=setor_filter)
-
-    # Obter todos os setores para popular o dropdown no template
-    todos_os_setores = Setor.objects.all().order_by('nome')
-    
     # Paginação
     paginator = Paginator(problemas_list, 9) 	# 9 itens por página
     page_number = request.GET.get('page')
@@ -369,9 +360,8 @@ def tela_problema_view(request):
 
     # Passar os dados para o template
     context = {
-        'problemas_page': problemas_page,     # Lista de problemas paginada
+        'problemas_page': problemas_page,
         'total_problemas': total_problemas, 	# Total de problemas filtrados
-        'todos_os_setores': todos_os_setores,     # Passa todos os setores para o template
         'search_query': escola_query, 	# Termo de busca (para manter na barra de pesquisa)
         'request': request, # Passa o request para o template
         'status_choices': STATUS_CHOICES, #Passa as opções para o template
@@ -671,3 +661,95 @@ def confirmar_visualizacao_aviso(request, aviso_id):
     if confirmacao.status == 'pendente':
         confirmacao.confirmar_visualizado()
     return redirect('listar_avisos') 	# Redireciona para a página de avisos ou a página desejada
+
+
+# =============================================================================
+#  VIEW DA LISTA DE PROBLEMAS POR ESCOLA (REFEITA)
+# =============================================================================
+
+@login_required
+def lista_problemas_por_escola(request, escola_id):
+    """
+    Exibe uma lista paginada e filtrável de problemas para uma escola específica,
+    respeitando as permissões do usuário logado.
+    """
+    escola = get_object_or_404(Escola, pk=escola_id)
+
+    # 1. VERIFICAÇÃO DE PERMISSÃO (LÓGICA ESSENCIAL)
+    # Garante que o usuário só pode ver dados de escolas que lhe são permitidas.
+    if not request.user.greuser.pode_acessar_escola(escola):
+        raise PermissionDenied("Você não tem permissão para acessar os dados desta escola.")
+
+    # 2. LÓGICA DE FILTRAGEM E PESQUISA
+    # Pega a lista de todos os problemas apenas daquela escola como base.
+    queryset = ProblemaUsuario.objects.filter(escola=escola).order_by('-criado_em')
+
+    # Filtra por status, se o parâmetro 'status' for passado na URL (ex: ?status=P)
+    status_filter = request.GET.get('status')
+    if status_filter in ['P', 'R', 'E']: # 'P'endente, 'R'esolvido, 'E'm Andamento
+        queryset = queryset.filter(status=status_filter)
+    
+    # Filtra por termo de pesquisa, se houver
+    search_query = request.GET.get('q')
+    if search_query:
+        # Pesquisa na descrição do problema (ajuste o campo se necessário)
+        queryset = queryset.filter(descricao__icontains=search_query)
+
+    # 3. LÓGICA DE PAGINAÇÃO
+    # Evita que páginas com centenas de problemas fiquem lentas.
+    paginator = Paginator(queryset, 10) # Mostra 10 problemas por página
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    
+    context = {
+        'escola': escola,
+        'problemas': page_obj, # Envia o objeto da página para o template, não a lista inteira
+        'total_problemas': paginator.count, # Total de problemas após os filtros
+        'status_filter': status_filter, # Para manter o filtro selecionado na interface
+        'search_query': search_query, # Para manter o texto da busca na interface
+    }
+    
+    return render(request, 'tela_problemas.html', context)
+
+# =============================================================================
+#  VIEW DA LISTA DE LACUNAS POR ESCOLA (REFEITA)
+# =============================================================================
+from django.core.exceptions import PermissionDenied
+@login_required
+def lista_lacunas_por_escola(request, escola_id):
+    """
+    Exibe uma lista paginada e filtrável de lacunas para uma escola específica,
+    respeitando as permissões do usuário logado.
+    """
+    escola = get_object_or_404(Escola, pk=escola_id)
+
+    # 1. VERIFICAÇÃO DE PERMISSÃO
+    if not request.user.greuser.pode_acessar_escola(escola):
+        raise PermissionDenied("Você não tem permissão para acessar os dados desta escola.")
+
+    # 2. LÓGICA DE FILTRAGEM E PESQUISA
+    queryset = Lacuna.objects.filter(escola=escola).order_by('-criado_em')
+
+    status_filter = request.GET.get('status')
+    if status_filter in ['P', 'R', 'E']:
+        queryset = queryset.filter(status=status_filter)
+    
+    search_query = request.GET.get('q')
+    if search_query:
+        # Pesquisa na disciplina da lacuna (ajuste o campo se necessário)
+        queryset = queryset.filter(disciplina__icontains=search_query)
+
+    # 3. LÓGICA DE PAGINAÇÃO
+    paginator = Paginator(queryset, 10) # 10 lacunas por página
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    
+    context = {
+        'escola': escola,
+        'lacunas': page_obj,
+        'total_lacunas': paginator.count,
+        'status_filter': status_filter,
+        'search_query': search_query,
+    }
+    
+    return render(request, 'tela_lacunas.html', context)
