@@ -97,7 +97,7 @@ DEBUG = env.bool("DEBUG", default=False)
 # Proteção CSRF (se usar formulários)
 CSRF_TRUSTED_ORIGINS = [
     'https://projeto-cedep-production.up.railway.app',
-    'https://cedepegrefloresta.com.br',
+    'https://grefloresta.com.br',
     'http://localhost:8000',
     'http://127.0.0.1:8000',
     'http://127.0.0.1',  

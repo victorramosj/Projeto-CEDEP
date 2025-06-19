@@ -1,62 +1,153 @@
 {% extends "cedepe/base.html" %}
 {% block title %}Início{% endblock %}
-{% block extra_style %}]
+{% block extra_style %}
 <style>
+/* General button styling */
 .btn-lg {
     transition: all 0.3s ease-in-out;
+    border-radius: 0.5rem; /* Slightly rounded corners for a modern look */
+    padding: 0.75rem 1.5rem; /* More generous padding */
+    font-weight: 600; /* Bolder text for better readability */
 }
 
 .btn-lg:hover {
-    transform: scale(1.05);
-    filter: brightness(1.2);
+    transform: translateY(-3px) scale(1.02); /* Subtle lift and slight scale */
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15); /* Soft shadow on hover */
+    filter: brightness(1.1); /* Slightly brighter on hover */
 }
 
-.typing-effect {
-    animation: fadeIn 1s ease-in-out;
+/* New: Bounce-in effect for the welcome message */
+.bounce-in-effect {
+    animation: bounceIn 1s ease-out forwards; /* Changed animation name and timing */
+    opacity: 0; /* Start invisible for the animation */
 }
 
-@keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
-}</style>
+@keyframes bounceIn {
+    0% {
+        opacity: 0;
+        transform: translateY(50px) scale(0.8); /* Starts lower and smaller */
+    }
+    60% {
+        opacity: 1;
+        transform: translateY(-10px) scale(1.05); /* Bounces up slightly */
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0) scale(1); /* Settles at its final position */
+    }
+}
+
+/* Social media buttons styling */
+.social-share-buttons {
+    margin-top: 2.5rem; /* More space above social buttons */
+    padding-top: 1.5rem; /* Add some padding at the top */
+    border-top: 1px solid rgba(0, 0, 0, 0.1); /* Subtle separator line */
+}
+
+.social-share-buttons a {
+    font-size: 1.8rem; /* Larger icons */
+    margin: 0 0.8rem; /* More space between icons */
+    color: #6c757d; /* Muted color for icons */
+    transition: color 0.3s ease-in-out, transform 0.2s ease-in-out;
+}
+
+.social-share-buttons a:hover {
+    transform: translateY(-3px); /* Lift effect on hover */
+}
+
+/* Specific social media colors */
+.social-share-buttons .bi-facebook:hover {
+    color: #3b5998; /* Facebook blue */
+}
+
+.social-share-buttons .bi-twitter:hover {
+    color: #00acee; /* Twitter blue */
+}
+
+.social-share-buttons .bi-linkedin:hover {
+    color: #0e76a8; /* LinkedIn blue */
+}
+
+.social-share-buttons .bi-whatsapp:hover {
+    color: #25d366; /* WhatsApp green */
+}
+
+/* Instagram specific color */
+.social-share-buttons .bi-instagram:hover {
+    color: #E1306C; /* Instagram pink/purple */
+}
+
+/* Responsive adjustments for smaller screens */
+@media (max-width: 767.98px) {
+    .welcome-text { /* Renamed to .welcome-text for clarity */
+        font-size: 1.8rem; /* Adjust font size for smaller screens */
+    }
+
+    .btn-lg {
+        width: 100%; /* Make buttons full width on small screens */
+        margin-bottom: 1rem; /* Add space between stacked buttons */
+    }
+
+    .social-share-buttons a {
+        font-size: 1.5rem; /* Slightly smaller icons on small screens */
+        margin: 0 0.5rem; /* Less space between icons on small screens */
+    }
+}
+</style>
 {% endblock %}
 
 {% block content %}
 <div class="container d-flex justify-content-center align-items-center min-vh-100">
-    <div class="text-center">
-        <h1 class="fw-bold mb-4 typing-effect">
-            <span class="typing-text">
+    <div class="text-center w-100">
+        <h1 class="fw-bold mb-4 bounce-in-effect">
+            <span class="welcome-text">
                 {% if user.is_authenticated %}
                 Olá! Bem-vindo(a), {{ user.username }}!
                 {% else %}
-                Bem-vindo(a) ao Sistema de Gestão Integrado GRE FLORESTA!📊{% endif %}
+                Bem-vindo(a) ao Sistema Integrado GRE FLORESTA!📊
+                {% endif %}
             </span>
         </h1>
 
         {% if user.is_authenticated %}
         <p class="lead text-muted">Gerencie seus recursos com facilidade e eficiência.</p>
-        <a href="{% url 'dashboard_hospedagens' %}" class="btn btn-outline-primary btn-lg mt-3">
-            <i class="bi bi-house-door me-2"></i> Hospedagens
-        </a>
+        <div class="d-grid gap-3 col-10 col-sm-8 col-md-6 col-lg-5 mx-auto">
+            <a href="{% url 'dashboard_hospedagens' %}" class="btn btn-outline-primary btn-lg">
+                <i class="bi bi-house-door me-2"></i> Hospedagens
+            </a>
 
-        <a href="{% url 'dashboard_eventos' %}" class="btn btn-outline-warning btn-lg mt-3">
-            <i class="bi bi-calendar-event me-2"></i> Eventos
-        </a>
+            <a href="{% url 'dashboard_eventos' %}" class="btn btn-outline-warning btn-lg">
+                <i class="bi bi-calendar-event me-2"></i> Eventos
+            </a>
 
-        <a href="{% url 'logout' %}" class="btn btn-outline-danger btn-lg mt-3">
-            <i class="bi bi-box-arrow-right me-2"></i> Sair
-        </a>
-        </a>
+            <a href="{% url 'logout' %}" class="btn btn-outline-danger btn-lg">
+                <i class="bi bi-box-arrow-right me-2"></i> Sair
+            </a>
+        </div>
         {% else %}
         <p class="lead text-muted">Acesse sua conta ou registre-se para começar.</p>
-        <a href="{% url 'login' %}" class="btn btn-outline-success btn-lg mt-3">
-            <i class="bi bi-box-arrow-in-right me-2"></i> Entrar
-        </a>
-        
-        <a href="{% url 'dashboard_eventos' %}" class="btn btn-outline-warning btn-lg mt-3">
-            <i class="bi bi-calendar-event me-2"></i> Eventos
-        </a>
+        <div class="d-grid gap-3 col-10 col-sm-8 col-md-6 col-lg-5 mx-auto">
+            <a href="{% url 'login' %}" class="btn btn-outline-success btn-lg">
+                <i class="bi bi-box-arrow-in-right me-2"></i> Entrar
+            </a>
+            
+            <a href="{% url 'dashboard_eventos' %}" class="btn btn-outline-warning btn-lg">
+                <i class="bi bi-calendar-event me-2"></i> Eventos
+            </a>
+        </div>
         {% endif %}
+
+        <div class="social-share-buttons">
+            <p class="text-muted mt-4 mb-3">Conheça-nos e compartilhe:</p>
+            <a href="https://www.instagram.com/grefloresta.oficial/" target="_blank" class="text-decoration-none" aria-label="Visite nosso Instagram">
+                <i class="bi bi-instagram"></i>
+            </a>
+            
+            <a href="https://wa.me/558791019828?text=Ol%C3%A1%2C%20gostaria%20de%20saber%20mais%20sobre%20o%20Sistema%20Integrado%20GRE%20FLORESTA." target="_blank" class="text-decoration-none" aria-label="Fale conosco via WhatsApp">
+                <i class="bi bi-whatsapp"></i>
+            </a>
+            
+        </div>
     </div>
 </div>
 {% endblock %}

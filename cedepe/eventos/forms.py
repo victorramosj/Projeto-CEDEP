@@ -22,8 +22,8 @@ class AgendamentoForm(forms.ModelForm):
         fields = '__all__'
         widgets = {
             'evento': forms.Select(attrs={'class': 'form-select'}),
-            # Alterando para SelectMultiple para permitir múltiplas salas:
-            'salas': forms.SelectMultiple(attrs={'class': 'form-select'}),
+            # Alterando para CheckboxSelectMultiple para permitir múltiplas salas via checkbox:
+            'salas': forms.CheckboxSelectMultiple(attrs={'class': 'form-check-input'}),
             'inicio': forms.DateTimeInput(attrs={'class': 'form-control', 'type': 'datetime-local'}),
             'fim': forms.DateTimeInput(attrs={'class': 'form-control', 'type': 'datetime-local'}),
             'participantes': forms.TextInput(attrs={'class': 'form-control'}),
