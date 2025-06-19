@@ -170,17 +170,27 @@ class DetalheMonitoramentoView(DetailView):
             raise PermissionDenied
             
         return super().dispatch(request, *args, **kwargs)
-
+import datetime
 from datetime import timedelta
-
+from problemas.models import ProblemaUsuario, Lacuna, AvisoImportante
 def dashboard_monitoramentos(request):
     user = request.user.greuser
 
     # Período de filtro
-    period = int(request.GET.get('period', 30))
-    data_final = timezone.now()
-    data_inicial = data_final - timedelta(days=period)
-
+    period = request.GET.get('period', '30')
+    if period == 'custom':
+        data_inicial_str = request.GET.get('data_inicial')
+        data_final_str = request.GET.get('data_final')
+        try:
+            data_inicial = datetime.datetime.strptime(data_inicial_str, "%Y-%m-%d") if data_inicial_str else timezone.now() - timedelta(days=30)
+            data_final = datetime.datetime.strptime(data_final_str, "%Y-%m-%d") if data_final_str else timezone.now()
+        except ValueError:
+            data_inicial = timezone.now() - timedelta(days=30)
+            data_final = timezone.now()
+    else:
+        period_int = int(period)
+        data_final = timezone.now()
+        data_inicial = data_final - timedelta(days=period_int)
     # Escolas acessíveis
     if user.is_admin() or user.is_coordenador():
         escolas = Escola.objects.all()
@@ -263,6 +273,28 @@ def dashboard_monitoramentos(request):
         for greuser in greusers
     ]
     ver_todas = request.GET.get('ver_todas') == '1'
+
+    # IDs das escolas filtradas
+    escolas_ids = list(escolas.values_list('id', flat=True))
+
+    # Problemas reportados no período e nessas escolas
+    problemas = ProblemaUsuario.objects.filter(
+        escola_id__in=escolas_ids,
+        criado_em__range=(data_inicial, data_final)
+    ).select_related('usuario', 'setor', 'escola')
+
+    # Lacunas registradas no período e nessas escolas
+    lacunas = Lacuna.objects.filter(
+        escola_id__in=escolas_ids,
+        criado_em__range=(data_inicial, data_final)
+    ).select_related('escola')
+    # Avisos importantes no período e nessas escolas
+    avisos_importantes = AvisoImportante.objects.filter(
+        escola_id__in=escolas_ids,
+        data_criacao__range=(data_inicial, data_final)
+    ).select_related('escola')
+
+    problemas_pendentes = problemas.filter(status='P').count()
     context = {
         'escolas': escolas,
         'ver_todas': ver_todas,
@@ -281,7 +313,13 @@ def dashboard_monitoramentos(request):
         'setores': setores,
         'greusers': greusers_info,
         'period': period,
+        # Adicionados:
+        'problemas': problemas,
+        'lacunas': lacunas,
+        'problemas_pendentes': problemas_pendentes,
+        'avisos_importantes': avisos_importantes,
     }
+    
 
     return render(request, 'monitoramentos/dashboard_monitoramentos.html', context)
     

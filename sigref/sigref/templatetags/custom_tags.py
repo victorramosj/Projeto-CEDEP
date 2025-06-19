@@ -79,3 +79,8 @@ def dict_get(d, key):
     if isinstance(d, dict):
         return d.get(key, [])
     return []
+
+@register.filter
+def filter_by_status(queryset, status):
+    """Filtra um queryset ou lista de objetos pelo campo 'status'."""
+    return [obj for obj in queryset if getattr(obj, 'status', None) == status]
