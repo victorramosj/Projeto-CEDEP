@@ -688,6 +688,7 @@ from .models import Escola, Questionario, Monitoramento, Resposta
 class RelatorioDiarioView(View):
     def get(self, request, escola_id):
         escola = get_object_or_404(Escola, id=escola_id)
+        user = request.user
         agora = timezone.localtime(timezone.now())
         hoje = agora.date()
         
@@ -695,15 +696,17 @@ class RelatorioDiarioView(View):
         inicio_hoje = agora.replace(hour=0, minute=0, second=0, microsecond=0)
         fim_hoje = agora.replace(hour=23, minute=59, second=59, microsecond=999999)
         
-        # Busca todos os questionários respondidos hoje na escola
+        # Busca apenas os questionários respondidos HOJE pelo usuário logado na escola
         questionarios = Questionario.objects.filter(
             monitoramentos__escola=escola,
+            monitoramentos__respondido_por=user,
             monitoramentos__criado_em__range=(inicio_hoje, fim_hoje)
         ).distinct().prefetch_related(
             Prefetch(
                 'monitoramentos',
                 queryset=Monitoramento.objects.filter(
-                    criado_em__range=(inicio_hoje, fim_hoje)
+                    criado_em__range=(inicio_hoje, fim_hoje),
+                    respondido_por=user
                 ).prefetch_related(
                     Prefetch(
                         'respostas',
@@ -717,6 +720,7 @@ class RelatorioDiarioView(View):
         total_questionarios = questionarios.count()
         total_monitoramentos = Monitoramento.objects.filter(
             escola=escola,
+            respondido_por=user,
             criado_em__range=(inicio_hoje, fim_hoje)
         ).count()
         

@@ -259,12 +259,7 @@
                                                                 <i class="fas fa-edit me-1"></i>Editar
                                                             </a>
                                                         </div>
-                                                        {% if questionario.escolas_destino.exists %}
-                                                        <a href="{% url 'questionarios_escola' escola_id=questionario.escolas_destino.first.id %}" 
-                                                           class="btn btn-sm btn-link text-muted">
-                                                            Ver monitoramentos <i class="fas fa-arrow-right ms-1"></i>
-                                                        </a>
-                                                        {% endif %}
+                                                        
                                                     </div>
                                                 </div>
                                                 {% endfor %}

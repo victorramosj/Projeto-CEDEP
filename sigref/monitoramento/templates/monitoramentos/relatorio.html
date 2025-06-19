@@ -499,10 +499,10 @@
                             {{ resposta.pergunta.ordem }}. {{ resposta.pergunta.texto }}
                         </div>
                         <div class="resposta-valor">
-                            {% if resposta.pergunta.tipo_resposta == 'SN' %}
-                                {{ resposta.resposta_sn|default:"-" }}
+                        {% if resposta.pergunta.tipo_resposta == 'SN' %}
+                                {{ resposta.get_resposta_sn_display|default:"-" }}
                             {% elif resposta.pergunta.tipo_resposta == 'NU' %}
-                                {{ resposta.resposta_num|default:"-" }}
+                                {{ resposta.resposta_num|floatformat:0|default:"-" }}
                             {% else %}
                                 {{ resposta.resposta_texto|default:"-"|truncatechars:100 }}
                             {% endif %}

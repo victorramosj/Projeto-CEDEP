@@ -88,9 +88,8 @@
                             <p class="mb-0">
                                 Para que seu relatório seja considerado válido, é necessário realizar
                                 pelo menos <strong>5 monitoramentos</strong> em diferentes setores.
-                                {% if meus_monitoramentos_total < 5 %} Você já fez <strong>{{ meus_monitoramentos_total
-                                    }}</strong> -
-                                    faltam <strong>{{ 5|sub:meus_monitoramentos_total }}</strong>.
+                                {% if meus_monitoramentos_total < 5 %} Você já fez <strong>{{ meus_monitoramentos_total }}</strong> -
+                                    faltam <strong>{{ 5|subtract:meus_monitoramentos_total }}</strong>.
                                     {% elif meus_monitoramentos_total == 5 %}
                                     <strong>Parabéns!</strong> Você já completou o mínimo necessário.
                                     {% else %}

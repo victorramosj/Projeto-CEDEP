@@ -164,9 +164,9 @@
                 </div>
                 <div class="resposta-valor">
                     {% if resposta.pergunta.tipo_resposta == 'SN' %}
-                        {{ resposta.resposta_sn|default:"-" }}
+                        {{ resposta.get_resposta_sn_display|default:"-" }}
                     {% elif resposta.pergunta.tipo_resposta == 'NU' %}
-                        {{ resposta.resposta_num|default:"-" }}
+                        {{ resposta.resposta_num|floatformat:0|default:"-" }}
                     {% else %}
                         {{ resposta.resposta_texto|default:"-" }}
                     {% endif %}

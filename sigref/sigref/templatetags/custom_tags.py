@@ -32,27 +32,18 @@ def average(lista):
     except:
         return 'N/A'
     
-@register.filter(name='sub')
+@register.filter(name='subtract')
 def subtract(value, arg):
-    """Subtrai o argumento do valor."""
     try:
         return int(value) - int(arg)
     except (ValueError, TypeError):
         try:
-            return value - arg
-        except Exception:
-            return ''
-
-@register.filter(name='subtract')
-def subtract(value, arg):
-    """Subtrai arg de value."""
-    try:
-        return value - arg
-    except (TypeError, ValueError):
-        try:
             return float(value) - float(arg)
         except (TypeError, ValueError):
             return ''
+
+        
+
 from django.template.defaultfilters import floatformat
 @register.filter(name='percentage')
 def percentage(value, total):
