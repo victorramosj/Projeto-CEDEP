@@ -30,7 +30,7 @@ table .form-select {
             
             <div class="d-flex align-items-left gap-2">
             <!-- Barra de pesquisa -->
-                <form method="GET" action="{% url 'tela_problemas' %}" class="input-group" style="width: 600px;">
+                <form method="GET" action="{% url 'tela_problemas' %}" class="input-group" style="width: 460px;">
                     {% csrf_token %}
                     <span class="input-group-text"><i class="fas fa-search"></i></span>
                     <input type="text" class="form-control" name="escola" value="{{ search_query }}" placeholder="Pesquise por Escola...">
@@ -50,7 +50,14 @@ table .form-select {
                         <option value="R" {% if request.GET.status == 'R' %} selected {% endif %}>Resolvido</option>
                         <option value="E" {% if request.GET.status == 'E' %} selected {% endif %}>Em Andamento</option>
                     </select>
-                    
+                    <select class="form-select" name="setor" aria-label="Filtro Setor">
+                            <option value="" {% if not request.GET.setor %}selected{% endif %}>Setor (Todos)</option>
+                            {% for setor_obj in todos_os_setores %}
+                                <option value="{{ setor_obj.id }}" {% if request.GET.setor == setor_obj.id|stringformat:"s" %} selected {% endif %}>
+                                    {{ setor_obj.nome }}
+                                </option>
+                            {% endfor %}
+                    </select>
                 </div>
             </div>
 
@@ -113,7 +120,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const searchInput = document.querySelector("input[name='escola']");
     const selectData = document.querySelector("select[name='data']");
     const selectStatus = document.querySelector("select[name='status']");
+    const selectSetor = document.querySelector("select[name='setor']");
     
+    // Função para aplicar os filtros e redirecionar
     function aplicarFiltros() {
         // Pega a URL base sem parâmetros
         const baseUrl = window.location.origin + window.location.pathname;
@@ -123,20 +132,16 @@ document.addEventListener('DOMContentLoaded', () => {
         params.set('escola', searchInput.value);
         params.set('data', selectData.value);
         params.set('status', selectStatus.value);
-        
+        params.set('setor', selectSetor.value);
+
         // Redireciona para a página com os filtros corretos.
-        // Isso causa um recarregamento limpo da página, garantindo que tudo funcione.
         window.location.href = `${baseUrl}?${params.toString()}`;
     }
 
-    // Adiciona o evento para aplicar os filtros ao clicar num botão ou ao mudar a seleção
-    // Sugestão: adicione um botão de "Filtrar" no seu HTML para acionar isso
+    // Adiciona o evento de 'change' para cada select
     selectData.addEventListener('change', aplicarFiltros);
     selectStatus.addEventListener('change', aplicarFiltros);
-    // Para a barra de busca, o ideal é usar um botão de submit no form,
-    // mas se quiser que filtre ao digitar, a lógica abaixo funcionaria, 
-    // embora possa ser ineficiente. A melhoria seria usar o submit do form.
-
+    selectSetor.addEventListener('change', aplicarFiltros);
 
     // ==================================================================
     // PARTE 2: LÓGICA PARA ATUALIZAÇÃO DE STATUS (COM DELEGAÇÃO DE EVENTOS)
