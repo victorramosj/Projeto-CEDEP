@@ -1,527 +1,404 @@
 {% extends 'cedepe/base.html' %}
 {% load static %}
 
+{% block title %}{{ questionario.titulo }} - Gráficos{% endblock %}
+
 {% block extra_style %}
 {{ block.super }}
 <style>
-    .graficos-container {
-        max-width: 1000px;
-        margin: 40px auto;
-        background: #fff;
-        border-radius: 16px;
-        box-shadow: 0 8px 30px rgba(0,0,0,0.08);
-        padding: 32px;
+    /* Estilos gerais para o container */
+    #graficos-main-container {
+        background: #f8f9fa; /* Um fundo levemente cinza para destacar os cards */
+        padding: 30px 0;
     }
-    
-    .header-container {
+
+    .chart-card {
+        margin-bottom: 25px; /* Espaçamento entre os cards de gráfico */
+        border: none; /* Remover a borda padrão do card */
+        border-radius: 12px; /* Cantos arredondados */
+        box-shadow: 0 4px 12px rgba(0,0,0,0.08); /* Sombra mais suave */
+        overflow: hidden; /* Garante que o conteúdo não vaze */
+    }
+
+    .chart-card .card-header {
+        background-color: #e9ecef; /* Cor de fundo para o cabeçalho do card */
+        border-bottom: 1px solid #dee2e6;
+        padding: 15px 20px;
+        font-weight: 600;
+        color: #343a40;
         display: flex;
-        flex-wrap: wrap;
-        align-items: center;
         justify-content: space-between;
-        gap: 24px;
-        margin-bottom: 32px;
-        padding-bottom: 24px;
-        border-bottom: 1px solid #f0f0f0;
-    }
-    
-    .questionario-title {
-        margin: 0;
-        font-size: 1.8rem;
-        font-weight: 700;
-        color: #2c3e50;
-        flex-grow: 1;
-        min-width: 300px;
-    }
-    
-    .controls-container {
-        display: flex;
-        gap: 16px;
-        flex-wrap: wrap;
-    }
-    
-    .btn-control {
-        display: flex;
         align-items: center;
-        gap: 8px;
-        padding: 10px 16px;
-        border-radius: 8px;
-        font-weight: 500;
-        transition: all 0.2s ease;
-        border: none;
-        cursor: pointer;
     }
-    
-    .btn-back {
-        background: #f8f9fa;
-        color: #495057;
-    }
-    
-    .btn-back:hover {
-        background: #e9ecef;
-        transform: translateY(-2px);
-        box-shadow: 0 4px 8px rgba(0,0,0,0.05);
-    }
-    
-    .btn-export {
-        background: #e3f2fd;
-        color: #0d6efd;
-    }
-    
-    .btn-export:hover {
-        background: #d0e2ff;
-        transform: translateY(-2px);
-        box-shadow: 0 4px 8px rgba(13, 110, 253, 0.1);
-    }
-    
-    .filters-container {
-        display: flex;
-        gap: 16px;
-        margin-bottom: 28px;
-        flex-wrap: wrap;
-    }
-    
-    .filter-card {
-        flex: 1;
-        min-width: 200px;
-        background: #f8f9fa;
-        border-radius: 10px;
-        padding: 16px;
-        box-shadow: 0 2px 6px rgba(0,0,0,0.03);
-    }
-    
-    .filter-label {
-        display: block;
-        font-size: 0.9rem;
-        color: #6c757d;
-        margin-bottom: 8px;
-        font-weight: 500;
-    }
-    
-    .filter-select {
-        width: 100%;
-        padding: 10px 12px;
-        border-radius: 8px;
-        border: 1px solid #dee2e6;
-        background: #fff;
-        font-size: 0.95rem;
-        transition: all 0.2s ease;
-    }
-    
-    .filter-select:focus {
-        border-color: #86b7fe;
-        box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
-        outline: none;
-    }
-    
-    .grafico-card {
-        background: #fff;
-        border-radius: 12px;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-        margin-bottom: 32px;
-        border: 1px solid #f0f0f0;
-        overflow: hidden;
-        transition: transform 0.3s ease, box-shadow 0.3s ease;
-    }
-    
-    .grafico-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 8px 20px rgba(0,0,0,0.08);
-    }
-    
-    .grafico-header {
-        padding: 20px 24px;
-        background: #f8f9fa;
-        border-bottom: 1px solid #f0f0f0;
-    }
-    
-    .pergunta-title {
-        margin: 0;
-        font-size: 1.2rem;
-        font-weight: 600;
-        color: #212529;
-        display: flex;
-        align-items: center;
-        gap: 12px;
-    }
-    
-    .tipo-indicator {
-        display: inline-block;
-        padding: 4px 10px;
-        border-radius: 20px;
-        font-size: 0.8rem;
-        font-weight: 600;
-        background: #e9ecef;
-    }
-    
-    .tipo-SN { background: #d4edda; color: #155724; }
-    .tipo-NU { background: #cce5ff; color: #004085; }
-    .tipo-TX { background: #fff3cd; color: #856404; }
-    
-    .pergunta-desc {
-        margin: 12px 0 0;
-        color: #495057;
-        font-size: 1rem;
-        line-height: 1.5;
-    }
-    
-    .grafico-content {
-        padding: 24px;
-    }
-    
-    .no-data-container {
-        text-align: center;
-        padding: 40px 20px;
-    }
-    
-    .no-data-icon {
-        font-size: 3.5rem;
-        color: #dee2e6;
-        margin-bottom: 16px;
-    }
-    
-    .no-data-title {
-        font-size: 1.4rem;
-        color: #6c757d;
-        margin-bottom: 12px;
-    }
-    
-    .no-data-text {
-        color: #adb5bd;
-        max-width: 500px;
-        margin: 0 auto;
-        line-height: 1.6;
-    }
-    
-    .text-responses-container {
-        background: #f8f9fa;
-        border-radius: 8px;
+
+    .chart-card .card-body {
         padding: 20px;
-        max-height: 300px;
-        overflow-y: auto;
     }
-    
-    .text-response {
-        padding: 12px;
-        background: #fff;
-        border-radius: 8px;
-        margin-bottom: 12px;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.03);
-        border-left: 4px solid #0d6efd;
+
+    /* Estilos específicos para cada tipo de gráfico */
+    .card-sn {
+        background-color: #e6ffed; /* Verde claro */
+        border-left: 5px solid #28a745; /* Borda lateral verde */
     }
-    
-    .text-response:last-child {
+
+    .card-nu {
+        background-color: #e0f2ff; /* Azul claro */
+        border-left: 5px solid #007bff; /* Borda lateral azul */
+    }
+
+    .card-tx {
+        background-color: #fefefe; /* Branco para texto */
+        border-left: 5px solid #6c757d; /* Borda lateral cinza */
+    }
+
+    /* Estilos para informações estatísticas */
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+        gap: 10px;
+        margin-top: 15px;
+    }
+
+    .stat-item {
+        background-color: rgba(0,0,0,0.03);
+        padding: 8px 12px;
+        border-radius: 6px;
+        font-size: 0.85em;
+    }
+
+    .stat-item strong {
+        display: block;
+        font-size: 1.1em;
+        color: #343a40;
+    }
+
+    /* Estilos para lista de exemplos de texto */
+    .text-response-list {
+        list-style-type: disc; /* Bolinhas para a lista */
+        padding-left: 25px;
         margin-bottom: 0;
     }
-    
-    .stats-container {
-        display: flex;
-        gap: 16px;
-        margin-top: 20px;
-        flex-wrap: wrap;
-    }
-    
-    .stat-card {
-        flex: 1;
-        min-width: 150px;
-        background: #f8f9fa;
-        border-radius: 8px;
-        padding: 16px;
-        text-align: center;
-    }
-    
-    .stat-value {
-        font-size: 1.8rem;
-        font-weight: 700;
-        color: #2c3e50;
+
+    .text-response-list li {
         margin-bottom: 8px;
+        color: #495057;
     }
-    
-    .stat-label {
-        font-size: 0.9rem;
+
+    .no-data-message {
+        padding: 40px;
+        text-align: center;
         color: #6c757d;
+        font-size: 1.2em;
+        background-color: #f2f2f2;
+        border-radius: 8px;
+        margin-top: 30px;
     }
-    
-    @media (max-width: 768px) {
-        .graficos-container {
-            padding: 24px 16px;
-            margin: 20px auto;
-        }
-        
-        .header-container {
-            flex-direction: column;
-            align-items: flex-start;
-        }
-        
-        .controls-container {
-            width: 100%;
-        }
-        
-        .btn-control {
-            flex: 1;
-            justify-content: center;
-        }
-        
-        .filters-container {
-            flex-direction: column;
-        }
+
+    /* Ocultar barra de rolagem para o cabeçalho fixo */
+    .sticky-header {
+        position: sticky;
+        top: 0;
+        z-index: 1020; /* Bootstrap navbar z-index is 1030, this is just below */
+        background-color: var(--bs-body-bg); /* Use Bootstrap's background color variable */
+        padding-bottom: 15px;
+        border-bottom: 1px solid var(--bs-border-color-translucent);
     }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="graficos-container">
-    <div class="header-container">
-        <h1 class="questionario-title">{{ questionario.titulo }} - Análise de Respostas</h1>
-        <div class="controls-container">
-            <button class="btn-control btn-back" onclick="history.back()">
-                <i class="bi bi-arrow-left"></i>
-                Voltar
-            </button>
-            <button class="btn-control btn-export" id="exportBtn">
-                <i class="bi bi-download"></i>
-                Exportar Dados
-            </button>
-        </div>
+
+<div class="container-fluid py-4 sticky-header">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 class="mb-0 text-primary">{{ questionario.titulo }} - Visão Geral dos Gráficos</h2>
+        <button type="button" class="btn btn-outline-secondary d-flex align-items-center gap-2" onclick="history.back()">
+            <i class="bi bi-arrow-left"></i> Voltar
+        </button>
     </div>
-    
-    <div class="filters-container">
-        <div class="filter-card">
-            <label class="filter-label">Filtrar por Escola</label>
-            <select class="filter-select" id="escolaFilter">
-                <option value="all">Todas as Escolas</option>
-                <!-- Escolas seriam carregadas dinamicamente -->
-                <option value="escola1">Escola A</option>
-                <option value="escola2">Escola B</option>
-            </select>
-        </div>
-        
-        <div class="filter-card">
-            <label class="filter-label">Período</label>
-            <select class="filter-select" id="periodoFilter">
-                <option value="all">Todo o Período</option>
-                <option value="7">Últimos 7 dias</option>
-                <option value="30">Últimos 30 dias</option>
-                <option value="90">Últimos 90 dias</option>
-            </select>
-        </div>
-        
-        <div class="filter-card">
-            <label class="filter-label">Ordenar por</label>
-            <select class="filter-select" id="ordenarFilter">
-                <option value="recentes">Mais Recentes</option>
-                <option value="antigos">Mais Antigos</option>
-                <option value="alfabetico">Ordem Alfabética</option>
-            </select>
-        </div>
-    </div>
-    
-    <div id="graficos-content">
-        {% if dados_graficos|length > 0 %}
-            {% for item in dados_graficos %}
-            <div class="grafico-card">
-                <div class="grafico-header">
-                    <h2 class="pergunta-title">
-                        <span class="tipo-indicator tipo-{{ item.tipo }}">{{ item.tipo }}</span>
-                        {{ item.pergunta }}
-                    </h2>
-                    {% if item.descricao %}
-                    <p class="pergunta-desc">{{ item.descricao }}</p>
-                    {% endif %}
+    <div class="row">
+        <div class="col-md-6 col-lg-4 mb-3">
+            <div class="card shadow-sm h-100">
+                <div class="card-body">
+                    <h5 class="card-title text-info"><i class="bi bi-bar-chart-steps me-2"></i>Estatísticas Gerais</h5>
+                    <p class="card-text">Total de Monitoramentos: <span class="fw-bold">{{ total_monitoramentos }}</span></p>
+                    <p class="card-text">Escolas que Responderam: <span class="fw-bold">{{ escolas|length }}</span></p>
                 </div>
-                
-                <div class="grafico-content">
-                    {% if item.tipo == 'SN' %}
-                        <canvas id="grafico-{{ forloop.counter0 }}" height="220"></canvas>
-                        
-                        <div class="stats-container">
-                            <div class="stat-card">
-                                <div class="stat-value">{{ item.dados.values.0|floatformat:"0" }}%</div>
-                                <div class="stat-label">Respostas Sim</div>
-                            </div>
-                            <div class="stat-card">
-                                <div class="stat-value">{{ item.dados.values.1|floatformat:"0" }}%</div>
-                                <div class="stat-label">Respostas Não</div>
-                            </div>
-                            <div class="stat-card">
-                                <div class="stat-value">{{ item.dados.total_respostas }}</div>
-                                <div class="stat-label">Total de Respostas</div>
-                            </div>
-                        </div>
-                    
-                    {% elif item.tipo == 'NU' %}
-                        <canvas id="grafico-{{ forloop.counter0 }}" height="260"></canvas>
-                        
-                        <div class="stats-container">
-                            <div class="stat-card">
-                                <div class="stat-value">{{ item.dados.media|floatformat:"1" }}</div>
-                                <div class="stat-label">Média</div>
-                            </div>
-                            <div class="stat-card">
-                                <div class="stat-value">{{ item.dados.mediana|floatformat:"1" }}</div>
-                                <div class="stat-label">Mediana</div>
-                            </div>
-                            <div class="stat-card">
-                                <div class="stat-value">{{ item.dados.min|floatformat:"1" }} - {{ item.dados.max|floatformat:"1" }}</div>
-                                <div class="stat-label">Min - Max</div>
-                            </div>
-                        </div>
-                    
-                    {% elif item.tipo == 'TX' %}
-                        <div class="text-responses-container">
-                            {% if item.dados.exemplos|length > 0 %}
-                                {% for resposta in item.dados.exemplos %}
-                                <div class="text-response">
-                                    {{ resposta }}
-                                </div>
-                                {% endfor %}
-                            {% else %}
-                                <div class="no-data-container">
-                                    <i class="bi bi-chat-left-text no-data-icon"></i>
-                                    <h3 class="no-data-title">Nenhuma resposta textual</h3>
-                                    <p class="no-data-text">Não há respostas textuais registradas para esta pergunta.</p>
-                                </div>
-                            {% endif %}
-                        </div>
-                        
-                        <div class="stats-container">
-                            <div class="stat-card">
-                                <div class="stat-value">{{ item.dados.total_respostas }}</div>
-                                <div class="stat-label">Total de Respostas</div>
-                            </div>
-                            <div class="stat-card">
-                                <div class="stat-value">{{ item.dados.exemplos|length }}</div>
-                                <div class="stat-label">Exemplos Selecionados</div>
-                            </div>
-                        </div>
+            </div>
+        </div>
+        <div class="col-md-6 col-lg-8 mb-3">
+            <div class="card shadow-sm h-100">
+                <div class="card-body">
+                    <h5 class="card-title text-success"><i class="bi bi-building-fill-check me-2"></i>Escolas com Mais Respostas</h5>
+                    {% if escolas_respondentes %}
+                    <ul class="list-group list-group-flush">
+                        {% for escola_data in escolas_respondentes|slice:":5" %} {# Limitar a 5 para não ficar muito longo #}
+                        <li class="list-group-item d-flex justify-content-between align-items-center px-0 py-2">
+                            {{ escola_data.escola__nome }}
+                            <span class="badge bg-primary rounded-pill">{{ escola_data.total }}</span>
+                        </li>
+                        {% endfor %}
+                        {% if escolas_respondentes|length > 5 %}
+                        <li class="list-group-item text-end px-0 py-2">
+                            <small class="text-muted">E mais {{ escolas_respondentes|length|add:"-5" }} escolas...</small>
+                        </li>
+                        {% endif %}
+                    </ul>
+                    {% else %}
+                    <p class="text-muted">Nenhuma escola respondeu a este questionário ainda.</p>
                     {% endif %}
                 </div>
             </div>
-            {% endfor %}
-        {% else %}
-            <div class="no-data-container">
-                <i class="bi bi-bar-chart no-data-icon"></i>
-                <h2 class="no-data-title">Nenhum dado disponível para análise</h2>
-                <p class="no-data-text">
-                    Este questionário ainda não possui respostas registradas. 
-                    Quando as respostas estiverem disponíveis, os gráficos e análises serão exibidos aqui.
-                </p>
-            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container py-4" id="graficos-main-container">
+    <div id="graficos-render-area">
+        {% if not dados_graficos_json %} {# Usaremos um novo nome para o JSON parseado no contexto da view #}
+        <div class="alert alert-info no-data-message" role="alert">
+            <i class="bi bi-info-circle-fill me-2"></i>
+            Nenhum dado disponível para exibir gráficos deste questionário.
+            Certifique-se de que há monitoramentos e respostas registradas.
+        </div>
         {% endif %}
     </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@latest"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const dadosGraficos = JSON.parse('{{ dados_graficos|safe }}');
-        
-        // Renderizar gráficos apenas se houver dados
-        if (dadosGraficos.length > 0) {
-            dadosGraficos.forEach((item, index) => {
-                const canvas = document.getElementById(`grafico-${index}`);
-                if (!canvas) return;
-                
-                if (item.tipo === 'SN') {
-                    new Chart(canvas, {
-                        type: 'doughnut',
-                        data: {
-                            labels: item.dados.labels,
-                            datasets: [{
-                                data: item.dados.values,
-                                backgroundColor: ['#28a745', '#dc3545'],
-                                borderWidth: 0
-                            }]
-                        },
-                        options: {
-                            responsive: true,
-                            maintainAspectRatio: false,
-                            plugins: {
-                                legend: { 
-                                    position: 'bottom', 
-                                    labels: { 
-                                        font: { size: 14 },
-                                        padding: 20
-                                    } 
-                                },
-                                tooltip: {
-                                    callbacks: {
-                                        label: function(context) {
-                                            return `${context.label}: ${context.raw}%`;
+    Chart.register(ChartDataLabels); // Registrar o plugin globalmente
+
+    const dadosGraficos = JSON.parse('{{ dados_graficos|safe }}');
+    const graficosRenderArea = document.getElementById('graficos-render-area');
+
+    if (dadosGraficos.length === 0) {
+        // A mensagem de "nenhum dado" já está no HTML via Django template para melhor UX.
+    }
+
+    dadosGraficos.forEach((item, index) => {
+        const card = document.createElement('div');
+        card.className = 'card chart-card';
+
+        // Adiciona classe específica para estilização por tipo
+        if (item.tipo === 'SN') {
+            card.classList.add('card-sn');
+        } else if (item.tipo === 'NU') {
+            card.classList.add('card-nu');
+        } else if (item.tipo === 'TX') {
+            card.classList.add('card-tx');
+        }
+
+        const cardHeader = document.createElement('div');
+        cardHeader.className = 'card-header';
+        cardHeader.innerHTML = `
+            ${item.pergunta}
+            <span class="badge bg-secondary">Total de Respostas: ${item.dados.total_respostas}</span>
+        `;
+        card.appendChild(cardHeader);
+
+        const cardBody = document.createElement('div');
+        cardBody.className = 'card-body';
+
+        if (item.tipo === 'SN') {
+            if (item.dados.total_respostas > 0) {
+                const canvas = document.createElement('canvas');
+                canvas.id = `grafico-${index}`;
+                canvas.height = 200; // Ajustar a altura para melhor visualização
+                cardBody.appendChild(canvas);
+
+                new Chart(canvas, {
+                    type: 'doughnut',
+                    data: {
+                        labels: item.dados.labels,
+                        datasets: [{
+                            data: item.dados.values,
+                            backgroundColor: ['#28a745', '#dc3545'],
+                            borderColor: '#fff',
+                            borderWidth: 2
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'bottom',
+                                labels: {
+                                    font: { size: 14 }
+                                }
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        let label = context.label || '';
+                                        if (label) {
+                                            label += ': ';
                                         }
+                                        if (context.parsed !== null) {
+                                            label += context.parsed.toFixed(1) + '%';
+                                            // Adiciona a contagem absoluta no tooltip também
+                                            if (context.label === 'Sim') {
+                                                label += ` (${item.dados.total_sim} escolas)`;
+                                            } else if (context.label === 'Não') {
+                                                label += ` (${item.dados.total_nao} escolas)`;
+                                            }
+                                        }
+                                        return label;
                                     }
                                 }
                             },
-                            cutout: '65%'
-                        }
-                    });
-                } 
-                else if (item.tipo === 'NU') {
-                    new Chart(canvas, {
-                        type: 'bar',
-                        data: {
-                            labels: item.dados.valores.map((_, i) => `Resposta ${i + 1}`),
-                            datasets: [{
-                                label: 'Valor',
-                                data: item.dados.valores,
-                                backgroundColor: '#0d6efd',
-                                borderRadius: 6,
-                                maxBarThickness: 36
-                            }]
-                        },
-                        options: {
-                            responsive: true,
-                            maintainAspectRatio: false,
-                            plugins: {
-                                legend: { display: false }
-                            },
-                            scales: {
-                                x: { 
-                                    grid: { display: false }, 
-                                    ticks: { font: { size: 13 } } 
+                            datalabels: { // Configuração para exibir as porcentagens
+                                color: '#fff', // Cor do texto dos rótulos
+                                formatter: (value, context) => {
+                                    // Exibe a porcentagem e, opcionalmente, a contagem absoluta
+                                    let label = value.toFixed(1) + '%';
+                                    if (context.chart.data.labels[context.dataIndex] === 'Sim') {
+                                        label += `\n(${item.dados.total_sim})`;
+                                    } else if (context.chart.data.labels[context.dataIndex] === 'Não') {
+                                        label += `\n(${item.dados.total_nao})`;
+                                    }
+                                    return label;
                                 },
-                                y: { 
-                                    beginAtZero: true, 
-                                    grid: { color: "#f0f0f0" }, 
-                                    ticks: { font: { size: 13 } } 
+                                font: {
+                                    weight: 'bold',
+                                    size: 14
+                                },
+                                textShadow: { // Adiciona sombra para melhor legibilidade
+                                    color: 'rgba(0, 0, 0, 0.5)',
+                                    blur: 4,
+                                    offsetX: 2,
+                                    offsetY: 2
                                 }
+                            },
+                            title: { display: false }
+                        }
+                    }
+                });
+
+                const statsDiv = document.createElement('div');
+                statsDiv.className = 'stats-grid mt-3';
+                statsDiv.innerHTML = `
+                    <div class="stat-item"><strong>${item.dados.total_sim}</strong> Sim</div>
+                    <div class="stat-item"><strong>${item.dados.perc_sim}%</strong> Sim</div>
+                    <div class="stat-item"><strong>${item.dados.total_nao}</strong> Não</div>
+                    <div class="stat-item"><strong>${item.dados.perc_nao}%</strong> Não</div>
+                `;
+                cardBody.appendChild(statsDiv);
+
+            } else {
+                cardBody.innerHTML = `<p class="text-muted text-center py-3">Sem respostas para esta pergunta (Sim/Não).</p>`;
+            }
+
+        } else if (item.tipo === 'NU') {
+            if (item.dados.total_respostas > 0) {
+                const canvas = document.createElement('canvas');
+                canvas.id = `grafico-${index}`;
+                canvas.height = 220;
+                cardBody.appendChild(canvas);
+
+                const valueCounts = {};
+                item.dados.valores.forEach(val => {
+                    valueCounts[val] = (valueCounts[val] || 0) + 1;
+                });
+                const sortedLabels = Object.keys(valueCounts).sort((a, b) => parseFloat(a) - parseFloat(b));
+                const sortedValues = sortedLabels.map(label => valueCounts[label]);
+
+                new Chart(canvas, {
+                    type: 'bar',
+                    data: {
+                        labels: sortedLabels,
+                        datasets: [{
+                            label: 'Frequência',
+                            data: sortedValues,
+                            backgroundColor: '#007bff',
+                            borderRadius: 6,
+                            maxBarThickness: 40
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: {
+                                callbacks: {
+                                    title: function(context) {
+                                        return `Valor: ${context[0].label}`;
+                                    },
+                                    label: function(context) {
+                                        return `Frequência: ${context.parsed.y} escolas`;
+                                    }
+                                }
+                            },
+                            datalabels: { // Configuração para exibir a frequência acima das barras
+                                anchor: 'end', // Posição do rótulo (no final da barra)
+                                align: 'top', // Alinhamento do rótulo
+                                color: '#333', // Cor do texto
+                                formatter: (value) => {
+                                    return value + 'x'; // Exemplo: "5x" para 5 ocorrências
+                                },
+                                font: {
+                                    weight: 'bold',
+                                    size: 13
+                                }
+                            },
+                            title: { display: false }
+                        },
+                        scales: {
+                            x: {
+                                title: {
+                                    display: true,
+                                    text: 'Valor da Resposta',
+                                    font: { size: 14, weight: 'bold' }
+                                },
+                                grid: { display: false },
+                                ticks: { font: { size: 13 } }
+                            },
+                            y: {
+                                title: {
+                                    display: true,
+                                    text: 'Frequência (Nº de Escolas)',
+                                    font: { size: 14, weight: 'bold' }
+                                },
+                                beginAtZero: true,
+                                grid: { color: "#e3eafc" },
+                                ticks: { font: { size: 13 } }
                             }
                         }
-                    });
-                }
-            });
-        }
-        
-        // Botão de exportação
-        document.getElementById('exportBtn').addEventListener('click', function() {
-            // Simulação de exportação
-            this.innerHTML = '<i class="bi bi-check-circle"></i> Exportado!';
-            this.style.background = '#d4edda';
-            this.style.color = '#155724';
-            
-            setTimeout(() => {
-                this.innerHTML = '<i class="bi bi-download"></i> Exportar Dados';
-                this.style.background = '#e3f2fd';
-                this.style.color = '#0d6efd';
-            }, 2000);
-        });
-        
-        // Filtros interativos
-        const filters = document.querySelectorAll('.filter-select');
-        filters.forEach(filter => {
-            filter.addEventListener('change', function() {
-                // Simulação de filtro
-                document.querySelectorAll('.grafico-card').forEach(card => {
-                    card.style.opacity = '0.7';
-                    card.style.transition = 'opacity 0.3s ease';
+                    }
                 });
-                
-                setTimeout(() => {
-                    document.querySelectorAll('.grafico-card').forEach(card => {
-                        card.style.opacity = '1';
-                    });
-                }, 300);
-            });
-        });
+
+                const statsDiv = document.createElement('div');
+                statsDiv.className = 'stats-grid mt-3';
+                statsDiv.innerHTML = `
+                    <div class="stat-item">Média: <strong>${item.dados.media.toFixed(2)}</strong></div>
+                    <div class="stat-item">Mediana: <strong>${item.dados.mediana.toFixed(2)}</strong></div>
+                    <div class="stat-item">Mín: <strong>${item.dados.min}</strong></div>
+                    <div class="stat-item">Máx: <strong>${item.dados.max}</strong></div>
+                    <div class="stat-item">Desvio Padrão: <strong>${item.dados.desvio_padrao.toFixed(2)}</strong></div>
+                `;
+                cardBody.appendChild(statsDiv);
+
+            } else {
+                cardBody.innerHTML = `<p class="text-muted text-center py-3">Sem respostas para esta pergunta (Numérica).</p>`;
+            }
+
+        } else if (item.tipo === 'TX') {
+            if (item.dados.exemplos.length > 0) {
+                const ul = document.createElement('ul');
+                ul.className = 'text-response-list';
+                item.dados.exemplos.forEach(text => {
+                    const li = document.createElement('li');
+                    li.innerText = text;
+                    ul.appendChild(li);
+                });
+                cardBody.appendChild(ul);
+            } else {
+                cardBody.innerHTML = `<p class="text-muted text-center py-3">Sem respostas textuais para esta pergunta.</p>`;
+            }
+        }
+        graficosRenderArea.appendChild(card);
     });
 </script>
 {% endblock %}

@@ -2,16 +2,54 @@
 {% load static %}
 
 {% block content %}
-
-<div style="display: flex; align-items: center; justify-content: space-between; gap: 24px; margin-bottom: 32px;">
-    <h2 style="margin: 0; text-align: center;">{{ questionario.titulo }} - Gráficos</h2>
-    <button type="button" class="btn btn-sm btn-secondary d-flex align-items-center gap-2" onclick="history.back()">
-        <span class="bi bi-arrow-left"></span>
-        Voltar
-    </button>
-</div>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-<div id="graficos-container" style="max-width: 900px; margin: auto; background: #fff; border-radius: 12px; box-shadow: 0 2px 16px rgba(0,0,0,0.07); padding: 32px 24px 24px 24px;"></div>
+
+<div class="container py-4">
+    <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between mb-4 gap-3">
+        <div>
+            <h2 class="mb-1">{{ questionario.titulo }} <span class="badge bg-primary align-middle">Gráficos</span></h2>
+            <div class="text-muted small">
+                <i class="bi bi-building"></i> Escolas respondentes:
+                {% for escola in escolas %}
+                    <span class="badge bg-light text-dark border">{{ escola }}</span>
+                {% empty %}
+                    Nenhuma escola respondeu ainda.
+                {% endfor %}
+            </div>
+        </div>
+        <button type="button" class="btn btn-sm btn-secondary d-flex align-items-center gap-2" onclick="history.back()">
+            <span class="bi bi-arrow-left"></span>
+            Voltar
+        </button>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-md-4 mb-2">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-body py-3">
+                    <div class="fw-bold text-primary mb-1">Total de Monitoramentos</div>
+                    <div class="fs-4">{{ total_monitoramentos }}</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-8 mb-2">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-body py-3">
+                    <div class="fw-bold text-primary mb-1">Escolas Respondentes</div>
+                    <div class="d-flex flex-wrap gap-2">
+                        {% for escola in escolas_respondentes %}
+                            <span class="badge bg-info text-dark">{{ escola.escola__nome }} ({{ escola.total }})</span>
+                        {% empty %}
+                            <span class="text-muted">Nenhuma escola respondeu ainda.</span>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="graficos-container"></div>
+</div>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
@@ -23,39 +61,30 @@
     }
 
     dadosGraficos.forEach((item, index) => {
-        // Pergunta
-        const pergunta = document.createElement('h4');
-        pergunta.innerText = item.pergunta;
-        pergunta.style.marginTop = "32px";
-        pergunta.style.marginBottom = "8px";
-        pergunta.style.color = "#222";
-        pergunta.style.fontWeight = "600";
-        container.appendChild(pergunta);
+        // Wrapper para pergunta e gráfico
+        const row = document.createElement('div');
+        row.className = "row align-items-stretch mb-4";
 
-        // Descrição (se houver)
-        if (item.descricao) {
-            const desc = document.createElement('p');
-            desc.innerText = item.descricao;
-            desc.style.color = "#666";
-            desc.style.fontSize = "0.97em";
-            desc.style.marginBottom = "12px";
-            container.appendChild(desc);
-        }
+        // Coluna do gráfico
+        const colGrafico = document.createElement('div');
+        colGrafico.className = "col-md-7 mb-3 mb-md-0";
+
+        // Coluna do resumo/estatísticas
+        const colResumo = document.createElement('div');
+        colResumo.className = "col-md-5";
+
+        // Pergunta
+        const pergunta = document.createElement('h5');
+        pergunta.innerText = item.pergunta;
+        pergunta.className = "mb-2";
+        colGrafico.appendChild(pergunta);
 
         // Gráfico ou lista
         if (item.tipo === 'SN') {
-            const card = document.createElement('div');
-            card.style.background = "#f6fef7";
-            card.style.border = "1px solid #e0f2e9";
-            card.style.borderRadius = "8px";
-            card.style.padding = "18px 12px 8px 12px";
-            card.style.marginBottom = "18px";
-            card.style.boxShadow = "0 1px 6px rgba(40,167,69,0.06)";
             const canvas = document.createElement('canvas');
             canvas.id = `grafico-${index}`;
             canvas.height = 180;
-            card.appendChild(canvas);
-            container.appendChild(card);
+            colGrafico.appendChild(canvas);
 
             new Chart(canvas, {
                 type: 'pie',
@@ -74,19 +103,23 @@
                     }
                 }
             });
+
+            // Resumo
+            colResumo.innerHTML = `
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-body">
+                        <div class="fw-bold mb-2">Resumo</div>
+                        <div><span class="badge bg-success">Sim</span> ${item.dados.total_sim} (${item.dados.perc_sim}%)</div>
+                        <div><span class="badge bg-danger">Não</span> ${item.dados.total_nao} (${item.dados.perc_nao}%)</div>
+                        <div class="text-muted mt-2 small">Total de respostas: ${item.dados.total_respostas}</div>
+                    </div>
+                </div>
+            `;
         } else if (item.tipo === 'NU') {
-            const card = document.createElement('div');
-            card.style.background = "#f7f9ff";
-            card.style.border = "1px solid #e3eafc";
-            card.style.borderRadius = "8px";
-            card.style.padding = "18px 12px 8px 12px";
-            card.style.marginBottom = "18px";
-            card.style.boxShadow = "0 1px 6px rgba(0,123,255,0.06)";
             const canvas = document.createElement('canvas');
             canvas.id = `grafico-${index}`;
             canvas.height = 200;
-            card.appendChild(canvas);
-            container.appendChild(card);
+            colGrafico.appendChild(canvas);
 
             new Chart(canvas, {
                 type: 'bar',
@@ -112,22 +145,40 @@
                     }
                 }
             });
+
+            // Estatísticas
+            colResumo.innerHTML = `
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-body">
+                        <div class="fw-bold mb-2">Estatísticas</div>
+                        <div>Média: <span class="badge bg-primary">${item.dados.media}</span></div>
+                        <div>Mediana: <span class="badge bg-secondary">${item.dados.mediana}</span></div>
+                        <div>Mínimo: <span class="badge bg-info text-dark">${item.dados.min}</span></div>
+                        <div>Máximo: <span class="badge bg-info text-dark">${item.dados.max}</span></div>
+                        <div>Desvio padrão: <span class="badge bg-warning text-dark">${item.dados.desvio_padrao}</span></div>
+                        <div class="text-muted mt-2 small">Total de respostas: ${item.dados.total_respostas}</div>
+                    </div>
+                </div>
+            `;
         } else if (item.tipo === 'TX') {
-            const card = document.createElement('div');
-            card.style.background = "#f8f9fa";
-            card.style.padding = "16px 22px";
-            card.style.borderRadius = "8px";
-            card.style.marginBottom = "18px";
-            card.style.marginTop = "8px";
-            card.style.border = "1px solid #e9ecef";
-            card.style.boxShadow = "0 1px 6px rgba(0,0,0,0.04)";
-            if (item.dados.exemplos.length > 0) {
-                card.innerHTML = `<ul style="margin:0; padding-left:22px; color:#333; font-size:1.04em;">${item.dados.exemplos.map(t => `<li style="margin-bottom:6px;">${t}</li>`).join('')}</ul>`;
-            } else {
-                card.innerHTML = "<em style='color:#888;'>Nenhuma resposta textual registrada.</em>";
-            }
-            container.appendChild(card);
+            colGrafico.innerHTML += `
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-body">
+                        <div class="fw-bold mb-2">Exemplos de respostas</div>
+                        ${
+                            item.dados.exemplos.length > 0
+                            ? `<ul class="mb-0">${item.dados.exemplos.map(t => `<li>${t}</li>`).join('')}</ul>`
+                            : "<em class='text-muted'>Nenhuma resposta textual registrada.</em>"
+                        }
+                        <div class="text-muted mt-2 small">Total de respostas: ${item.dados.total_respostas}</div>
+                    </div>
+                </div>
+            `;
         }
+
+        row.appendChild(colGrafico);
+        row.appendChild(colResumo);
+        container.appendChild(row);
     });
 </script>
 {% endblock %}

@@ -77,39 +77,41 @@
 
 {% block content %}
 <div class="container-fluid px-4">
-    <!-- Cabeçalho com Botões -->
     <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-2">
         <h2 class="mb-0">Dashboard de Monitoramentos</h2>
-        <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
-    <!-- Botão: Novo Monitoramento -->
-    <a href="{% url 'selecionar_escola' %}" class="btn btn-success btn-sm d-flex align-items-center">
-        <i class="fas fa-plus me-2"></i> Novo Monitoramento
-    </a>
+        <div class="d-flex flex-wrap align-items-center gap-2">
+            <a href="{% url 'selecionar_escola' %}" class="btn btn-success btn-sm d-flex align-items-center">
+                <i class="fas fa-school me-2"></i> Escolas
+            </a>
 
-    <!-- Botão: Gerar relatório por usuário -->
-    <button class="btn btn-outline-primary btn-sm d-flex align-items-center" 
-            data-bs-toggle="modal" data-bs-target="#relatorioMonitoramentosModal">
-        <i class="fas fa-file-alt me-2"></i> Gerar relatório por usuário
-    </button>
-    
-    {% include "monitoramentos/modal_selecionar_usuarios.html" %}
+            <a href="{% url 'fluxo_monitoramento_setores' %}" class="btn btn-primary btn-sm d-flex align-items-center">
+                <i class="fas fa-chart-pie me-2"></i> Monitoramento por Setores
+            </a>
 
-    <!-- Dropdown: Ações -->
-    <div class="dropdown">
-        <button class="btn btn-light btn-sm dropdown-toggle d-flex align-items-center" 
-                type="button" id="actionsDropdown" 
-                data-bs-toggle="dropdown" aria-expanded="false">
-            <i class="fas fa-cog me-2"></i> Ações
-        </button>
-        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="actionsDropdown">
-            <li><a class="dropdown-item" href="{% url 'fluxo_monitoramento_setores' %}">Fluxo de Monitoramentos</a></li>
-            <li><a class="dropdown-item" href="{% url 'gerenciar_questionarios' %}">Gerenciar Questionários</a></li>
-            <li><a class="dropdown-item" href="{% url 'tela_lacunas' %}">Lacunas</a></li>
-            <li><a class="dropdown-item" href="{% url 'tela_problemas' %}">Problemas</a></li>
-            <li><a class="dropdown-item" href="{% url 'listar_avisos' %}">Avisos</a></li>
-        </ul>
+            <button class="btn btn-secondary btn-sm d-flex align-items-center" 
+                    data-bs-toggle="modal" data-bs-target="#relatorioMonitoramentosModal">
+                <i class="fas fa-file-alt me-2"></i> Relatório por Usuário ou Setor
+            </button>
+            
+            {% include "monitoramentos/modal_selecionar_usuarios.html" %}
+
+            <div class="dropdown">
+                <button class="btn btn-light btn-sm dropdown-toggle d-flex align-items-center" 
+                        type="button" id="actionsDropdown" 
+                        data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class="fas fa-cog me-2"></i> Mais Ações
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="actionsDropdown">
+                    <li><a class="dropdown-item" href="{% url 'gerenciar_questionarios' %}">Questionários e Perguntas</a></li>
+                    <li><a class="dropdown-item" href="{% url 'tela_lacunas' %}">Lacunas</a></li>
+                    <li><a class="dropdown-item" href="{% url 'tela_problemas' %}">Problemas</a></li>
+                    <li><a class="dropdown-item" href="{% url 'listar_avisos' %}">Avisos</a></li>
+                </ul>
+            </div>
+        </div>
     </div>
-</div>
+
+
 
     </div>
 

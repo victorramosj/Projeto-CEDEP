@@ -12,11 +12,11 @@
             </h2>
             <p class="mb-0 text-muted small">Questionários disponíveis para resposta</p>
         </div>
-        <a href="{% url 'selecionar_escola' %}" class="btn btn-outline-primary btn-sm">
-            <i class="fas fa-arrow-left me-2"></i>Voltar às escolas
+        <a href="{% url 'selecionar_escola' %}" class="btn btn-secondary btn-sm">
+            <i class="fas fa-arrow-left me-2"></i>Voltar
         </a>
     </div>
-
+    {% if user.greuser.is_monitor %}
     <!-- Seção: Minha Atividade -->
     <div class="card mb-4 border-0 shadow-lg">
         <div class="card-header bg-info text-white py-3">
@@ -102,7 +102,7 @@
                 </div>
             </div>
         </div>
-
+{% endif %}
         <!-- Card de Resumo Geral -->
         <div class="card mb-4 border-0 shadow-lg">
             <div class="card-header bg-primary text-white py-3">
@@ -150,7 +150,7 @@
             {% for questionario in questionarios %}
             <div class="col">
                 <div class="card h-100 border-0 shadow-sm transition hover-shadow">
-                    <div class="card-header bg-gradient-primary text-white py-3">
+                    <div class="card-header bg-gradient-primary  py-3">
                         <div class="d-flex justify-content-between align-items-center">
                             <h5 class="card-title mb-0">{{ questionario.titulo|truncatechars:30 }}</h5>
                             <span class="badge bg-white text-primary">{{ forloop.counter }}</span>

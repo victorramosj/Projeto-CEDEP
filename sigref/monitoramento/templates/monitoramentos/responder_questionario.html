@@ -21,10 +21,14 @@
                             </span>
                         </div>
                     </div>
-                    <div class="col-12 col-lg-4 text-lg-end mt-3 mt-lg-0">
+                    <div class="col-12 col-lg-4 text-lg-end mt-3 mt-lg-0 d-flex flex-column flex-lg-row align-items-lg-center justify-content-lg-end gap-2">
                         <span class="badge bg-info text-dark fs-6 px-3 py-2 shadow-sm w-100 w-lg-auto d-block d-lg-inline-block">
                             {{ questionario.titulo }}
                         </span>
+                        <button type="button" class="btn btn-secondary btn-sm" onclick="history.back()">
+                            <i class="bi bi-arrow-left me-2"></i> Voltar
+                        </button>
+                        
                     </div>
                 </div>
             </header>
@@ -110,11 +114,14 @@
                         <button type="button" class="btn btn-outline-secondary" id="selecionar-arquivo">
                             <i class="bi bi-folder me-1"></i>Selecionar Arquivo
                         </button>
-                         <button type="button" class="btn btn-outline-info" id="download-modelo">
-                             <i class="bi bi-file-earmark-arrow-down text-primary"></i> Baixar Modelo de Formulário (PDF)
+                        <button type="button" class="btn btn-outline-info" id="download-modelo">
+                            <i class="bi bi-file-earmark-arrow-down text-primary"></i> Baixar Modelo de Comprovante para impressão(PDF)
                         </button>
                         <a href="{% static 'modelos/formulario_modelo.pdf' %}" id="modelo-pdf-link" class="d-none" download></a>
-                        
+                        <span class="text-muted small d-block mt-2">
+                            <i class="bi bi-info-circle"></i>
+                            Ao final do monitoramento, é necessário anexar um comprovante (foto ou arquivo) para validar o envio.
+                        </span>
                     </div>
 
                     <!-- Área da câmera simplificada -->

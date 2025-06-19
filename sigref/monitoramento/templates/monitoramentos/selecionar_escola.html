@@ -10,15 +10,14 @@
             </h2>
         </div>
         <div class="col-12 col-md-6">
-            <form method="get" class="d-flex flex-column flex-sm-row align-items-sm-center">
-                <input type="text" name="q" value="{{ q }}" class="form-control me-sm-2 mb-2 mb-sm-0"
-                    placeholder="Buscar por nome, INEP ou gestor...">
-                <button class="btn btn-primary me-sm-2 mb-2 mb-sm-0" type="submit">
+            <form method="get" class="d-flex align-items-center gap-2">
+                <input type="text" name="q" value="{{ q }}" class="form-control" placeholder="Buscar por nome, INEP ou gestor...">
+                <button class="btn btn-primary" type="submit">
                     <i class="fas fa-search"></i>
                 </button>
-                <a type="button" href="{% url 'home' %}" class="btn btn-secondary btn-sm">
-                    <i class="fas fa-arrow-left me-2"></i>Voltar
-                </a>
+                <button type="button" class="btn btn-secondary btn-sm" onclick="history.back()" style="white-space: nowrap;">
+                    <i class="fas fa-arrow-left me-1"></i> Voltar
+                </button>
             </form>
         </div>
     </div>
@@ -44,12 +43,12 @@
                         Gestor: {{ escola.nome_gestor }}
                     </p>
                     <div class="mt-auto d-flex flex-wrap gap-2 justify-content-between align-items-end">
-                        <!-- Botão Questionários - Cor Azul -->
+                        <!-- Botão Realizar Monitoramento - Cor Azul -->
                         <a href="{% url 'questionarios_escola' escola.id %}"
                             class="btn btn-outline-primary btn-sm flex-fill d-flex align-items-center justify-content-center"
                             style="min-width: 0;">
-                            <i class="fas fa-list-alt me-1"></i>
-                            <span class="small">Questionários</span>
+                            <i class="fas fa-clipboard-check me-1"></i>
+                            <span class="small">Realizar Monitoramento</span>
                         </a>
 
                         <!-- Botão Escola - Cor Verde -->
@@ -78,7 +77,7 @@
         <p class="text-muted">Nenhuma escola encontrada.</p>
     </div>
     {% endfor %}
-        <!-- Modal ÚNICO (fora do loop) -->
+    <!-- Modal ÚNICO (fora do loop) -->
     <div class="modal fade" id="relatorioMonitoramentosModal" tabindex="-1"
         aria-labelledby="relatorioMonitoramentosModalLabel" aria-hidden="true">
         <div class="modal-dialog">
@@ -98,7 +97,7 @@
                             <select id="setor_id" name="setor_id" class="form-select">
                                 <option value="">Todos</option>
                                 {% for setor in setores %}
-                                    <option value="{{ setor.id }}">{{ setor.nome }}</option>
+                                <option value="{{ setor.id }}">{{ setor.nome }}</option>
                                 {% endfor %}
                             </select>
                         </div>
@@ -117,18 +116,18 @@
             </form>
         </div>
     </div>
-    
+
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             var relatorioModal = document.getElementById('relatorioMonitoramentosModal');
-    
+
             relatorioModal.addEventListener('show.bs.modal', function (event) {
                 // Botão que acionou o modal
                 var button = event.relatedTarget;
-    
+
                 // Extrair ID do atributo data-escola-id
                 var escolaId = button.getAttribute('data-escola-id');
-    
+
                 // Atualizar campo oculto no formulário
                 document.getElementById('modal-escola-id').value = escolaId;
             });

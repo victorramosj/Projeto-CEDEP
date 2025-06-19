@@ -56,7 +56,8 @@ class PerguntaViewSet(viewsets.ModelViewSet):
         serializer.save(
             questionario_id=self.kwargs['questionario_pk']
         )
-        
+from rest_framework.decorators import action
+from rest_framework.response import Response     
 
 # Paginação personalizada para escolas
 class EscolaPagination(PageNumberPagination):
@@ -71,6 +72,12 @@ class EscolaViewSet(viewsets.ModelViewSet):
     pagination_class = EscolaPagination
     filter_backends = [filters.SearchFilter]
     search_fields = ['nome', 'inep', 'endereco', 'nome_gestor']
+
+    @action(detail=False, methods=['get'])
+    def all_ids(self, request):
+        queryset = self.filter_queryset(self.get_queryset())
+        ids = queryset.values_list('id', flat=True)
+        return Response({'ids': list(ids)})
 
     def get_serializer_context(self):
         return {'request': self.request}
@@ -573,27 +580,26 @@ from collections import Counter
 
 def visualizar_graficos_questionario(request, questionario_id):
     questionario = get_object_or_404(Questionario, pk=questionario_id)
+    # Ordenar perguntas para exibição consistente
     perguntas = questionario.pergunta_set.all().order_by('ordem')
-
-    # Obter todas as escolas que responderam este questionário
-    escolas = Escola.objects.filter(
-        monitoramentos__questionario=questionario
-    ).distinct().values_list('nome', flat=True)
 
     dados_graficos = []
 
     for pergunta in perguntas:
-        respostas = pergunta.respostas.all()
+        respostas = Resposta.objects.filter(pergunta=pergunta)
         tipo = pergunta.tipo_resposta
         dados = {}
         total_respostas = respostas.count()
 
         if tipo == 'SN':
-            contagem = Counter(r.resposta_sn for r in respostas if r.resposta_sn)
-            total_sim = contagem.get('S', 0)
-            total_nao = contagem.get('N', 0)
+            # Contagem de 'S' e 'N' diretamente no QuerySet para eficiência
+            contagem_sn = respostas.aggregate(
+                total_sim=Count('id', filter=models.Q(resposta_sn='S')),
+                total_nao=Count('id', filter=models.Q(resposta_sn='N'))
+            )
+            total_sim = contagem_sn['total_sim'] or 0
+            total_nao = contagem_sn['total_nao'] or 0
             
-            # Calcular porcentagens
             perc_sim = (total_sim / total_respostas * 100) if total_respostas else 0
             perc_nao = (total_nao / total_respostas * 100) if total_respostas else 0
             
@@ -608,9 +614,8 @@ def visualizar_graficos_questionario(request, questionario_id):
             }
 
         elif tipo == 'NU':
-            valores = [r.resposta_num for r in respostas if r.resposta_num is not None]
+            valores = list(respostas.filter(resposta_num__isnull=False).values_list('resposta_num', flat=True))
             
-            # Usar numpy se houver valores, caso contrário definir padrões
             if valores:
                 valores_np = np.array(valores)
                 media = np.mean(valores_np).item()
@@ -624,17 +629,17 @@ def visualizar_graficos_questionario(request, questionario_id):
             dados = {
                 'valores': valores,
                 'total_respostas': total_respostas,
-                'media': media,
-                'mediana': mediana,
+                'media': round(media, 2), # Arredondar para 2 casas decimais
+                'mediana': round(mediana, 2),
                 'min': minimo,
                 'max': maximo,
-                'desvio_padrao': desvio_padrao,
+                'desvio_padrao': round(desvio_padrao, 2),
             }
 
         elif tipo == 'TX':
-            exemplos = [r.resposta_texto for r in respostas if r.resposta_texto]
+            exemplos = list(respostas.filter(resposta_texto__isnull=False).values_list('resposta_texto', flat=True))
             dados = {
-                'exemplos': exemplos[:10],  # Limitar a 10 exemplos
+                'exemplos': exemplos[:10],  # Limitar a 10 exemplos para não sobrecarregar
                 'total_respostas': total_respostas,
             }
 
@@ -646,16 +651,26 @@ def visualizar_graficos_questionario(request, questionario_id):
 
     # Obter estatísticas gerais do questionário
     total_monitoramentos = Monitoramento.objects.filter(questionario=questionario).count()
-    escolas_respondentes = Monitoramento.objects.filter(
+    
+    # Escolas respondentes e suas contagens
+    # Incluindo 'escola__nome' para usar diretamente no template sem ter que iterar sobre objetos Escola
+    escolas_respondentes_data = Monitoramento.objects.filter(
         questionario=questionario
     ).values('escola__nome').annotate(total=Count('id')).order_by('-total')
 
+    # Para a lista de escolas no cabeçalho (apenas nomes únicos)
+    escolas_unicas = Escola.objects.filter(
+        monitoramentos__questionario=questionario
+    ).distinct().values_list('nome', flat=True)
+
+
     context = {
         'questionario': questionario,
-        'dados_graficos': json.dumps(dados_graficos, default=str),
-        'escolas': list(escolas),
+        'dados_graficos': json.dumps(dados_graficos, default=str), # json.dumps para passar ao JS
         'total_monitoramentos': total_monitoramentos,
-        'escolas_respondentes': list(escolas_respondentes),
+        'escolas_respondentes': list(escolas_respondentes_data),
+        'escolas': list(escolas_unicas), # Renomeado para evitar conflito e ser mais claro
+        'dados_graficos_json': True if dados_graficos else False # Para controle no template
     }
 
     return render(request, 'graficos/graficos_questionario.html', context)
@@ -724,7 +739,7 @@ class RelatorioDiarioView(View):
             'total_questionarios': total_questionarios,
             'total_monitoramentos': total_monitoramentos,
             'setores_envolvidos': len(setores_envolvidos),
-            'usuarios_envolvidos': len(usuarios_envolvidos),
+            'usuarios_envolvidos': usuarios_envolvidos,
         }
         
         return render(request, 'monitoramentos/relatorio.html', context)
