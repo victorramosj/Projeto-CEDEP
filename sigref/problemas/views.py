@@ -29,7 +29,7 @@ from rest_framework.views import APIView
 from monitoramento.models import Escola, GREUser, Setor
 
 from .forms import AvisoForm, LacunaForm, ProblemaUsuarioForm
-from .models import (AvisoImportante, ConfirmacaoAviso, Lacuna,ProblemaUsuario, STATUS_CHOICES)
+from .models import (AvisoImportante, ConfirmacaoAviso, Lacuna, ProblemaUsuario, Setor, STATUS_CHOICES)
 from .serializers import (AvisoImportanteSerializer, LacunaSerializer,ProblemaUsuarioSerializer)
 
 # ADICIONADO DEPOIS 
@@ -357,6 +357,15 @@ def tela_problema_view(request):
     if status_filter:
         problemas_list = problemas_list.filter(status=status_filter)
 
+    # Filtro por Setor
+    setor_filter = request.GET.get('setor', '')
+    if setor_filter:
+        #filtra pela chave primária do setor
+        problemas_list = problemas_list.filter(setor__id=setor_filter)
+
+    # Obter todos os setores para popular o dropdown no template
+    todos_os_setores = Setor.objects.all().order_by('nome')
+    
     # Paginação
     paginator = Paginator(problemas_list, 9) 	# 9 itens por página
     page_number = request.GET.get('page')
@@ -365,8 +374,9 @@ def tela_problema_view(request):
 
     # Passar os dados para o template
     context = {
-        'problemas_page': problemas_page,
+        'problemas_page': problemas_page,     # Lista de problemas paginada
         'total_problemas': total_problemas, 	# Total de problemas filtrados
+        'todos_os_setores': todos_os_setores,     # Passa todos os setores para o template
         'search_query': escola_query, 	# Termo de busca (para manter na barra de pesquisa)
         'request': request, # Passa o request para o template
         'status_choices': STATUS_CHOICES, #Passa as opções para o template

@@ -28,30 +28,32 @@ table .form-select {
 <div class="container mt-4">
     <h3>Lacunas (<span id="lacunas-count">{{ todas_lacunas }}</span>)</h3>
 
-    <div class="col-12">
-        <div class="d-flex justify-content-between gap-2 mb-3">
+    <div class="col-12 mt-3">
+        <div class="d-flex justify-content-between gap-2 mb-2">
             
-            <!-- Barra de pesquisa -->
-            <form method="GET" action="{% url 'tela_lacunas' %}" class="input-group" style="width: 50%;">
-                {% csrf_token %}
-                <span class="input-group-text"><i class="fas fa-search"></i></span>
-                <input type="text" class="form-control" name="q" value="{{ search_query }}" placeholder="Pesquise por Escola...">
-            </form>
-            
-            <div class="d-flex gap-2">
-                <!-- Filtros -->
-                <select class="form-select" name="data" aria-label="Filtro Data">
-                    <option value="" {% if not request.GET.data %} selected {% endif %}>Data (Todas)</option>
-                    <option value="1" {% if request.GET.data == '1' %} selected {% endif %}>Última semana</option>
-                    <option value="2" {% if request.GET.data == '2' %} selected {% endif %}>Último mês</option>
-                    <option value="3" {% if request.GET.data == '3' %} selected {% endif %}>Último ano</option>
-                </select>
-                <select class="form-select" name="status" aria-label="Filtro Status">
-                    <option value="" {% if not request.GET.status %}selected{% endif %}>Status (Todos)</option>
-                    <option value="P" {% if request.GET.status == 'P' %} selected {% endif %}>Pendente</option>
-                    <option value="R" {% if request.GET.status == 'R' %} selected {% endif %}>Resolvido</option>
-                    <option value="E" {% if request.GET.status == 'E' %} selected {% endif %}>Em Andamento</option>
-                </select>
+            <div class="d-flex align-items-left gap-2">
+                <!-- Barra de pesquisa -->
+                <form method="GET" action="{% url 'tela_lacunas' %}" class="input-group" style="width: 600px;">
+                    {% csrf_token %}
+                    <span class="input-group-text"><i class="fas fa-search"></i></span>
+                    <input type="text" class="form-control" name="q" value="{{ search_query }}" placeholder="Pesquise por Escola...">
+                </form>
+                
+                <div class="d-flex gap-2">
+                    <!-- Filtros -->
+                    <select class="form-select" name="data" aria-label="Filtro Data">
+                        <option value="" {% if not request.GET.data %} selected {% endif %}>Data (Todas)</option>
+                        <option value="1" {% if request.GET.data == '1' %} selected {% endif %}>Última semana</option>
+                        <option value="2" {% if request.GET.data == '2' %} selected {% endif %}>Último mês</option>
+                        <option value="3" {% if request.GET.data == '3' %} selected {% endif %}>Último ano</option>
+                    </select>
+                    <select class="form-select" name="status" aria-label="Filtro Status">
+                        <option value="" {% if not request.GET.status %}selected{% endif %}>Status (Todos)</option>
+                        <option value="P" {% if request.GET.status == 'P' %} selected {% endif %}>Pendente</option>
+                        <option value="R" {% if request.GET.status == 'R' %} selected {% endif %}>Resolvido</option>
+                        <option value="E" {% if request.GET.status == 'E' %} selected {% endif %}>Em Andamento</option>
+                    </select>
+                </div>
             </div>
 
             <div class="d-flex gap-2">
