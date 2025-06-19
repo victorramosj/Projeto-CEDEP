@@ -11,9 +11,9 @@
         </div>
         <div class="col-12 col-md-6">
             <form method="get" class="d-flex align-items-center gap-2">
-                <input type="text" name="q" value="{{ q }}" class="form-control" placeholder="Buscar por nome, INEP ou gestor...">
-                <button class="btn btn-primary" type="submit">
-                    <i class="fas fa-search"></i>
+                <input type="text" name="q" value="{{ q }}" class="form-control py-1" placeholder="Buscar por nome, INEP ou gestor...">
+                <button class="btn btn-primary btn-sm" type="submit">
+                    <i class="fas fa-search "></i>
                 </button>
                 <button type="button" class="btn btn-secondary btn-sm" onclick="history.back()" style="white-space: nowrap;">
                     <i class="fas fa-arrow-left me-1"></i> Voltar
@@ -59,7 +59,7 @@
                             <span class="small">Escola</span>
                         </a>
 
-                        <!-- Botão Relatório - Cor Roxa -->
+                        {% if not user.greuser.is_monitor %}
                         <button
                             class="btn btn-outline-secondary btn-sm flex-fill d-flex align-items-center justify-content-center"
                             data-bs-toggle="modal" data-bs-target="#relatorioMonitoramentosModal"
@@ -67,6 +67,8 @@
                             <i class="fas fa-file-alt me-1"></i>
                             <span class="small">Relatório</span>
                         </button>
+                        {% endif %}
+                        
                     </div>
                 </div>
             </div>
