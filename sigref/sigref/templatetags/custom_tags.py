@@ -73,3 +73,9 @@ def color_rotate(counter):
         return colors[idx]
     except (ValueError, TypeError):
         return colors[0]
+    
+@register.filter
+def dict_get(d, key):
+    if isinstance(d, dict):
+        return d.get(key, [])
+    return []

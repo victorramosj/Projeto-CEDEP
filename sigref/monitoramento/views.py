@@ -171,11 +171,15 @@ class DetalheMonitoramentoView(DetailView):
             
         return super().dispatch(request, *args, **kwargs)
 
-
-from .models import GREUser
+from datetime import timedelta
 
 def dashboard_monitoramentos(request):
     user = request.user.greuser
+
+    # Período de filtro
+    period = int(request.GET.get('period', 30))
+    data_final = timezone.now()
+    data_inicial = data_final - timedelta(days=period)
 
     # Escolas acessíveis
     if user.is_admin() or user.is_coordenador():
@@ -194,10 +198,23 @@ def dashboard_monitoramentos(request):
         escola = get_object_or_404(Escola, pk=school_id)
         questionarios = Questionario.objects.filter(escolas_destino=escola)
 
-    # Estatísticas
-    monitoramentos = Monitoramento.objects.filter(escola__in=escolas)
+    # Estatísticas (agora filtrando por data)
+    monitoramentos = Monitoramento.objects.filter(
+        escola__in=escolas,
+        criado_em__range=(data_inicial, data_final)
+    )
     total_monitoramentos = monitoramentos.count()
+    monitoramentos = Monitoramento.objects.filter(
+        escola__in=escolas,
+        criado_em__range=(data_inicial, data_final)
+    )
+    escolas_com_monitoramentos_ids = monitoramentos.values_list('escola_id', flat=True).distinct()
+    escolas = escolas.filter(id__in=escolas_com_monitoramentos_ids)
 
+    monitoramentos_por_escola = {
+        escola_id: count
+        for escola_id, count in monitoramentos.values('escola_id').annotate(total=Count('id')).values_list('escola_id', 'total')
+    }
     # Contar monitoramentos sem respostas
     monitoramentos_pendentes = monitoramentos.annotate(
         num_respostas=Count('respostas')
@@ -205,8 +222,8 @@ def dashboard_monitoramentos(request):
 
     # Últimos monitoramentos
     upcoming_monitoramentos = monitoramentos.order_by('-id')[:5]
-    
-    # Obter setores com contagens
+
+    # Obter setores com contagens (mantém igual)
     setores = Setor.objects.annotate(
         num_questionarios=Count('questionario'),
         num_monitoramentos=Count('questionario__monitoramentos')
@@ -216,24 +233,21 @@ def dashboard_monitoramentos(request):
         ))
     )
 
-    # Obter monitoramentos recentes por setor
+    # Obter monitoramentos recentes por setor (filtrando por data)
     monitoramentos_recentes = Monitoramento.objects.select_related(
         'escola', 'questionario'
-    ).order_by('-criado_em')
-    
+    ).filter(criado_em__range=(data_inicial, data_final)).order_by('-criado_em')
+
     # Agrupar monitoramentos por setor
     monitoramentos_por_setor = {}
     for setor in setores:
-        # Limitar a 5 monitoramentos por setor
         monitoramentos_por_setor[setor.id] = list(
             monitoramentos_recentes.filter(questionario__setor=setor)[:5]
         )
-    
-    # Adicionar monitoramentos recentes a cada setor
+
     for setor in setores:
         setor.monitoramentos_recentes = monitoramentos_por_setor.get(setor.id, [])
 
-    # Adicionar greusers e seus nomes completos ao contexto
     greusers = GREUser.objects.all().select_related('user').order_by('nome_completo', 'user__username')
     greusers_info = [
         {
@@ -245,6 +259,7 @@ def dashboard_monitoramentos(request):
 
     context = {
         'escolas': escolas,
+        'monitoramentos_por_escola': monitoramentos_por_escola,
         'questionarios': questionarios,
         'selected_school': int(school_id) if school_id else None,
         'total_monitoramentos': total_monitoramentos,
@@ -257,10 +272,10 @@ def dashboard_monitoramentos(request):
         ],
         'setores': setores,
         'greusers': greusers_info,
+        'period': period,
     }
 
     return render(request, 'monitoramentos/dashboard_monitoramentos.html', context)
-
     
 
 @login_required
