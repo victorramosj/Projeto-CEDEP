@@ -142,7 +142,7 @@
     gap: 0.8rem;
   }
 }
-
+ 
   </style>
 
   {% block extra_style %}{% endblock %}
@@ -154,7 +154,11 @@
     <div class="logo-section">
       <div class="bg-white p-3 shadow-sm border border-success rounded-3 logo-container">
         <a href="{% if request.user.greuser.is_escola %}{% url 'escola_dashboard' %}{% else %}{% url 'home' %}{% endif %}" class="d-flex flex-column align-items-center text-dark text-decoration-none">
-          <img src="{% static 'images/SIGREF.png' %}" alt="Logo GRE">        
+          <img src="{% static 'images/SIGREF.png' %}" alt="Logo GRE">
+            <p class="p-2 mb-0 text-secondary small mt-2 " >
+
+            Sistema Integrado <br /><strong class="gradiente-texto">GRE Floresta</strong>
+            </p>
         </a>
       </div>
       <hr>
@@ -411,48 +415,66 @@
 
   <!-- Conteúdo Principal -->
   <div class="flex-grow-1 overflow-auto " style="background: radial-gradient(circle, #ffffff 0%, #cce7ff 100%);">
-    <main class="container-fluid " style="min-height: 88vh;">
+    <main class="container-fluid " style="min-height: 90vh;">
       {% block content %}{% endblock %}
       
       
     </main>
-      <!-- Rodapé Aprimorado -->
-      <footer class="compact-footer">
-        <div class="container">
-          <div class="footer-content">
-            <p class="footer-text">
-              <span class="sigref">Sistema Integrado Gerência Regional de Educação de Floresta.</span> 
-              
-            </p>
-            <p class="footer-text"> &copy; {% now "Y" %} <span class="sigref">SIGREF</span> - Todos os direitos reservados.</p>
-            
-            <div class="social-links d-flex">
-              
-              <a href="https://www.instagram.com/grefloresta.oficial/" target="_blank" 
-               class="social-link" 
-               aria-label="Visite nosso Instagram"
-               title="Instagram">
-              <i class="bi bi-instagram"></i>
-              </a>
-              <a href="https://wa.me/558791019828?text=Ol%C3%A1%2C%20gostaria%20de%20saber%20mais%20sobre%20o%20Sistema%20Integrado%20GRE%20FLORESTA." 
-               target="_blank" 
-               class="social-link" 
-               aria-label="Fale conosco via WhatsApp"
-               title="WhatsApp">
-              <i class="bi bi-whatsapp"></i>
-              </a>             
-            </div>
+     <footer class="compact-footer">
+  <div class="container">
+    <div class="footer-content">
+      <div class="row w-100 g-3 g-md-4 align-items-center justify-content-center">
+        
+        {# Coluna 1: Logo da GRE #}
+        <div class="col-12 col-md-3 d-flex justify-content-center justify-content-md-start">
+          <div class="gre-logo-footer-container">
+            <img src="{% static 'images/CARD DA GRE.png' %}" alt="GRE Floresta" class="img-fluid" style="max-width:120px; height:auto;">
           </div>
         </div>
-      </footer>
-  </div>
 
-  <script src="{% static 'bootstrap/js/bootstrap.bundle.min.js' %}"></script>
-  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+        {# Coluna 2: Textos do SIGREF #}
+        <div class="col-12 col-md-6 text-center"> {# Centralizado em todas as telas, ou justificado se preferir #}
+          <p class="footer-text mb-1">
+            <span class="sigref">Sistema Integrado Gerência Regional de Educação de Floresta.</span>
+          </p>
+          <p class="footer-text mb-0">
+            &copy; {% now "Y" %} <span class="sigref">SIGREF</span> - Todos os direitos reservados.
+          </p>
+        </div>
 
-  {% block scripts %}{% endblock scripts %}
+        {# Coluna 3: Links Sociais #}
+<div class="col-12 col-md-3 d-flex flex-column align-items-center align-items-md-end">
+    {# Título da Coluna: Melhorado para texto e centralização #}
+    <p class="footer-text mb-1">
+            <span class="gradiente-texto">Conheça nossas Redes Sociais</span></p>
+    
+    <div class="social-links d-flex">
+        <a href="https://www.instagram.com/grefloresta.oficial/" target="_blank" 
+           class="social-link" 
+           aria-label="Visite nosso Instagram"
+           title="Instagram">
+            <i class="bi bi-instagram"></i>
+        </a>
+        <a href="https://wa.me/558791019828?text=Ol%C3%A1%2C%20gostaria%20de%20saber%20mais%20sobre%20o%20Sistema%20Integrado%20GRE%20FLORESTA." 
+           target="_blank" 
+           class="social-link" 
+           aria-label="Fale conosco via WhatsApp"
+           title="WhatsApp">
+            <i class="bi bi-whatsapp"></i>
+        </a>           
+    </div>
+</div>
+
+      </div> {# Fim da row principal #}
+    </div> {# Fim do footer-content #}
+  </div> {# Fim do container #}
+</footer>
+
+<script src="{% static 'bootstrap/js/bootstrap.bundle.min.js' %}"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+{% block scripts %}{% endblock scripts %}
 {% block extra_script %}{% endblock extra_script %}
 
 </body>
-
 </html>
