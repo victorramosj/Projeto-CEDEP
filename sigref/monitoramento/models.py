@@ -330,37 +330,3 @@ class Resposta(models.Model):
 
     def __str__(self):
         return f"{self.pergunta} - {self.resposta_formatada()}"
-
-class TipoProblema(models.Model):
-    descricao = models.CharField(max_length=255)
-    setor = models.ForeignKey(Setor, on_delete=models.CASCADE)
-    
-    def __str__(self):
-        return self.descricao
-
-class RelatoProblema(models.Model):
-    STATUS_CHOICES = [
-        ('P', 'Pendente'),
-        ('R', 'Resolvido'),
-        ('U', 'Urgente'),
-    ]
-    PRIORIDADE_CHOICES = [
-        ('A', 'Alta'),
-        ('M', 'Média'),
-        ('B', 'Baixa'),
-    ]
-    
-    gestor = models.ForeignKey(GREUser, on_delete=models.CASCADE)
-    tipo_problema = models.ForeignKey(TipoProblema, on_delete=models.CASCADE)
-    descricao_adicional = models.TextField(blank=True)
-    data_relato = models.DateTimeField(auto_now_add=True)
-    data_resolucao = models.DateTimeField(null=True, blank=True)
-    status = models.CharField(max_length=1, choices=STATUS_CHOICES, default='P')
-    prioridade = models.CharField(max_length=1, choices=PRIORIDADE_CHOICES, default='M')
-    foto = models.ImageField(upload_to='relatos_fotos/', blank=True, null=True)
-    responsavel = models.ForeignKey(GREUser, on_delete=models.SET_NULL, null=True, blank=True, related_name='problemas_responsavel')
-    solucao_aplicada = models.TextField(blank=True, null=True, verbose_name="Solução Aplicada")
-    escola = models.ForeignKey(Escola, on_delete=models.CASCADE)  # Adicione este campo    
-    def __str__(self):
-        return f"{self.tipo_problema} - {self.escola.nome}"  # Corrigido para usar o campo escola
-    

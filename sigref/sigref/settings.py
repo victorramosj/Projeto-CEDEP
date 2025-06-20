@@ -103,12 +103,17 @@ FILE_UPLOAD_MAX_MEMORY_SIZE = 5 * 1024 * 1024
 # Proteção CSRF (se usar formulários)
 CSRF_TRUSTED_ORIGINS = [
     'https://projeto-cedep-production.up.railway.app',
-    'https://cedepegrefloresta.com.br'
+    'https://grefloresta.com.br'
 ]
 # Configurações de HTTPS (obrigatório para produção)
-SECURE_SSL_REDIRECT = False  # Desative para testar
-SESSION_COOKIE_SECURE = False  # Cookies só via HTTPS
-CSRF_COOKIE_SECURE = False # Proteção CSRF só via HTTPS
+if DEBUG:
+    SECURE_SSL_REDIRECT = False  # Desative para testar
+    SESSION_COOKIE_SECURE = False  # Cookies só via HTTPS
+    CSRF_COOKIE_SECURE = False  # Proteção CSRF só via HTTPS
+else:
+    SECURE_SSL_REDIRECT = True
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')  # Para proxies como Railway
 
 # Arquivos estáticos (se aplicável)
