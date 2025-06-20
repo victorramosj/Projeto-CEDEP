@@ -1,87 +1,201 @@
-{% extends 'cedepe/base.html' %}
-{% load static %}
-
-{% block title %}Detalhes do Monitoramento{% endblock %}
-
-{% block content %}
-<div class="container-fluid px-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2>
-            <i class="fas fa-clipboard-check me-2"></i>
-            Detalhes do Monitoramento
-        </h2>
-        <a href="{% url 'dashboard_monitoramentos' %}" class="btn btn-secondary">
-            <i class="fas fa-arrow-left me-2"></i>Voltar
-        </a>
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Relatório de Monitoramento</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 1cm;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #2c3e50;
+            padding-bottom: 10px;
+        }
+        .header h1 {
+            margin: 0;
+            color: #2c3e50;
+            font-size: 24px;
+        }
+        .header .subtitle {
+            font-size: 18px;
+            color: #7f8c8d;
+        }
+        .card {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 25px;
+            page-break-inside: avoid;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .card-header {
+            background-color: #3498db;
+            color: white;
+            padding: 12px 15px;
+            margin: -20px -20px 20px -20px;
+            border-radius: 8px 8px 0 0;
+            font-weight: bold;
+            font-size: 18px;
+        }
+        .card-header.bg-info {
+            background-color: #1abc9c;
+        }
+        .info-grid {
+            display: grid;
+            grid-template-columns: max-content auto;
+            gap: 12px 20px;
+        }
+        .info-label {
+            font-weight: bold;
+            color: #2c3e50;
+            text-align: right;
+        }
+        .resposta-item {
+            margin-bottom: 15px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #eee;
+        }
+        .resposta-item:last-child {
+            border-bottom: none;
+        }
+        .pergunta-texto {
+            font-weight: bold;
+            margin-bottom: 5px;
+            color: #2c3e50;
+        }
+        .resposta-valor {
+            padding: 8px 12px;
+            background-color: #f9f9f9;
+            border-left: 3px solid #3498db;
+            border-radius: 0 4px 4px 0;
+        }
+        .foto-container {
+            margin-top: 15px;
+            text-align: center;
+        }
+        .foto-label {
+            font-weight: bold;
+            display: block;
+            margin-bottom: 8px;
+            color: #2c3e50;
+        }
+        .foto-comprovante {
+            max-width: 100%;
+            max-height: 400px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .no-print {
+            text-align: center;
+            margin-top: 30px;
+            padding: 15px;
+        }
+        @media print {
+            .no-print {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Relatório de Monitoramento</h1>
+        <div class="subtitle">SIGREF</div>
     </div>
 
-    <div class="card shadow mb-4">
-        <div class="card-header bg-primary text-white">
-            <h5 class="mb-0">
-                <i class="fas fa-info-circle me-2"></i>
-                Informações Gerais
-            </h5>
-        </div>
-        <div class="card-body">
-            <dl class="row">
-                <dt class="col-sm-3">Questionário:</dt>
-                <dd class="col-sm-9">{{ monitoramento.questionario.titulo }}</dd>
-
-                <dt class="col-sm-3">Escola:</dt>
-                <dd class="col-sm-9">{{ monitoramento.escola.nome }}</dd>
-
-                <dt class="col-sm-3">Respondido por:</dt>
-                <dd class="col-sm-9">
-                    {% if monitoramento.respondido_por %}
-                        {{ monitoramento.respondido_por.get_full_name }}
+    <div class="card">
+        <div class="card-header">Informações Gerais</div>
+        <div class="info-grid">
+            <div class="info-label">Questionário:</div>
+            <div>{{ monitoramento.questionario.titulo }}</div>
+            
+            <div class="info-label">Escola:</div>
+            <div>{{ monitoramento.escola.nome }}</div>
+            
+            <div class="info-label">Respondido por:</div>
+            <div>
+                {% if monitoramento.respondido_por %}
+                    {% if monitoramento.respondido_por.greuser %}
+                        {% if monitoramento.respondido_por.greuser.nome_completo %}
+                            {{ monitoramento.respondido_por.greuser.nome_completo }}
+                        {% else %}
+                            {{ monitoramento.respondido_por.username }}
+                        {% endif %}
                     {% else %}
-                        Não identificado
+                        {{ monitoramento.respondido_por.username }}
                     {% endif %}
-                </dd>
-
-                <dt class="col-sm-3">Data:</dt>
-                <dd class="col-sm-9">{{ monitoramento.criado_em|date:"d/m/Y H:i" }}</dd>
-            </dl>
-        </div>
-    </div>
-
-    <div class="card shadow">
-        <div class="card-header bg-info text-white">
-            <h5 class="mb-0">
-                <i class="fas fa-list-ol me-2"></i>
-                Respostas
-            </h5>
-        </div>
-        <div class="card-body">
-            <div class="list-group">
-                {% for resposta in respostas %}
-                <div class="list-group-item">
-                    <div class="d-flex w-100 justify-content-between">
-                        <h6 class="mb-1">{{ resposta.pergunta.texto }}</h6>
-                        <small>Ordem: {{ resposta.pergunta.ordem }}</small>
-                    </div>
-                    <p class="mb-1 mt-2">
-                        <strong>Resposta:</strong>
-                        <span class="ms-2">
-                            {% if resposta.pergunta.tipo_resposta == 'SN' %}
-                                {{ resposta.resposta_sn|default:"-" }}
-                            {% elif resposta.pergunta.tipo_resposta == 'NU' %}
-                                {{ resposta.resposta_num|default:"-" }}
-                            {% else %}
-                                {{ resposta.resposta_texto|default:"-"|truncatechars:100 }}
-                            {% endif %}
-                        </span>
-                    </p>
-                </div>
-                {% empty %}
-                <div class="list-group-item">
-                    <div class="alert alert-warning mb-0">
-                        Nenhuma resposta registrada para este monitoramento
-                    </div>
-                </div>
-                {% endfor %}
+                {% else %}
+                    Não identificado
+                {% endif %}
             </div>
+            
+            <div class="info-label">Data:</div>
+            <div>{{ monitoramento.criado_em|date:"d/m/Y H:i" }}</div>
+        </div>
+        
+        <!-- Campo da foto comprovante -->
+        {% if monitoramento.foto_comprovante %}
+        <div class="foto-container">
+            <span class="foto-label">Foto Comprobatória:</span>
+            <img src="{{ monitoramento.foto_comprovante.url }}" 
+                 alt="Foto comprovante do monitoramento" 
+                 class="foto-comprovante">
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="card">
+        <div class="card-header bg-info">Respostas</div>
+        <div class="respostas-container">
+            {% for resposta in respostas %}
+            <div class="resposta-item">
+                <div class="pergunta-texto">
+                    {{ resposta.pergunta.ordem }}. {{ resposta.pergunta.texto }}
+                </div>
+                <div class="resposta-valor">
+                    {% if resposta.pergunta.tipo_resposta == 'SN' %}
+                        {{ resposta.get_resposta_sn_display|default:"-" }}
+                    {% elif resposta.pergunta.tipo_resposta == 'NU' %}
+                        {{ resposta.resposta_num|floatformat:0|default:"-" }}
+                    {% else %}
+                        {{ resposta.resposta_texto|default:"-" }}
+                    {% endif %}
+                </div>
+            </div>
+            {% empty %}
+            <div class="resposta-item">
+                Nenhuma resposta registrada para este monitoramento
+            </div>
+            {% endfor %}
         </div>
     </div>
-</div>
-{% endblock %}
+
+    <div class="no-print">
+        <button onclick="window.print()" style="
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            font-size: 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        ">
+            Imprimir Relatório
+        </button>
+        <p style="margin-top: 15px; color: #7f8c8d;">
+            Gerado em {% now "d/m/Y H:i" %}
+        </p>
+    </div>
+</body>
+</html>

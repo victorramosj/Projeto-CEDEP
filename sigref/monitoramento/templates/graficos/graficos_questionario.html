@@ -2,33 +2,248 @@
 {% load static %}
 
 {% block content %}
-<h2>{{ questionario.titulo }} - Gráficos</h2>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+<style>
+    /* Estilos para o badge-list e ocultar badges */
+    .badge-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        max-height: none; /* Removido para ser controlado via JS ou uma classe específica para scroll */
+        align-items: center; /* Alinha verticalmente os itens */
+    }
+    .badge-hidden {
+        display: none;
+    }
 
-<div id="graficos-container"></div>
+    /* Estilos para cards de gráficos e resumo */
+    .chart-card {
+        border-radius: 0.75rem; /* Cantos mais arredondados */
+        overflow: hidden; /* Garante que o conteúdo respeite o border-radius */
+    }
+    .chart-container {
+        position: relative;
+        height: 250px; /* Altura fixa para gráficos, melhora a consistência */
+    }
+
+    /* Estilos para títulos de perguntas */
+    .question-title {
+        color: var(--bs-primary); /* Usa a cor primária do Bootstrap */
+        font-weight: 600; /* Um pouco mais encorpado */
+        margin-bottom: 1.5rem; /* Mais espaçamento abaixo */
+        border-bottom: 1px solid rgba(0, 0, 0, 0.08); /* Linha sutil para separar */
+        padding-bottom: 0.75rem;
+    }
+
+    /* Estilo para a área de scroll das escolas (cabeçalho) */
+    .scrollable-badges {
+        max-height: 120px; /* Altura máxima para a rolagem */
+        overflow-y: auto; /* Adiciona rolagem vertical se o conteúdo exceder a altura */
+        padding-right: 10px; /* Espaço para a barra de rolagem */
+        -webkit-overflow-scrolling: touch; /* Melhor rolagem em dispositivos iOS */
+    }
+
+    /* NOVO: Estilo para a área de scroll das escolas detalhadas */
+    .scrollable-detailed-schools {
+        max-height: 200px; /* Altura máxima para a rolagem, um pouco mais alto que o cabeçalho */
+        overflow-y: auto; /* Adiciona rolagem vertical se o conteúdo exceder a altura */
+        padding-right: 10px; /* Espaço para a barra de rolagem */
+        -webkit-overflow-scrolling: touch; /* Melhor rolagem em dispositivos iOS */
+    }
+
+    /* Ajuste para que os badges detalhados possam se quebrar em várias linhas se necessário */
+    .detailed-school-badge {
+        white-space: normal; /* Permite que o texto do badge quebre linha */
+        text-align: center;
+        flex-shrink: 0; /* Impede que os itens encolham */
+    }
+</style>
+
+<div class="container py-4">
+    <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between mb-4 gap-3">
+        <div>
+            <h2 class="mb-1">
+                {{ questionario.titulo }}
+                <span class="badge bg-primary align-middle ms-2">Gráficos</span>
+            </h2>
+            <div class="text-muted small mt-2">
+                <i class="bi bi-building me-1"></i> Escolas respondentes:
+                {% if escolas %}
+                <div id="escolas-lista-wrapper" class="scrollable-badges"> {# Wrapper para o scroll #}
+                    <span id="escolas-lista" class="badge-list">
+                        {% for escola in escolas %}
+                            <span class="badge bg-light text-dark border rounded-pill py-1 px-2 me-1
+                                {% if forloop.counter > 5 %}badge-hidden extra-escola{% endif %}">
+                                {{ escola }}
+                            </span>
+                        {% endfor %}
+                    </span>
+                </div>
+                {% if escolas|length > 5 %}
+                    <button class="btn btn-outline-secondary btn-sm py-0 px-2 rounded-pill mt-2" onclick="mostrarMaisEscolas(this)">
+                        + mais
+                    </button>
+                {% endif %}
+                {% else %}
+                    <span class="text-muted fst-italic">Nenhuma escola respondeu ainda.</span>
+                {% endif %}
+            </div>
+        </div>
+
+        <button type="button" class="btn btn-secondary d-flex align-items-center gap-2" onclick="history.back()">
+            <i class="bi bi-arrow-left"></i>
+            Voltar
+        </button>
+    </div>
+
+    <hr class="my-4"> <div class="row mb-5">
+        <div class="col-md-4 mb-3">
+            <div class="card shadow-sm border-0 h-100 chart-card">
+                <div class="card-body py-3 d-flex flex-column justify-content-between">
+                    <div>
+                        <div class="fw-bold text-primary mb-1">Total de Monitoramentos</div>
+                        <div class="fs-4 fw-bold text-dark">{{ total_monitoramentos }}</div>
+                    </div>
+                    <div class="text-muted small mt-2">Número total de questionários respondidos.</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-8 mb-3">
+            <div class="card shadow-sm border-0 h-100 chart-card">
+                <div class="card-body py-3">
+                    <div class="fw-bold text-primary mb-2">Monitoramentos por Escola</div>
+                    <div class="scrollable-detailed-schools"> {# NOVO: Wrapper para scroll aqui também #}
+                        <div class="badge-list">
+                            {% for escola in escolas_respondentes %}
+                                <span class="badge bg-info rounded-pill py-1 px-2 me-2 detailed-school-badge" style="color: #0a3d62; font-weight: 500; font-size: 0.94rem; box-shadow: 0 2px 8px rgba(10,61,98,0.08);  display: flex; align-items: center; gap: 0.5em;">
+                                    <span style="color: #0a3d62; word-break: break-word;">{{ escola.escola__nome }}</span>
+                                    <span style="color: #ffffff; font-size: 0.88em; font-weight: 600; margin-left: 6px; white-space: nowrap;"> ( {{ escola.total }} )</span>
+                                        
+                                    </span>
+                                </span>
+                            {% empty %}
+                                <span class="text-muted fst-italic">Nenhuma escola respondeu ainda.</span>
+                            {% endfor %}
+                        </div>
+                    </div>
+                     <div class="text-muted small mt-3">Total de respostas recebidas de cada escola.</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="graficos-container"></div>
+</div>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
+    function mostrarMaisEscolas(button) {
+        document.querySelectorAll('.extra-escola').forEach(el => el.classList.remove('badge-hidden'));
+        button.remove(); // Remove o botão "mais" após expandir
+        document.getElementById('escolas-lista-wrapper').style.maxHeight = 'none'; // Remove o limite de altura para mostrar tudo
+        document.getElementById('escolas-lista-wrapper').style.overflowY = 'visible'; // Desativa a rolagem
+    }
+
     const dadosGraficos = JSON.parse('{{ dados_graficos|safe }}');
     const container = document.getElementById('graficos-container');
 
+    if (dadosGraficos.length === 0) {
+        container.innerHTML = `
+            <div class="alert alert-info text-center" role="alert">
+                <i class="bi bi-info-circle me-2"></i>Nenhum dado disponível para exibir gráficos.
+            </div>
+        `;
+    }
+
     dadosGraficos.forEach((item, index) => {
-        const canvas = document.createElement('canvas');
-        canvas.id = `grafico-${index}`;
-        container.appendChild(document.createElement('h4')).innerText = item.pergunta;
-        container.appendChild(canvas);
+        const row = document.createElement('div');
+        row.className = "row align-items-stretch mb-5"; // Aumenta o espaçamento entre as linhas
+
+        const colGrafico = document.createElement('div');
+        colGrafico.className = "col-md-7 mb-4 mb-md-0"; // Mais espaçamento em telas menores
+
+        const colResumo = document.createElement('div');
+        colResumo.className = "col-md-5";
+
+        // Card para o gráfico
+        const cardGrafico = document.createElement('div');
+        cardGrafico.className = "card shadow-sm border-0 h-100 chart-card";
+        cardGrafico.innerHTML = `
+            <div class="card-body d-flex flex-column">
+                <h5 class="question-title">${item.pergunta}</h5>
+                <div class="chart-container">
+                    <canvas id="grafico-${index}"></canvas>
+                </div>
+            </div>
+        `;
+        colGrafico.appendChild(cardGrafico);
+
+        // Card para o resumo
+        const cardResumo = document.createElement('div');
+        cardResumo.className = "card shadow-sm border-0 h-100 chart-card";
+        colResumo.appendChild(cardResumo);
 
         if (item.tipo === 'SN') {
+            const canvas = cardGrafico.querySelector(`#grafico-${index}`);
             new Chart(canvas, {
-                type: 'pie',
+                type: 'doughnut', // Gráfico de rosca para um visual mais moderno
                 data: {
                     labels: item.dados.labels,
                     datasets: [{
                         data: item.dados.values,
-                        backgroundColor: ['#28a745', '#dc3545'],
+                        backgroundColor: ['#28a745', '#dc3545'], // Cores Bootstrap
+                        hoverBackgroundColor: ['#218838', '#c82333'], // Cores ao passar o mouse
+                        borderWidth: 1,
+                        borderColor: '#fff'
                     }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false, // Permite que chart-container controle a altura
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                font: { size: 14, family: 'Arial, sans-serif' },
+                                boxWidth: 20 // Tamanho da caixa de cor na legenda
+                            }
+                        },
+                        tooltip: { // Melhorias na dica de ferramenta
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.label || '';
+                                    if (label) {
+                                        label += ': ';
+                                    }
+                                    if (context.parsed !== null) {
+                                        label += context.parsed + '%';
+                                    }
+                                    return label;
+                                }
+                            }
+                        }
+                    }
                 }
             });
+
+            cardResumo.innerHTML = `
+                <div class="card-body">
+                    <div class="fw-bold text-primary mb-3">Resumo das Respostas</div>
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                            <span><span class="badge bg-success me-2">Sim</span> Total:</span>
+                            <span class="fw-bold">${item.dados.total_sim} (${item.dados.perc_sim}%)</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                            <span><span class="badge bg-danger me-2">Não</span> Total:</span>
+                            <span class="fw-bold">${item.dados.total_nao} (${item.dados.perc_nao}%)</span>
+                        </li>
+                    </ul>
+                    <div class="text-muted mt-3 small text-end">Total de respostas: <span class="fw-bold">${item.dados.total_respostas}</span></div>
+                </div>
+            `;
         } else if (item.tipo === 'NU') {
+            const canvas = cardGrafico.querySelector(`#grafico-${index}`);
             new Chart(canvas, {
                 type: 'bar',
                 data: {
@@ -36,16 +251,108 @@
                     datasets: [{
                         label: 'Valor',
                         data: item.dados.valores,
-                        backgroundColor: '#007bff'
+                        backgroundColor: '#007bff', // Cor Bootstrap Primary
+                        borderColor: '#007bff',
+                        borderWidth: 1,
+                        borderRadius: 8, // Barras com cantos arredondados
+                        barPercentage: 0.8, // Largura das barras
+                        categoryPercentage: 0.8 // Espaçamento entre as categorias
                     }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return `${context.dataset.label}: ${context.parsed.y}`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: { display: false },
+                            ticks: { font: { size: 13, family: 'Arial, sans-serif' } },
+                            title: {
+                                display: true,
+                                text: 'Respostas Individuais',
+                                font: { size: 14, weight: 'bold' },
+                                color: '#555'
+                            }
+                        },
+                        y: {
+                            beginAtZero: true,
+                            grid: { color: "#e3eafc", drawBorder: false }, // Linhas mais suaves
+                            ticks: { font: { size: 13, family: 'Arial, sans-serif' } },
+                            title: {
+                                display: true,
+                                text: 'Valores',
+                                font: { size: 14, weight: 'bold' },
+                                color: '#555'
+                            }
+                        }
+                    }
                 }
             });
+
+            cardResumo.innerHTML = `
+                <div class="card-body">
+                    <div class="fw-bold text-primary mb-3">Estatísticas</div>
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                            <span>Média:</span>
+                            <span class="badge bg-primary fs-6">${item.dados.media}</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                            <span>Mediana:</span>
+                            <span class="badge bg-secondary fs-6">${item.dados.mediana}</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                            <span>Mínimo:</span>
+                            <span class="badge bg-info text-dark fs-6">${item.dados.min}</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                            <span>Máximo:</span>
+                            <span class="badge bg-info text-dark fs-6">${item.dados.max}</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                            <span>Desvio Padrão:</span>
+                            <span class="badge bg-warning text-dark fs-6">${item.dados.desvio_padrao}</span>
+                        </li>
+                    </ul>
+                    <div class="text-muted mt-3 small text-end">Total de respostas: <span class="fw-bold">${item.dados.total_respostas}</span></div>
+                </div>
+            `;
         } else if (item.tipo === 'TX') {
-            const texto = item.dados.exemplos.map(t => `<li>${t}</li>`).join('');
-            const div = document.createElement('div');
-            div.innerHTML = `<ul>${texto}</ul>`;
-            container.appendChild(div);
+            // Para respostas textuais, o colResumo não é necessário como card separado
+            // O conteúdo é colocado diretamente no cardGrafico
+            cardGrafico.innerHTML = `
+                <div class="card-body">
+                    <h5 class="question-title">${item.pergunta}</h5>
+                    <div class="fw-bold text-primary mb-2">Exemplos de Respostas</div>
+                    ${
+                        item.dados.exemplos.length > 0
+                        ? `<ul class="list-group list-group-flush mb-3">
+                                ${item.dados.exemplos.map(t => `<li class="list-group-item">${t}</li>`).join('')}
+                            </ul>`
+                        : "<div class='alert alert-light text-center'><em class='text-muted'>Nenhuma resposta textual registrada.</em></div>"
+                    }
+                    <div class="text-muted mt-2 small text-end">Total de respostas: <span class="fw-bold">${item.dados.total_respostas}</span></div>
+                </div>
+            `;
+            // Remove o colResumo se não for necessário para este tipo de gráfico
+            colResumo.remove();
         }
+
+        row.appendChild(colGrafico);
+        // Só adiciona colResumo se ele não foi removido para TX type
+        if (item.tipo !== 'TX') {
+            row.appendChild(colResumo);
+        }
+        container.appendChild(row);
     });
 </script>
 {% endblock %}

@@ -10,15 +10,14 @@
             </h2>
         </div>
         <div class="col-12 col-md-6">
-            <form method="get" class="d-flex flex-column flex-sm-row align-items-sm-center">
-                <input type="text" name="q" value="{{ q }}" class="form-control me-sm-2 mb-2 mb-sm-0"
-                    placeholder="Buscar por nome, INEP ou gestor...">
-                <button class="btn btn-primary me-sm-2 mb-2 mb-sm-0" type="submit">
-                    <i class="fas fa-search"></i>
+            <form method="get" class="d-flex align-items-center gap-2">
+                <input type="text" name="q" value="{{ q }}" class="form-control py-1" placeholder="Buscar por nome, INEP ou gestor...">
+                <button class="btn btn-primary btn-sm" type="submit">
+                    <i class="fas fa-search "></i>
                 </button>
-                <a type="button" href="{% url 'home' %}" class="btn btn-secondary btn-sm">
-                    <i class="fas fa-arrow-left me-2"></i>Voltar
-                </a>
+                <button type="button" class="btn btn-secondary btn-sm" onclick="history.back()" style="white-space: nowrap;">
+                    <i class="fas fa-arrow-left me-1"></i> Voltar
+                </button>
             </form>
         </div>
     </div>
@@ -43,13 +42,33 @@
                         INEP: {{ escola.inep }}<br>
                         Gestor: {{ escola.nome_gestor }}
                     </p>
-                    <div class="mt-auto d-flex gap-2">
-                        <a href="{% url 'questionarios_escola' escola.id %}" class="btn btn-outline-primary w-50">
-                            Ver questionários
+                    <div class="mt-auto d-flex flex-wrap gap-2 justify-content-between align-items-end">
+                        <!-- Botão Realizar Monitoramento - Cor Azul -->
+                        <a href="{% url 'questionarios_escola' escola.id %}"
+                            class="btn btn-outline-primary btn-sm flex-fill d-flex align-items-center justify-content-center"
+                            style="min-width: 0;">
+                            <i class="fas fa-clipboard-check me-1"></i>
+                            <span class="small">Realizar Monitoramento</span>
                         </a>
-                        <a href="{% url 'dashboard_escola' escola.id%}" class="btn btn-outline-primary w-50">
-                            Ver escola
+
+                        <!-- Botão Escola - Cor Verde -->
+                        <a href="{% url 'dashboard_escola' escola.id %}"
+                            class="btn btn-outline-success btn-sm flex-fill d-flex align-items-center justify-content-center"
+                            style="min-width: 0;">
+                            <i class="fas fa-school me-1"></i>
+                            <span class="small">Escola</span>
                         </a>
+
+                        {% if not user.greuser.is_monitor %}
+                        <button
+                            class="btn btn-outline-secondary btn-sm flex-fill d-flex align-items-center justify-content-center"
+                            data-bs-toggle="modal" data-bs-target="#relatorioMonitoramentosModal"
+                            data-escola-id="{{ escola.id }}" style="min-width: 0;">
+                            <i class="fas fa-file-alt me-1"></i>
+                            <span class="small">Relatório</span>
+                        </button>
+                        {% endif %}
+                        
                     </div>
                 </div>
             </div>
@@ -60,6 +79,62 @@
         <p class="text-muted">Nenhuma escola encontrada.</p>
     </div>
     {% endfor %}
+    <!-- Modal ÚNICO (fora do loop) -->
+    <div class="modal fade" id="relatorioMonitoramentosModal" tabindex="-1"
+        aria-labelledby="relatorioMonitoramentosModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <form method="get" action="{% url 'relatorio_monitoramentos' %}">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="relatorioMonitoramentosModalLabel">
+                            Gerar Relatório de Monitoramentos
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                    </div>
+                    <div class="modal-body">
+                        <!-- Campo oculto para armazenar o ID -->
+                        <input type="hidden" name="escola_id" id="modal-escola-id" value="">
+                        <div class="mb-3">
+                            <label for="setor_id" class="form-label">Setor</label>
+                            <select id="setor_id" name="setor_id" class="form-select">
+                                <option value="">Todos</option>
+                                {% for setor in setores %}
+                                <option value="{{ setor.id }}">{{ setor.nome }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="quantidade" class="form-label">Quantidade de Monitoramentos</label>
+                            <input type="number" class="form-control" id="quantidade" name="quantidade" min="1"
+                                max="100" value="10" required>
+                            <div class="form-text">Informe quantos últimos monitoramentos deseja incluir no relatório.
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn-primary">Gerar Relatório</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            var relatorioModal = document.getElementById('relatorioMonitoramentosModal');
+
+            relatorioModal.addEventListener('show.bs.modal', function (event) {
+                // Botão que acionou o modal
+                var button = event.relatedTarget;
+
+                // Extrair ID do atributo data-escola-id
+                var escolaId = button.getAttribute('data-escola-id');
+
+                // Atualizar campo oculto no formulário
+                document.getElementById('modal-escola-id').value = escolaId;
+            });
+        });
+    </script>
 </div>
 {# ---------- PAGINAÇÃO ---------- #}
 {% if is_paginated %}
@@ -96,8 +171,6 @@
     </ul>
 </nav>
 {% endif %}
-
-</div>
 
 <style>
     .hover-effect {

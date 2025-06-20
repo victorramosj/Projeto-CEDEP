@@ -71,9 +71,7 @@ class ProblemaUsuario(models.Model):
         setor_nome = self.setor.hierarquia_completa if self.setor else "Geral"
         return f"{self.usuario.user.username} → {setor_nome}"
 
-from django.db import models
-from django.utils import timezone
-
+# seu_app/models.py
 class AvisoImportante(models.Model):
     PRIORIDADES = [
         ('baixa', 'Baixa'),
@@ -81,21 +79,51 @@ class AvisoImportante(models.Model):
         ('alta', 'Alta'),
     ]
     
-    # Mantenha apenas uma definição de setor_destino
     setor_destino = models.ForeignKey(Setor, on_delete=models.SET_NULL, null=True, blank=True)
     
     titulo = models.CharField(max_length=255)
     mensagem = models.TextField()
+    
+    # [MODIFICADO] Campo de imagem agora é opcional
+    imagem = models.ImageField(upload_to='avisos_imagens/', null=True, blank=True)
+    
     prioridade = models.CharField(max_length=10, choices=PRIORIDADES, default='normal')
     escola = models.ForeignKey(Escola, on_delete=models.CASCADE, related_name='avisos_problemas')
     criado_por = models.ForeignKey(GREUser, on_delete=models.CASCADE)
     data_criacao = models.DateTimeField(auto_now_add=True)
     data_expiracao = models.DateTimeField(null=True, blank=True)
     ativo = models.BooleanField(default=True)
-    data_exclusao = models.DateTimeField(null=True, blank=True)  # Campo para armazenar a data de exclusão
+    data_exclusao = models.DateTimeField(null=True, blank=True)
+    visualizado = models.BooleanField(default=False)  # Campo adicionado
 
     def __str__(self):
         return f"[{self.escola.nome}] {self.titulo}"
 
     def ainda_valido(self):
         return self.ativo and (self.data_expiracao is None or self.data_expiracao >= timezone.now())
+
+    
+
+# cedepe/models.py
+
+class ConfirmacaoAviso(models.Model):
+    STATUS = [
+        ('pendente', 'Pendente'),
+        ('visualizado', 'Visualizado'),
+    ]
+    
+    aviso = models.ForeignKey(AvisoImportante, on_delete=models.CASCADE, related_name='confirmacoes')
+    escola = models.ForeignKey(Escola, on_delete=models.CASCADE, related_name='confirmacoes')
+    data_recebimento = models.DateTimeField(auto_now_add=True)
+    status = models.CharField(max_length=15, choices=STATUS, default='pendente')
+    
+    def __str__(self):
+        return f"Status de {self.escola.nome} para o aviso: {self.aviso.titulo} - {self.status}"
+    
+    def confirmar_visualizado(self):
+        """Método para confirmar que a escola visualizou o aviso"""
+        self.status = 'visualizado'
+        self.save()  # <--- ADICIONE ESTA LINHA!
+
+
+

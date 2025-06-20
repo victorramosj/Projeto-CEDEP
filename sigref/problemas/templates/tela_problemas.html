@@ -1,0 +1,322 @@
+{% extends "cedepe/base.html" %}
+{% load static %}
+
+{% block title %}
+Problemas
+{% endblock %}
+
+{% block extra_style %}
+<link rel="stylesheet" href="{% static 'css/tabelas.css' %}" />
+<style>
+.form-select {
+    width: 160px;
+}
+table .form-select {
+    color: #333; 
+    padding: 5px 10px;      
+    border-radius: 5px;       
+    border: none;
+    transition: background-color 0.3s ease;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4 ">
+    <h3>Problemas (<span id="problemas-count">{{ total_problemas }}</span>)</h3>
+
+    <div class="col-12 mt-3">
+        <div class="d-flex justify-content-between gap-2 mb-2">
+            
+            <div class="d-flex align-items-left gap-2">
+            <!-- Barra de pesquisa -->
+                <form method="GET" action="{% url 'tela_problemas' %}" class="input-group" style="width: 460px;">
+                    {% csrf_token %}
+                    <span class="input-group-text"><i class="fas fa-search"></i></span>
+                    <input type="text" class="form-control" name="escola" value="{{ search_query }}" placeholder="Pesquise por Escola...">
+                </form>
+                
+                <div class="d-flex gap-2">
+                    <!-- Filtros -->
+                    <select class="form-select" name="data" aria-label="Filtro Data">
+                        <option value="" {% if not request.GET.data %} selected {% endif %}>Data (Todas)</option>
+                        <option value="1" {% if request.GET.data == '1' %} selected {% endif %}>Última semana</option>
+                        <option value="2" {% if request.GET.data == '2' %} selected {% endif %}>Último mês</option>
+                        <option value="3" {% if request.GET.data == '3' %} selected {% endif %}>Último ano</option>
+                    </select>
+                    <select class="form-select" name="status" aria-label="Filtro Status">
+                        <option value="" {% if not request.GET.status %}selected{% endif %}>Status (Todos)</option>
+                        <option value="P" {% if request.GET.status == 'P' %} selected {% endif %}>Pendente</option>
+                        <option value="R" {% if request.GET.status == 'R' %} selected {% endif %}>Resolvido</option>
+                        <option value="E" {% if request.GET.status == 'E' %} selected {% endif %}>Em Andamento</option>
+                    </select>
+                    <select class="form-select" name="setor" aria-label="Filtro Setor">
+                            <option value="" {% if not request.GET.setor %}selected{% endif %}>Setor (Todos)</option>
+                            {% for setor_obj in todos_os_setores %}
+                                <option value="{{ setor_obj.id }}" {% if request.GET.setor == setor_obj.id|stringformat:"s" %} selected {% endif %}>
+                                    {{ setor_obj.nome }}
+                                </option>
+                            {% endfor %}
+                    </select>
+                </div>
+            </div>
+
+            <div class="d-flex gap-2">
+                <!-- Botões de ação -->
+                <button class="btnAcao btn btn-danger">Apagar Problemas</button> 
+            </div>
+        </div>
+
+        <!-- Tabela de Problemas -->
+        <div class="table-responsive">
+            <table class="table table-striped mt-2">
+                <thead>
+                    <tr>
+                        <th><input type="checkbox" id="selectAllCheckboxes"></th>
+                        <th class="text-start">Problema</th>
+                        <th class="text-start">Escola</th>
+                        <th class="text-start">Usuário</th>
+                        <th class="text-start">Setor Responsável</th>
+                        <th class="text-start">Data</th>
+                        <th class="text-start">Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for problema in problemas_page %}
+                        <tr id="problema-row-{{ problema.id }}">
+                            <td><input type="checkbox" name="selected_problemas" value="{{ problema.id }}"></td>
+                            <td class="text-start">{{ problema.descricao}}</td>
+                            <td class="text-start">{{ problema.escola.nome }}</td>
+                            <td class="text-start">{{ problema.usuario }}</td>
+                            <td class="text-start">{{ problema.setor.hierarquia_completa }}</td>
+                            <td class="text-start">{{ problema.criado_em|date:"d/m/Y" }}</td>
+                            <td>
+                                <select class="form-select status-updater" data-problema-id="{{ problema.id }}" aria-label="Alterar Status">
+                                    {% for value, display in status_choices %}
+                                        <option value="{{ value }}" {% if problema.status == value %}selected{% endif %}>
+                                            {{ display }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="7" class="text-center p-4">Nenhum problema encontrado.</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>    
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+
+    // ==================================================================
+    // PARTE 1: LÓGICA PARA OS FILTROS (MÉTODO MAIS SIMPLES E ROBUSTO)
+    // ==================================================================
+    const searchInput = document.querySelector("input[name='escola']");
+    const selectData = document.querySelector("select[name='data']");
+    const selectStatus = document.querySelector("select[name='status']");
+    const selectSetor = document.querySelector("select[name='setor']");
+    
+    // Função para aplicar os filtros e redirecionar
+    function aplicarFiltros() {
+        // Pega a URL base sem parâmetros
+        const baseUrl = window.location.origin + window.location.pathname;
+        
+        // Cria os parâmetros de busca
+        const params = new URLSearchParams();
+        params.set('escola', searchInput.value);
+        params.set('data', selectData.value);
+        params.set('status', selectStatus.value);
+        params.set('setor', selectSetor.value);
+
+        // Redireciona para a página com os filtros corretos.
+        window.location.href = `${baseUrl}?${params.toString()}`;
+    }
+
+    // Adiciona o evento de 'change' para cada select
+    selectData.addEventListener('change', aplicarFiltros);
+    selectStatus.addEventListener('change', aplicarFiltros);
+    selectSetor.addEventListener('change', aplicarFiltros);
+
+    // ==================================================================
+    // PARTE 2: LÓGICA PARA ATUALIZAÇÃO DE STATUS (COM DELEGAÇÃO DE EVENTOS)
+    // ==================================================================
+    const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+    const tabelaContainer = document.querySelector('.table-responsive');
+
+    const statusColors = {
+        'P': '#ffcccc', 'R': '#ccffcc', 'E': '#ffffcc'
+    };
+
+    function setSelectColor(selectElement) {
+        selectElement.style.backgroundColor = statusColors[selectElement.value] || '#ffffff';
+    }
+
+    // Aplica a cor inicial a todos os selects que já estão na página
+    document.querySelectorAll('.status-updater').forEach(setSelectColor);
+
+    // DELEGAÇÃO DE EVENTO: O "ouvinte" fica no container da tabela, que não é destruído.
+    tabelaContainer.addEventListener('change', function(event) {
+        
+        // Verifica se o elemento que disparou o evento é um select de atualização
+        if (event.target.matches('.status-updater')) {
+            const selectElement = event.target;
+            const problemaId = selectElement.dataset.problemaId;
+            const novoStatus = selectElement.value;
+
+            setSelectColor(selectElement);
+
+            const url = `{% url 'api_atualizar_status_problema' 0 %}`.replace('0', problemaId);
+
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrftoken
+                },
+                body: JSON.stringify({ status: novoStatus })
+            })
+            .then(response => {
+                if (!response.ok) throw new Error('Falha na API');
+                return response.json();
+            })
+            .then(data => {
+                console.log('Status atualizado com sucesso:', data);
+                const linhaTabela = document.getElementById(`problema-row-${problemaId}`);
+                if (linhaTabela) {
+                    linhaTabela.classList.add('status-atualizado');
+                    setTimeout(() => {
+                        linhaTabela.classList.remove('status-atualizado');
+                    }, 2000);
+                }
+            })
+            .catch(error => {
+                console.error('Erro ao atualizar status:', error);
+                alert('Ocorreu um erro ao atualizar o status.');
+            });
+        }
+    });
+
+    // ==================================================================
+    // PARTE 3: LÓGICA PARA APAGAR PROBLEMAS SELECIONADOS
+    // ==================================================================
+
+    const selectAllCheckbox = document.getElementById('selectAllCheckboxes');
+    let problemaCheckboxes = document.querySelectorAll('input[name="selected_problemas"]');
+    const botaoApagar = document.querySelector('.btnAcao');
+    const problemasCount = document.getElementById('problemas-count');
+
+    // Função para atualizar o estado do botão de apagar
+    function atualizarBotaoApagar() {
+        // Verifica se o botão de apagar existe
+        problemaCheckboxes = document.querySelectorAll('input[name="selected_problemas"]');
+
+        const anyCheckboxSelected = Array.from(problemaCheckboxes).some(checkbox => checkbox.checked);
+        botaoApagar.disabled = !anyCheckboxSelected;
+    }
+
+    // Inicializa o estado do botão
+    atualizarBotaoApagar();
+
+    // Evento para selecionar/deselecionar todos os checkboxes
+    if (selectAllCheckboxes){
+        selectAllCheckboxes.addEventListener('change', () => {
+            problemaCheckboxes.forEach(checkbox => {
+                checkbox.checked = selectAllCheckboxes.checked;
+            });
+            atualizarBotaoApagar();
+        });    
+    }
+
+    // Evento para atualizar o estado do botão ao alterar qualquer checkbox
+    problemaCheckboxes.forEach(checkbox => {
+        checkbox.addEventListener('change',() => {
+
+            // Se algum checkbox for desmarcado, desmarca o "selecionar todos"
+            if (!checkbox.checked) {
+                if (selectAllCheckboxes){
+                    selectAllCheckboxes.checked = false;
+                }
+            }
+
+            // Se algum checkbox individuais forem marcados, marca o "selecionar todos"
+            const allChecked = Array.from(problemaCheckboxes).every(checkbox => checkbox.checked);
+            if (selectAllCheckboxes) {
+                selectAllCheckboxes.checked = allChecked;
+            }
+
+            atualizarBotaoApagar();
+        });
+    });
+
+    // Evento para apagar problemas selecionadas
+
+    if( botaoApagar ) {
+        botaoApagar.addEventListener('click', async () => {
+            const selectedProblemas = Array.from(problemaCheckboxes)
+                .filter(checkbox => checkbox.checked)
+                .map(checkbox => checkbox.value);
+
+            if (selectedProblemas.length === 0) {
+                alert('Selecione pelo menos um problema para apagar.');
+                return;
+            }
+            if (!confirm(`Você tem certeza que deseja apagar ${selectedProblemas.length} problema(s)?`)) {
+                return;
+            }
+
+            try {
+                const response = await fetch("{% url 'api_deletar_problemas' %}", {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': csrftoken
+                    },
+                    body: JSON.stringify({ ids: selectedProblemas })
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || 'Erro ao apagar problemas.');
+                }
+
+                const data = await response.json();
+                console.log('Problemas apagados com sucesso:', data);
+                alert(data.message);
+
+                // Remover as linhas da tabela para os problemas apagados
+
+                selectedProblemas.forEach(id => {
+                    const row = document.getElementById(`problema-row-${id}`);
+                    if (row) {
+                        row.remove();
+                    }
+                });
+
+                // Atualizar a contagem de problemas
+                const currentCount = parseInt(problemasCount.textContent);
+                problemasCount.textContent = currentCount - selectedProblemas.length;
+
+                //Limpar seleção e desabilitar botão
+                if (selectAllCheckboxes) {
+                    selectAllCheckboxes.checked = false;
+                }
+
+                atualizarBotaoApagar();
+
+            } catch (error) {
+                console.error('Erro ao apagar problemas:', error);
+                alert(`Erro: ${error.message}`);
+            }
+        });
+    }
+    
+});
+</script>
+
+{% endblock %}

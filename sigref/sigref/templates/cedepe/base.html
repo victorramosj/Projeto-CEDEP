@@ -80,7 +80,6 @@
       <i class="fas fa-home me-2"></i>
       Início
     </a>
-  </li>
   {# --- Monitoramentos --- #}
 {% with current=request.resolver_match.url_name gre=user.greuser %}
   {% if user.is_authenticated and gre.is_monitor %}
@@ -95,52 +94,51 @@
     {# Admins, coordenadores e chefes de setor veem o dropdown completo #}
     <li class="nav-item">
       <a class="nav-link text-white sidebar-link d-flex justify-content-between align-items-center"
-         data-bs-toggle="collapse"
+        data-bs-toggle="collapse"
          href="#monitoramentosSubmenu"
          role="button"
-         aria-expanded="{{ current|url_in:'dashboard_monitoramentos,fluxo_monitoramento_setores,listar_avisos,lacunas-list,problemas-usuario-list'|yesno:'true,false' }}"
+         aria-expanded="{{ current|url_in:'dashboard_monitoramentos,fluxo_monitoramento_setores,listar_avisos,tela_lacunas,tela_problemas,problemas-usuario-list'|yesno:'true,false' }}"
          aria-controls="monitoramentosSubmenu">
         <span><i class="fas fa-clipboard-list me-2"></i>Monitoramentos</span>
         <i class="fas fa-chevron-down"></i>
       </a>
-      <ul class="nav flex-column ms-3 collapse {% if current|url_in:'dashboard_monitoramentos,fluxo_monitoramento_setores,listar_avisos' %}show{% endif %}"
+      <ul class="nav flex-column ms-3 collapse {% if current|url_in:'dashboard_monitoramentos,fluxo_monitoramento_setores,listar_avisos,tela_lacunas,tela_problemas,problemas-usuario-list' %}show{% endif %}"
           id="monitoramentosSubmenu">
 
         <li>
           <a href="{% url 'dashboard_monitoramentos' %}"
-             class="nav-link text-white sidebar-link {% if current == 'dashboard_monitoramentos' %}active{% endif %}">
+            class="nav-link text-white sidebar-link {% if current == 'dashboard_monitoramentos' %}active{% endif %}">
             <i class="fas fa-chart-bar me-2"></i>Visão Geral
           </a>
         </li>
         <li>
           <a href="{% url 'fluxo_monitoramento_setores' %}"
-             class="nav-link text-white sidebar-link {% if current == 'fluxo_monitoramento_setores' %}active{% endif %}">
+            class="nav-link text-white sidebar-link {% if current == 'fluxo_monitoramento_setores' %}active{% endif %}">
             <i class="fas fa-tasks me-2"></i>Fluxo por Setores
           </a>
         </li>
         <li>
-      <a href="{% url 'lacunas-list' %}"
-        class="nav-link text-white sidebar-link {% if current == 'lacunas-list' %}active{% endif %}">
-        <i class="fas fa-book me-2"></i>Lacunas
-      </a>
-    </li>
-    <li>
-      <a href="{% url 'problemas-usuario-list' %}"
-        class="nav-link text-white sidebar-link {% if current == 'problemas-usuario-list' %}active{% endif %}">
-        <i class="fas fa-exclamation-circle me-2"></i>Problemas
-      </a>
-    </li>
-    <li>
-      <a href="{% url 'listar_avisos' %}"
-        class="nav-link text-white sidebar-link {% if current == 'listar_avisos' %}active{% endif %}">
-        <i class="fas fa-exclamation-triangle me-2"></i>Avisos
-      </a>
-    </li>
-        
+          <a href="{% url 'tela_lacunas' %}"
+            class="nav-link text-white sidebar-link {% if current == 'tela_lacunas' %}active{% endif %}">
+            <i class="fas fa-book me-2"></i>Lacunas
+          </a>
+        </li>
+        <li>
+          <a href="{% url 'tela_problemas' %}"
+            class="nav-link text-white sidebar-link {% if current == 'tela_problemas' %}active{% endif %}">
+            <i class="fas fa-exclamation-circle me-2"></i>Problemas
+          </a>
+        </li>
+        <li>
+          <a href="{% url 'listar_avisos' %}"
+            class="nav-link text-white sidebar-link {% if current == 'listar_avisos' %}active{% endif %}">
+            <i class="fas fa-exclamation-triangle me-2"></i>Avisos
+          </a>
+        </li>
       </ul>
     </li>
- 
   {% endif %}
+
 
   {% if user.is_staff and not user.greuser.is_monitor %}
     {# Questionários #}
@@ -333,6 +331,9 @@
 
   <script src="{% static 'bootstrap/js/bootstrap.bundle.min.js' %}"></script>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-  {% block scripts %}{% endblock %}
+
+  {% block extra_script %}{% endblock %}
+
 </body>
+
 </html>
