@@ -1,0 +1,2 @@
+web: cd sigref && gunicorn sigref.wsgi:application --bind 0.0.0.0:$PORT --workers 2 --log-level debug
+release: cd sigref && python manage.py migrate && python manage.py collectstatic --noinput
