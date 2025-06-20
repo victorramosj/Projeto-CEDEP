@@ -103,7 +103,8 @@ FILE_UPLOAD_MAX_MEMORY_SIZE = 5 * 1024 * 1024
 # Proteção CSRF (se usar formulários)
 CSRF_TRUSTED_ORIGINS = [
     'https://projeto-cedep-production.up.railway.app',
-    'https://grefloresta.com.br'
+    'https://grefloresta.com.br',
+    'projeto-cedep-production-f58c.up.railway.app' 
 ]
 # Configurações de HTTPS (obrigatório para produção)
 if DEBUG:
@@ -175,8 +176,7 @@ REST_FRAMEWORK = {
         'rest_framework.authentication.SessionAuthentication',
         'rest_framework.authentication.TokenAuthentication',
     ],
-    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
-    'PAGE_SIZE': 10,
+       
     
 }
 
