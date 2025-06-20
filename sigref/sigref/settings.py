@@ -24,7 +24,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Domínios permitidos
 ALLOWED_HOSTS = [
     'projeto-cedep-production.up.railway.app',
-    'cedepegrefloresta.com.br',
+    'grefloresta.com.br',
     'localhost',
     '127.0.0.1'
 ]
