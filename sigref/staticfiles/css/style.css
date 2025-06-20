@@ -1,48 +1,3 @@
-/* Botões ativos */
-.bg-primary {
-    background-color: #10295d !important;
-}
-
-/* Efeito de cursor piscando */
-.typing-effect::after {
-    content: "|"; /* Cursor piscando */
-    display: inline-block;
-    animation: blink 0.8s infinite;
-}
-
-@keyframes blink {
-    50% { opacity: 0; }
-}
-
-/* Animação de digitação */
-@keyframes typing {
-    from { width: 0; }
-    to { width: 100%; }
-}
-
-.typing-text {
-    display: inline-block;
-    overflow: hidden; /* Mantém escondido o texto extra */
-    white-space: nowrap; /* Não quebra linha */
-    border-right: 2px solid transparent;
-    width: 0;
-    animation: typing 3s steps(30, end) forwards;
-    font-size: 2.5rem; /* Tamanho para desktop */
-    max-width: 100%; /* Limita para a largura da tela */
-}
-
-/* Responsividade */
-@media (max-width: 768px) {
-    .typing-text {
-        font-size: 1.8rem; /* Tablets */
-    }
-}
-
-@media (max-width: 576px) {
-    .typing-text {
-        font-size: 1.4rem; /* Celulares */
-    }
-}
 
 
 .card {
@@ -169,21 +124,30 @@ body {
     flex-direction: column;
     align-items: center;
     text-align: center;
-    padding: 0;
+    padding: 10px;
 }
 .logo-container img {
     /* Responsividade */
-    width: 130%;
-    max-width: 25rem;  /* ou qualquer outro valor máximo */
+    width: 95%;
+    max-width: 27rem;  /* ou qualquer outro valor máximo */
     height: auto;
     display: block;
     
     
     margin-top: -3rem;    /* ajusta pra subir */
-    margin-bottom: -3.6rem; /* ajusta pra descer */
+    margin-bottom: -2.5rem; /* ajusta pra descer */
   }
-  
 
+.gradiente-texto {
+        background: linear-gradient(90deg, #4e73df, #a02261, #d4a451);
+        background-size: 300% 300%;
+        font-size: 0.92rem;
+    text-align: center;
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+        animation: gradient-shift 3s ease infinite;
+    }
 
 /* Botões ativos */
 .sidebar-link.active {
@@ -228,3 +192,4 @@ body {
     background: #0d6efd;
     color: white;
 }
+
