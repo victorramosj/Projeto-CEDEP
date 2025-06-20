@@ -1,20 +1,28 @@
 @echo off
+REM Define a senha do PostgreSQL
 set PGPASSWORD=vDadjhfHsAXBQkxbEkskxbOZSRhogYvs
 
-set BACKUP_FILE=C:\Users\Pichau\Documents\GitHub\Projeto-CEDEP\sigref\scripts\backup_railway_2025-06-20_12-00.backup
+REM Configurações do Banco de Dados
 set HOST=mainline.proxy.rlwy.net
 set PORT=32588
 set DB=railway
 set USER=postgres
 
-REM Limpa apenas as tabelas de agendamento (ordem importa por FK)
-echo TRUNCATE TABLE eventos_agendamento_salas CASCADE; TRUNCATE TABLE eventos_agendamento CASCADE; | psql -U %USER% -h %HOST% -p %PORT% -d %DB%
+REM Caminho para o seu arquivo de backup COMPLETO
+set BACKUP_FILE=C:\Users\Pichau\Documents\GitHub\Projeto-CEDEP\sigref\scripts\railway_backup_2025-06-20_17-18.sqlc
 
-REM Restaura apenas os dados de agendamento e seus relacionamentos
-pg_restore -U %USER% -h %HOST% -p %PORT% -d %DB% -v --data-only ^
--t eventos_agendamento ^
--t eventos_agendamento_salas ^
-%BACKUP_FILE%
+echo Restaurando apenas os dados no banco '%DB%'...
 
-echo Processo concluído.
+pg_restore -Fc --data-only -h %HOST% -p %PORT% -U %USER% -d %DB% "%BACKUP_FILE%"
+
+IF %ERRORLEVEL% NEQ 0 (
+    echo.
+    echo ERRO: A restauracao dos dados falhou!
+    echo Verifique se o arquivo de backup existe e as permissoes.
+) ELSE (
+    echo.
+    echo Restauracao dos dados concluida com sucesso!
+)
+
+echo.
 pause

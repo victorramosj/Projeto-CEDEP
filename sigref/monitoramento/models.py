@@ -47,13 +47,7 @@ class Escola(models.Model):
     )
     telefone = models.CharField(
         max_length=15,
-        blank=True,
-        validators=[
-            RegexValidator(
-                regex=r'^\(\d{2}\) \d{5}-\d{4}$',
-                message='Celular deve estar no formato: (99) 99999-9999'
-            )
-        ]
+        blank=True,        
     )
     telefone_gestor = models.CharField(
         max_length=15,
@@ -106,13 +100,7 @@ class GREUser(models.Model):
     )
     celular = models.CharField(
         max_length=15,
-        blank=True,
-        validators=[
-            RegexValidator(
-                regex=r'^\(\d{2}\) \d{5}-\d{4}$',
-                message='Celular deve estar no formato: (99) 99999-9999'
-            )
-        ]
+        blank=True,       
     )
     
     def __str__(self):

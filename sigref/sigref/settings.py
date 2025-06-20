@@ -85,7 +85,19 @@ WSGI_APPLICATION = 'sigref.wsgi.application'
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
 
-
+# Static files (CSS, JavaScript, Images)
+# Para coletar todos os arquivos estáticos em STATIC_ROOT, use o comando:
+# python manage.py collectstatic
+# 
+# PRIORIDADE:
+# Quando você executa 'python manage.py collectstatic', o Django coleta todos os arquivos das pastas 'static' de cada app
+# e também da pasta 'static' no diretório do projeto, e copia tudo para STATIC_ROOT.
+# 
+# Quando o site está publicado (produção), os arquivos são servidos a partir de STATIC_ROOT.
+# 
+# Durante o desenvolvimento (DEBUG=True), Django procura primeiro na pasta 'static' do app, depois na pasta 'static' do projeto.
+# 
+# Em produção, sempre use STATIC_ROOT (com collectstatic) para servir os arquivos estáticos.
 import environ
 import os
 
@@ -93,7 +105,7 @@ env = environ.Env()
 environ.Env.read_env()  # Isso carrega as variáveis do .env local (não usado no Railway)
 
 SECRET_KEY = env("SECRET_KEY", default="chave_secreta_fallback")
-DEBUG = env.bool("DEBUG", default=False)
+DEBUG = env.bool("DEBUG", default=True)
 
 
 # Em bytes: 10 MB para toda a requisição, por exemplo
