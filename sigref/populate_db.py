@@ -11,8 +11,8 @@ from reservas.models import Quarto, Cama, Ocupacao, Hospede
 # Quais camas devem ficar OCUPADAS por quarto
 quartos_ocupacoes = {
     '8': [1, 2, 3, 4, 5, 6],  # Todas
-    '11': [6],               # Só cama 1
-    '12': [6],               # Só cama 1
+    '11': [1, 2, 3, 4, 5, 6],              
+    '12': [1, 2, 3, 4, 5, 6],               
 }
 
 # Hospede padrão para associar ocupações
