@@ -6,7 +6,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>{% block title %}Sistema de Gerenciar Hospedagens CEDEPE{% endblock %}</title>
+  <title>{% block title %}{% endblock %}</title>
 
   <!-- Bootstrap CSS local -->
   <link rel="stylesheet" href="{% static 'bootstrap/css/bootstrap.min.css' %}">
@@ -19,7 +19,9 @@
 
   <link rel="stylesheet" href="{% static 'css/style.css' %}">
   <link rel="icon" type="image/png" href="{% static 'images/CARD DA GRE.png' %}">
-
+  <meta name="description" content="Sistema Integrado GRE Floresta Pernambuco - Gestão de hospedagens, eventos e recursos para a GRE Floresta.">
+  <meta name="keywords" content="GRE Floresta, Pernambuco, Sistema Integrado, hospedagens, eventos, gestão, educação">
+  <meta name="author" content="Gisele Novaes, João Victor Ramos, Lucas Bastos, Victor Kauê">
   <!-- Estilo adicional para responsividade -->
   <style>
     /* Estilo da sidebar */
@@ -54,6 +56,93 @@
       background: rgba(255,255,255,0.3);
       border-radius: 4px;
     }
+.compact-footer {
+  padding: 0.8rem 0; /* compacta o topo e fundo */
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
+  background-color: rgba(255, 255, 255, 0.95);
+  margin-top: 1rem;
+}
+
+.footer-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.6rem; /* reduz o espaço entre linhas */
+}
+
+.footer-text {
+  color: #6c757d;
+  font-size: 0.8rem; /* compacta a fonte */
+  margin: 0 0.5rem;
+  text-align: center;
+  line-height: 1.2;
+}
+
+.footer-text .sigref {
+  font-weight: 600;
+}
+
+.social-links {
+  display: flex;
+  align-items: center;
+  gap: 1rem; /* espaçamento enxuto entre ícones */
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.social-link {
+  color: #6c757d;
+  font-size: 1.4rem; /* ícones um pouco menores para harmonia */
+  transition: color 0.2s ease, transform 0.2s ease;
+  position: relative;
+}
+
+.social-link:hover {
+  transform: translateY(-2px);
+  text-decoration: none;
+}
+
+.social-link::after {
+  content: attr(aria-label);
+  position: absolute;
+  bottom: 110%;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: rgba(0, 0, 0, 0.85);
+  color: #fff;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 0.65rem;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+}
+
+.social-link:hover::after {
+  opacity: 1;
+}
+
+.bi-instagram:hover {
+  color: #E1306C;
+}
+
+.bi-whatsapp:hover {
+  color: #25d366;
+}
+
+@media (max-width: 767px) {
+  .footer-content {
+    gap: 0.5rem;
+  }
+  .footer-text {
+    font-size: 0.75rem;
+  }
+  .social-links {
+    gap: 0.8rem;
+  }
+}
+ 
   </style>
 
   {% block extra_style %}{% endblock %}
@@ -65,7 +154,11 @@
     <div class="logo-section">
       <div class="bg-white p-3 shadow-sm border border-success rounded-3 logo-container">
         <a href="{% if request.user.greuser.is_escola %}{% url 'escola_dashboard' %}{% else %}{% url 'home' %}{% endif %}" class="d-flex flex-column align-items-center text-dark text-decoration-none">
-          <img src="{% static 'images/SIGREF.png' %}" alt="Logo GRE">        
+          <img src="{% static 'images/SIGREF.png' %}" alt="Logo GRE">
+            <p class="p-2 mb-0 text-secondary small mt-2 " >
+
+            Sistema Integrado <br /><strong class="gradiente-texto">GRE Floresta</strong>
+            </p>
         </a>
       </div>
       <hr>
@@ -228,6 +321,7 @@
               <i class="fas fa-users me-2"></i>Hóspedes
             </a>
           </li>
+          
         </ul>
       </li>
     {% endwith %}
@@ -270,8 +364,11 @@
             <i class="bi bi-house-door me-2"></i>Salas
           </a>
         </li>
+        <li class="nav-item">
+      
       </ul>
     </li>
+    
 
   {% else %}
     <li class="nav-item">
@@ -297,12 +394,7 @@
     </li>
     {% endif %}
 </ul>
-    
-
-
-    </ul>
-
-    <hr>
+   
 
     {% if user.is_authenticated %}
     <div class="text-center mb-3">
@@ -322,18 +414,69 @@
   </div>
 
   <!-- Conteúdo Principal -->
-  <div class="flex-grow-1 overflow-auto" style="background: radial-gradient(circle, #ffffff 0%, #cce7ff 100%);">
-    <main class="container-fluid p-4 min-vh-100">
+  <div class="flex-grow-1 overflow-auto " style="background: radial-gradient(circle, #ffffff 0%, #cce7ff 100%);">
+    <main class="container-fluid " style="min-height: 90vh;">
       {% block content %}{% endblock %}
+      
+      {# Comando para coletar arquivos estáticos (incluindo CSS) no Django: #}
+      {# Execute no terminal: #}
+      {# python manage.py collectstatic #}
     </main>
+     <footer class="compact-footer">
+  <div class="container">
+    <div class="footer-content">
+      <div class="row w-100 g-3 g-md-4 align-items-center justify-content-center">
+        
+        {# Coluna 1: Logo da GRE #}
+        <div class="col-12 col-md-3 d-flex justify-content-center justify-content-md-start">
+          <div class="gre-logo-footer-container">
+            <img src="{% static 'images/CARD DA GRE.png' %}" alt="GRE Floresta" class="img-fluid" style="max-width:120px; height:auto;">
+          </div>
+        </div>
+
+        {# Coluna 2: Textos do SIGREF #}
+        <div class="col-12 col-md-6 text-center"> {# Centralizado em todas as telas, ou justificado se preferir #}
+          <p class="footer-text mb-1">
+            <span class="sigref">Sistema Integrado Gerência Regional de Educação de Floresta.</span>
+          </p>
+          <p class="footer-text mb-0">
+            &copy; {% now "Y" %} <span class="sigref">SIGREF</span> - Todos os direitos reservados.
+          </p>
+        </div>
+
+        {# Coluna 3: Links Sociais #}
+<div class="col-12 col-md-3 d-flex flex-column align-items-center align-items-md-end">
+    {# Título da Coluna: Melhorado para texto e centralização #}
+    <p class="footer-text mb-1">
+            <span class="gradiente-texto">Conheça nossas Redes Sociais</span></p>
     
-  </div>
+    <div class="social-links d-flex">
+        <a href="https://www.instagram.com/grefloresta.oficial/" target="_blank" 
+           class="social-link" 
+           aria-label="Visite nosso Instagram"
+           title="Instagram">
+            <i class="bi bi-instagram"></i>
+        </a>
+        <a href="https://wa.me/558791019828?text=Ol%C3%A1%2C%20gostaria%20de%20saber%20mais%20sobre%20o%20Sistema%20Integrado%20GRE%20FLORESTA." 
+           target="_blank" 
+           class="social-link" 
+           aria-label="Fale conosco via WhatsApp"
+           title="WhatsApp">
+            <i class="bi bi-whatsapp"></i>
+        </a>           
+    </div>
+</div>
 
-  <script src="{% static 'bootstrap/js/bootstrap.bundle.min.js' %}"></script>
-  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+      </div> {# Fim da row principal #}
+    </div> {# Fim do footer-content #}
+  </div> {# Fim do container #}
+</footer>
 
-  {% block extra_script %}{% endblock %}
+<script src="{% static 'bootstrap/js/bootstrap.bundle.min.js' %}"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+{% block scripts %}{% endblock scripts %}
+{% block extra_script %}{% endblock extra_script %}
 
 </body>
-
 </html>

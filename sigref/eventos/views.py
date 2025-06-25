@@ -118,8 +118,11 @@ def gerenciar_agendamentos(request):
     if query:
         agendamentos_list = agendamentos_list.filter(
             Q(evento__titulo__icontains=query) |
-            Q(salas__nome__icontains=query)  # <-- Correção aqui
+            Q(salas__nome__icontains=query)
         ).distinct()
+    
+    # Ordena do mais recente para o mais antigo
+    agendamentos_list = agendamentos_list.order_by('-inicio')
     
     paginator = Paginator(agendamentos_list, ITENS_POR_PAGINA)
     
@@ -259,24 +262,26 @@ from rest_framework.response import Response
 from rest_framework import permissions
 from django.utils import timezone
 from .models import Agendamento
+from django.utils import timezone
 
 class FullCalendarEventsView(APIView):
-    permission_classes = [permissions.AllowAny]    
+    permission_classes = [permissions.AllowAny]
 
     def get(self, request, format=None):
         agendamentos = Agendamento.objects.all()
         events = [{
             'id': agendamento.id,
             'title': agendamento.evento.titulo,
-            'start': agendamento.inicio.isoformat(),
-            'end': agendamento.fim.isoformat(),
+            'start': timezone.localtime(agendamento.inicio).isoformat(),
+            'end': timezone.localtime(agendamento.fim).isoformat(),
             'extendedProps': {
                 'salas': [sala.nome for sala in agendamento.salas.all()],
                 'descricao': agendamento.evento.descricao,
-                'horario': f"{agendamento.inicio.strftime('%H:%M')} - {agendamento.fim.strftime('%H:%M')}"
+                'horario': f"{timezone.localtime(agendamento.inicio).strftime('%H:%M')} - {timezone.localtime(agendamento.fim).strftime('%H:%M')}"
             }
         } for agendamento in agendamentos]
         return Response(events)
+
     
 from django.db.models.functions import ExtractYear    
 from django.shortcuts import render

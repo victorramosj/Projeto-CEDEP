@@ -156,18 +156,3 @@ class MonitoramentoSerializer(serializers.ModelSerializer):
         
         return monitoramento
 
-class TipoProblemaSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = TipoProblema
-        fields = '__all__'
-
-class RelatoProblemaSerializer(serializers.ModelSerializer):
-    status_display = serializers.CharField(source='get_status_display', read_only=True)
-    prioridade_display = serializers.CharField(source='get_prioridade_display', read_only=True)
-    foto_url = serializers.ImageField(source='foto', read_only=True)
-
-    class Meta:
-        model = RelatoProblema
-        fields = '__all__'
-        read_only_fields = ['data_relato', 'gestor']
-

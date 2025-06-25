@@ -2,7 +2,7 @@ from django.contrib import admin
 from django.utils import timezone
 from .models import (
     Setor, Escola, GREUser, Questionario, Pergunta,
-    Monitoramento, Resposta, TipoProblema, RelatoProblema
+    Monitoramento, Resposta,  
 )
 from django.contrib.admin.filters import EmptyFieldListFilter
 
@@ -171,6 +171,7 @@ class QuestionarioAdmin(admin.ModelAdmin):
     def quantidade_perguntas(self, obj):
         return obj.pergunta_set.count()
     quantidade_perguntas.short_description = 'Nº Perguntas'
+    
 
 
 @admin.register(Pergunta)
@@ -179,6 +180,8 @@ class PerguntaAdmin(admin.ModelAdmin):
     list_filter   = ('questionario__setor', 'questionario')
     search_fields = ('texto',)
     ordering      = ('questionario', 'ordem')
+    list_per_page   = 25  # Ajuste o número conforme desejado
+    list_max_show_all = 200  # Máximo de registros ao exibir tud
 
 
 @admin.register(Monitoramento)
@@ -197,6 +200,8 @@ class MonitoramentoAdmin(admin.ModelAdmin):
     date_hierarchy  = 'criado_em'
     readonly_fields = ('criado_em', 'atualizado_em')
     inlines         = [RespostaInline]
+    list_per_page   = 25  # Ajuste o número conforme desejado
+    list_max_show_all = 200  # Máximo de registros ao exibir tudo
 
 
 @admin.register(Resposta)
@@ -210,36 +215,3 @@ class RespostaAdmin(admin.ModelAdmin):
         return obj.resposta_formatada()
     resposta_formatada.short_description = 'Resposta'
 
-
-@admin.register(TipoProblema)
-class TipoProblemaAdmin(admin.ModelAdmin):
-    list_display  = ('descricao', 'setor')
-    list_filter   = ('setor',)
-    search_fields = ('descricao',)
-
-
-@admin.register(RelatoProblema)
-class RelatoProblemaAdmin(admin.ModelAdmin):
-    list_display    = (
-        'tipo_problema', 'prioridade', 'status',
-        'gestor', 'escola_relacionada', 'data_relato', 'responsavel'
-    )
-    list_filter     = (
-        'tipo_problema__setor', 'status', 'prioridade'
-    )
-    search_fields   = ('descricao_adicional', 'solucao_aplicada')
-    date_hierarchy  = 'data_relato'
-    readonly_fields = ('data_relato',)
-    actions         = ['marcar_como_resolvido', 'marcar_como_urgente']
-
-    def escola_relacionada(self, obj):
-        return obj.gestor.escolas.first().nome if obj.gestor.escolas.exists() else "-"
-    escola_relacionada.short_description = 'Escola'
-
-    def marcar_como_resolvido(self, request, queryset):
-        queryset.update(status='R', data_resolucao=timezone.now())
-    marcar_como_resolvido.short_description = "Marcar como Resolvido"
-
-    def marcar_como_urgente(self, request, queryset):
-        queryset.update(status='U')
-    marcar_como_urgente.short_description = "Marcar como Urgente"

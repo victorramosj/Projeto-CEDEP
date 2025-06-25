@@ -22,12 +22,25 @@ class AgendamentoForm(forms.ModelForm):
         fields = '__all__'
         widgets = {
             'evento': forms.Select(attrs={'class': 'form-select'}),
-            # Alterando para SelectMultiple para permitir múltiplas salas:
-            'salas': forms.SelectMultiple(attrs={'class': 'form-select'}),
-            'inicio': forms.DateTimeInput(attrs={'class': 'form-control', 'type': 'datetime-local'}),
-            'fim': forms.DateTimeInput(attrs={'class': 'form-control', 'type': 'datetime-local'}),
+            'salas': forms.CheckboxSelectMultiple(attrs={'class': 'form-check-input'}),
+            'inicio': forms.DateTimeInput(
+                attrs={'class': 'form-control', 'type': 'datetime-local'},
+                format='%Y-%m-%dT%H:%M'
+            ),
+            'fim': forms.DateTimeInput(
+                attrs={'class': 'form-control', 'type': 'datetime-local'},
+                format='%Y-%m-%dT%H:%M'
+            ),
             'participantes': forms.TextInput(attrs={'class': 'form-control'}),
         }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Garante que o valor inicial está no formato correto para o input datetime-local
+        for field in ['inicio', 'fim']:
+            value = self.initial.get(field)
+            if value and hasattr(value, 'strftime'):
+                self.initial[field] = value.strftime('%Y-%m-%dT%H:%M')
 
     def clean(self):
         cleaned_data = super().clean()
@@ -45,16 +58,14 @@ class AgendamentoForm(forms.ModelForm):
         # Validação de conflito em cada sala selecionada
         if salas and inicio and fim:
             for sala in salas:
-                # Filtra agendamentos dessa sala com conflito de horário
                 conflitos = Agendamento.objects.filter(
                     salas=sala,
                     inicio__lt=fim,
                     fim__gt=inicio
                 )
-                # Se estiver editando, exclua o próprio agendamento
                 if self.instance and self.instance.pk:
                     conflitos = conflitos.exclude(pk=self.instance.pk)
                 if conflitos.exists():
                     self.add_error('salas', f'Já existe um agendamento na sala {sala.nome} nesse horário.')
 
-        return cleaned_data
+        return

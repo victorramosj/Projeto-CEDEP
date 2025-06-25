@@ -67,26 +67,26 @@
     </div>
 </div>
 
-<!-- Botões de Relatórios -->
-<div class="row mt-4">
-    <div class="col-12">
-        <h5 class="text-muted mb-3">
-            <i class="bi bi-file-earmark-bar-graph me-2"></i>Relatórios
-        </h5>
-    </div>
-    <div class="col-12 col-md-3 mb-2">
-        <a href="{% url 'reservas_report_pdf' %}" class="btn btn-outline-warning w-100">
-            <i class="bi bi-file-earmark-bar-graph me-2"></i>Relatório de Reservas
-        </a>
-    </div>
-    <div class="col-12 col-md-3 mb-2">
-        <a href="{% url 'ocupacoes_report_pdf' %}" class="btn btn-outline-warning w-100">
-            <i class="bi bi-file-earmark-bar-graph me-2"></i>Relatório de Ocupações
-        </a>
-    </div>
-</div>
-
-
+        <div class="card shadow">
+            <div class="card-body">
+                <h5 class="card-title text-muted mb-3">
+                    <i class="bi bi-file-earmark-bar-graph me-2"></i>Relatórios
+                </h5>
+                <div class="row">
+                    <div class="col-12 col-md-6 mb-2">
+                        <a href="{% url 'reservas_report_pdf' %}" class="btn btn-outline-warning w-100">
+                            <i class="bi bi-file-earmark-bar-graph me-2"></i>Relatório de Reservas
+                        </a>
+                    </div>
+                    <div class="col-12 col-md-6 mb-2">
+                        <a href="{% url 'ocupacoes_report_pdf' %}" class="btn btn-outline-warning w-100">
+                            <i class="bi bi-file-earmark-bar-graph me-2"></i>Relatório de Ocupações
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+  
     <!-- Gráficos -->
     <div class="row g-4 my-2">
         <!-- Status das Camas -->
