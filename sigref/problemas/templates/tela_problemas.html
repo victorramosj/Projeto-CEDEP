@@ -38,12 +38,12 @@ table .form-select {
             
             <div class="d-flex align-items-left gap-2">
             <!-- Barra de pesquisa -->
-             <form method="GET" action="{% url 'tela_problemas' %}" class="input-group" style="width: 460px;">
+                <form method="GET" action="{% url 'tela_problemas' %}" class="input-group" style="width: 460px;">
                     {% csrf_token %}
                     <span class="input-group-text"><i class="fas fa-search"></i></span>
                     <input type="text" class="form-control" name="escola" value="{{ search_query }}" placeholder="Pesquise por Escola...">
                 </form>
-          
+            
                 <div class="d-flex gap-2">
                     <!-- Filtros -->
                     <select class="form-select" name="data" aria-label="Filtro Data">
