@@ -859,14 +859,29 @@ def lista_lacunas_por_escola(request, escola_id):
     # 1. VERIFICAÇÃO DE PERMISSÃO
     if not request.user.greuser.pode_acessar_escola(escola):
         raise PermissionDenied("Você não tem permissão para acessar os dados desta escola.")
-
+    
     # 2. LÓGICA DE FILTRAGEM E PESQUISA
+    # Pega a lista de todas as lacunas apenas daquela escola como base.
     queryset = Lacuna.objects.filter(escola=escola).order_by('-criado_em')
 
-    status_filter = request.GET.get('status')
+    # Parametros de filtro da URL
+    status_filter = request.GET.get('status', '')
+    data_filter = request.GET.get('data', '')
+
+    # Filtra por status
     if status_filter in ['P', 'R', 'E']:
         queryset = queryset.filter(status=status_filter)
     
+    # Filtra por data
+    if data_filter: 
+        hoje = timezone.now()
+        if data_filter == '1':  # Última semana
+            queryset = queryset.filter(criado_em__gte=hoje - timedelta(weeks=1))
+        elif data_filter == '2':  # Último mês
+            queryset = queryset.filter(criado_em__gte=hoje - timedelta(days=30))
+        elif data_filter == '3':  # Último ano
+            queryset = queryset.filter(criado_em__gte=hoje - timedelta(days=365))
+
     search_query = request.GET.get('q')
     if search_query:
         # Pesquisa na disciplina da lacuna (ajuste o campo se necessário)
@@ -881,8 +896,14 @@ def lista_lacunas_por_escola(request, escola_id):
         'escola': escola,
         'lacunas': page_obj,
         'total_lacunas': paginator.count,
+        'status_choices': STATUS_CHOICES,
+        'request': request,
+
+        # Manter o estado dos filtros na interface
         'status_filter': status_filter,
         'search_query': search_query,
+        'data_filter': data_filter,
+        
     }
     
     return render(request, 'tela_lacunas.html', context)
