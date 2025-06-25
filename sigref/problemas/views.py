@@ -29,8 +29,8 @@ from rest_framework.views import APIView
 from monitoramento.models import Escola, GREUser, Setor
 
 from .forms import AvisoForm, LacunaForm, ProblemaUsuarioForm
-from .models import (AvisoImportante, ConfirmacaoAviso, Lacuna,ProblemaUsuario, STATUS_CHOICES)
-from .serializers import (AvisoImportanteSerializer, LacunaSerializer,ProblemaUsuarioSerializer)
+from .models import (AvisoImportante, ConfirmacaoAviso, Lacuna, ProblemaUsuario, STATUS_CHOICES)
+from .serializers import (AvisoImportanteSerializer, LacunaSerializer, ProblemaUsuarioSerializer)
 
 # ADICIONADO DEPOIS 
 from django.shortcuts import get_object_or_404, redirect
@@ -331,7 +331,7 @@ def tela_lacuna_view(request):
     lacunas_list = lacunas_list.order_by('-criado_em')
     
     # Paginação, como antes.
-    paginator = Paginator(lacunas_list, 9)
+    paginator = Paginator(lacunas_list, 8)
     page_number = request.GET.get('page')
     lacunas_page = paginator.get_page(page_number)
 
@@ -360,6 +360,7 @@ def tela_problema_view(request):
     escola_query = request.GET.get('escola', '') 	# Pesquisa pela escola
     data_filter = request.GET.get('data', '')
     status_filter = request.GET.get('status', '')
+    setor_filter = request.GET.get('setor', '')
 
     # Filtro por Escola
     if escola_query:
@@ -377,8 +378,14 @@ def tela_problema_view(request):
     if status_filter:
         problemas_list = problemas_list.filter(status=status_filter)
 
+    # Filtro por Setor
+    if setor_filter:
+        problemas_list = problemas_list.filter(setor__id=setor_filter)
+
+    todos_os_setores = Setor.objects.all().order_by('nome')
+
     # Paginação
-    paginator = Paginator(problemas_list, 9) 	# 9 itens por página
+    paginator = Paginator(problemas_list, 6) 	# 6 itens por página
     page_number = request.GET.get('page')
     problemas_page = paginator.get_page(page_number)
     total_problemas = problemas_list.count() 	# Total de problemas filtrados
@@ -390,6 +397,7 @@ def tela_problema_view(request):
         'search_query': escola_query, 	# Termo de busca (para manter na barra de pesquisa)
         'request': request, # Passa o request para o template
         'status_choices': STATUS_CHOICES, #Passa as opções para o template
+        'todos_os_setores': todos_os_setores,
     }
 
     return render(request, 'tela_problemas.html', context)
