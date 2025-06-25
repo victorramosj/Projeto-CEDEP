@@ -312,7 +312,7 @@ def tela_lacuna_view(request):
 
     # Prepara o contexto para o template.
     context = {
-        'lacunas_page': lacunas_page,
+        'lacunas': lacunas_page,
         'todas_lacunas': paginator.count, # Usar paginator.count é mais eficiente aqui.
         'search_query': search_query,
         'data_filter': data_filter,
@@ -360,7 +360,7 @@ def tela_problema_view(request):
 
     # Passar os dados para o template
     context = {
-        'problemas_page': problemas_page,
+        'problemas': problemas_page,
         'total_problemas': total_problemas, 	# Total de problemas filtrados
         'search_query': escola_query, 	# Termo de busca (para manter na barra de pesquisa)
         'request': request, # Passa o request para o template
@@ -664,9 +664,8 @@ def confirmar_visualizacao_aviso(request, aviso_id):
 
 
 # =============================================================================
-#  VIEW DA LISTA DE PROBLEMAS POR ESCOLA (REFEITA)
+#  VIEW DA LISTA DE PROBLEMAS POR ESCOLA 
 # =============================================================================
-
 @login_required
 def lista_problemas_por_escola(request, escola_id):
     """
@@ -712,7 +711,7 @@ def lista_problemas_por_escola(request, escola_id):
     return render(request, 'tela_problemas.html', context)
 
 # =============================================================================
-#  VIEW DA LISTA DE LACUNAS POR ESCOLA (REFEITA)
+#  VIEW DA LISTA DE LACUNAS POR ESCOLA 
 # =============================================================================
 from django.core.exceptions import PermissionDenied
 @login_required
