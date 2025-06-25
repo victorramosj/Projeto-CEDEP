@@ -392,7 +392,7 @@ def tela_problema_view(request):
 
     # Passar os dados para o template
     context = {
-        'problemas_page': problemas_page,
+        'problemas': problemas_page,
         'total_problemas': total_problemas, 	# Total de problemas filtrados
         'search_query': escola_query, 	# Termo de busca (para manter na barra de pesquisa)
         'request': request, # Passa o request para o template
@@ -732,7 +732,6 @@ def confirmar_visualizacao_aviso(request, aviso_id):
         except AttributeError: # Caso request.user.greuser não exista
             return JsonResponse({'status': 'error', 'message': 'Perfil de usuário inválido ou não associado.'}, status=400)
 
-
         # Recupera o aviso com o ID fornecido
         aviso = get_object_or_404(AvisoImportante, id=aviso_id)
 
@@ -762,3 +761,98 @@ def confirmar_visualizacao_aviso(request, aviso_id):
     
     # Se a requisição não for POST, retorne um erro de método não permitido
     return JsonResponse({'status': 'error', 'message': 'Método não permitido.'}, status=405)
+    # Caso ainda não tenha sido visualizado, muda o status
+    if confirmacao.status == 'pendente':
+        confirmacao.confirmar_visualizado()
+    return redirect('listar_avisos') 	# Redireciona para a página de avisos ou a página desejada
+
+
+# =============================================================================
+#  VIEW DA LISTA DE PROBLEMAS POR ESCOLA 
+# =============================================================================
+@login_required
+def lista_problemas_por_escola(request, escola_id):
+    """
+    Exibe uma lista paginada e filtrável de problemas para uma escola específica,
+    respeitando as permissões do usuário logado.
+    """
+    escola = get_object_or_404(Escola, pk=escola_id)
+
+    # 1. VERIFICAÇÃO DE PERMISSÃO (LÓGICA ESSENCIAL)
+    # Garante que o usuário só pode ver dados de escolas que lhe são permitidas.
+    if not request.user.greuser.pode_acessar_escola(escola):
+        raise PermissionDenied("Você não tem permissão para acessar os dados desta escola.")
+
+    # 2. LÓGICA DE FILTRAGEM E PESQUISA
+    # Pega a lista de todos os problemas apenas daquela escola como base.
+    queryset = ProblemaUsuario.objects.filter(escola=escola).order_by('-criado_em')
+
+    # Filtra por status, se o parâmetro 'status' for passado na URL (ex: ?status=P)
+    status_filter = request.GET.get('status')
+    if status_filter in ['P', 'R', 'E']: # 'P'endente, 'R'esolvido, 'E'm Andamento
+        queryset = queryset.filter(status=status_filter)
+    
+    # Filtra por termo de pesquisa, se houver
+    search_query = request.GET.get('q')
+    if search_query:
+        # Pesquisa na descrição do problema (ajuste o campo se necessário)
+        queryset = queryset.filter(descricao__icontains=search_query)
+
+    # 3. LÓGICA DE PAGINAÇÃO
+    # Evita que páginas com centenas de problemas fiquem lentas.
+    paginator = Paginator(queryset, 10) # Mostra 10 problemas por página
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    
+    context = {
+        'escola': escola,
+        'problemas': page_obj, # Envia o objeto da página para o template, não a lista inteira
+        'total_problemas': paginator.count, # Total de problemas após os filtros
+        'status_filter': status_filter, # Para manter o filtro selecionado na interface
+        'search_query': search_query, # Para manter o texto da busca na interface
+    }
+    
+    return render(request, 'tela_problemas.html', context)
+
+# =============================================================================
+#  VIEW DA LISTA DE LACUNAS POR ESCOLA 
+# =============================================================================
+from django.core.exceptions import PermissionDenied
+@login_required
+def lista_lacunas_por_escola(request, escola_id):
+    """
+    Exibe uma lista paginada e filtrável de lacunas para uma escola específica,
+    respeitando as permissões do usuário logado.
+    """
+    escola = get_object_or_404(Escola, pk=escola_id)
+
+    # 1. VERIFICAÇÃO DE PERMISSÃO
+    if not request.user.greuser.pode_acessar_escola(escola):
+        raise PermissionDenied("Você não tem permissão para acessar os dados desta escola.")
+
+    # 2. LÓGICA DE FILTRAGEM E PESQUISA
+    queryset = Lacuna.objects.filter(escola=escola).order_by('-criado_em')
+
+    status_filter = request.GET.get('status')
+    if status_filter in ['P', 'R', 'E']:
+        queryset = queryset.filter(status=status_filter)
+    
+    search_query = request.GET.get('q')
+    if search_query:
+        # Pesquisa na disciplina da lacuna (ajuste o campo se necessário)
+        queryset = queryset.filter(disciplina__icontains=search_query)
+
+    # 3. LÓGICA DE PAGINAÇÃO
+    paginator = Paginator(queryset, 10) # 10 lacunas por página
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    
+    context = {
+        'escola': escola,
+        'lacunas': page_obj,
+        'total_lacunas': paginator.count,
+        'status_filter': status_filter,
+        'search_query': search_query,
+    }
+    
+    return render(request, 'tela_lacunas.html', context)
