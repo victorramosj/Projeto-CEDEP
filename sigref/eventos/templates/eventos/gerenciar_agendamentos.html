@@ -4,7 +4,7 @@
 {% block title %}Gerenciar Agendamentos{% endblock %}
 
 {% block content %}
-<div class="container-fluid px-4 vh-100">
+<div class="container-fluid px-4 ">
   <div class="d-flex justify-content-between align-items-center mb-4">
     <h1 class=" mb-2" style="color: #10295d">Gerenciar Agendamentos</h1>
     <a href="{% url 'agendamento_form' %}" class="btn btn-success">
@@ -30,7 +30,8 @@
           <thead class="table-light">
             <tr>
               <th>Evento</th>
-              <th>Sala</th>
+              <th>Salas</th>
+              <th>Participantes</th>
               <th>Início</th>
               <th>Fim</th>
               <th>Ações</th>
@@ -43,6 +44,7 @@
               <td>
                 {{ agendamento.salas.all|join:", " }}  <!-- Corrected 'sala' to 'salas' -->
             </td>
+            <td>{{ agendamento.participantes|default:"Não informado" }}</td>
               <td>{{ agendamento.inicio|date:"d/m/Y H:i" }}</td>
               <td>{{ agendamento.fim|date:"d/m/Y H:i" }}</td>
               <td>

@@ -118,8 +118,11 @@ def gerenciar_agendamentos(request):
     if query:
         agendamentos_list = agendamentos_list.filter(
             Q(evento__titulo__icontains=query) |
-            Q(salas__nome__icontains=query)  # <-- Correção aqui
+            Q(salas__nome__icontains=query)
         ).distinct()
+    
+    # Ordena do mais recente para o mais antigo
+    agendamentos_list = agendamentos_list.order_by('-inicio')
     
     paginator = Paginator(agendamentos_list, ITENS_POR_PAGINA)
     
