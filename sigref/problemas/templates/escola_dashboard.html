@@ -11,6 +11,9 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
 
     <style>
+        /* --------------------------------------------- */
+        /* ----- PALETA DE CORES E ESTILOS GERAIS ----- */
+        /* --------------------------------------------*/
         :root {
             --primary-color: #26326D;
             --accent-color: #E53935;
@@ -55,8 +58,10 @@
         @media (max-width: 991.98px) { .header-escola { flex-direction: column; align-items: center; } .info-escola { border-radius: 12px 12px 0 0; width: 100%; } .info-escola-detalhes { text-align: center; } .info-escola-detalhes p { justify-content: center; } .imagem-escola { width: 100%; height: 250px; } .imagem-escola img { border-radius: 0 0 12px 12px; } }
     </style>
 {% endblock %}
-
 {% block content %}
+<!-- ==================================================================
+    Dashboard da Escola
+    ================================================================== -->
 <div class="container mt-4">
     <div class="header-escola">
         <div class="info-escola">
@@ -78,6 +83,10 @@
             {% endif %}
         </a>
     </div>
+
+    <!-- ==================================================================
+    Indicadores de Lacunas e Problemas
+    ================================================================== -->
 
     <div class="row">
         <div class="col-lg-8 mb-4 mb-lg-0">
@@ -121,10 +130,15 @@
         </div>
     </div>
 
+
+    <!-- ==================================================================
+    Histórico de Problemas 
+    ================================================================== -->
     <div class="mt-5">
         <div class="d-flex justify-content-between align-items-center mb-3">
             <h5 class="titulo-secao mb-0">HISTÓRICO DE PROBLEMAS</h5>
-            <a href="{% url 'tela_problemas' %}" class="btn btn-relatar" style="width: auto;">Ver Mais</a>
+            <a href="{% url 'lista_problemas_escola'   escola_id=escola.id %}" class="btn btn-relatar" style="width: auto;">Ver Mais</a>
+            
         </div>
         <div class="row g-4">
             <div class="col-xl-3 col-md-6"><div class="card-status resolvidos"><div class="numero">{{ problemas_resolvidos }}</div><div class="descricao"><i class="fas fa-check-circle"></i> Resolvidos</div></div></div>
@@ -133,10 +147,15 @@
             <div class="col-xl-3 col-md-6"><div class="card-status este-mes"><div class="numero">{{ problemas_este_mes }}</div><div class="descricao"><i class="fas fa-calendar-alt"></i> Este Mês</div></div></div>
         </div>
     </div>
+
+    <!-- ==================================================================
+    Histórico de Lacunas
+    ================================================================== -->
     <div class="mt-5">
         <div class="d-flex justify-content-between align-items-center mb-3">
             <h5 class="titulo-secao mb-0">HISTÓRICO DE LACUNAS</h5>
-            <a href="{% url 'tela_lacunas' %}" class="btn btn-relatar" style="width: auto;">Ver Mais</a>
+            <a href="{% url 'lista_lacunas_escola' escola_id=escola.id %}" class="btn btn-relatar" style="width: auto;">Ver Mais</a>
+
         </div>
         <div class="row g-4">
             <div class="col-xl-3 col-md-6"><div class="card-status resolvidos"><div class="numero">{{ lacunas_resolvidas }}</div><div class="descricao"><i class="fas fa-check-circle"></i> Resolvidas</div></div></div>
@@ -147,12 +166,18 @@
     </div>
 </div>
 
+<!-- ==================================================================
+    Modal para exibir a imagem da escola 
+    ================================================================== -->
 <div class="modal fade" id="schoolImageModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content"><div class="modal-header bg-primary text-white"><h5 class="modal-title">{{ escola.nome }}</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body text-center p-0"><img id="modalSchoolImage" src="" class="img-fluid rounded"></div></div>
     </div>
 </div>
 
+<!-- ==================================================================
+    Modal para relatar lacuna
+    ================================================================== -->
 <div class="modal fade" id="modalRelatarLacuna" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
@@ -170,6 +195,9 @@
     </div>
 </div>
 
+<!-- ==================================================================
+    Modal para relatar problema
+    ================================================================== -->
 <div class="modal fade" id="modalRelatarProblema" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
@@ -190,6 +218,9 @@
     </div>
 </div>
 
+<!-- ==================================================================
+    Modal para exibir todos os avisos
+    ================================================================== -->
 <div class="modal fade" id="modalAvisos" tabindex="-1" aria-labelledby="modalAvisosLabel" aria-hidden="true">
     <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
         <div class="modal-content">
@@ -201,10 +232,10 @@
                 <div id="avisos-container">
                     {% for aviso in avisos %}
                         <div class="card mb-3 shadow-sm aviso-item aviso-item-modal rounded-3" 
-                             data-prioridade="{{ aviso.prioridade }}" 
-                             data-timestamp="{{ aviso.data_criacao.timestamp }}" 
-                             data-aviso-id="{{ aviso.id }}"
-                             data-status="{{ aviso.ja_visualizado|yesno:'visualizado,pendente' }}">
+                            data-prioridade="{{ aviso.prioridade }}" 
+                            data-timestamp="{{ aviso.data_criacao.timestamp }}" 
+                            data-aviso-id="{{ aviso.id }}"
+                            data-status="{{ aviso.ja_visualizado|yesno:'visualizado,pendente' }}">
                             <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
                                 <strong class="text-truncate text-dark">{{ aviso.titulo }}</strong>
                                 <div class="d-flex align-items-center">
