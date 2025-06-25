@@ -554,26 +554,30 @@ def criar_aviso_view(request):
 def editar_aviso_view(request, aviso_id):
     aviso = get_object_or_404(AvisoImportante, id=aviso_id)
     gre_user = request.user.greuser
-    
-    # Verificação de permissão para garantir que o usuário possa editar o aviso
+
+    # Verificação de permissão (sem alterações)
     if aviso.criado_por != gre_user and not gre_user.is_admin():
         messages.error(request, "Você não tem permissão para editar este aviso.")
         return redirect('listar_avisos')
 
-    # Se for um POST, tentamos editar o aviso
     if request.method == 'POST':
         form = AvisoForm(request.POST, instance=aviso)
         if form.is_valid():
-            form.save()
-            messages.success(request, "Aviso editado com sucesso!")
-            return redirect('listar_avisos') 	# Redireciona após salvar
+            # 1. Salva as alterações (título, mensagem, etc.) no aviso.
+            aviso_editado = form.save()
+
+            # 2. Redefine o status de TODAS as confirmações associadas para 'pendente'.
+            #    Esta é a única linha necessária para a nova lógica.
+            aviso_editado.confirmacoes.all().update(status='pendente')
+
+            messages.success(request, "Aviso editado com sucesso! O status foi redefinido para 'Pendente' para todas as escolas.")
+            return redirect('listar_avisos')
         else:
-            messages.error(request, "Houve um erro ao editar o aviso.")
-            return render(request, 'avisos/editar_aviso.html', {'form': form, 'aviso': aviso})
-    
-    # Se for um GET, mostramos o formulário de edição
-    form = AvisoForm(instance=aviso)
-    return render(request, 'problemas/listar_avisos.html', {'form': form, 'aviso': aviso})
+            messages.error(request, "Houve um erro ao editar o aviso. Verifique os dados inseridos.")
+            return redirect('listar_avisos')
+
+    # Se a requisição for GET, apenas redireciona para a lista.
+    return redirect('listar_avisos')
 
 # =============================================================================
 #  VIEW DA EXCLUSÃO DE AVISO
