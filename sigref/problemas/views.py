@@ -787,6 +787,11 @@ def lista_problemas_por_escola(request, escola_id):
     # Pega a lista de todos os problemas apenas daquela escola como base.
     queryset = ProblemaUsuario.objects.filter(escola=escola).order_by('-criado_em')
 
+    # Parametros de filtro da URL
+    status_filter = request.GET.get('status', '')
+    data_filter = request.GET.get('data', '')
+    setor_filter = request.GET.get('setor', '')
+
     # Filtra por status, se o parâmetro 'status' for passado na URL (ex: ?status=P)
     status_filter = request.GET.get('status')
     if status_filter in ['P', 'R', 'E']: # 'P'endente, 'R'esolvido, 'E'm Andamento
@@ -798,18 +803,43 @@ def lista_problemas_por_escola(request, escola_id):
         # Pesquisa na descrição do problema (ajuste o campo se necessário)
         queryset = queryset.filter(descricao__icontains=search_query)
 
+    # Filtra por data
+    if data_filter:
+        hoje = timezone.now()
+        if data_filter == '1':  # Última semana
+            queryset = queryset.filter(criado_em__gte=hoje - timedelta(weeks=1))
+        elif data_filter == '2':  # Último mês
+            queryset = queryset.filter(criado_em__gte=hoje - timedelta(days=30))
+        elif data_filter == '3':  # Último ano
+            queryset = queryset.filter(criado_em__gte=hoje - timedelta(days=365))
+
+    # Filtra por setor
+    if setor_filter:
+        queryset = queryset.filter(setor__id=setor_filter)
+    
+    todos_os_setores = Setor.objects.all().order_by('nome')
+
     # 3. LÓGICA DE PAGINAÇÃO
     # Evita que páginas com centenas de problemas fiquem lentas.
     paginator = Paginator(queryset, 10) # Mostra 10 problemas por página
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
-    
+
     context = {
         'escola': escola,
         'problemas': page_obj, # Envia o objeto da página para o template, não a lista inteira
         'total_problemas': paginator.count, # Total de problemas após os filtros
-        'status_filter': status_filter, # Para manter o filtro selecionado na interface
-        'search_query': search_query, # Para manter o texto da busca na interface
+        'status_choices': STATUS_CHOICES, # Para popular o dropdown de status
+        'request': request, # Passar o request é útil para o template
+        
+        # Manter o estado dos filtros na interface
+        'status_filter': status_filter,
+        'search_query': search_query,
+        'data_filter': data_filter, 
+        'setor_filter': setor_filter,
+
+        # Para popular o dropdown de setores
+        'todos_os_setores': todos_os_setores,
     }
     
     return render(request, 'tela_problemas.html', context)
