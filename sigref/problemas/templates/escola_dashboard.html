@@ -4,11 +4,11 @@
 {% block title %}Dashboard da Escola{% endblock %}
 
 {% block extra_style %}
+    {#-- Google Fonts e Font Awesome --#}
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" xintegrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
 
     <style>
         /* --------------------------------------------- */
@@ -24,206 +24,486 @@
             --red: #E53935;
             --orange: #FFB300;
             --info: #039BE5;
+            --border-radius-lg: 12px;
+            --border-radius-md: 8px;
         }
-        body { font-family: 'Poppins', sans-serif; background-color: var(--light-gray); color: var(--text-dark); }
-        .header-escola { background-color: var(--primary-color); color: white; border-radius: 12px; padding: 0; overflow: hidden; display: flex; align-items: stretch; margin-bottom: 30px; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1); }
-        .info-escola { background-color: white; padding: 2rem; flex: 1; min-width: 0; border-top-left-radius: 12px; border-bottom-left-radius: 12px; display: flex; flex-direction: column; }
-        .info-escola h4 { color: var(--primary-color); font-weight: bold; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 10px; }
-        .info-escola-detalhes { flex-grow: 1; display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 0.75rem 1.5rem; font-size: 0.95rem; color: var(--text-muted); }
-        .info-escola-detalhes p { margin-bottom: 0; display: flex; align-items: center; gap: 8px; word-break: break-word; }
-        .info-escola-detalhes i { margin-right: 0; color: var(--primary-color); font-size: 1.1rem; width: 20px; text-align: center; }
-        .imagem-escola { width: 516px; height: 279px; flex-shrink: 0; position: relative; display: flex; justify-content: center; align-items: center; }
-        .imagem-escola img { width: 100%; height: 100%; object-fit: cover; border-top-right-radius: 12px; border-bottom-right-radius: 12px; display: block; cursor: pointer; transition: transform 0.3s ease; }
-        .imagem-escola img:hover { transform: scale(1.02); }
-        .card-indicador { background: white; text-align: center; padding: 2rem; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.08); height: 100%; display: flex; flex-direction: column; justify-content: space-between; transition: transform 0.3s ease, box-shadow 0.3s ease; }
-        .card-indicador:hover { transform: translateY(-5px); box-shadow: 0 6px 15px rgba(0,0,0,0.12); }
-        .card-indicador p { color: var(--text-muted); font-weight: 500; text-transform: uppercase; font-size: 0.9rem; margin-bottom: 0.5rem; }
-        .card-indicador h1 { font-size: 3.5rem; font-weight: 700; color: var(--text-dark); margin-bottom: 1.5rem; line-height: 1; }
-        .btn-relatar { width: 100%; font-weight: bold; background-color: var(--primary-color); border-color: var(--primary-color); color: white; border-radius: 0.5rem; padding: 0.75rem 1.5rem; transition: background-color 0.3s ease, border-color 0.3s ease, transform 0.2s ease; }
-        .btn-relatar:hover { background-color: #1e2858; border-color: #1e2858; transform: translateY(-2px); }
-        .avisos-importantes { background: white; border-left: 5px solid var(--accent-color); border-radius: 8px; padding: 2rem; height: 100%; box-shadow: 0 4px 10px rgba(0,0,0,0.08); display: flex; flex-direction: column; justify-content: space-between; transition: transform 0.3s ease, box-shadow 0.3s ease; }
-        .avisos-importantes:hover { transform: translateY(-5px); box-shadow: 0 6px 15px rgba(0,0,0,0.12); }
-        .avisos-importantes h5 { color: var(--accent-color); font-weight: bold; margin-bottom: 1rem; display: flex; align-items: center; gap: 10px; }
-        .titulo-secao { color: var(--text-dark); font-weight: 700; margin-bottom: 1.5rem !important; padding-bottom: 0.5rem; border-bottom: 3px solid var(--primary-color); display: inline-block; font-size: 1.25rem; }
-        .card-status { background: white; padding: 1.5rem; text-align: center; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; border: 1px solid var(--light-gray); transition: transform 0.3s ease, box-shadow 0.3s ease; }
-        .card-status:hover { transform: translateY(-5px); box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
-        .card-status .numero { font-size: 3rem; font-weight: 700; color: var(--text-dark); line-height: 1; margin-bottom: 0.5rem; }
-        .card-status .descricao { font-size: 1rem; color: var(--text-muted); display: flex; align-items: center; gap: 8px; }
-        .card-status i { font-size: 1.2rem; }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: var(--light-gray);
+            color: var(--text-dark);
+        }
+
+        /* --------------------------------------------- */
+        /* -------------- HEADER DA ESCOLA -------------- */
+        /* --------------------------------------------- */
+        .header-escola {
+            background-color: var(--primary-color);
+            border-radius: var(--border-radius-lg);
+            overflow: hidden;
+            display: flex;
+            margin-bottom: 2rem;
+            box-shadow: 0 6px 20px rgba(38, 50, 109, 0.15);
+        }
+
+        .info-escola {
+            background-color: white;
+            padding: 2rem;
+            flex: 1;
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .info-escola h4 {
+            color: var(--primary-color);
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1.25rem;
+        }
+
+        .info-escola-detalhes {
+            flex-grow: 1;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1rem 1.5rem;
+            font-size: 0.9rem;
+            color: var(--text-muted);
+        }
+
+        .info-escola-detalhes p {
+            margin-bottom: 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            word-break: break-word;
+        }
+
+        .info-escola-detalhes i {
+            color: var(--primary-color);
+            font-size: 1.1rem;
+            width: 20px;
+            text-align: center;
+        }
+
+        .imagem-escola {
+            width: 450px; /* Largura ajustada */
+            flex-shrink: 0;
+            position: relative;
+            cursor: pointer;
+        }
+
+        .imagem-escola img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+            transition: transform 0.3s ease, filter 0.3s ease;
+        }
+
+        .imagem-escola:hover img {
+            transform: scale(1.03);
+            filter: brightness(1.1);
+        }
+        
+        /* --------------------------------------------- */
+        /* ------------ CARDS DE INDICADORES ------------ */
+        /* --------------------------------------------- */
+
+        .titulo-secao {
+            color: var(--text-dark);
+            font-weight: 700;
+            margin-bottom: 1.5rem !important;
+            padding-bottom: 0.5rem;
+            border-bottom: 3px solid var(--primary-color);
+            display: inline-block;
+            font-size: 1.3rem;
+        }
+
+        .card-indicador, .avisos-importantes, .card-status {
+            background: white;
+            border-radius: var(--border-radius-md);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.06);
+            height: 100%;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            border: 1px solid #eef2f7;
+        }
+        
+        .card-indicador:hover, .avisos-importantes:hover, .card-status:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+        }
+
+        .card-indicador {
+            text-align: center;
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .card-indicador p {
+            color: var(--text-muted);
+            font-weight: 500;
+            text-transform: uppercase;
+            font-size: 0.85rem;
+            letter-spacing: 0.5px;
+            margin-bottom: 0.5rem;
+        }
+
+        .card-indicador h1 {
+            font-size: 3.5rem;
+            font-weight: 700;
+            color: var(--text-dark);
+            margin-bottom: 1.5rem;
+            line-height: 1;
+        }
+
+        .btn-relatar {
+            font-weight: 600;
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+            color: white;
+            border-radius: 0.5rem;
+            padding: 0.75rem 1.5rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            transition: all 0.3s ease;
+        }
+
+        .btn-relatar:hover {
+            background-color: #fcfcfc;
+            border-color: #039BE5;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(250, 250, 250, 0.3);
+        }
+
+        /* --------------------------------------------- */
+        /* ------------- AVISOS E STATUS -------------- */
+        /* --------------------------------------------- */
+        .avisos-importantes {
+            border-left: 5px solid var(--accent-color);
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .avisos-importantes h5 {
+            color: var(--accent-color);
+            font-weight: 700;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .card-status {
+            padding: 1.5rem;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .card-status .numero {
+            font-size: 2.75rem;
+            font-weight: 700;
+            line-height: 1;
+            margin-bottom: 0.5rem;
+        }
+
+        .card-status .descricao {
+            font-size: 1rem;
+            font-weight: 500;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .card-status i {
+            font-size: 1.1rem;
+        }
+
         .card-status.resolvidos { border-left: 5px solid var(--green); } .card-status.resolvidos .numero { color: var(--green); }
         .card-status.pendentes { border-left: 5px solid var(--red); } .card-status.pendentes .numero { color: var(--red); }
         .card-status.em-andamento { border-left: 5px solid var(--orange); } .card-status.em-andamento .numero { color: var(--orange); }
         .card-status.este-mes { border-left: 5px solid var(--info); } .card-status.este-mes .numero { color: var(--info); }
-        .modal-body .aviso-item-modal { border: 1px solid var(--light-gray); border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
-        @media (max-width: 991.98px) { .header-escola { flex-direction: column; align-items: center; } .info-escola { border-radius: 12px 12px 0 0; width: 100%; } .info-escola-detalhes { text-align: center; } .info-escola-detalhes p { justify-content: center; } .imagem-escola { width: 100%; height: 250px; } .imagem-escola img { border-radius: 0 0 12px 12px; } }
+        
+        /* --------------------------------------------- */
+        /* ------------- MODAL DE AVISOS -------------- */
+        /* --------------------------------------------- */
+        .aviso-item-modal { 
+            border: 1px solid #dee2e6; 
+            border-radius: var(--border-radius-md); 
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            overflow: hidden;
+        }
+        .marcar-como-visualizado-btn .fa-spinner {
+            display: none;
+        }
+        .marcar-como-visualizado-btn.loading .fa-spinner {
+            display: inline-block;
+        }
+        .marcar-como-visualizado-btn.loading .fa-check-circle {
+            display: none;
+        }
+        
+        /* --------------------------------------------- */
+        /* ---------------- RESPONSIVIDADE -------------- */
+        /* --------------------------------------------- */
+
+        /* Extra large devices (large desktops, 1200px e acima) */
+        @media (min-width: 1200px) {
+            .info-escola-detalhes { grid-template-columns: repeat(2, 1fr); }
+        }
+
+        /* Large devices (desktops, 992px to 1199px) */
+        @media (max-width: 1199.98px) {
+            .imagem-escola { width: 380px; }
+        }
+
+        /* Medium devices (tablets, 768px to 991px) */
+        @media (max-width: 991.98px) {
+            .header-escola { flex-direction: column; }
+            .info-escola { border-radius: var(--border-radius-lg) var(--border-radius-lg) 0 0; }
+            .imagem-escola { width: 100%; height: 250px; border-radius: 0 0 var(--border-radius-lg) var(--border-radius-lg); }
+            
+            .row.g-4 {
+                --bs-gutter-y: 1.5rem;
+            }
+        }
+        
+        /* Small devices (landscape phones, 576px to 767px) */
+        @media (max-width: 767.98px) {
+             .info-escola { padding: 1.5rem; }
+             .info-escola h4 { font-size: 1.1rem; }
+             .info-escola-detalhes { grid-template-columns: 1fr; text-align: center; gap: 0.8rem; }
+             .info-escola-detalhes p { justify-content: center; }
+
+             .card-indicador h1 { font-size: 3rem; }
+             .card-indicador { padding: 1.5rem; }
+             .avisos-importantes { padding: 1.5rem; margin-top: 1.5rem; }
+
+             .titulo-secao { font-size: 1.15rem; }
+             .card-status .numero { font-size: 2.25rem; }
+             .card-status .descricao { font-size: 0.9rem; }
+        }
+        
     </style>
 {% endblock %}
 
 {% block content %}
-<div class="container mt-4">
+<div class="container my-4 my-md-5">
+    {#-- Bloco de Header com informações da escola --#}
     <div class="header-escola">
         <div class="info-escola">
-            <h4><i class="fas fa-school"></i> {{ escola.nome }} - {{ escola.inep }}</h4>
+            <h4><i class="fas fa-school fa-fw"></i> {{ escola.nome }} - {{ escola.inep }}</h4>
             <div class="info-escola-detalhes">
-                <p><i class="fas fa-map-marker-alt"></i> <span>{{ escola.endereco|default:"Endereço não cadastrado" }}</span></p>
-                <p><i class="fas fa-phone-alt"></i> <span>{{ escola.telefone|default:"Telefone não cadastrado" }}</span></p>
-                <p><i class="fas fa-envelope"></i> <span><strong>Email da Escola:</strong> {{ escola.email_escola }}</span></p>
-                <p><i class="fas fa-user-shield"></i> <span><strong>Gestor:</strong> {{ escola.nome_gestor }}</span></p>
-                <p><i class="fas fa-phone-alt"></i> <span><strong>Telefone do Gestor:</strong> {{ escola.telefone_gestor|default:"Telefone não cadastrado" }}</span></p>
-                <p><i class="fas fa-envelope"></i> <span><strong>Email do Gestor:</strong> {{ escola.email_gestor|default:"Email não cadastrado" }}</span></p>
+                <p><i class="fas fa-map-marker-alt fa-fw"></i> <span>{{ escola.endereco|default:"Não cadastrado" }}</span></p>
+                <p><i class="fas fa-phone-alt fa-fw"></i> <span>{{ escola.telefone|default:"Não cadastrado" }}</span></p>
+                <p><i class="fas fa-user-shield fa-fw"></i> <span><strong>Gestor:</strong> {{ escola.nome_gestor }}</span></p>
+                <p><i class="fas fa-phone-alt fa-fw"></i> <span><strong>Tel. Gestor:</strong> {{ escola.telefone_gestor|default:"Não cadastrado" }}</span></p>
+                <p><i class="fas fa-envelope fa-fw"></i> <span>{{ escola.email_escola|default:"Não cadastrado" }}</span></p>
+                <p><i class="fas fa-envelope fa-fw"></i> <span>{{ escola.email_gestor|default:"Não cadastrado" }}</span></p>
             </div>
         </div>
         <a href="#" data-bs-toggle="modal" data-bs-target="#schoolImageModal" class="imagem-escola">
             {% if escola.foto_fachada %}
-                <img id="schoolMainImage" src="{{ escola.foto_fachada.url }}" alt="Foto da Escola" />
+                <img id="schoolMainImage" src="{{ escola.foto_fachada.url }}" alt="Foto da Escola {{ escola.nome }}" />
             {% else %}
-                <img id="schoolMainImage" src="{% static 'images/default-school.jpeg' %}" alt="Foto não disponível" />
+                <img id="schoolMainImage" src="{% static 'images/default-school.jpeg' %}" alt="Foto da escola não disponível" />
             {% endif %}
         </a>
     </div>
 
-    <div class="row">
-        <div class="col-lg-8 mb-4 mb-lg-0">
+    {#-- Bloco principal com cartões de ação e avisos --#}
+    <div class="row g-4">
+        <div class="col-lg-8">
             <div class="row g-4">
                 <div class="col-md-6">
                     <div class="card-indicador">
-                        <p>QUANTIDADE DE LACUNAS EXISTENTES</p>
+                        <p>Total de Lacunas</p>
                         <h1>{{ total_lacunas }}</h1>
-                        <button class="btn btn-relatar mt-auto" data-bs-toggle="modal" data-bs-target="#modalRelatarLacuna">RELATAR LACUNA</button>
+                        <button class="btn btn-relatar mt-auto" data-bs-toggle="modal" data-bs-target="#modalRelatarLacuna">Relatar Lacuna</button>
                     </div>
                 </div>
                 <div class="col-md-6">
                     <div class="card-indicador">
-                        <p>QUANTIDADE DE PROBLEMAS EXISTENTES</p>
+                        <p>Total de Problemas</p>
                         <h1>{{ total_problemas }}</h1>
-                        <button class="btn btn-relatar mt-auto" data-bs-toggle="modal" data-bs-target="#modalRelatarProblema">RELATAR PROBLEMA</button>
+                        <button class="btn btn-relatar mt-auto" data-bs-toggle="modal" data-bs-target="#modalRelatarProblema">Relatar Problema</button>
                     </div>
                 </div>
             </div>
         </div>
         <div class="col-lg-4">
             <div class="avisos-importantes">
-                <h5><i class="fas fa-exclamation-triangle"></i> AVISOS IMPORTANTES</h5>
+                <h5><i class="fas fa-exclamation-triangle"></i> Avisos Importantes</h5>
                 {% if avisos %}
-                    <div class="flex-grow-1 d-flex flex-column justify-content-center">
-                        <p class="text-muted mb-2">
+                    <div class="flex-grow-1 d-flex flex-column justify-content-center mb-3">
+                        <p class="text-muted">
                             <strong>{{ avisos.0.titulo|upper }}</strong>:
                             {{ avisos.0.mensagem|truncatechars:70 }}
                         </p>
                     </div>
-                    <button class="btn btn-sm btn-outline-danger w-100 mb-2" data-bs-toggle="modal" data-bs-target="#modalAvisos">
-                        Ver todos os avisos
+                    <button class="btn btn-sm btn-outline-danger w-100" data-bs-toggle="modal" data-bs-target="#modalAvisos">
+                        Ver todos os avisos ({{ avisos|length }})
                     </button>
-                    {% if not gre_user.is_escola %}
-                    
-                    {% endif %}
                 {% else %}
-                    <p class="text-muted flex-grow-1 d-flex align-items-center justify-content-center">Nenhum aviso no momento.</p>
+                    <p class="text-muted flex-grow-1 d-flex align-items-center justify-content-center m-0">Nenhum aviso no momento.</p>
                 {% endif %}
             </div>
         </div>
     </div>
 
+    {#-- Seção Histórico de Problemas --#}
     <div class="mt-5">
-        <div class="d-flex justify-content-between align-items-center mb-3">
-            <h5 class="titulo-secao mb-0">HISTÓRICO DE PROBLEMAS</h5>
-            <a href="{% url 'tela_problemas' %}" class="btn btn-relatar" style="width: auto;">Ver Mais</a>
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
+            <h5 class="titulo-secao mb-0">Histórico de Problemas</h5>
+            <a href="{% url 'tela_problemas' %}" class="btn btn-sm btn-outline-primary">Ver Detalhes</a>
         </div>
-        <div class="row g-4">
-            <div class="col-xl-3 col-md-6"><div class="card-status resolvidos"><div class="numero">{{ problemas_resolvidos }}</div><div class="descricao"><i class="fas fa-check-circle"></i> Resolvidos</div></div></div>
-            <div class="col-xl-3 col-md-6"><div class="card-status pendentes"><div class="numero">{{ problemas_pendentes }}</div><div class="descricao"><i class="fas fa-exclamation-circle"></i> Pendentes</div></div></div>
-            <div class="col-xl-3 col-md-6"><div class="card-status em-andamento"><div class="numero">{{ problemas_andamento }}</div><div class="descricao"><i class="fas fa-spinner"></i> Em Andamento</div></div></div>
-            <div class="col-xl-3 col-md-6"><div class="card-status este-mes"><div class="numero">{{ problemas_este_mes }}</div><div class="descricao"><i class="fas fa-calendar-alt"></i> Este Mês</div></div></div>
+        <div class="row g-3 g-lg-4">
+            <div class="col-sm-6 col-xl-3"><div class="card-status resolvidos"><div class="numero">{{ problemas_resolvidos }}</div><div class="descricao"><i class="fas fa-check-circle"></i> Resolvidos</div></div></div>
+            <div class="col-sm-6 col-xl-3"><div class="card-status pendentes"><div class="numero">{{ problemas_pendentes }}</div><div class="descricao"><i class="fas fa-exclamation-circle"></i> Pendentes</div></div></div>
+            <div class="col-sm-6 col-xl-3"><div class="card-status em-andamento"><div class="numero">{{ problemas_andamento }}</div><div class="descricao"><i class="fas fa-sync-alt fa-spin"></i> Em Andamento</div></div></div>
+            <div class="col-sm-6 col-xl-3"><div class="card-status este-mes"><div class="numero">{{ problemas_este_mes }}</div><div class="descricao"><i class="fas fa-calendar-alt"></i> Este Mês</div></div></div>
         </div>
     </div>
 
-    <!-- ==================================================================
-    Histórico de Lacunas
-    ================================================================== -->
+    {#-- Seção Histórico de Lacunas --#}
     <div class="mt-5">
-        <div class="d-flex justify-content-between align-items-center mb-3">
-            <h5 class="titulo-secao mb-0">HISTÓRICO DE LACUNAS</h5>
-            <a href="{% url 'tela_lacunas' %}" class="btn btn-relatar" style="width: auto;">Ver Mais</a>
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
+            <h5 class="titulo-secao mb-0">Histórico de Lacunas</h5>
+            <a href="{% url 'tela_lacunas' %}" class="btn btn-sm btn-outline-primary">Ver Detalhes</a>
         </div>
-        <div class="row g-4">
-            <div class="col-xl-3 col-md-6"><div class="card-status resolvidos"><div class="numero">{{ lacunas_resolvidas }}</div><div class="descricao"><i class="fas fa-check-circle"></i> Resolvidas</div></div></div>
-            <div class="col-xl-3 col-md-6"><div class="card-status pendentes"><div class="numero">{{ lacunas_pendentes }}</div><div class="descricao"><i class="fas fa-exclamation-circle"></i> Pendentes</div></div></div>
-            <div class="col-xl-3 col-md-6"><div class="card-status em-andamento"><div class="numero">{{ lacunas_andamento }}</div><div class="descricao"><i class="fas fa-spinner"></i> Em Andamento</div></div></div>
-            <div class="col-xl-3 col-md-6"><div class="card-status este-mes"><div class="numero">{{ lacunas_este_mes }}</div><div class="descricao"><i class="fas fa-calendar-alt"></i> Este Mês</div></div></div>
+        <div class="row g-3 g-lg-4">
+            <div class="col-sm-6 col-xl-3"><div class="card-status resolvidos"><div class="numero">{{ lacunas_resolvidas }}</div><div class="descricao"><i class="fas fa-check-circle"></i> Resolvidas</div></div></div>
+            <div class="col-sm-6 col-xl-3"><div class="card-status pendentes"><div class="numero">{{ lacunas_pendentes }}</div><div class="descricao"><i class="fas fa-exclamation-circle"></i> Pendentes</div></div></div>
+            <div class="col-sm-6 col-xl-3"><div class="card-status em-andamento"><div class="numero">{{ lacunas_andamento }}</div><div class="descricao"><i class="fas fa-sync-alt fa-spin"></i> Em Andamento</div></div></div>
+            <div class="col-sm-6 col-xl-3"><div class="card-status este-mes"><div class="numero">{{ lacunas_este_mes }}</div><div class="descricao"><i class="fas fa-calendar-alt"></i> Este Mês</div></div></div>
         </div>
     </div>
 </div>
 
-<!-- ==================================================================
-    Modal para exibir a imagem da escola 
-    ================================================================== -->
-<div class="modal fade" id="schoolImageModal" tabindex="-1" aria-hidden="true">
+<!-- ================================================================== -->
+<!-- ======================= MODAIS =================================== -->
+<!-- ================================================================== -->
+
+{#-- Modal para exibir a imagem da escola --#}
+<div class="modal fade" id="schoolImageModal" tabindex="-1" aria-labelledby="schoolImageModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-lg">
-        <div class="modal-content"><div class="modal-header bg-primary text-white"><h5 class="modal-title">{{ escola.nome }}</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body text-center p-0"><img id="modalSchoolImage" src="" class="img-fluid rounded"></div></div>
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="schoolImageModalLabel">{{ escola.nome }}</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
+            </div>
+            <div class="modal-body text-center p-0">
+                <img id="modalSchoolImage" src="" class="img-fluid" alt="Foto ampliada da escola">
+            </div>
+        </div>
     </div>
 </div>
 
-<!-- ==================================================================
-    Modal para relatar lacuna
-    ================================================================== -->
-<div class="modal fade" id="modalRelatarLacuna" tabindex="-1" aria-hidden="true">
+{#-- Modal para relatar lacuna --#}
+<div class="modal fade" id="modalRelatarLacuna" tabindex="-1" aria-labelledby="modalRelatarLacunaLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <form method="post" action="{% url 'relatar_lacuna' escola_id=escola.id %}">
                 {% csrf_token %}
-                <div class="modal-header bg-primary text-white"><h5 class="modal-title"><i class="fas fa-plus-circle me-2"></i> Nova Lacuna</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
-                <div class="modal-body">
-                    <p class="text-end text-danger small">Obs. Campos com <span class="fw-bold">*</span> são obrigatórios</p>
-                    <div class="mb-3"><label class="form-label" for="disciplina_manual"><i class="fas fa-book-open me-2 text-primary"></i>Disciplina <span class="text-danger">*</span></label><input id="disciplina_manual" type="text" name="disciplina" class="form-control" placeholder="Ex: Matemática" required></div>
-                    <div class="mb-3"><label class="form-label" for="carga_horaria_manual"><i class="fas fa-clock me-2 text-primary"></i>Carga Horária <span class="text-danger">*</span></label><select id="carga_horaria_manual" name="carga_horaria" class="form-select" required><option value="" disabled selected>Selecione</option><option value="150">150 horas</option><option value="200">200 horas</option></select></div>
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title" id="modalRelatarLacunaLabel"><i class="fas fa-plus-circle me-2"></i> Nova Lacuna</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
                 </div>
-                <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button><button type="submit" class="btn btn-primary">Relatar Lacuna</button></div>
+                <div class="modal-body">
+                    <p class="text-end text-danger small">Campos com <span class="fw-bold">*</span> são obrigatórios.</p>
+                    <div class="mb-3">
+                        <label class="form-label" for="disciplina_manual"><i class="fas fa-book-open me-2 text-primary"></i>Disciplina <span class="text-danger">*</span></label>
+                        <input id="disciplina_manual" type="text" name="disciplina" class="form-control" placeholder="Ex: Matemática" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label" for="carga_horaria_manual"><i class="fas fa-clock me-2 text-primary"></i>Carga Horária <span class="text-danger">*</span></label>
+                        <select id="carga_horaria_manual" name="carga_horaria" class="form-select" required>
+                            <option value="" disabled selected>Selecione a carga horária</option>
+                            <option value="150">150 horas</option>
+                            <option value="200">200 horas</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary"><i class="fas fa-paper-plane me-2"></i>Relatar Lacuna</button>
+                </div>
             </form>
         </div>
     </div>
 </div>
 
-<!-- ==================================================================
-    Modal para relatar problema
-    ================================================================== -->
-<div class="modal fade" id="modalRelatarProblema" tabindex="-1" aria-hidden="true">
+{#-- Modal para relatar problema --#}
+<div class="modal fade" id="modalRelatarProblema" tabindex="-1" aria-labelledby="modalRelatarProblemaLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <form method="post" enctype="multipart/form-data" action="{% url 'relatar_problema' escola_id=escola.id %}">
                 {% csrf_token %}
-                <div class="modal-header bg-primary text-white"><h5 class="modal-title"><i class="fas fa-plus-circle me-2"></i> Novo Problema</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title" id="modalRelatarProblemaLabel"><i class="fas fa-plus-circle me-2"></i> Novo Problema</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                </div>
                 <div class="modal-body">
-                    <p class="text-end text-danger small">Obs. Campos com <span class="fw-bold">*</span> são obrigatórios</p>
-                    <div class="mb-3"><label for="descricao_manual" class="form-label"><i class="fas fa-exclamation-circle me-2 text-primary"></i>Descrição Detalhada <span class="text-danger">*</span></label><textarea id="descricao_manual" name="descricao" class="form-control" rows="4" placeholder="Descreva melhor o seu problema:" required style="overflow-y: auto; max-height: 150px;"></textarea></div>
-                    <div class="row">
-                        <div class="col-md-6 mb-3"><label class="form-label"><i class="fas fa-sitemap me-2 text-primary"></i>Setor <span class="text-danger">*</span></label>{{ form_problema.setor }}</div>
-                        <div class="col-md-6 mb-3"><label class="form-label"><i class="fas fa-paperclip me-2 text-primary"></i>Anexo</label><input type="file" name="anexo" class="form-control" placeholder="Anexe aqui..." multiple></div>
+                    <p class="text-end text-danger small">Campos com <span class="fw-bold">*</span> são obrigatórios.</p>
+                    <div class="mb-3">
+                        <label for="descricao_manual" class="form-label"><i class="fas fa-exclamation-circle me-2 text-primary"></i>Descrição Detalhada <span class="text-danger">*</span></label>
+                        <textarea id="descricao_manual" name="descricao" class="form-control" rows="4" placeholder="Descreva o problema em detalhes..." required style="resize: vertical;"></textarea>
+                    </div>
+                    <div class="row g-3">
+                        <div class="col-md-6"><label class="form-label"><i class="fas fa-sitemap me-2 text-primary"></i>Setor <span class="text-danger">*</span></label>{{ form_problema.setor }}</div>
+                        <div class="col-md-6"><label class="form-label"><i class="fas fa-paperclip me-2 text-primary"></i>Anexo</label><input type="file" name="anexo" class="form-control" multiple></div>
                     </div>
                 </div>
-                <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button><button type="submit" class="btn btn-primary">Relatar Problema</button></div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary"><i class="fas fa-paper-plane me-2"></i>Relatar Problema</button>
+                </div>
             </form>
         </div>
     </div>
 </div>
 
+{#-- Modal para exibir todos os avisos --#}
 <div class="modal fade" id="modalAvisos" tabindex="-1" aria-labelledby="modalAvisosLabel" aria-hidden="true">
-    <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
         <div class="modal-content">
             <div class="modal-header bg-danger text-white">
                 <h5 class="modal-title" id="modalAvisosLabel"><i class="fas fa-bullhorn me-2"></i>Todos os Avisos</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
             </div>
-            <div class="modal-body bg-light p-4">
-                <div id="avisos-container">
+            
+            <div class="p-3 border-bottom bg-light sticky-top">
+                <div id="modal-alert-placeholder"></div>
+                <div class="btn-toolbar justify-content-center filter-btn-group" role="toolbar" aria-label="Filtros de avisos">
+                    <div class="btn-group btn-group-sm" role="group">
+                        <button type="button" class="btn btn-outline-primary active" data-filter-status="todos">Todos</button>
+                        <button type="button" class="btn btn-outline-primary" data-filter-status="pendente">Pendentes</button>
+                        <button type="button" class="btn btn-outline-primary" data-filter-status="visualizado">Lidos</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-body p-3 p-md-4">
+                <div id="avisos-container" class="vstack gap-3">
                     {% for aviso in avisos %}
-                        <div class="card mb-3 shadow-sm aviso-item aviso-item-modal rounded-3" 
-                            data-prioridade="{{ aviso.prioridade }}" 
-                            data-timestamp="{{ aviso.data_criacao.timestamp }}" 
-                            data-aviso-id="{{ aviso.id }}"
-                            data-status="{{ aviso.ja_visualizado|yesno:'visualizado,pendente' }}">
-                            <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
-                                <strong class="text-truncate text-dark">{{ aviso.titulo }}</strong>
-                                <div class="d-flex align-items-center">
+                        <div class="card aviso-item aviso-item-modal" 
+                             data-timestamp="{{ aviso.data_criacao.timestamp }}" 
+                             data-aviso-id="{{ aviso.id }}"
+                             data-status="{{ aviso.ja_visualizado|yesno:'visualizado,pendente' }}">
+                            <div class="card-header bg-white d-flex justify-content-between align-items-center py-2">
+                                <strong class="text-truncate text-dark me-2">{{ aviso.titulo }}</strong>
+                                <div class="d-flex align-items-center flex-shrink-0">
                                     {% if aviso.prioridade == 'alta' %}<span class="badge bg-danger">Alta</span>
                                     {% elif aviso.prioridade == 'normal' %}<span class="badge bg-warning text-dark">Normal</span>
                                     {% else %}<span class="badge bg-success">Baixa</span>
@@ -236,35 +516,34 @@
                                     {% endif %}
                                 </div>
                             </div>
-                            <div class="card-body py-3">
+                            <div class="card-body py-2">
                                 <button class="btn btn-sm btn-outline-primary visualizar-aviso-btn" type="button" data-bs-toggle="collapse" data-bs-target="#collapseAviso{{ aviso.id }}" aria-expanded="false" aria-controls="collapseAviso{{ aviso.id }}" data-aviso-id="{{ aviso.id }}">
-                                    <i class="fas fa-eye me-2"></i> Visualizar Mensagem
+                                    <i class="fas fa-eye me-1"></i> Visualizar
                                 </button>
                                 
                                 {% if not aviso.ja_visualizado %}
                                     <button class="btn btn-sm btn-success ms-2 marcar-como-visualizado-btn" type="button" data-aviso-id="{{ aviso.id }}">
-                                        <i class="fas fa-check-circle me-2"></i> Marcar como Visualizado
+                                        <i class="fas fa-check-circle me-1"></i>
+                                        <i class="fas fa-spinner fa-spin"></i>
+                                        Marcar como Visto
                                     </button>
                                 {% endif %}
 
                                 <div class="collapse mt-3" id="collapseAviso{{ aviso.id }}">
                                     {% if aviso.imagem %}
-                                        <img src="{{ aviso.imagem.url }}" class="img-fluid rounded my-3" alt="Imagem do Aviso" style="max-height: 250px;">
+                                        <img src="{{ aviso.imagem.url }}" class="img-fluid rounded my-2" alt="Imagem do Aviso" style="max-height: 250px;">
                                     {% endif %}
-                                    <p class="text-muted" style="white-space: pre-wrap;">{{ aviso.mensagem }}</p>
+                                    <p class="text-muted mb-0" style="white-space: pre-wrap;">{{ aviso.mensagem }}</p>
                                 </div>
                             </div>
-                            <div class="card-footer bg-light text-muted small d-flex justify-content-between flex-wrap gap-2 py-3">
+                            <div class="card-footer bg-light text-muted small d-flex justify-content-between flex-wrap gap-2 py-2">
                                 <span><i class="fas fa-user me-1"></i> {{ aviso.criado_por }}</span>
-                                <span><i class="fas fa-calendar-alt me-1"></i> Publicado em: {{ aviso.data_criacao|date:"d/m/Y H:i" }}</span>
-                                {% if aviso.data_expiracao %}
-                                    <span><i class="fas fa-clock me-1"></i> Expira em: {{ aviso.data_expiracao|date:"d/m/Y H:i" }}</span>
-                                {% endif %}
+                                <span><i class="fas fa-calendar-alt me-1"></i> {{ aviso.data_criacao|date:"d/m/Y H:i" }}</span>
                             </div>
                         </div>
                     {% empty %}
-                        <div class="text-center p-5">
-                            <i class="fas fa-bell-slash fs-1 text-muted"></i>
+                        <div class="text-center p-5 empty-state">
+                            <i class="fas fa-bell-slash fa-3x text-muted"></i>
                             <p class="mt-3 text-muted">Não há avisos para exibir.</p>
                         </div>
                     {% endfor %}
@@ -281,126 +560,13 @@
 {% block extra_script %}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // ---- SCRIPT PARA O MODAL DA IMAGEM DA ESCOLA ----
-    const schoolImageModal = document.getElementById('schoolImageModal');
-    if (schoolImageModal) {
-        schoolImageModal.addEventListener('show.bs.modal', function (event) {
-            const mainImage = document.getElementById('schoolMainImage');
-            if (mainImage) {
-                const modalImage = document.getElementById('modalSchoolImage');
-                modalImage.src = mainImage.src;
-            }
-        });
-    }
+    'use strict';
 
-    // ---- Script para o modal de Avisos ----
-    const modalAvisos = document.getElementById('modalAvisos');
-    if (modalAvisos) {
-        const avisosContainer = modalAvisos.querySelector('#avisos-container');
-        let originalAllAvisos = []; // A lista começa vazia. Será populada no momento certo.
-
-        function applyFiltersAndSort() {
-            const activeStatusFilter = modalAvisos.querySelector('.filter-btn-group .btn.active')?.dataset.filterStatus || 'todos';
-            let filteredAvisos = originalAllAvisos.filter(aviso => {
-                const status = aviso.dataset.status;
-                return activeStatusFilter === 'todos' || status === activeStatusFilter;
-            });
-            filteredAvisos.sort((a, b) => b.dataset.timestamp - a.dataset.timestamp);
-            
-            avisosContainer.innerHTML = '';
-            if (filteredAvisos.length > 0) {
-                filteredAvisos.forEach(aviso => avisosContainer.appendChild(aviso));
-            } else {
-                avisosContainer.innerHTML = `<div class="text-center p-5"><i class="fas fa-bell-slash fs-1 text-muted"></i><p class="mt-3 text-muted">Não há avisos para exibir com este filtro.</p></div>`;
-            }
-        }
-
-        const filterStatusButtons = modalAvisos.querySelectorAll('.filter-btn-group .btn');
-        filterStatusButtons.forEach(button => {
-            button.addEventListener('click', function(e) {
-                e.preventDefault();
-                modalAvisos.querySelectorAll('.filter-btn-group .btn.active').forEach(b => b.classList.remove('active'));
-                this.classList.add('active');
-                applyFiltersAndSort();
-            });
-        });
-        
-        modalAvisos.addEventListener('shown.bs.modal', function () {
-            originalAllAvisos = Array.from(avisosContainer.querySelectorAll('.aviso-item'));
-            const allButton = modalAvisos.querySelector('[data-filter-status="todos"]');
-            if (allButton && !allButton.classList.contains('active')) {
-                modalAvisos.querySelectorAll('.filter-btn-group .btn.active').forEach(b => b.classList.remove('active'));
-                allButton.classList.add('active');
-            }
-            applyFiltersAndSort();
-        });
-
-        if (avisosContainer) {
-            avisosContainer.addEventListener('click', function(event) {
-                const visualizarBtn = event.target.closest('.visualizar-aviso-btn');
-                const marcarBtn = event.target.closest('.marcar-como-visualizado-btn');
-
-                if (visualizarBtn) {
-                    const avisoId = visualizarBtn.dataset.avisoId;
-                    const collapseElement = document.getElementById(`collapseAviso${avisoId}`);
-                    if (collapseElement && !collapseElement.classList.contains('show')) {
-                        marcarAvisoComoVisualizado(avisoId);
-                    }
-                } else if (marcarBtn) {
-                    event.preventDefault();
-                    const avisoId = marcarBtn.dataset.avisoId;
-                    if (avisoId) {
-                        marcarAvisoComoVisualizado(avisoId);
-                    }
-                }
-            });
-        }
-    }
-
-    function marcarAvisoComoVisualizado(avisoId) {
-        const avisoCard = document.querySelector(`.aviso-item[data-aviso-id="${avisoId}"]`);
-        if (avisoCard && avisoCard.dataset.status === 'visualizado') {
-            return;
-        }
-
-        fetch(`{% url 'confirmar_visualizacao_aviso' 0 %}`.replace('0', avisoId), {
-            method: 'POST',
-            headers: {
-                'X-CSRFToken': getCookie('csrftoken'),
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({})
-        })
-        .then(response => {
-            if (!response.ok) throw new Error(`Erro HTTP: ${response.status}`);
-            return response.json();
-        })
-        .then(data => {
-            if (data.status === 'success' || data.status === 'already_viewed') {
-                const statusBadge = document.getElementById(`status-aviso-${avisoId}`);
-                if (statusBadge) {
-                    statusBadge.textContent = 'Visto';
-                    statusBadge.classList.remove('bg-secondary');
-                    statusBadge.classList.add('bg-success');
-                    if (!statusBadge.innerHTML.includes('fa-check')) {
-                        statusBadge.innerHTML += ' <i class="fas fa-check"></i>';
-                    }
-                }
-                
-                const marcarBtn = document.querySelector(`.marcar-como-visualizado-btn[data-aviso-id="${avisoId}"]`);
-                if (marcarBtn) marcarBtn.remove();
-
-                if (avisoCard) avisoCard.dataset.status = 'visualizado';
-            } else {
-                alert(`Erro ao marcar aviso: ${data.message || 'Erro desconhecido'}`);
-            }
-        })
-        .catch(error => {
-            console.error(`Erro na requisição para o aviso ID ${avisoId}:`, error);
-            alert(`Ocorreu um erro de rede. Verifique o console para mais detalhes.`);
-        });
-    }
-
+    /**
+     * Helper para obter o CSRF token do Django.
+     * @param {string} name - O nome do cookie (geralmente 'csrftoken').
+     * @returns {string|null} - O valor do cookie.
+     */
     function getCookie(name) {
         let cookieValue = null;
         if (document.cookie && document.cookie !== '') {
@@ -414,6 +580,154 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
         return cookieValue;
+    }
+
+    /**
+     * Exibe um alerta não-bloqueante dentro de um modal.
+     * @param {string} placeholderSelector - Seletor do elemento onde o alerta será inserido.
+     * @param {string} message - A mensagem de erro.
+     * @param {string} type - O tipo do alerta (e.g., 'danger', 'success').
+     */
+    function showModalAlert(placeholderSelector, message, type = 'danger') {
+        const placeholder = document.querySelector(placeholderSelector);
+        if (!placeholder) return;
+        
+        const wrapper = document.createElement('div');
+        wrapper.innerHTML = [
+            `<div class="alert alert-${type} alert-dismissible fade show" role="alert">`,
+            `   <div>${message}</div>`,
+            '   <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>',
+            '</div>'
+        ].join('');
+
+        placeholder.append(wrapper);
+
+        // Remove o alerta após 5 segundos
+        setTimeout(() => {
+            const bsAlert = new bootstrap.Alert(wrapper.firstChild);
+            if (bsAlert) bsAlert.close();
+        }, 5000);
+    }
+
+
+    // ---- SCRIPT PARA O MODAL DA IMAGEM DA ESCOLA ----
+    const schoolImageModal = document.getElementById('schoolImageModal');
+    if (schoolImageModal) {
+        schoolImageModal.addEventListener('show.bs.modal', function (event) {
+            const mainImageSrc = document.getElementById('schoolMainImage')?.src;
+            if (mainImageSrc) {
+                const modalImage = document.getElementById('modalSchoolImage');
+                modalImage.src = mainImageSrc;
+            }
+        });
+    }
+
+    // ---- SCRIPT PARA O MODAL DE AVISOS ----
+    const modalAvisos = document.getElementById('modalAvisos');
+    if (modalAvisos) {
+        const avisosContainer = modalAvisos.querySelector('#avisos-container');
+        const allAvisos = Array.from(avisosContainer.querySelectorAll('.aviso-item'));
+        const emptyState = avisosContainer.querySelector('.empty-state');
+        
+        const applyFiltersAndSort = () => {
+            const activeFilter = modalAvisos.querySelector('.filter-btn-group .btn.active')?.dataset.filterStatus || 'todos';
+            let hasVisibleItems = false;
+            
+            allAvisos.sort((a, b) => b.dataset.timestamp - a.dataset.timestamp)
+                     .forEach(aviso => avisosContainer.appendChild(aviso));
+
+            allAvisos.forEach(aviso => {
+                const status = aviso.dataset.status;
+                const shouldShow = activeFilter === 'todos' || status === activeFilter;
+                aviso.style.display = shouldShow ? '' : 'none';
+                if (shouldShow) hasVisibleItems = true;
+            });
+            
+            if (emptyState) {
+                emptyState.style.display = hasVisibleItems ? 'none' : '';
+            }
+        };
+
+        modalAvisos.querySelectorAll('.filter-btn-group .btn').forEach(button => {
+            button.addEventListener('click', function() {
+                modalAvisos.querySelector('.filter-btn-group .btn.active')?.classList.remove('active');
+                this.classList.add('active');
+                applyFiltersAndSort();
+            });
+        });
+        
+        modalAvisos.addEventListener('shown.bs.modal', applyFiltersAndSort);
+
+        // Delegação de eventos para os botões dentro dos cards de aviso
+        avisosContainer.addEventListener('click', function(event) {
+            const visualizarBtn = event.target.closest('.visualizar-aviso-btn');
+            const marcarBtn = event.target.closest('.marcar-como-visualizado-btn');
+
+            if (visualizarBtn) {
+                const avisoId = visualizarBtn.dataset.avisoId;
+                const collapseElement = document.getElementById(`collapseAviso${avisoId}`);
+                // Marcar como lido ao expandir, se não estiver já expandido
+                if (collapseElement && !collapseElement.classList.contains('show')) {
+                    marcarAvisoComoVisualizado(avisoId, marcarBtn);
+                }
+            } else if (marcarBtn) {
+                event.preventDefault();
+                marcarAvisoComoVisualizado(marcarBtn.dataset.avisoId, marcarBtn);
+            }
+        });
+    }
+
+    /**
+     * Função para marcar um aviso como visualizado via AJAX.
+     * @param {string} avisoId - O ID do aviso.
+     * @param {HTMLElement} buttonElement - O botão que acionou a ação.
+     */
+    async function marcarAvisoComoVisualizado(avisoId, buttonElement) {
+        const avisoCard = document.querySelector(`.aviso-item[data-aviso-id="${avisoId}"]`);
+        // Não faz nada se já foi visualizado
+        if (!avisoId || !avisoCard || avisoCard.dataset.status === 'visualizado') {
+            return;
+        }
+
+        if (buttonElement) buttonElement.classList.add('loading');
+
+        try {
+            const response = await fetch(`{% url 'confirmar_visualizacao_aviso' 0 %}`.replace('0', avisoId), {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken'),
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: JSON.stringify({})
+            });
+
+            if (!response.ok) {
+                throw new Error(`Erro na rede: ${response.statusText}`);
+            }
+
+            const data = await response.json();
+
+            if (data.status === 'success' || data.status === 'already_viewed') {
+                // Atualiza o card
+                avisoCard.dataset.status = 'visualizado';
+                const statusBadge = document.getElementById(`status-aviso-${avisoId}`);
+                if (statusBadge) {
+                    statusBadge.textContent = 'Visto';
+                    statusBadge.className = 'badge bg-success ms-2';
+                    statusBadge.innerHTML += ' <i class="fas fa-check"></i>';
+                }
+                if(buttonElement) buttonElement.remove();
+            } else {
+                throw new Error(data.message || 'Falha ao atualizar o status do aviso.');
+            }
+
+        } catch (error) {
+            console.error(`Erro ao marcar aviso ${avisoId} como lido:`, error);
+            showModalAlert('#modal-alert-placeholder', `Ocorreu um erro: ${error.message}`);
+        } finally {
+            if (buttonElement) buttonElement.classList.remove('loading');
+        }
     }
 });
 </script>
