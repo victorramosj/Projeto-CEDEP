@@ -331,7 +331,7 @@ def tela_lacuna_view(request):
     lacunas_list = lacunas_list.order_by('-criado_em')
     
     # Paginação, como antes.
-    paginator = Paginator(lacunas_list, 9)
+    paginator = Paginator(lacunas_list, 8)
     page_number = request.GET.get('page')
     lacunas_page = paginator.get_page(page_number)
 
@@ -385,7 +385,7 @@ def tela_problema_view(request):
     todos_os_setores = Setor.objects.all().order_by('nome')
 
     # Paginação
-    paginator = Paginator(problemas_list, 9) 	# 9 itens por página
+    paginator = Paginator(problemas_list, 6) 	# 6 itens por página
     page_number = request.GET.get('page')
     problemas_page = paginator.get_page(page_number)
     total_problemas = problemas_list.count() 	# Total de problemas filtrados

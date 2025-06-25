@@ -23,7 +23,15 @@ table .form-select {
 
 {% block content %}
 <div class="container mt-4 ">
-    <h3>Problemas (<span id="problemas-count">{{ total_problemas }}</span>)</h3>
+
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-center mb-4">
+        <h2 class="mb-3 mb-md-0 ">
+            Problemas (<span id="problemas-count">{{ total_problemas }}</span>)
+        </h2>
+        <a href="javascript:history.back()" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left me-2"></i> Voltar
+        </a>
+    </div>
 
     <div class="col-12 mt-3">
         <div class="d-flex justify-content-between gap-2 mb-2">
