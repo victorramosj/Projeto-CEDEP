@@ -58,10 +58,8 @@
         @media (max-width: 991.98px) { .header-escola { flex-direction: column; align-items: center; } .info-escola { border-radius: 12px 12px 0 0; width: 100%; } .info-escola-detalhes { text-align: center; } .info-escola-detalhes p { justify-content: center; } .imagem-escola { width: 100%; height: 250px; } .imagem-escola img { border-radius: 0 0 12px 12px; } }
     </style>
 {% endblock %}
+
 {% block content %}
-<!-- ==================================================================
-    Dashboard da Escola
-    ================================================================== -->
 <div class="container mt-4">
     <div class="header-escola">
         <div class="info-escola">
@@ -83,10 +81,6 @@
             {% endif %}
         </a>
     </div>
-
-    <!-- ==================================================================
-    Indicadores de Lacunas e Problemas
-    ================================================================== -->
 
     <div class="row">
         <div class="col-lg-8 mb-4 mb-lg-0">
@@ -130,15 +124,10 @@
         </div>
     </div>
 
-
-    <!-- ==================================================================
-    Histórico de Problemas 
-    ================================================================== -->
     <div class="mt-5">
         <div class="d-flex justify-content-between align-items-center mb-3">
             <h5 class="titulo-secao mb-0">HISTÓRICO DE PROBLEMAS</h5>
-            <a href="{% url 'lista_problemas_escola'   escola_id=escola.id %}" class="btn btn-relatar" style="width: auto;">Ver Mais</a>
-            
+            <a href="{% url 'tela_problemas' %}" class="btn btn-relatar" style="width: auto;">Ver Mais</a>
         </div>
         <div class="row g-4">
             <div class="col-xl-3 col-md-6"><div class="card-status resolvidos"><div class="numero">{{ problemas_resolvidos }}</div><div class="descricao"><i class="fas fa-check-circle"></i> Resolvidos</div></div></div>
@@ -154,8 +143,7 @@
     <div class="mt-5">
         <div class="d-flex justify-content-between align-items-center mb-3">
             <h5 class="titulo-secao mb-0">HISTÓRICO DE LACUNAS</h5>
-            <a href="{% url 'lista_lacunas_escola' escola_id=escola.id %}" class="btn btn-relatar" style="width: auto;">Ver Mais</a>
-
+            <a href="{% url 'tela_lacunas' %}" class="btn btn-relatar" style="width: auto;">Ver Mais</a>
         </div>
         <div class="row g-4">
             <div class="col-xl-3 col-md-6"><div class="card-status resolvidos"><div class="numero">{{ lacunas_resolvidas }}</div><div class="descricao"><i class="fas fa-check-circle"></i> Resolvidas</div></div></div>
@@ -218,9 +206,6 @@
     </div>
 </div>
 
-<!-- ==================================================================
-    Modal para exibir todos os avisos
-    ================================================================== -->
 <div class="modal fade" id="modalAvisos" tabindex="-1" aria-labelledby="modalAvisosLabel" aria-hidden="true">
     <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
         <div class="modal-content">

@@ -90,7 +90,7 @@ table .form-select {
                     </tr>
                 </thead>
                 <tbody>
-                    {% for problema in problemas %}
+                    {% for problema in problemas_page %}
                         <tr id="problema-row-{{ problema.id }}">
                             <td><input type="checkbox" name="selected_problemas" value="{{ problema.id }}"></td>
                             <td class="text-start">{{ problema.descricao}}</td>
