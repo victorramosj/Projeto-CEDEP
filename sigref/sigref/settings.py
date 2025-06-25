@@ -24,7 +24,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Domínios permitidos
 ALLOWED_HOSTS = [
     'projeto-cedep-production.up.railway.app',
-    'grefloresta.com.br',
+    'cedepegrefloresta.com.br',
     'localhost',
     '127.0.0.1'
 ]
@@ -93,7 +93,7 @@ env = environ.Env()
 environ.Env.read_env()  # Isso carrega as variáveis do .env local (não usado no Railway)
 
 SECRET_KEY = env("SECRET_KEY", default="chave_secreta_fallback")
-DEBUG = env.bool("DEBUG", default=False)
+DEBUG = env.bool("DEBUG", default=True)
 
 
 # Em bytes: 10 MB para toda a requisição, por exemplo
@@ -103,18 +103,12 @@ FILE_UPLOAD_MAX_MEMORY_SIZE = 5 * 1024 * 1024
 # Proteção CSRF (se usar formulários)
 CSRF_TRUSTED_ORIGINS = [
     'https://projeto-cedep-production.up.railway.app',
-    'https://grefloresta.com.br',
-    'projeto-cedep-production-f58c.up.railway.app' 
+    'https://cedepegrefloresta.com.br'
 ]
 # Configurações de HTTPS (obrigatório para produção)
-if DEBUG:
-    SECURE_SSL_REDIRECT = False  # Desative para testar
-    SESSION_COOKIE_SECURE = False  # Cookies só via HTTPS
-    CSRF_COOKIE_SECURE = False  # Proteção CSRF só via HTTPS
-else:
-    SECURE_SSL_REDIRECT = True
-    SESSION_COOKIE_SECURE = True
-    CSRF_COOKIE_SECURE = True
+SECURE_SSL_REDIRECT = False  # Desative para testar
+SESSION_COOKIE_SECURE = False  # Cookies só via HTTPS
+CSRF_COOKIE_SECURE = False # Proteção CSRF só via HTTPS
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')  # Para proxies como Railway
 
 # Arquivos estáticos (se aplicável)
@@ -124,30 +118,30 @@ STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 LOGOUT_REDIRECT_URL = 'home'
 
-# Banco de dados online se colocar 3 aspas simples vira comentário
-DATABASE_URL = os.getenv('DATABASE_URL', 'postgresql://postgres:vDadjhfHsAXBQkxbEkskxbOZSRhogYvs@mainline.proxy.rlwy.net:32588/railway')  # Coloque sua URL como fallback
+# Configure as variáveis antes da configuração do banco
+'''DATABASE_URL = os.getenv('DATABASE_URL', 'postgresql://postgres:HKhnFzXggtmylfsSKcPbVGfQEvataqYo@shortline.proxy.rlwy.net:13741/railway')  # Coloque sua URL como fallback
 
 DATABASES = {
     'default': dj_database_url.config(
         default=DATABASE_URL,
         conn_max_age=600,
-        ssl_require=False
+        ssl_require=True
     )
 }
-
+'''
 import os
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 
-'''# Configuração para banco de dados SQLite (útil para testes) Local
+# Configuração para banco de dados SQLite (útil para testes)
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
     }
-}'''
+}
 
 # Password validation
 # https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators
@@ -176,7 +170,8 @@ REST_FRAMEWORK = {
         'rest_framework.authentication.SessionAuthentication',
         'rest_framework.authentication.TokenAuthentication',
     ],
-       
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
+    'PAGE_SIZE': 10,
     
 }
 
