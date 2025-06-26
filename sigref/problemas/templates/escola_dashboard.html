@@ -116,7 +116,6 @@
         .titulo-secao {
             color: var(--text-dark);
             font-weight: 700;
-            margin-bottom: 1.5rem !important;
             padding-bottom: 0.5rem;
             border-bottom: 3px solid var(--primary-color);
             display: inline-block;
@@ -281,18 +280,21 @@
         
         /* Small devices (landscape phones, 576px to 767px) */
         @media (max-width: 767.98px) {
-            .info-escola { padding: 1.5rem; }
-            .info-escola h4 { font-size: 1.1rem; }
-            .info-escola-detalhes { grid-template-columns: 1fr; text-align: center; gap: 0.8rem; }
-            .info-escola-detalhes p { justify-content: center; }
+            .info-escola { padding: 1.1rem; }
+            .info-escola h4 { font-size: 1.1rem; justify-content: center;}
+            .info-escola-detalhes { grid-template-columns: 1fr; text-align: center; gap: 0.7rem; }
+            .info-escola-detalhes p { justify-content: left; font-size: 0.7rem;}
+            .info-escola-detalhes i { font-size: 0.8rem; }
 
             .card-indicador h1 { font-size: 3rem; }
             .card-indicador { padding: 1.5rem; }
             .avisos-importantes { padding: 1.5rem; margin-top: 1.5rem; }
 
-            .titulo-secao { font-size: 1.15rem; }
+            .titulo-secao { font-size: 1.1rem;  }
             .card-status .numero { font-size: 2.25rem; }
             .card-status .descricao { font-size: 0.9rem; }
+
+            .btnDetalhe{ font-size: 0.7rem;}
         }
         
     </style>
@@ -384,8 +386,8 @@
     {#-- Seção Histórico de Problemas --#}
     <div class="mt-5">
         <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
-            <h5 class="titulo-secao mb-0">Histórico de Problemas</h5>
-            <a href="{% url 'detalhes_problemas' escola_id=escola.id %}" class="btn btn-sm btn-outline-primary">Ver Detalhes</a>
+            <h5 class="titulo-secao">Histórico de Problemas</h5>
+            <a href="{% url 'detalhes_problemas' escola_id=escola.id %}" class="btnDetalhe btn btn-sm btn-outline-primary">Ver Detalhes</a>
         </div>
         <div class="row g-3 g-lg-4">
             <div class="col-sm-6 col-xl-3"><div class="card-status resolvidos"><div class="numero">{{ problemas_resolvidos }}</div><div class="descricao"><i class="fas fa-check-circle"></i> Resolvidos</div></div></div>
@@ -398,8 +400,8 @@
     {#-- Seção Histórico de Lacunas --#}
     <div class="mt-5 mb-5">
         <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
-            <h5 class="titulo-secao mb-0">Histórico de Lacunas</h5>
-            <a href="{% url 'tela_lacunas' escola_id=escola.id %}" class="btn btn-sm btn-outline-primary">Ver Detalhes</a>
+            <h5 class="titulo-secao">Histórico de Lacunas</h5>
+            <a href="{% url 'tela_lacunas' escola_id=escola.id %}" class="btnDetalhe btn btn-sm btn-outline-primary">Ver Detalhes</a>
         </div>
         <div class="row g-3 g-lg-4">
             <div class="col-sm-6 col-xl-3"><div class="card-status resolvidos"><div class="numero">{{ lacunas_resolvidas }}</div><div class="descricao"><i class="fas fa-check-circle"></i> Resolvidas</div></div></div>
