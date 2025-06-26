@@ -110,7 +110,14 @@ def importar_usuarios(setores):
             user, user_created = User.objects.get_or_create(username=username)
             if user_created:
                 user.set_password(senha)
-                user.save()
+
+            # Marcar como staff se não for escola
+            if tipo != 'ESCOLA':
+                user.is_staff = True
+            else:
+                user.is_staff = False  # opcional, para garantir
+
+            user.save()
 
             greuser, gre_created = GREUser.objects.get_or_create(
                 user=user,
@@ -129,6 +136,7 @@ def importar_usuarios(setores):
             associar_setor_por_username(greuser, setores)
             
             print(f"• Usuário: {greuser.nome_completo} [{greuser.tipo_usuario}]")
+
 
 def importar_escolas():
     path = os.path.join(settings.BASE_DIR, 'escolas.csv')

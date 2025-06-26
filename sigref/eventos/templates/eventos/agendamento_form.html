@@ -44,10 +44,11 @@
             <!-- Sala -->
             <!-- Substituir a seção de "Sala" por "Salas" -->
 <div class="mb-3">
-  <label class="form-label" for="id_salas">Salas</label>
-  {{ form.salas }}
-  {% for error in form.salas.errors %}
-  <div class="invalid-feedback">{{ error }}</div>
+  <label for="id_salas" class="form-label">Salas</label>
+  {% for checkbox in form.salas %}
+    <div class="form-check">
+      {{ checkbox.tag }} {{ checkbox.choice_label }}
+    </div>
   {% endfor %}
 </div>
 

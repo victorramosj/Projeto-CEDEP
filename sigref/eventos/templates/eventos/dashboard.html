@@ -136,7 +136,6 @@
 
 {% block content %}
 <div class="container-fluid px-4">
-    {% if user.is_authenticated and user.is_staff %}
     <!-- Cards de Resumo -->
     <div class="row g-4 my-2">
         <div class="col-12 col-md-4">
@@ -186,7 +185,7 @@
         </div>
     </div>
 
-    
+    {% if user.is_authenticated and user.is_staff %}
     <div class="row g-3 mb-4">
         <div class="col-md-4">
             <a href="{% url 'evento_form' %}" class="btn btn-primary w-100 btn-md hover-scale">

@@ -27,7 +27,7 @@
 <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 g-4">
     {% for escola in escolas %}
     <div class="col">
-        <a href="{% url 'questionarios_escola' escola.id %}" class="text-decoration-none">
+        <a href="{% url 'dashboard_escola' escola.id %}" class="text-decoration-none">
             <div class="card shadow h-100 hover-effect">
                 {% if escola.foto_fachada %}
                 <img src="{{ escola.foto_fachada.url }}" class="card-img-top" alt="Fachada {{ escola.nome }}"
@@ -51,21 +51,13 @@
                             <span class="small">Realizar Monitoramento</span>
                         </a>
 
-                        <!-- Botão Escola - Cor Verde -->
-                        <a href="{% url 'dashboard_escola' escola.id %}"
-                            class="btn btn-outline-success btn-sm flex-fill d-flex align-items-center justify-content-center"
-                            style="min-width: 0;">
-                            <i class="fas fa-school me-1"></i>
-                            <span class="small">Escola</span>
-                        </a>
-
                         {% if not user.greuser.is_monitor %}
                         <button
                             class="btn btn-outline-secondary btn-sm flex-fill d-flex align-items-center justify-content-center"
                             data-bs-toggle="modal" data-bs-target="#relatorioMonitoramentosModal"
                             data-escola-id="{{ escola.id }}" style="min-width: 0;">
                             <i class="fas fa-file-alt me-1"></i>
-                            <span class="small">Relatório</span>
+                            <span class="small">Relatório de monitoramentos</span>
                         </button>
                         {% endif %}
                         

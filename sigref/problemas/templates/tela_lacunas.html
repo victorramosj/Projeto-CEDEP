@@ -26,7 +26,14 @@ table .form-select {
 
 {% block content %}
 <div class="container mt-4">
-    <h3>Lacunas (<span id="lacunas-count">{{ todas_lacunas }}</span>)</h3>
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-center mb-4">
+        <h2 class="mb-3 mb-md-0 ">
+            Lacunas (<span id="lacunas-count">{{ todas_lacunas }}</span>)
+        </h2>
+        <a href="#" id="btn-voltar-recarregar" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left me-2"></i> Voltar
+        </a>
+    </div>
 
     <div class="col-12 mt-3">
         <div class="d-flex justify-content-between gap-2 mb-2">
@@ -122,6 +129,27 @@ table .form-select {
 
 <script>
 document.addEventListener('DOMContentLoaded', () => {
+
+    // ==================================================================
+    // CÓDIGO NOVO: LÓGICA PARA VOLTAR E RECARREGAR A PÁGINA ANTERIOR
+    // ==================================================================
+    const botaoVoltar = document.getElementById('btn-voltar-recarregar');
+    if (botaoVoltar) {
+        botaoVoltar.addEventListener('click', function(event) {
+            // 1. Impede a ação padrão do link (que seria pular para o topo da página)
+            event.preventDefault(); 
+
+            // 2. Verifica se a página de referência (anterior) existe.
+            //    Isso evita erros caso a página atual tenha sido aberta em uma nova aba.
+            if (document.referrer) {
+                // 3. Navega para a URL anterior. Isso força um recarregamento completo da página.
+                window.location.href = document.referrer;
+            } else {
+                // 4. Caso não haja uma página de referência, usa o "history.back()" como um fallback seguro.
+                window.history.back();
+            }
+        });
+    }
 
     // ==================================================================
     // PARTE 1: LÓGICA PARA OS FILTROS (MÉTODO MAIS SIMPLES E ROBUSTO)

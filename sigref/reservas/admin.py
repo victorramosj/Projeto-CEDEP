@@ -23,7 +23,7 @@ class CamaAdmin(admin.ModelAdmin):
 
 @admin.register(Hospede)
 class HospedeAdmin(admin.ModelAdmin):
-    list_display = ('nome', 'cpf', 'email', 'telefone', 'criado_em')
+    list_display = ('nome', 'cpf', 'email', 'telefone', 'endereco', 'instituicao', 'criado_em')
     search_fields = ('nome', 'cpf', 'email')
     readonly_fields = ('criado_em', 'atualizado_em')
 

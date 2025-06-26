@@ -95,19 +95,19 @@
 {% block content %}
 <div class="container-fluid px-4">
     <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-2">
-        <h2 class="mb-0">Dashboard de Monitoramentos</h2>
+        <h2 class="mb-0"><i class="fas fa-chart-bar me-2"></i>Painel de Monitoramentos</h2>
         <div class="d-flex flex-wrap align-items-center gap-2">
             <a href="{% url 'selecionar_escola' %}" class="btn btn-success btn-sm d-flex align-items-center">
                 <i class="fas fa-school me-2"></i> Escolas
             </a>
 
             <a href="{% url 'fluxo_monitoramento_setores' %}" class="btn btn-primary btn-sm d-flex align-items-center">
-                <i class="fas fa-chart-pie me-2"></i> Monitoramento por Setores
+                <i class="fas fa-plus me-2"></i> Criar Questionários
             </a>
 
             <button class="btn btn-secondary btn-sm d-flex align-items-center" data-bs-toggle="modal"
                 data-bs-target="#relatorioMonitoramentosModal">
-                <i class="fas fa-file-alt me-2"></i> Relatório por Usuário ou Setor
+                <i class="fas fa-file-alt me-2"></i> Relatório
             </button>
 
             {% include "monitoramentos/modal_selecionar_usuarios.html" %}
@@ -134,7 +134,7 @@
 
 <!-- Cards de Resumo -->
 <div class="row g-4 mb-4">
-    <div class="col-md-2">
+    <div class="col-lg-2 col-md-4 ">
         <div class="card card-stat shadow border-primary h-100">
             <div class="card-body position-relative">
                 <h5 class="card-title text-primary mb-3">
@@ -160,7 +160,7 @@
         </div>
     </div>
 
-    <div class="col-md-2">
+    <div class="col-lg-2 col-md-4 ">
         <div class="card card-stat shadow border-warning h-100">
             <div class="card-body position-relative">
                 <h5 class="card-title text-warning mb-3">
@@ -172,7 +172,7 @@
                 </div>
                 <div class="mt-3">
                     <div class="d-flex justify-content-between mb-1">
-                        <span class="small">Taxa de Pendência</span>
+                        <span class="small">% de Pendência</span>
                         <span class="small fw-bold">{% widthratio monitoramentos_pendentes total_monitoramentos 100%}%</span>
                     </div>
                     <div class="progress progress-thin">
@@ -184,7 +184,7 @@
         </div>
     </div>
 
-    <div class="col-md-2">
+    <div class="col-lg-2 col-md-4 ">
         <div class="card card-stat shadow border-info h-100">
             <div class="card-body position-relative">
                 <h5 class="card-title text-info mb-3">
@@ -208,7 +208,7 @@
     </div>
     
     <!-- Problemas Reportados -->
-    <div class="col-md-2">
+   <div class="col-lg-2 col-md-4 ">
         <div class="card card-stat shadow border-danger h-100">
             <div class="card-body position-relative">
                 <h5 class="card-title text-danger mb-3">
@@ -236,7 +236,7 @@
         </div>
     </div>
     <!-- Lacunas -->
-    <div class="col-md-2">
+    <div class="col-lg-2 col-md-4 ">
         <div class="card card-stat shadow border-warning h-100">
             <div class="card-body position-relative">
                 <h5 class="card-title text-warning mb-3">
@@ -264,11 +264,11 @@
         </div>
     </div>
     <!-- Avisos Importantes -->
-    <div class="col-md-2">
+    <div class="col-lg-2 col-md-4 ">
         <div class="card card-stat shadow border-info h-100">
             <div class="card-body position-relative">
                 <h5 class="card-title text-info mb-3">
-                    <i class="fas fa-bell me-2"></i>Avisos Importantes
+                    <i class="fas fa-bell me-2"></i>Avisos
                 </h5>
                 <div class="d-flex justify-content-between align-items-center">
                     <p class="display-5 fw-bold mb-0">{{ avisos_importantes.count }}</p>
@@ -297,8 +297,8 @@
 <!-- Visão Geral dos Monitoramentos -->
 <div class="card shadow mb-4">
     <div class="card-header bg-light py-3">
-        <div class="d-flex justify-content-between align-items-center">
-            <h5 class="mb-0"><i class="fas fa-tasks me-2"></i>Visão Geral dos Monitoramentos</h5>
+        <div class="d-flex justify-content-center align-items-center">
+            
             <form method="get" class="d-flex align-items-center gap-2">
             <select class="form-select form-select-sm" style="width: auto;" name="period" onchange="this.form.submit()">
                 <option value="7" {% if request.GET.period == '7' %}selected{% endif %}>Últimos 7 dias</option>
@@ -612,7 +612,7 @@
     </div>
 </div>
 
-</div>
+
 {% endblock %}
 
 {% block scripts %}

@@ -29,8 +29,8 @@ from rest_framework.views import APIView
 from monitoramento.models import Escola, GREUser, Setor
 
 from .forms import AvisoForm, LacunaForm, ProblemaUsuarioForm
-from .models import (AvisoImportante, ConfirmacaoAviso, Lacuna,ProblemaUsuario, STATUS_CHOICES)
-from .serializers import (AvisoImportanteSerializer, LacunaSerializer,ProblemaUsuarioSerializer)
+from .models import (AvisoImportante, ConfirmacaoAviso, Lacuna, ProblemaUsuario, STATUS_CHOICES)
+from .serializers import (AvisoImportanteSerializer, LacunaSerializer, ProblemaUsuarioSerializer)
 
 # ADICIONADO DEPOIS 
 from django.shortcuts import get_object_or_404, redirect
@@ -331,7 +331,7 @@ def tela_lacuna_view(request):
     lacunas_list = lacunas_list.order_by('-criado_em')
     
     # Paginação, como antes.
-    paginator = Paginator(lacunas_list, 9)
+    paginator = Paginator(lacunas_list, 8)
     page_number = request.GET.get('page')
     lacunas_page = paginator.get_page(page_number)
 
@@ -360,6 +360,7 @@ def tela_problema_view(request):
     escola_query = request.GET.get('escola', '') 	# Pesquisa pela escola
     data_filter = request.GET.get('data', '')
     status_filter = request.GET.get('status', '')
+    setor_filter = request.GET.get('setor', '')
 
     # Filtro por Escola
     if escola_query:
@@ -377,19 +378,26 @@ def tela_problema_view(request):
     if status_filter:
         problemas_list = problemas_list.filter(status=status_filter)
 
+    # Filtro por Setor
+    if setor_filter:
+        problemas_list = problemas_list.filter(setor__id=setor_filter)
+
+    todos_os_setores = Setor.objects.all().order_by('nome')
+
     # Paginação
-    paginator = Paginator(problemas_list, 9) 	# 9 itens por página
+    paginator = Paginator(problemas_list, 6) 	# 6 itens por página
     page_number = request.GET.get('page')
     problemas_page = paginator.get_page(page_number)
     total_problemas = problemas_list.count() 	# Total de problemas filtrados
 
     # Passar os dados para o template
     context = {
-        'problemas_page': problemas_page,
+        'problemas': problemas_page,
         'total_problemas': total_problemas, 	# Total de problemas filtrados
         'search_query': escola_query, 	# Termo de busca (para manter na barra de pesquisa)
         'request': request, # Passa o request para o template
         'status_choices': STATUS_CHOICES, #Passa as opções para o template
+        'todos_os_setores': todos_os_setores,
     }
 
     return render(request, 'tela_problemas.html', context)
@@ -554,26 +562,30 @@ def criar_aviso_view(request):
 def editar_aviso_view(request, aviso_id):
     aviso = get_object_or_404(AvisoImportante, id=aviso_id)
     gre_user = request.user.greuser
-    
-    # Verificação de permissão para garantir que o usuário possa editar o aviso
+
+    # Verificação de permissão (sem alterações)
     if aviso.criado_por != gre_user and not gre_user.is_admin():
         messages.error(request, "Você não tem permissão para editar este aviso.")
         return redirect('listar_avisos')
 
-    # Se for um POST, tentamos editar o aviso
     if request.method == 'POST':
         form = AvisoForm(request.POST, instance=aviso)
         if form.is_valid():
-            form.save()
-            messages.success(request, "Aviso editado com sucesso!")
-            return redirect('listar_avisos') 	# Redireciona após salvar
+            # 1. Salva as alterações (título, mensagem, etc.) no aviso.
+            aviso_editado = form.save()
+
+            # 2. Redefine o status de TODAS as confirmações associadas para 'pendente'.
+            #    Esta é a única linha necessária para a nova lógica.
+            aviso_editado.confirmacoes.all().update(status='pendente')
+
+            messages.success(request, "Aviso editado com sucesso! O status foi redefinido para 'Pendente' para todas as escolas.")
+            return redirect('listar_avisos')
         else:
-            messages.error(request, "Houve um erro ao editar o aviso.")
-            return render(request, 'avisos/editar_aviso.html', {'form': form, 'aviso': aviso})
-    
-    # Se for um GET, mostramos o formulário de edição
-    form = AvisoForm(instance=aviso)
-    return render(request, 'problemas/listar_avisos.html', {'form': form, 'aviso': aviso})
+            messages.error(request, "Houve um erro ao editar o aviso. Verifique os dados inseridos.")
+            return redirect('listar_avisos')
+
+    # Se a requisição for GET, apenas redireciona para a lista.
+    return redirect('listar_avisos')
 
 # =============================================================================
 #  VIEW DA EXCLUSÃO DE AVISO
@@ -704,49 +716,187 @@ def dashboard(request):
 #  VIEW DA CONFIRMAÇÃO DE VISUALIZAÇÃO DE AVISO
 # =============================================================================
 # Em problemas/views.py
+from django.shortcuts import get_object_or_404
+from django.http import JsonResponse
+from django.contrib.auth.decorators import login_required
+from .models import AvisoImportante, ConfirmacaoAviso, GREUser # Certifique-se de importar os modelos
 
 @login_required
 def confirmar_visualizacao_aviso(request, aviso_id):
-    # 1. Verifica se o método da requisição é POST
-    if request.method == 'POST':
-        # 2. **CONTROLE DE PERMISSÃO: Verifica se o usuário logado é do tipo "escola"**
-        # Pelo seu model, request.user.greuser.is_escola é a forma correta.
-        # Adicione um try-except para caso o greuser não exista, evitando erro 500.
-        try:
-            if not request.user.greuser.is_escola:
-                return JsonResponse({'status': 'error', 'message': 'Permissão negada. Apenas usuários do tipo escola podem marcar avisos como visualizados.'}, status=403)
-        except GREUser.DoesNotExist:
-            return JsonResponse({'status': 'error', 'message': 'Perfil de usuário não encontrado.'}, status=400)
-        except AttributeError: # Caso request.user.greuser não exista
-            return JsonResponse({'status': 'error', 'message': 'Perfil de usuário inválido ou não associado.'}, status=400)
+    # 1. Garante que a requisição é do tipo POST
+    if request.method != 'POST':
+        return JsonResponse({'status': 'error', 'message': 'Método não permitido.'}, status=405)
 
-
-        # Recupera o aviso com o ID fornecido
-        aviso = get_object_or_404(AvisoImportante, id=aviso_id)
-
-        # Assumindo que request.user.greuser.escolas.first() retorne a escola correta para o usuário logado
-        escola_do_usuario = request.user.greuser.escolas.first() 
-
-        if not escola_do_usuario:
-            return JsonResponse({'status': 'error', 'message': 'Escola do usuário não encontrada ou não associada. Não é possível marcar o aviso.'}, status=400)
+    # 2. Bloco de verificação de perfil e permissão
+    try:
+        gre_user = request.user.greuser
+        if not gre_user.is_escola:
+            return JsonResponse({'status': 'error', 'message': 'Apenas usuários de escolas podem visualizar avisos.'}, status=403)
         
-        # Opcional: Você pode adicionar uma verificação extra aqui para garantir que o aviso pertence a essa escola
-        if aviso.escola != escola_do_usuario:
-            return JsonResponse({'status': 'error', 'message': 'Permissão negada. Este aviso não é para sua escola.'}, status=403)
+        escola_do_usuario = gre_user.escolas.first()
+        if not escola_do_usuario:
+            return JsonResponse({'status': 'error', 'message': 'Usuário não está associado a nenhuma escola.'}, status=400)
+            
+    except (GREUser.DoesNotExist, AttributeError):
+        return JsonResponse({'status': 'error', 'message': 'Perfil de usuário inválido ou não encontrado.'}, status=400)
 
+    # 3. Recupera o aviso ou retorna erro 404
+    aviso = get_object_or_404(AvisoImportante, id=aviso_id)
 
-        # Tenta recuperar a confirmação existente ou cria uma nova
-        confirmacao, created = ConfirmacaoAviso.objects.get_or_create(
-            aviso=aviso,
-            escola=escola_do_usuario
-        )
+    # 4. Busca ou cria o registro de confirmação.
+    #    Esta é a verificação de associação correta e suficiente.
+    #    Ele garante que estamos agindo sobre a relação entre ESTE aviso e ESTA escola.
+    confirmacao, created = ConfirmacaoAviso.objects.get_or_create(
+        aviso=aviso,
+        escola=escola_do_usuario
+    )
 
-        # Caso ainda não tenha sido visualizado, muda o status
-        if confirmacao.status == 'pendente':
-            confirmacao.confirmar_visualizado()
-            return JsonResponse({'status': 'success', 'message': 'Aviso marcado como visualizado.'})
-        else:
-            return JsonResponse({'status': 'already_viewed', 'message': 'Aviso já havia sido visualizado.'})
+    # 5. Altera o status se estiver pendente
+    if confirmacao.status == 'pendente':
+        confirmacao.confirmar_visualizado() # Chama o método do seu modelo
+        return JsonResponse({'status': 'success', 'message': 'Aviso marcado como visualizado.'})
     
-    # Se a requisição não for POST, retorne um erro de método não permitido
-    return JsonResponse({'status': 'error', 'message': 'Método não permitido.'}, status=405)
+    # 6. Se o status já era 'visualizado', apenas informa
+    else:
+        return JsonResponse({'status': 'already_viewed', 'message': 'Este aviso já havia sido visualizado.'})
+
+# =============================================================================
+#  VIEW DA LISTA DE PROBLEMAS POR ESCOLA 
+# =============================================================================
+@login_required
+def lista_problemas_por_escola(request, escola_id):
+    """
+    Exibe uma lista paginada e filtrável de problemas para uma escola específica,
+    respeitando as permissões do usuário logado.
+    """
+    escola = get_object_or_404(Escola, pk=escola_id)
+
+    # 1. VERIFICAÇÃO DE PERMISSÃO (LÓGICA ESSENCIAL)
+    # Garante que o usuário só pode ver dados de escolas que lhe são permitidas.
+    if not request.user.greuser.pode_acessar_escola(escola):
+        raise PermissionDenied("Você não tem permissão para acessar os dados desta escola.")
+
+    # 2. LÓGICA DE FILTRAGEM E PESQUISA
+    # Pega a lista de todos os problemas apenas daquela escola como base.
+    queryset = ProblemaUsuario.objects.filter(escola=escola).order_by('-criado_em')
+
+    # Parametros de filtro da URL
+    status_filter = request.GET.get('status', '')
+    data_filter = request.GET.get('data', '')
+    setor_filter = request.GET.get('setor', '')
+
+    # Filtra por status, se o parâmetro 'status' for passado na URL (ex: ?status=P)
+    status_filter = request.GET.get('status')
+    if status_filter in ['P', 'R', 'E']: # 'P'endente, 'R'esolvido, 'E'm Andamento
+        queryset = queryset.filter(status=status_filter)
+    
+    # Filtra por termo de pesquisa, se houver
+    search_query = request.GET.get('q')
+    if search_query:
+        # Pesquisa na descrição do problema (ajuste o campo se necessário)
+        queryset = queryset.filter(descricao__icontains=search_query)
+
+    # Filtra por data
+    if data_filter:
+        hoje = timezone.now()
+        if data_filter == '1':  # Última semana
+            queryset = queryset.filter(criado_em__gte=hoje - timedelta(weeks=1))
+        elif data_filter == '2':  # Último mês
+            queryset = queryset.filter(criado_em__gte=hoje - timedelta(days=30))
+        elif data_filter == '3':  # Último ano
+            queryset = queryset.filter(criado_em__gte=hoje - timedelta(days=365))
+
+    # Filtra por setor
+    if setor_filter:
+        queryset = queryset.filter(setor__id=setor_filter)
+    
+    todos_os_setores = Setor.objects.all().order_by('nome')
+
+    # 3. LÓGICA DE PAGINAÇÃO
+    # Evita que páginas com centenas de problemas fiquem lentas.
+    paginator = Paginator(queryset, 10) # Mostra 10 problemas por página
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    context = {
+        'escola': escola,
+        'problemas': page_obj, # Envia o objeto da página para o template, não a lista inteira
+        'total_problemas': paginator.count, # Total de problemas após os filtros
+        'status_choices': STATUS_CHOICES, # Para popular o dropdown de status
+        'request': request, # Passar o request é útil para o template
+        
+        # Manter o estado dos filtros na interface
+        'status_filter': status_filter,
+        'search_query': search_query,
+        'data_filter': data_filter, 
+        'setor_filter': setor_filter,
+
+        # Para popular o dropdown de setores
+        'todos_os_setores': todos_os_setores,
+    }
+    
+    return render(request, 'tela_problemas.html', context)
+
+# =============================================================================
+#  VIEW DA LISTA DE LACUNAS POR ESCOLA 
+# =============================================================================
+from django.core.exceptions import PermissionDenied
+@login_required
+def lista_lacunas_por_escola(request, escola_id):
+    """
+    Exibe uma lista paginada e filtrável de lacunas para uma escola específica,
+    respeitando as permissões do usuário logado.
+    """
+    escola = get_object_or_404(Escola, pk=escola_id)
+
+    # 1. VERIFICAÇÃO DE PERMISSÃO
+    if not request.user.greuser.pode_acessar_escola(escola):
+        raise PermissionDenied("Você não tem permissão para acessar os dados desta escola.")
+    
+    # 2. LÓGICA DE FILTRAGEM E PESQUISA
+    # Pega a lista de todas as lacunas apenas daquela escola como base.
+    queryset = Lacuna.objects.filter(escola=escola).order_by('-criado_em')
+
+    # Parametros de filtro da URL
+    status_filter = request.GET.get('status', '')
+    data_filter = request.GET.get('data', '')
+
+    # Filtra por status
+    if status_filter in ['P', 'R', 'E']:
+        queryset = queryset.filter(status=status_filter)
+    
+    # Filtra por data
+    if data_filter: 
+        hoje = timezone.now()
+        if data_filter == '1':  # Última semana
+            queryset = queryset.filter(criado_em__gte=hoje - timedelta(weeks=1))
+        elif data_filter == '2':  # Último mês
+            queryset = queryset.filter(criado_em__gte=hoje - timedelta(days=30))
+        elif data_filter == '3':  # Último ano
+            queryset = queryset.filter(criado_em__gte=hoje - timedelta(days=365))
+
+    search_query = request.GET.get('q')
+    if search_query:
+        # Pesquisa na disciplina da lacuna (ajuste o campo se necessário)
+        queryset = queryset.filter(disciplina__icontains=search_query)
+
+    # 3. LÓGICA DE PAGINAÇÃO
+    paginator = Paginator(queryset, 10) # 10 lacunas por página
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    
+    context = {
+        'escola': escola,
+        'lacunas': page_obj,
+        'total_lacunas': paginator.count,
+        'status_choices': STATUS_CHOICES,
+        'request': request,
+
+        # Manter o estado dos filtros na interface
+        'status_filter': status_filter,
+        'search_query': search_query,
+        'data_filter': data_filter,
+        
+    }
+    
+    return render(request, 'tela_lacunas.html', context)

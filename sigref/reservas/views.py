@@ -1,23 +1,18 @@
+# reservas/views.py (apenas as ViewSets relevantes)
 from rest_framework import viewsets, filters
 from django_filters.rest_framework import DjangoFilterBackend
-from .models import Quarto, Cama, Hospede, Reserva
-from .serializers import QuartoSerializer, CamaSerializer, HospedeSerializer, ReservaSerializer
-
+from .models import Quarto, Cama, Hospede, Reserva, Ocupacao
+from .serializers import QuartoSerializer, CamaSerializer, HospedeSerializer, ReservaSerializer, OcupacaoSerializer
 
 class QuartoViewSet(viewsets.ModelViewSet):
-    """
-    ViewSet para o CRUD de Quartos.
-    Permite criar, listar, atualizar e excluir quartos.
-    Possui busca por número ou descrição.
-    """
-    queryset = Quarto.objects.all()
+    queryset = Quarto.objects.all().order_by('numero')
     serializer_class = QuartoSerializer
     filter_backends = [filters.SearchFilter]
     search_fields = ['numero', 'descricao']
 
-
 class CamaViewSet(viewsets.ModelViewSet):
-    queryset = Cama.objects.all()
+    # Use select_related para otimizar o acesso a Quarto
+    queryset = Cama.objects.select_related('quarto').all().order_by('quarto__numero', 'identificacao')
     serializer_class = CamaSerializer
     filter_backends = [DjangoFilterBackend, filters.SearchFilter]
     filterset_fields = ['quarto']
@@ -28,29 +23,13 @@ class CamaViewSet(viewsets.ModelViewSet):
         context.update({'request': self.request})
         return context
 
-
 class HospedeViewSet(viewsets.ModelViewSet):
-    """
-    ViewSet para o CRUD de Hóspedes.
-    Permite criar, listar, atualizar e excluir hóspedes.
-    Possui busca por nome, CPF ou e-mail.
-    """
     queryset = Hospede.objects.all()
     serializer_class = HospedeSerializer
     filter_backends = [filters.SearchFilter]
     search_fields = ['nome', 'cpf', 'email']
 
-
-from rest_framework import viewsets, filters
-from django_filters.rest_framework import DjangoFilterBackend
-from .models import Quarto, Cama, Hospede, Reserva, Ocupacao
-from .serializers import QuartoSerializer, CamaSerializer, HospedeSerializer, ReservaSerializer, OcupacaoSerializer
-
 class ReservaViewSet(viewsets.ModelViewSet):
-    """
-    ViewSet para o CRUD de Reservas.
-    Agora a reserva envolve apenas informações do hóspede, datas e status.
-    """
     queryset = Reserva.objects.all()
     serializer_class = ReservaSerializer
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
@@ -61,23 +40,36 @@ class ReservaViewSet(viewsets.ModelViewSet):
         instance.delete()
 
 class OcupacaoViewSet(viewsets.ModelViewSet):
-    """
-    ViewSet para o CRUD de Ocupações.
-    Gerencia o controle de quartos e camas ocupadas.
-    """
-    queryset = Ocupacao.objects.all()
+    # Prefetch 'hospede' e 'cama' para evitar N+1 queries ao serializar
+    queryset = Ocupacao.objects.select_related('hospede', 'cama').all().order_by('-data_checkin')
     serializer_class = OcupacaoSerializer
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     filterset_fields = ['hospede', 'cama', 'status']
     search_fields = ['hospede__nome', 'cama__identificacao', 'status']
     
     def perform_create(self, serializer):
-        # Ao criar uma ocupação ATIVA, atualiza o status da cama
         ocupacao = serializer.save()
         if ocupacao.status == 'ATIVA':
+            # Garante que qualquer outra ocupação ATIVA para esta cama seja FINALIZADA
+            Ocupacao.objects.filter(cama=ocupacao.cama, status='ATIVA').exclude(pk=ocupacao.pk).update(status='FINALIZADA')
             ocupacao.cama.status = 'OCUPADA'
             ocupacao.cama.save()
 
+    def perform_update(self, serializer):
+        old_status = self.get_object().status
+        ocupacao = serializer.save()
+        
+        # Se o status mudou para ATIVA, atualiza a cama e finaliza outras
+        if ocupacao.status == 'ATIVA' and old_status != 'ATIVA':
+            Ocupacao.objects.filter(cama=ocupacao.cama, status='ATIVA').exclude(pk=ocupacao.pk).update(status='FINALIZADA')
+            ocupacao.cama.status = 'OCUPADA'
+            ocupacao.cama.save()
+        # Se o status mudou para FINALIZADA e era ATIVA, desocupa a cama
+        elif ocupacao.status == 'FINALIZADA' and old_status == 'ATIVA':
+            # Verifica se não há outras ocupações ATIVAS para esta cama
+            if not Ocupacao.objects.filter(cama=ocupacao.cama, status='ATIVA').exists():
+                ocupacao.cama.status = 'DISPONIVEL'
+                ocupacao.cama.save()
 # reservas/views.py
 from django.shortcuts import render, redirect, get_object_or_404
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
@@ -159,6 +151,12 @@ def gerenciar_hospedes(request):
             Q(email__icontains=query)
         )
     
+    # Ordena do mais recente para o mais antigo (considerando o campo 'criado_em' se existir, senão por 'id')
+    if hasattr(Hospede, 'criado_em'):
+        hospedes_list = hospedes_list.order_by('-criado_em')
+    else:
+        hospedes_list = hospedes_list.order_by('-id')
+
     paginator = Paginator(hospedes_list, ITENS_POR_PAGINA)
     
     try:
@@ -474,12 +472,16 @@ def dashboard(request):
     
     return render(request, 'reservas/dashboard.html', context)
 
+from django.core import serializers
+
 def mapa_interativo(request):
     hospedes = Hospede.objects.all()
+    hospedes_json = serializers.serialize('json', hospedes)
     context = {
-        'hospedes': hospedes
+        'hospedes_json': hospedes_json
     }
     return render(request, 'reservas/mapa_interativo.html', context)
+
 
 from django.db.models.functions import ExtractYear, ExtractMonth
 from django.shortcuts import render
