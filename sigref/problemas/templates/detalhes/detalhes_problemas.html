@@ -17,7 +17,7 @@
         {#-- Verificamos se a lista de problemas não está vazia antes de criar o link --#}
         {% if problemas %}
             <a href="{% url 'dashboard_escola' escola_id=problemas.0.escola.id %}" class="btn btn-outline-secondary btn-sm">
-                <i class="fas fa-arrow-left me-2"></i>Voltar para o Dashboard da Escola
+                <i class="fas fa-arrow-left me-2"></i>voltar
             </a>
         {% endif %}
     </div>

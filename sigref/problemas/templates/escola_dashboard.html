@@ -304,7 +304,7 @@
     {% if not gre.is_escola %}
     <div class="d-flex flex-column flex-md-row justify-content-between align-items-center mb-4">
         <h2 class="mb-3 mb-md-0 "> Perfil da escola </h2>
-        <a href="javascript:history.back()" class="btn btn-outline-secondary">
+        <a href="{% url 'selecionar_escola' %}" class="btn btn-outline-secondary">
             <i class="fas fa-arrow-left me-2"></i> Voltar
         </a>
     </div>
