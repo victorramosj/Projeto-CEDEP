@@ -762,23 +762,21 @@ def confirmar_visualizacao_aviso(request, aviso_id):
 
 
 # =============================================================================
-#  VIEW PARA A EXIBIÇÃO DOS DETALHES DOS PROBLEMAS (REVISADA)
+#  VIEW PARA A EXIBIÇÃO DOS DETALHES DOS PROBLEMAS 
 # =============================================================================
 from django.shortcuts import render, get_object_or_404
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from .models import Escola, ProblemaUsuario, Lacuna
-
 def detalhes_problemas_view(request, escola_id):
-    """Esta view exibe uma lista detalhada de TODOS os problemas ertencentes a UMA escola específica.
-    """
-    #Busca a escola pelo ID fornecido na URL. Se não encontrar, exibe um erro 404.
+    """ Esta view exibe uma lista detalhada de TODOS os problemas pertencentes a UMA escola específica."""
+    # Busca a escola pelo ID fornecido na URL. Se não encontrar, exibe um erro 404.
     escola = get_object_or_404(Escola, pk=escola_id)
+
+    # possam ser exibidos no template de forma eficiente.
+    lista_de_problemas = ProblemaUsuario.objects.filter(escola=escola).select_related('usuario__user', 'setor').order_by('-criado_em')
     
-    # de todos os usuários daquela escola.
-    lista_de_problemas = ProblemaUsuario.objects.filter(escola=escola).order_by('-criado_em')
-    
-    # Exibe 10 problemas por página.
-    paginator = Paginator(lista_de_problemas, 10)
+    # Adiciona paginação para organizar a lista, exibindo 10 problemas por página.
+    paginator = Paginator(lista_de_problemas, 8)
     page_number = request.GET.get('page')
     try:
         problemas_paginados = paginator.page(page_number)
@@ -792,11 +790,10 @@ def detalhes_problemas_view(request, escola_id):
     # Envia os dados para o template.
     context = {
         'escola': escola,
-        'problemas': problemas_paginados, # Enviamos a lista já paginada
+        'problemas': problemas_paginados,
     }
     
-    # Renderiza o template de detalhes.
-    # Corrigindo o caminho para o padrão do Django.
+    # Renderiza o template de detalhes usando o caminho correto.
     return render(request, 'detalhes/detalhes_problemas.html', context)
 
 
@@ -804,18 +801,15 @@ def detalhes_problemas_view(request, escola_id):
 #  VIEW PARA A EXIBIÇÃO DOS DETALHES DAS LACUNAS (REVISADA)
 # =============================================================================
 def detalhes_lacunas_view(request, escola_id):
-    """
-    Esta view exibe uma lista detalhada de TODAS as lacunas
-    pertencentes a UMA escola específica.
-    """
+    """Esta view exibe uma lista detalhada de TODAS as lacunas pertencentes a UMA escola específica."""
     # Busca a escola pelo ID.
     escola = get_object_or_404(Escola, pk=escola_id)
     
-    # Filtra a lista de lacunas para pegar apenas as da escola encontrada.
+    # .select_related() foi removida para corrigir o FieldError.
     lista_de_lacunas = Lacuna.objects.filter(escola=escola).order_by('-criado_em')
 
-    # Exibe 10 lacunas por página.
-    paginator = Paginator(lista_de_lacunas, 10)
+    # Adiciona paginação, exibindo 10 lacunas por página.
+    paginator = Paginator(lista_de_lacunas, 8)
     page_number = request.GET.get('page')
     try:
         lacunas_paginadas = paginator.page(page_number)
@@ -827,8 +821,8 @@ def detalhes_lacunas_view(request, escola_id):
     # Envia os dados para o template.
     context = {
         'escola': escola,
-        'lacunas': lacunas_paginadas, # Enviamos a lista já paginada
+        'lacunas': lacunas_paginadas,
     }
 
-    # Corrigindo o caminho para o padrão do Django.
+    # Renderiza o template de detalhes.
     return render(request, 'detalhes/detalhes_lacunas.html', context)
