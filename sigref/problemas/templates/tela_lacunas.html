@@ -84,7 +84,7 @@ table .form-select {
                     </tr>
                 </thead>
                 <tbody>
-                    {% for lacuna in lacunas_page %}
+                    {% for lacuna in lacunas %}
                         <tr id="lacuna-row-{{ lacuna.id }}">
                             <td><input type="checkbox" name="selected_lacunas" value="{{ lacuna.id }}"></td>
                             <td class="text-start">{{ lacuna.escola.nome }}</td>

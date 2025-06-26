@@ -337,7 +337,7 @@ def tela_lacuna_view(request):
 
     # Prepara o contexto para o template.
     context = {
-        'lacunas_page': lacunas_page,
+        'lacunas': lacunas_page,
         'todas_lacunas': paginator.count, # Usar paginator.count é mais eficiente aqui.
         'search_query': search_query,
         'data_filter': data_filter,
