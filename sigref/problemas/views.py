@@ -760,141 +760,75 @@ def confirmar_visualizacao_aviso(request, aviso_id):
     else:
         return JsonResponse({'status': 'already_viewed', 'message': 'Este aviso já havia sido visualizado.'})
 
+
 # =============================================================================
-#  VIEW DA LISTA DE PROBLEMAS POR ESCOLA 
+#  VIEW PARA A EXIBIÇÃO DOS DETALHES DOS PROBLEMAS (REVISADA)
 # =============================================================================
-@login_required
-def lista_problemas_por_escola(request, escola_id):
+from django.shortcuts import render, get_object_or_404
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+from .models import Escola, ProblemaUsuario, Lacuna
+
+def detalhes_problemas_view(request, escola_id):
+    """Esta view exibe uma lista detalhada de TODOS os problemas ertencentes a UMA escola específica.
     """
-    Exibe uma lista paginada e filtrável de problemas para uma escola específica,respeitando as permissões do usuário logado.
-    """
+    #Busca a escola pelo ID fornecido na URL. Se não encontrar, exibe um erro 404.
     escola = get_object_or_404(Escola, pk=escola_id)
-
-    # 1. VERIFICAÇÃO DE PERMISSÃO (LÓGICA ESSENCIAL)
-    # Garante que o usuário só pode ver dados de escolas que lhe são permitidas.
-    if not request.user.greuser.pode_acessar_escola(escola):
-        raise PermissionDenied("Você não tem permissão para acessar os dados desta escola.")
-
-    # 2. LÓGICA DE FILTRAGEM E PESQUISA
-    # Pega a lista de todos os problemas apenas daquela escola como base.
-    queryset = ProblemaUsuario.objects.filter(escola=escola).order_by('-criado_em')
-
-    # Parametros de filtro da URL
-    status_filter = request.GET.get('status', '')
-    data_filter = request.GET.get('data', '')
-    setor_filter = request.GET.get('setor', '')
-
-    # Filtra por status, se o parâmetro 'status' for passado na URL (ex: ?status=P)
-    status_filter = request.GET.get('status')
-    if status_filter in ['P', 'R', 'E']: # 'P'endente, 'R'esolvido, 'E'm Andamento
-        queryset = queryset.filter(status=status_filter)
     
-    # Filtra por termo de pesquisa, se houver
-    search_query = request.GET.get('q')
-    if search_query:
-        # Pesquisa na descrição do problema (ajuste o campo se necessário)
-        queryset = queryset.filter(descricao__icontains=search_query)
-
-    # Filtra por data
-    if data_filter:
-        hoje = timezone.now()
-        if data_filter == '1':  # Última semana
-            queryset = queryset.filter(criado_em__gte=hoje - timedelta(weeks=1))
-        elif data_filter == '2':  # Último mês
-            queryset = queryset.filter(criado_em__gte=hoje - timedelta(days=30))
-        elif data_filter == '3':  # Último ano
-            queryset = queryset.filter(criado_em__gte=hoje - timedelta(days=365))
-
-    # Filtra por setor
-    if setor_filter:
-        queryset = queryset.filter(setor__id=setor_filter)
+    # de todos os usuários daquela escola.
+    lista_de_problemas = ProblemaUsuario.objects.filter(escola=escola).order_by('-criado_em')
     
-    todos_os_setores = Setor.objects.all().order_by('nome')
-
-    # 3. LÓGICA DE PAGINAÇÃO
-    # Evita que páginas com centenas de problemas fiquem lentas.
-    paginator = Paginator(queryset, 10) # Mostra 10 problemas por página
+    # Exibe 10 problemas por página.
+    paginator = Paginator(lista_de_problemas, 10)
     page_number = request.GET.get('page')
-    page_obj = paginator.get_page(page_number)
+    try:
+        problemas_paginados = paginator.page(page_number)
+    except PageNotAnInteger:
+        # Se a página não for um número, exibe a primeira página.
+        problemas_paginados = paginator.page(1)
+    except EmptyPage:
+        # Se a página estiver fora do intervalo, exibe a última página de resultados.
+        problemas_paginados = paginator.page(paginator.num_pages)
 
+    # Envia os dados para o template.
     context = {
         'escola': escola,
-        'problemas': page_obj, # Envia o objeto da página para o template, não a lista inteira
-        'total_problemas': paginator.count, # Total de problemas após os filtros
-        'status_choices': STATUS_CHOICES, # Para popular o dropdown de status
-        'request': request, # Passar o request é útil para o template
-        
-        # Manter o estado dos filtros na interface
-        'status_filter': status_filter,
-        'search_query': search_query,
-        'data_filter': data_filter, 
-        'setor_filter': setor_filter,
-
-        # Para popular o dropdown de setores
-        'todos_os_setores': todos_os_setores,
+        'problemas': problemas_paginados, # Enviamos a lista já paginada
     }
     
-    return render(request, 'tela_problemas.html', context)
+    # Renderiza o template de detalhes.
+    # Corrigindo o caminho para o padrão do Django.
+    return render(request, 'detalhes/detalhes_problemas.html', context)
+
 
 # =============================================================================
-#  VIEW DA LISTA DE LACUNAS POR ESCOLA 
+#  VIEW PARA A EXIBIÇÃO DOS DETALHES DAS LACUNAS (REVISADA)
 # =============================================================================
-from django.core.exceptions import PermissionDenied
-@login_required
-def lista_lacunas_por_escola(request, escola_id):
+def detalhes_lacunas_view(request, escola_id):
     """
-    Exibe uma lista paginada e filtrável de lacunas para uma escola específica, respeitando as permissões do usuário logado.
+    Esta view exibe uma lista detalhada de TODAS as lacunas
+    pertencentes a UMA escola específica.
     """
+    # Busca a escola pelo ID.
     escola = get_object_or_404(Escola, pk=escola_id)
-
-    # 1. VERIFICAÇÃO DE PERMISSÃO
-    if not request.user.greuser.pode_acessar_escola(escola):
-        raise PermissionDenied("Você não tem permissão para acessar os dados desta escola.")
     
-    # 2. LÓGICA DE FILTRAGEM E PESQUISA
-    # Pega a lista de todas as lacunas apenas daquela escola como base.
-    queryset = Lacuna.objects.filter(escola=escola).order_by('-criado_em')
+    # Filtra a lista de lacunas para pegar apenas as da escola encontrada.
+    lista_de_lacunas = Lacuna.objects.filter(escola=escola).order_by('-criado_em')
 
-    # Parametros de filtro da URL
-    status_filter = request.GET.get('status', '')
-    data_filter = request.GET.get('data', '')
-
-    # Filtra por status
-    if status_filter in ['P', 'R', 'E']:
-        queryset = queryset.filter(status=status_filter)
-    
-    # Filtra por data
-    if data_filter: 
-        hoje = timezone.now()
-        if data_filter == '1':  # Última semana
-            queryset = queryset.filter(criado_em__gte=hoje - timedelta(weeks=1))
-        elif data_filter == '2':  # Último mês
-            queryset = queryset.filter(criado_em__gte=hoje - timedelta(days=30))
-        elif data_filter == '3':  # Último ano
-            queryset = queryset.filter(criado_em__gte=hoje - timedelta(days=365))
-
-    search_query = request.GET.get('q')
-    if search_query:
-        # Pesquisa na disciplina da lacuna (ajuste o campo se necessário)
-        queryset = queryset.filter(disciplina__icontains=search_query)
-
-    # 3. LÓGICA DE PAGINAÇÃO
-    paginator = Paginator(queryset, 10) # 10 lacunas por página
+    # Exibe 10 lacunas por página.
+    paginator = Paginator(lista_de_lacunas, 10)
     page_number = request.GET.get('page')
-    page_obj = paginator.get_page(page_number)
-    
+    try:
+        lacunas_paginadas = paginator.page(page_number)
+    except PageNotAnInteger:
+        lacunas_paginadas = paginator.page(1)
+    except EmptyPage:
+        lacunas_paginadas = paginator.page(paginator.num_pages)
+
+    # Envia os dados para o template.
     context = {
         'escola': escola,
-        'lacunas': page_obj,
-        'total_lacunas': paginator.count,
-        'status_choices': STATUS_CHOICES,
-        'request': request,
-
-        # Manter o estado dos filtros na interface
-        'status_filter': status_filter,
-        'search_query': search_query,
-        'data_filter': data_filter,
-        
+        'lacunas': lacunas_paginadas, # Enviamos a lista já paginada
     }
-    
-    return render(request, 'tela_lacunas.html', context)
+
+    # Corrigindo o caminho para o padrão do Django.
+    return render(request, 'detalhes/detalhes_lacunas.html', context)

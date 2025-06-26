@@ -86,6 +86,7 @@ table .form-select {
                         <th class="text-start">Usuário</th>
                         <th class="text-start">Setor Responsável</th>
                         <th class="text-start">Data</th>
+                        <th class="text-center">Anexo</th>
                         <th class="text-start">Status</th>
                     </tr>
                 </thead>
@@ -98,6 +99,15 @@ table .form-select {
                             <td class="text-start">{{ problema.usuario }}</td>
                             <td class="text-start">{{ problema.setor.hierarquia_completa }}</td>
                             <td class="text-start">{{ problema.criado_em|date:"d/m/Y" }}</td>
+                            <td class="align-middle text-center px-4">
+                                {% if problema.anexo %}
+                                    <a href="{{ problema.anexo.url }}" target="_blank" class="btn btn-sm btn-outline-info">
+                                        <i class="fas fa-paperclip"></i>
+                                    </a>
+                                {% else %}
+                                    <i class="fas fa-minus text-muted"></i>
+                                {% endif %}
+                            </td>
                             <td>
                                 <select class="form-select status-updater" data-problema-id="{{ problema.id }}" aria-label="Alterar Status">
                                     {% for value, display in status_choices %}

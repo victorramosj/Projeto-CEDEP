@@ -366,7 +366,7 @@
     <div class="mt-5">
         <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
             <h5 class="titulo-secao mb-0">Histórico de Problemas</h5>
-            <a href="{% url 'tela_problemas' %}" class="btn btn-sm btn-outline-primary">Ver Detalhes</a>
+            <a href="{% url 'detalhes_problemas' escola_id=escola.id %}" class="btn btn-sm btn-outline-primary">Ver Detalhes</a>
         </div>
         <div class="row g-3 g-lg-4">
             <div class="col-sm-6 col-xl-3"><div class="card-status resolvidos"><div class="numero">{{ problemas_resolvidos }}</div><div class="descricao"><i class="fas fa-check-circle"></i> Resolvidos</div></div></div>
@@ -380,7 +380,7 @@
     <div class="mt-5">
         <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
             <h5 class="titulo-secao mb-0">Histórico de Lacunas</h5>
-            <a href="{% url 'tela_lacunas' %}" class="btn btn-sm btn-outline-primary">Ver Detalhes</a>
+            <a href="{% url 'tela_lacunas' escola_id=escola.id %}" class="btn btn-sm btn-outline-primary">Ver Detalhes</a>
         </div>
         <div class="row g-3 g-lg-4">
             <div class="col-sm-6 col-xl-3"><div class="card-status resolvidos"><div class="numero">{{ lacunas_resolvidas }}</div><div class="descricao"><i class="fas fa-check-circle"></i> Resolvidas</div></div></div>
