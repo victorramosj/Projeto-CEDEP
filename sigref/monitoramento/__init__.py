@@ -21,4 +21,5 @@
 # 5- python manage.py migrate
 # 6- python manage.py runserver
 
+# seilannn
 # python popular.py

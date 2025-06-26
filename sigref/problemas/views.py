@@ -392,7 +392,7 @@ def tela_problema_view(request):
 
     # Passar os dados para o template
     context = {
-        'problemas': problemas_page,
+        'problemas_page': problemas_page,
         'total_problemas': total_problemas, 	# Total de problemas filtrados
         'search_query': escola_query, 	# Termo de busca (para manter na barra de pesquisa)
         'request': request, # Passa o request para o template
@@ -766,8 +766,7 @@ def confirmar_visualizacao_aviso(request, aviso_id):
 @login_required
 def lista_problemas_por_escola(request, escola_id):
     """
-    Exibe uma lista paginada e filtrável de problemas para uma escola específica,
-    respeitando as permissões do usuário logado.
+    Exibe uma lista paginada e filtrável de problemas para uma escola específica,respeitando as permissões do usuário logado.
     """
     escola = get_object_or_404(Escola, pk=escola_id)
 
@@ -844,8 +843,7 @@ from django.core.exceptions import PermissionDenied
 @login_required
 def lista_lacunas_por_escola(request, escola_id):
     """
-    Exibe uma lista paginada e filtrável de lacunas para uma escola específica,
-    respeitando as permissões do usuário logado.
+    Exibe uma lista paginada e filtrável de lacunas para uma escola específica, respeitando as permissões do usuário logado.
     """
     escola = get_object_or_404(Escola, pk=escola_id)
 
