@@ -691,7 +691,7 @@ def dashboard(request):
         problemas_pendentes = ProblemaUsuario.objects.filter(setor=setor, status='P')
 
         alerts = []
-        if lacunas_pendentes.exists():
+        if lacunas_pendentes.exists() and setor.nome in ['CGAF', 'UDP']:
             alerts.append({
                 'type': 'lacuna',
                 'count': lacunas_pendentes.count(),
