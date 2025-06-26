@@ -99,7 +99,7 @@
             <i class="fas fa-puzzle-piece text-primary me-2"></i>Histórico de Lacunas
         </h1>
         <a href="{% url 'dashboard_escola' escola_id=escola.id %}" class="btn btn-outline-secondary btn-sm">
-            <i class="fas fa-arrow-left me-2"></i>Voltar
+            <i class="fas fa-arrow-left me-2"></i>Voltar ao Dashboard
         </a>
     </div>
 
@@ -135,9 +135,17 @@
                 <hr class="my-2">
 
                 <!-- Detalhes Rápidos -->
-                <div class="d-grid gap-3 lacuna-info-grid" style="grid-template-columns: repeat(2, 1fr); font-size: 0.85rem;">
+                <div class="d-grid gap-3 lacuna-info-grid" style="grid-template-columns: repeat(3, 1fr); font-size: 0.85rem;">
                     <div class="text-muted"><i class="fas fa-clock me-2 text-primary"></i><strong>Carga:</strong> {{ lacuna.carga_horaria }} horas/aula</div>
                     <div class="text-muted"><i class="fas fa-calendar-alt me-2 text-primary"></i><strong>Data:</strong> {{ lacuna.criado_em|date:"d/m/Y H:i" }}</div>
+                    <div class="text-muted">
+                        <i class="fas fa-info-circle me-2 text-primary"></i><strong>Status:</strong>
+                        {% if lacuna.status == 'R' %}<span class="badge rounded-pill status-badge bg-success">{{ lacuna.get_status_display }}</span>
+                        {% elif lacuna.status == 'P' %}<span class="badge rounded-pill status-badge bg-danger">{{ lacuna.get_status_display }}</span>
+                        {% elif lacuna.status == 'E' %}<span class="badge rounded-pill status-badge bg-warning text-dark">{{ lacuna.get_status_display }}</span>
+                        {% else %}<span class="badge rounded-pill status-badge bg-secondary">{{ lacuna.get_status_display }}</span>
+                        {% endif %}
+                    </div>
                 </div>
             </div>
         {% empty %}
