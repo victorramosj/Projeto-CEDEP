@@ -299,7 +299,18 @@
 {% endblock %}
 
 {% block content %}
-<div class="container my-4 my-md-5">
+<div class="container mt-4 ">
+    {% with gre=user.greuser %}
+    {% if not gre.is_escola %}
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-center mb-4">
+        <h2 class="mb-3 mb-md-0 "> Perfil da escola </h2>
+        <a href="javascript:history.back()" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left me-2"></i> Voltar
+        </a>
+    </div>
+    {% endif %}
+
+    {#-- Mensagem de boas-vindas --#}
     {#-- Bloco de Header com informações da escola --#}
     <div class="header-escola">
         <div class="info-escola">
@@ -324,7 +335,12 @@
 
     {#-- Bloco principal com cartões de ação e avisos --#}
     <div class="row g-4">
+    
+        {% if gre.is_escola %}
         <div class="col-lg-8">
+        {% else %}
+        <div class="col-lg-12">
+        {% endif %}
             <div class="row g-4">
                 <div class="col-md-6">
                     <div class="card-indicador">
@@ -342,6 +358,7 @@
                 </div>
             </div>
         </div>
+        {% if gre.is_escola %}
         <div class="col-lg-4">
             <div class="avisos-importantes">
                 <h5><i class="fas fa-exclamation-triangle"></i> Avisos Importantes</h5>
@@ -360,7 +377,9 @@
                 {% endif %}
             </div>
         </div>
+        {% endif %}
     </div>
+    {% endwith %}
 
     {#-- Seção Histórico de Problemas --#}
     <div class="mt-5">
@@ -560,6 +579,7 @@
 {% block extra_script %}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+
     'use strict';
 
     /**
