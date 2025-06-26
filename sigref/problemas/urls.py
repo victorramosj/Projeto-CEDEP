@@ -67,6 +67,12 @@ urlpatterns = [
 
     # Confirmação de visualização do aviso
     path('confirmar-visualizacao/<int:aviso_id>/', confirmar_visualizacao_aviso, name='confirmar_visualizacao_aviso'),
+
+   # URL de detalhes para PROBLEMAS (espera um escola_id)
+    path('detalhes/<int:escola_id>/', views.detalhes_problemas_view, name='detalhes_problemas'),
+    
+    # URL de detalhes para LACUNAS (espera um escola_id)
+    path('lacunas/detalhes/<int:escola_id>/', views.detalhes_lacunas_view, name='tela_lacunas'),
 ]
 
 urlpatterns += router.urls

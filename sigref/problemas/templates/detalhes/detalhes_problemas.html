@@ -1,0 +1,109 @@
+{% extends "cedepe/base.html" %}
+{% load static %}
+
+{% block title %}Detalhes dos Problemas{% endblock %}
+
+{% block content %}
+<div class="container my-4 my-md-5">
+
+    <!-- ================================================================== -->
+    <!--                      Cabeçalho                                     -->
+    <!-- ================================================================== -->
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
+        <h1 class="titulo-secao mb-0" style="border-color: var(--accent-color);">
+            <i class="fas fa-tasks text-primary me-2"></i>Histórico Detalhado de Problemas
+        </h1>
+        
+        {#-- Verificamos se a lista de problemas não está vazia antes de criar o link --#}
+        {% if problemas %}
+            <a href="{% url 'dashboard_escola' escola_id=problemas.0.escola.id %}" class="btn btn-outline-secondary btn-sm">
+                <i class="fas fa-arrow-left me-2"></i>Voltar para o Dashboard da Escola
+            </a>
+        {% endif %}
+    </div>
+
+    <!-- ================================================================== -->
+    <!--                      Tabela de Problemas                           -->
+    <!-- ================================================================== -->
+    <div class="card" style="border-radius: var(--border-radius-md); box-shadow: 0 4px 15px rgba(0,0,0,0.06);">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-striped table-hover mb-0">
+                    <thead class="bg-light">
+                        <tr>
+                            <th scope="col" class="py-3 px-4">Usuário</th>
+                            <th scope="col" class="py-3 px-4">Setor</th>
+                            <th scope="col" class="py-3 px-4">Descrição</th>
+                            <th scope="col" class="py-3 px-4">Data</th>
+                            <th scope="col" class="py-3 px-4 text-center">Anexo</th>
+                            <th scope="col" class="py-3 px-4 text-center">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for problema in problemas %}
+                        <tr>
+                            <td class="align-middle px-4">{{ problema.usuario.user.username }}</td>
+                            <td class="align-middle px-4">{{ problema.setor.nome|default:"N/A" }}</td>
+                            <td class="align-middle px-4" style="max-width: 300px;">
+                                <small class="text-muted">{{ problema.descricao|truncatewords:20 }}</small>
+                            </td>
+                            <td class="align-middle px-4">{{ problema.criado_em|date:"d/m/Y H:i" }}</td>
+                            <td class="align-middle text-center px-4">
+                                {% if problema.anexo %}
+                                    <a href="{{ problema.anexo.url }}" target="_blank" class="btn btn-sm btn-outline-info">
+                                        <i class="fas fa-paperclip"></i>
+                                    </a>
+                                {% else %}
+                                    <i class="fas fa-minus text-muted"></i>
+                                {% endif %}
+                            </td>
+                            <td class="align-middle text-center px-4">
+                                {% if problema.status == 'R' %}
+                                    <span class="badge rounded-pill" style="background-color: var(--green);">{{ problema.get_status_display }}</span>
+                                {% elif problema.status == 'P' %}
+                                    <span class="badge rounded-pill" style="background-color: var(--red);">{{ problema.get_status_display }}</span>
+                                {% elif problema.status == 'E' %}
+                                    <span class="badge rounded-pill" style="background-color: var(--orange);">{{ problema.get_status_display }}</span>
+                                {% else %}
+                                    <span class="badge rounded-pill bg-secondary">{{ problema.get_status_display }}</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="6" class="text-center p-5">
+                                <p class="text-muted m-0">
+                                    <i class="fas fa-check-circle fa-2x mb-2 text-success"></i><br>
+                                    Ótimo! Nenhum problema foi reportado ainda.
+                                </p>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% if problemas.has_other_pages %}
+        <div class="card-footer bg-light d-flex justify-content-center">
+            <nav aria-label="Paginação de problemas">
+                <ul class="pagination mb-0">
+                    {% if problemas.has_previous %}
+                        <li class="page-item"><a class="page-link" href="?page={{ problemas.previous_page_number }}">Anterior</a></li>
+                    {% else %}
+                        <li class="page-item disabled"><span class="page-link">Anterior</span></li>
+                    {% endif %}
+                    
+                    <li class="page-item active" aria-current="page"><span class="page-link">Página {{ problemas.number }} de {{ problemas.paginator.num_pages }}</span></li>
+                    
+                    {% if problemas.has_next %}
+                        <li class="page-item"><a class="page-link" href="?page={{ problemas.next_page_number }}">Próxima</a></li>
+                    {% else %}
+                        <li class="page-item disabled"><span class="page-link">Próxima</span></li>
+                    {% endif %}
+                </ul>
+            </nav>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
