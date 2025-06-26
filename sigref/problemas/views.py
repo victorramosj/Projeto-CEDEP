@@ -676,6 +676,19 @@ def apagar_avisos_automaticos(request):
 # =============================================================================
 #  VIEW DA DASHBOARD- CEDEPE(NOTIFICAÇÃO)
 # =============================================================================
+# Arquivo: views.py
+
+from django.shortcuts import render
+from django.db.models import Count
+from .models import Lacuna, ProblemaUsuario, GREUser # Certifique-se de que seus modelos estão importados
+
+# Um dicionário para deixar os nomes dos status mais amigáveis
+STATUS_MAP = {
+    'P': 'pendente(s)',
+    'E': 'em andamento',
+    'R': 'resolvido(s)',
+}
+
 def dashboard(request):
     if not request.user.is_authenticated:
         return render(request, "cedepe/home.html")
@@ -684,32 +697,54 @@ def dashboard(request):
         gre_user = request.user.greuser
         setor = gre_user.setor
         escolas = gre_user.escolas.all()
-
-        # Filtrar lacunas apenas das escolas do usuário
-        lacunas_pendentes = Lacuna.objects.filter(escola__in=escolas, status='P')
-        # Filtrar problemas apenas do setor do usuário
-        problemas_pendentes = ProblemaUsuario.objects.filter(setor=setor, status='P')
-
+        
         alerts = []
-        if lacunas_pendentes.exists() and setor.nome in ['CGAF', 'UDP']:
-            alerts.append({
-                'type': 'lacuna',
-                'count': lacunas_pendentes.count(),
-                'url': 'tela_lacunas',
-                'text': f"Você tem {lacunas_pendentes.count()} lacuna(s) pendente(s)."
-            })
-        if problemas_pendentes.exists():
-            alerts.append({
-                'type': 'problema',
-                'count': problemas_pendentes.count(),
-                'url': 'tela_problemas',
-                'text': f"Você tem {problemas_pendentes.count()} problema(s) pendente(s)."
-            })
+
+        # --- Lógica para Notificações de Lacunas ---
+        # Apenas setores específicos podem ver alertas de lacunas
+        if setor and setor.nome.strip().upper() in ['CGAF', 'UDP']:
+            # Agrupa lacunas por status e conta quantos existem em cada grupo
+            lacunas_por_status = (
+                Lacuna.objects
+                .filter(escola__in=escolas)
+                .values('status')
+                .annotate(count=Count('id')) # Usar Count('id') ou Count('*') é mais comum
+            )
+            
+            for item in lacunas_por_status:
+                status_codigo = item['status']
+                count = item['count']
+                if count > 0:
+                    alerts.append({
+                        'text': f"Você tem {count} lacuna(s) {STATUS_MAP.get(status_codigo, status_codigo)}.",
+                        'url_name': 'tela_lacunas',      # O NOME da sua rota no urls.py
+                        'status_param': status_codigo,  # O parâmetro que queremos adicionar
+                        'status_class': f"status-{status_codigo.lower()}"
+                    })
+
+        # --- Lógica para Notificações de Problemas ---
+        problemas_por_status = (
+            ProblemaUsuario.objects
+            .filter(setor=setor)
+            .values('status')
+            .annotate(count=Count('id'))
+        )
+        
+        for item in problemas_por_status:
+            status_codigo = item['status']
+            count = item['count']
+            if count > 0:
+                alerts.append({
+                    'text': f"Você tem {count} problema(s) {STATUS_MAP.get(status_codigo, status_codigo)}.",
+                    'url_name': 'tela_problemas',    # O NOME da sua rota no urls.py
+                    'status_param': status_codigo,  # O parâmetro que queremos adicionar
+                    'status_class': f"status-{status_codigo.lower()}"
+                })
 
         return render(request, "cedepe/home.html", {"alerts": alerts})
 
-    except GREUser.DoesNotExist:
-        
+    # Trata casos onde o usuário não tem um perfil GREUser ou falta algum atributo
+    except (GREUser.DoesNotExist, AttributeError):
         return render(request, "cedepe/home.html")
 
 # =============================================================================
@@ -759,3 +794,142 @@ def confirmar_visualizacao_aviso(request, aviso_id):
     # 6. Se o status já era 'visualizado', apenas informa
     else:
         return JsonResponse({'status': 'already_viewed', 'message': 'Este aviso já havia sido visualizado.'})
+
+# =============================================================================
+#  VIEW DA LISTA DE PROBLEMAS POR ESCOLA 
+# =============================================================================
+@login_required
+def lista_problemas_por_escola(request, escola_id):
+    """
+    Exibe uma lista paginada e filtrável de problemas para uma escola específica,respeitando as permissões do usuário logado.
+    """
+    escola = get_object_or_404(Escola, pk=escola_id)
+
+    # 1. VERIFICAÇÃO DE PERMISSÃO (LÓGICA ESSENCIAL)
+    # Garante que o usuário só pode ver dados de escolas que lhe são permitidas.
+    if not request.user.greuser.pode_acessar_escola(escola):
+        raise PermissionDenied("Você não tem permissão para acessar os dados desta escola.")
+
+    # 2. LÓGICA DE FILTRAGEM E PESQUISA
+    # Pega a lista de todos os problemas apenas daquela escola como base.
+    queryset = ProblemaUsuario.objects.filter(escola=escola).order_by('-criado_em')
+
+    # Parametros de filtro da URL
+    status_filter = request.GET.get('status', '')
+    data_filter = request.GET.get('data', '')
+    setor_filter = request.GET.get('setor', '')
+
+    # Filtra por status, se o parâmetro 'status' for passado na URL (ex: ?status=P)
+    status_filter = request.GET.get('status')
+    if status_filter in ['P', 'R', 'E']: # 'P'endente, 'R'esolvido, 'E'm Andamento
+        queryset = queryset.filter(status=status_filter)
+    
+    # Filtra por termo de pesquisa, se houver
+    search_query = request.GET.get('q')
+    if search_query:
+        # Pesquisa na descrição do problema (ajuste o campo se necessário)
+        queryset = queryset.filter(descricao__icontains=search_query)
+
+    # Filtra por data
+    if data_filter:
+        hoje = timezone.now()
+        if data_filter == '1':  # Última semana
+            queryset = queryset.filter(criado_em__gte=hoje - timedelta(weeks=1))
+        elif data_filter == '2':  # Último mês
+            queryset = queryset.filter(criado_em__gte=hoje - timedelta(days=30))
+        elif data_filter == '3':  # Último ano
+            queryset = queryset.filter(criado_em__gte=hoje - timedelta(days=365))
+
+    # Filtra por setor
+    if setor_filter:
+        queryset = queryset.filter(setor__id=setor_filter)
+    
+    todos_os_setores = Setor.objects.all().order_by('nome')
+
+    # 3. LÓGICA DE PAGINAÇÃO
+    # Evita que páginas com centenas de problemas fiquem lentas.
+    paginator = Paginator(queryset, 10) # Mostra 10 problemas por página
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    context = {
+        'escola': escola,
+        'problemas': page_obj, # Envia o objeto da página para o template, não a lista inteira
+        'total_problemas': paginator.count, # Total de problemas após os filtros
+        'status_choices': STATUS_CHOICES, # Para popular o dropdown de status
+        'request': request, # Passar o request é útil para o template
+        
+        # Manter o estado dos filtros na interface
+        'status_filter': status_filter,
+        'search_query': search_query,
+        'data_filter': data_filter, 
+        'setor_filter': setor_filter,
+
+        # Para popular o dropdown de setores
+        'todos_os_setores': todos_os_setores,
+    }
+    
+    return render(request, 'tela_problemas.html', context)
+
+# =============================================================================
+#  VIEW DA LISTA DE LACUNAS POR ESCOLA 
+# =============================================================================
+from django.core.exceptions import PermissionDenied
+@login_required
+def lista_lacunas_por_escola(request, escola_id):
+    """
+    Exibe uma lista paginada e filtrável de lacunas para uma escola específica, respeitando as permissões do usuário logado.
+    """
+    escola = get_object_or_404(Escola, pk=escola_id)
+
+    # 1. VERIFICAÇÃO DE PERMISSÃO
+    if not request.user.greuser.pode_acessar_escola(escola):
+        raise PermissionDenied("Você não tem permissão para acessar os dados desta escola.")
+    
+    # 2. LÓGICA DE FILTRAGEM E PESQUISA
+    # Pega a lista de todas as lacunas apenas daquela escola como base.
+    queryset = Lacuna.objects.filter(escola=escola).order_by('-criado_em')
+
+    # Parametros de filtro da URL
+    status_filter = request.GET.get('status', '')
+    data_filter = request.GET.get('data', '')
+
+    # Filtra por status
+    if status_filter in ['P', 'R', 'E']:
+        queryset = queryset.filter(status=status_filter)
+    
+    # Filtra por data
+    if data_filter: 
+        hoje = timezone.now()
+        if data_filter == '1':  # Última semana
+            queryset = queryset.filter(criado_em__gte=hoje - timedelta(weeks=1))
+        elif data_filter == '2':  # Último mês
+            queryset = queryset.filter(criado_em__gte=hoje - timedelta(days=30))
+        elif data_filter == '3':  # Último ano
+            queryset = queryset.filter(criado_em__gte=hoje - timedelta(days=365))
+
+    search_query = request.GET.get('q')
+    if search_query:
+        # Pesquisa na disciplina da lacuna (ajuste o campo se necessário)
+        queryset = queryset.filter(disciplina__icontains=search_query)
+
+    # 3. LÓGICA DE PAGINAÇÃO
+    paginator = Paginator(queryset, 10) # 10 lacunas por página
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    
+    context = {
+        'escola': escola,
+        'lacunas': page_obj,
+        'total_lacunas': paginator.count,
+        'status_choices': STATUS_CHOICES,
+        'request': request,
+
+        # Manter o estado dos filtros na interface
+        'status_filter': status_filter,
+        'search_query': search_query,
+        'data_filter': data_filter,
+        
+    }
+    
+    return render(request, 'tela_lacunas.html', context)
