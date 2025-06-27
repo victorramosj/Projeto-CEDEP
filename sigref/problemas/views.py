@@ -772,7 +772,6 @@ from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.db.models import Q
 from .models import Escola, ProblemaUsuario, Lacuna
 
-
 def detalhes_problemas_view(request, escola_id):
     """ Esta view exibe uma lista detalhada de TODOS os problemas pertencentes a UMA escola específica."""
     escola = get_object_or_404(Escola, pk=escola_id)
