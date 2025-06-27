@@ -42,6 +42,8 @@ width: 100%;
 
 .btnAcao{
 display: flex;
+width: 100%; /* Botão ocupa 100% da largura */
+justify-content: center; /* Centraliza o botão */
 }
 
 /* --- Telas de Celular na Horizontal (>= 576px) --- */
@@ -53,7 +55,16 @@ display: flex;
     .grupo-selects > .form-select {
         flex: 1;
     }
-
+    .grupo-controles {
+        flex-direction: column;
+        align-items: center;
+        width: 100%;
+        
+    }
+    .btnAcao {
+        width: 100%; /* Botão ocupa 100% da largura */
+        justify-content: center; /* Centraliza o botão */
+    }
 }
 
 /* --- Telas Médias / Tablets (>= 768px) --- */
