@@ -761,68 +761,88 @@ def confirmar_visualizacao_aviso(request, aviso_id):
         return JsonResponse({'status': 'already_viewed', 'message': 'Este aviso já havia sido visualizado.'})
 
 
+
+
+
 # =============================================================================
-#  VIEW PARA A EXIBIÇÃO DOS DETALHES DOS PROBLEMAS 
+#  VIEW PARA A EXIBIÇÃO DOS DETALHES DOS PROBLEMAS (COM PESQUISA)
 # =============================================================================
 from django.shortcuts import render, get_object_or_404
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+from django.db.models import Q
 from .models import Escola, ProblemaUsuario, Lacuna
+
+
 def detalhes_problemas_view(request, escola_id):
     """ Esta view exibe uma lista detalhada de TODOS os problemas pertencentes a UMA escola específica."""
-    # Busca a escola pelo ID fornecido na URL. Se não encontrar, exibe um erro 404.
     escola = get_object_or_404(Escola, pk=escola_id)
-
-    # possam ser exibidos no template de forma eficiente.
-    lista_de_problemas = ProblemaUsuario.objects.filter(escola=escola).select_related('usuario__user', 'setor').order_by('-criado_em')
     
-    # Adiciona paginação para organizar a lista, exibindo 10 problemas por página.
+    # 1. Obter o termo de pesquisa a partir dos parâmetros da URL
+    search_query = request.GET.get('q', '')
+
+    # 2. Iniciar a consulta base, filtrando pela escola
+    lista_de_problemas = ProblemaUsuario.objects.filter(escola=escola).select_related('usuario__user', 'setor')
+
+    # 3. Aplicar o filtro de pesquisa, se um termo for fornecido
+    if search_query:
+        lista_de_problemas = lista_de_problemas.filter(
+            Q(descricao__icontains=search_query) |
+            Q(setor__nome__icontains=search_query) |
+            Q(usuario__user__username__icontains=search_query) |
+            Q(usuario__user__first_name__icontains=search_query) |
+            Q(usuario__user__last_name__icontains=search_query)
+        )
+
+    # Ordenar o resultado final
+    lista_de_problemas = lista_de_problemas.order_by('-criado_em')
+    
+    # Adiciona paginação para organizar a lista
     paginator = Paginator(lista_de_problemas, 8)
     page_number = request.GET.get('page')
-    try:
-        problemas_paginados = paginator.page(page_number)
-    except PageNotAnInteger:
-        # Se a página não for um número, exibe a primeira página.
-        problemas_paginados = paginator.page(1)
-    except EmptyPage:
-        # Se a página estiver fora do intervalo, exibe a última página de resultados.
-        problemas_paginados = paginator.page(paginator.num_pages)
+    problemas_paginados = paginator.get_page(page_number) # .get_page lida com exceções
 
-    # Envia os dados para o template.
+    # Envia os dados para o template, incluindo o termo de pesquisa
     context = {
         'escola': escola,
         'problemas': problemas_paginados,
+        'search_query': search_query,
     }
     
-    # Renderiza o template de detalhes usando o caminho correto.
+    # Renderiza o template de detalhes
     return render(request, 'detalhes/detalhes_problemas.html', context)
 
 
 # =============================================================================
-#  VIEW PARA A EXIBIÇÃO DOS DETALHES DAS LACUNAS (REVISADA)
+#  VIEW PARA A EXIBIÇÃO DOS DETALHES DAS LACUNAS (COM PESQUISA)
 # =============================================================================
 def detalhes_lacunas_view(request, escola_id):
     """Esta view exibe uma lista detalhada de TODAS as lacunas pertencentes a UMA escola específica."""
-    # Busca a escola pelo ID.
     escola = get_object_or_404(Escola, pk=escola_id)
     
-    # .select_related() foi removida para corrigir o FieldError.
-    lista_de_lacunas = Lacuna.objects.filter(escola=escola).order_by('-criado_em')
+    # 1. Obter o termo de pesquisa a partir dos parâmetros da URL
+    search_query = request.GET.get('q', '')
 
-    # Adiciona paginação, exibindo 10 lacunas por página.
+    # 2. Iniciar a consulta base, filtrando pela escola
+    lista_de_lacunas = Lacuna.objects.filter(escola=escola)
+
+    # 3. Aplicar o filtro de pesquisa, se um termo for fornecido
+    if search_query:
+        lista_de_lacunas = lista_de_lacunas.filter(disciplina__icontains=search_query)
+
+    # Ordenar o resultado final
+    lista_de_lacunas = lista_de_lacunas.order_by('-criado_em')
+
+    # Adiciona paginação
     paginator = Paginator(lista_de_lacunas, 8)
     page_number = request.GET.get('page')
-    try:
-        lacunas_paginadas = paginator.page(page_number)
-    except PageNotAnInteger:
-        lacunas_paginadas = paginator.page(1)
-    except EmptyPage:
-        lacunas_paginadas = paginator.page(paginator.num_pages)
+    lacunas_paginadas = paginator.get_page(page_number)
 
-    # Envia os dados para o template.
+    # Envia os dados para o template
     context = {
         'escola': escola,
         'lacunas': lacunas_paginadas,
+        'search_query': search_query,
     }
 
-    # Renderiza o template de detalhes.
+    # Renderiza o template de detalhes
     return render(request, 'detalhes/detalhes_lacunas.html', context)
