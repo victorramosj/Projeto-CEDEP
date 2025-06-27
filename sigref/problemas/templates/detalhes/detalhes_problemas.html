@@ -155,8 +155,7 @@
 
                 <!-- Detalhes Rápidos -->
                 <div class="d-grid gap-3 problema-info-grid" style="grid-template-columns: repeat(4, 1fr); font-size: 0.85rem;">
-                    <div class="text-muted"><i class="fas fa-user me-2 text-primary"></i><strong>Criado por:</strong> {{ problema.usuario.user.get_full_name|default:problema.usuario.user.username }}</div>
-                    <div class="text-muted"><i class="fas fa-sitemap me-2 text-primary"></i><strong>Setor responsável:</strong> {{ problema.setor.nome|default:"N/A" }}</div>
+<div class="text-muted"><i class="fas fa-user me-2 text-primary"></i><strong>Criado por:</strong> {{ problema.usuario.nome_completo|default:problema.usuario.user.username }}</div>                    <div class="text-muted"><i class="fas fa-sitemap me-2 text-primary"></i><strong>Setor responsável:</strong> {{ problema.setor.nome|default:"N/A" }}</div>
                     <div class="text-muted"><i class="fas fa-calendar-alt me-2 text-primary"></i><strong>Data de criação:</strong> {{ problema.criado_em|date:"d/m/Y H:i" }}</div>
                     <div class="text-muted">
                         <i class="fas fa-info-circle me-2 text-primary"></i><strong>Status:</strong>
