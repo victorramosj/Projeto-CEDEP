@@ -18,6 +18,8 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from django.views.decorators.http import require_POST
 from django.views.generic import TemplateView
+from django.core.paginator import EmptyPage, PageNotAnInteger
+
 
 from rest_framework import permissions, status, viewsets
 from rest_framework.response import Response
@@ -32,18 +34,11 @@ from .forms import AvisoForm, LacunaForm, ProblemaUsuarioForm
 from .models import (AvisoImportante, ConfirmacaoAviso, Lacuna, ProblemaUsuario, STATUS_CHOICES)
 from .serializers import (AvisoImportanteSerializer, LacunaSerializer, ProblemaUsuarioSerializer)
 
-# ADICIONADO DEPOIS 
-from django.shortcuts import get_object_or_404, redirect
-from django.http import JsonResponse
-from django.contrib.auth.decorators import login_required
-from .models import AvisoImportante, ConfirmacaoAviso, GREUser # Importe GREUser
 
 # =============================================================================
 #  VIEW DA DASHBOARD
 # =============================================================================
-
 class EscolaDashboardView(LoginRequiredMixin, TemplateView):
-    # O nome do template que esta view irá renderizar.
     # O seu pode ser 'escola_dashboard.html' ou 'cedepe/escola_dashboard.html', ajuste se necessário.
     template_name = 'escola_dashboard.html'
 
@@ -51,7 +46,7 @@ class EscolaDashboardView(LoginRequiredMixin, TemplateView):
         context = super().get_context_data(**kwargs)
         gre_user = self.request.user.greuser
 
-        # Inicializar a variável escola
+        # variável escola
         escola = None
 
         # Se o usuário for do tipo 'escola', usa a sua própria escola
@@ -73,7 +68,7 @@ class EscolaDashboardView(LoginRequiredMixin, TemplateView):
             # LÓGICA DE AVISOS - INÍCIO DA CORREÇÃO
             # =================================================================
 
-            # 1. Pega todos os avisos válidos para a escola (seu código original, que está correto)
+            # Pega todos os avisos válidos para a escola (seu código original, que está correto)
             avisos_queryset = AvisoImportante.objects.filter(
                 escola=escola,
                 ativo=True
@@ -81,14 +76,14 @@ class EscolaDashboardView(LoginRequiredMixin, TemplateView):
                 Q(data_expiracao__isnull=True) | Q(data_expiracao__gte=timezone.now())
             ).order_by('-prioridade', '-data_criacao')
 
-            # 2. Busca os IDs de todos os avisos que ESTA escola já marcou como 'visualizado'
+            # Busca os IDs de todos os avisos que ESTA escola já marcou como 'visualizado'
             # Usamos set() para uma verificação de 'in' muito mais rápida.
             avisos_visualizados_ids = set(ConfirmacaoAviso.objects.filter(
                 escola=escola,
                 status='visualizado'
             ).values_list('aviso_id', flat=True))
 
-            # 3. Percorre a lista de avisos e adiciona um novo atributo "ja_visualizado"
+            # Percorre a lista de avisos e adiciona um novo atributo "ja_visualizado"
             # Este atributo será True ou False e poderá ser usado diretamente no template
             for aviso in avisos_queryset:
                 aviso.ja_visualizado = aviso.id in avisos_visualizados_ids
@@ -101,7 +96,6 @@ class EscolaDashboardView(LoginRequiredMixin, TemplateView):
 
             agora = timezone.now()
 
-            # O restante do seu código para estatísticas permanece exatamente igual
             # Estatísticas de lacunas
             todas_lacunas = Lacuna.objects.all()
             lacunas_total = todas_lacunas.count()
@@ -250,7 +244,6 @@ class ProblemaUsuarioViewSet(viewsets.ModelViewSet):
 # =============================================================================
 #  VIEW DE AVISO IMPORTANTE
 # =============================================================================
-
 class AvisoImportanteViewSet(viewsets.ModelViewSet):
     queryset = AvisoImportante.objects.all()
     serializer_class = AvisoImportanteSerializer
@@ -346,7 +339,7 @@ def tela_lacuna_view(request):
         'status_choices': STATUS_CHOICES,
     }
 
-    # A view agora SEMPRE renderiza o template completo. Sem ifs.
+    # A view agora SEMPRE renderiza o template completo. 
     return render(request, 'tela_lacunas.html', context)
 
 
@@ -358,9 +351,9 @@ def tela_problema_view(request):
 
     # Obter os parâmetros de filtro da URL (busca por escola, data e status)
     escola_query = request.GET.get('escola', '') 	# Pesquisa pela escola
-    data_filter = request.GET.get('data', '')
-    status_filter = request.GET.get('status', '')
-    setor_filter = request.GET.get('setor', '')
+    data_filter = request.GET.get('data', '')     # Filtro de data
+    status_filter = request.GET.get('status', '')     # Filtro de status
+    setor_filter = request.GET.get('setor', '')   # Filtro de setor
 
     # Filtro por Escola
     if escola_query:
@@ -380,7 +373,7 @@ def tela_problema_view(request):
 
     # Filtro por Setor
     if setor_filter:
-        problemas_list = problemas_list.filter(setor__id=setor_filter)
+        problemas_list = problemas_list.filter(setor__id=setor_filter) 
 
     todos_os_setores = Setor.objects.all().order_by('nome')
 
@@ -406,24 +399,22 @@ def tela_problema_view(request):
 # =============================================================================
 #  VIEWS DE AVISOS
 # =============================================================================
-# Em seu arquivo views.py
-
 @login_required
 def listar_avisos_view(request):
     gre_user = request.user.greuser
 
-    # --- LÓGICA DE FILTRAGEM INICIAL (DATABASE) ---
+    # --- FILTRAGEM INICIAL (DATABASE) ---
     if gre_user.is_admin():
         avisos_queryset = AvisoImportante.objects.select_related('escola', 'criado_por__user').all()
     else:
         avisos_queryset = AvisoImportante.objects.select_related('escola', 'criado_por__user').filter(criado_por=gre_user)
 
-    # 1. NOVO: Recebe os parâmetros de filtro da URL
+    #  NOVO: Recebe os parâmetros de filtro da URL
     prioridade_filtro = request.GET.get('prioridade', '')
     status_filtro = request.GET.get('status', '')
     escola_filtro = request.GET.get('q_escola', '')
 
-    # 2. Aplica filtros que podem ser feitos no banco de dados
+    #  Aplica filtros que podem ser feitos no banco de dados
     if prioridade_filtro:
         avisos_queryset = avisos_queryset.filter(prioridade=prioridade_filtro)
     if escola_filtro:
@@ -431,7 +422,7 @@ def listar_avisos_view(request):
 
     avisos_ordenados = list(avisos_queryset.order_by('-data_criacao'))
 
-    # --- LÓGICA DE ANOTAÇÃO DE STATUS (PYTHON) ---
+    # --- ANOTAÇÃO DE STATUS (PYTHON) ---
     confirmacoes = ConfirmacaoAviso.objects.filter(
         aviso__in=avisos_ordenados,
         status='visualizado'
@@ -442,7 +433,7 @@ def listar_avisos_view(request):
     for aviso in avisos_ordenados:
         aviso.foi_visualizado = aviso.id in avisos_visualizados_ids
 
-    # 3. NOVO: Aplica o filtro de status que depende da anotação em Python
+    #  NOVO: Aplica o filtro de status que depende da anotação em Python
     if status_filtro:
         if status_filtro == 'visualizado':
             avisos_ordenados = [aviso for aviso in avisos_ordenados if aviso.foi_visualizado]
@@ -454,7 +445,7 @@ def listar_avisos_view(request):
     page_number = request.GET.get('page')
     avisos_paginated = paginator.get_page(page_number)
 
-    # 4. NOVO: Passa os filtros atuais de volta para o template
+    # NOVO: Passa os filtros atuais de volta para o template
     context = {
         'avisos': avisos_paginated,
         'prioridade_atual': prioridade_filtro,
@@ -487,7 +478,7 @@ def criar_aviso_view(request):
         data_expiracao_str = request.POST.get('data_expiracao')
         escolas_ids = request.POST.getlist('escola_id')
         
-        # [NOVO] Obtém o arquivo de imagem do request. Será 'None' se nenhum for enviado.
+        #  Obtém o arquivo de imagem do request. Será 'None' se nenhum for enviado.
         imagem_aviso = request.FILES.get('imagem')
 
         # --- Validação dos dados ---
@@ -535,7 +526,7 @@ def criar_aviso_view(request):
                     'data_expiracao': data_expiracao
                 }
 
-                # [NOVO] Adiciona a imagem ao dicionário SOMENTE se ela foi enviada
+                # Adiciona a imagem ao dicionário SOMENTE se ela foi enviada
                 if imagem_aviso:
                     dados_aviso['imagem'] = imagem_aviso
 
@@ -563,7 +554,7 @@ def editar_aviso_view(request, aviso_id):
     aviso = get_object_or_404(AvisoImportante, id=aviso_id)
     gre_user = request.user.greuser
 
-    # Verificação de permissão (sem alterações)
+    # Verificação de permissão 
     if aviso.criado_por != gre_user and not gre_user.is_admin():
         messages.error(request, "Você não tem permissão para editar este aviso.")
         return redirect('listar_avisos')
@@ -571,10 +562,10 @@ def editar_aviso_view(request, aviso_id):
     if request.method == 'POST':
         form = AvisoForm(request.POST, instance=aviso)
         if form.is_valid():
-            # 1. Salva as alterações (título, mensagem, etc.) no aviso.
+            #  Salva as alterações (título, mensagem, etc.) no aviso.
             aviso_editado = form.save()
 
-            # 2. Redefine o status de TODAS as confirmações associadas para 'pendente'.
+            # Redefine o status de TODAS as confirmações associadas para 'pendente'.
             #    Esta é a única linha necessária para a nova lógica.
             aviso_editado.confirmacoes.all().update(status='pendente')
 
@@ -626,10 +617,7 @@ def apagar_varios_avisos(request):
 #  VIEWS DE VERIFICAÇÃO/EXCLUSÃO AUTOMÁTICA DE AVISOS
 # =============================================================================
 def verificar_avisos_automaticos(request):
-    """
-    Verifica avisos que estão ativos mas cuja data de expiração já passou.
-    Esta lógica é mais precisa, usando os campos do seu modelo.
-    """
+    """Verifica avisos que estão ativos mas cuja data de expiração já passou. Esta lógica é mais precisa, usando os campos do seu modelo."""
     # Filtra por avisos que ainda estão marcados como ativos
     # e cuja data de expiração já passou (é menor que o tempo atual).
     avisos_expirados = AvisoImportante.objects.filter(
@@ -648,10 +636,7 @@ def verificar_avisos_automaticos(request):
 # =============================================================================
 @require_POST
 def apagar_avisos_automaticos(request):
-    """
-    Recebe uma lista de IDs de avisos via POST e os apaga.
-    Esta função agora opera no modelo AvisoImportante.
-    """
+    """Recebe uma lista de IDs de avisos via POST e os apaga. Esta função agora opera no modelo AvisoImportante. """
     try:
         data = json.loads(request.body)
         aviso_ids = data.get('aviso_ids', [])
@@ -750,19 +735,13 @@ def dashboard(request):
 # =============================================================================
 #  VIEW DA CONFIRMAÇÃO DE VISUALIZAÇÃO DE AVISO
 # =============================================================================
-# Em problemas/views.py
-from django.shortcuts import get_object_or_404
-from django.http import JsonResponse
-from django.contrib.auth.decorators import login_required
-from .models import AvisoImportante, ConfirmacaoAviso, GREUser # Certifique-se de importar os modelos
-
 @login_required
 def confirmar_visualizacao_aviso(request, aviso_id):
-    # 1. Garante que a requisição é do tipo POST
+    # Garante que a requisição é do tipo POST
     if request.method != 'POST':
         return JsonResponse({'status': 'error', 'message': 'Método não permitido.'}, status=405)
 
-    # 2. Bloco de verificação de perfil e permissão
+    # Bloco de verificação de perfil e permissão
     try:
         gre_user = request.user.greuser
         if not gre_user.is_escola:
@@ -775,89 +754,101 @@ def confirmar_visualizacao_aviso(request, aviso_id):
     except (GREUser.DoesNotExist, AttributeError):
         return JsonResponse({'status': 'error', 'message': 'Perfil de usuário inválido ou não encontrado.'}, status=400)
 
-    # 3. Recupera o aviso ou retorna erro 404
+    # Recupera o aviso ou retorna erro 404
     aviso = get_object_or_404(AvisoImportante, id=aviso_id)
 
-    # 4. Busca ou cria o registro de confirmação.
-    #    Esta é a verificação de associação correta e suficiente.
-    #    Ele garante que estamos agindo sobre a relação entre ESTE aviso e ESTA escola.
+    # Busca ou cria o registro de confirmação.
     confirmacao, created = ConfirmacaoAviso.objects.get_or_create(
         aviso=aviso,
         escola=escola_do_usuario
     )
 
-    # 5. Altera o status se estiver pendente
+    # Altera o status se estiver pendente
     if confirmacao.status == 'pendente':
         confirmacao.confirmar_visualizado() # Chama o método do seu modelo
         return JsonResponse({'status': 'success', 'message': 'Aviso marcado como visualizado.'})
     
-    # 6. Se o status já era 'visualizado', apenas informa
+    # Se o status já era 'visualizado', apenas informa
     else:
         return JsonResponse({'status': 'already_viewed', 'message': 'Este aviso já havia sido visualizado.'})
 
 
+
+
+
 # =============================================================================
-#  VIEW PARA A EXIBIÇÃO DOS DETALHES DOS PROBLEMAS 
+#  VIEW PARA A EXIBIÇÃO DOS DETALHES DOS PROBLEMAS (COM PESQUISA)
 # =============================================================================
-from django.shortcuts import render, get_object_or_404
-from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
-from .models import Escola, ProblemaUsuario, Lacuna
 def detalhes_problemas_view(request, escola_id):
     """ Esta view exibe uma lista detalhada de TODOS os problemas pertencentes a UMA escola específica."""
-    # Busca a escola pelo ID fornecido na URL. Se não encontrar, exibe um erro 404.
     escola = get_object_or_404(Escola, pk=escola_id)
-
-    # possam ser exibidos no template de forma eficiente.
-    lista_de_problemas = ProblemaUsuario.objects.filter(escola=escola).select_related('usuario__user', 'setor').order_by('-criado_em')
     
-    # Adiciona paginação para organizar a lista, exibindo 10 problemas por página.
+    # Obter o termo de pesquisa a partir dos parâmetros da URL
+    search_query = request.GET.get('q', '')
+
+    # Iniciar a consulta base, filtrando pela escola
+    lista_de_problemas = ProblemaUsuario.objects.filter(escola=escola).select_related('usuario__user', 'setor')
+
+    # Aplicar o filtro de pesquisa, se um termo for fornecido
+    if search_query:
+        lista_de_problemas = lista_de_problemas.filter(
+            Q(descricao__icontains=search_query) |
+            Q(setor__nome__icontains=search_query) |
+            Q(usuario__user__username__icontains=search_query) |
+            Q(usuario__user__first_name__icontains=search_query) |
+            Q(usuario__user__last_name__icontains=search_query)
+        )
+
+    # Ordenar o resultado final
+    lista_de_problemas = lista_de_problemas.order_by('-criado_em')
+    
+    # Adiciona paginação para organizar a lista
     paginator = Paginator(lista_de_problemas, 8)
     page_number = request.GET.get('page')
-    try:
-        problemas_paginados = paginator.page(page_number)
-    except PageNotAnInteger:
-        # Se a página não for um número, exibe a primeira página.
-        problemas_paginados = paginator.page(1)
-    except EmptyPage:
-        # Se a página estiver fora do intervalo, exibe a última página de resultados.
-        problemas_paginados = paginator.page(paginator.num_pages)
+    problemas_paginados = paginator.get_page(page_number) # .get_page lida com exceções
 
-    # Envia os dados para o template.
+    # Envia os dados para o template, incluindo o termo de pesquisa
     context = {
         'escola': escola,
         'problemas': problemas_paginados,
+        'search_query': search_query,
     }
     
-    # Renderiza o template de detalhes usando o caminho correto.
+    # Renderiza o template de detalhes
     return render(request, 'detalhes/detalhes_problemas.html', context)
 
 
 # =============================================================================
-#  VIEW PARA A EXIBIÇÃO DOS DETALHES DAS LACUNAS (REVISADA)
+#  VIEW PARA A EXIBIÇÃO DOS DETALHES DAS LACUNAS (COM PESQUISA)
 # =============================================================================
 def detalhes_lacunas_view(request, escola_id):
     """Esta view exibe uma lista detalhada de TODAS as lacunas pertencentes a UMA escola específica."""
-    # Busca a escola pelo ID.
     escola = get_object_or_404(Escola, pk=escola_id)
     
-    # .select_related() foi removida para corrigir o FieldError.
-    lista_de_lacunas = Lacuna.objects.filter(escola=escola).order_by('-criado_em')
+    # Obter o termo de pesquisa a partir dos parâmetros da URL
+    search_query = request.GET.get('q', '')
 
-    # Adiciona paginação, exibindo 10 lacunas por página.
+    # Iniciar a consulta base, filtrando pela escola
+    lista_de_lacunas = Lacuna.objects.filter(escola=escola)
+
+    # Aplicar o filtro de pesquisa, se um termo for fornecido
+    if search_query:
+        lista_de_lacunas = lista_de_lacunas.filter(disciplina__icontains=search_query)
+
+    # Ordenar o resultado final
+    lista_de_lacunas = lista_de_lacunas.order_by('-criado_em')
+
+    # Adiciona paginação
     paginator = Paginator(lista_de_lacunas, 8)
     page_number = request.GET.get('page')
-    try:
-        lacunas_paginadas = paginator.page(page_number)
-    except PageNotAnInteger:
-        lacunas_paginadas = paginator.page(1)
-    except EmptyPage:
-        lacunas_paginadas = paginator.page(paginator.num_pages)
+    lacunas_paginadas = paginator.get_page(page_number)
 
-    # Envia os dados para o template.
+    # Envia os dados para o template
     context = {
         'escola': escola,
         'lacunas': lacunas_paginadas,
+        'search_query': search_query,
     }
 
-    # Renderiza o template de detalhes.
+    # Renderiza o template de detalhes
     return render(request, 'detalhes/detalhes_lacunas.html', context)

@@ -121,17 +121,17 @@
     <div class="vstack gap-3" id="problemas-list">
         {% for problema in problemas %}
             <div class="problema-card p-3" 
-                data-status="{{ problema.status }}" 
-                data-search-text="{{ problema.usuario.user.username|lower }} {{ problema.setor.nome|default:''|lower }} {{ problema.descricao|lower }}"
-                data-bs-toggle="modal" 
-                data-bs-target="#modalDetalheProblema"
-                data-problema-id="{{ problema.id }}"
-                data-problema-descricao="{{ problema.descricao }}"
-                data-problema-usuario="{{ problema.usuario.user.get_full_name|default:problema.usuario.user.username }}"
-                data-problema-setor="{{ problema.setor.nome|default:'N/A' }}"
-                data-problema-data="{{ problema.criado_em|date:'d/m/Y H:i' }}"
-                data-problema-status="{{ problema.status }}"
-                data-problema-anexo-url="{% if problema.anexo %}{{ problema.anexo.url }}{% endif %}">
+                 data-status="{{ problema.status }}" 
+                 data-search-text="{{ problema.usuario.user.get_full_name|default:problema.usuario.user.username|lower }} {{ problema.setor.nome|default:''|lower }} {{ problema.descricao|lower }}"
+                 data-bs-toggle="modal" 
+                 data-bs-target="#modalDetalheProblema"
+                 data-problema-id="{{ problema.id }}"
+                 data-problema-descricao="{{ problema.descricao }}"
+                 data-problema-usuario="{{ problema.usuario.user.get_full_name|default:problema.usuario.user.username }}"
+                 data-problema-setor="{{ problema.setor.nome|default:'N/A' }}"
+                 data-problema-data="{{ problema.criado_em|date:'d/m/Y H:i' }}"
+                 data-problema-status="{{ problema.status }}"
+                 data-problema-anexo-url="{% if problema.anexo %}{{ problema.anexo.url }}{% endif %}">
 
                 <div class="d-flex flex-wrap align-items-start">
                     <!-- Descrição -->
@@ -155,9 +155,8 @@
 
                 <!-- Detalhes Rápidos -->
                 <div class="d-grid gap-3 problema-info-grid" style="grid-template-columns: repeat(4, 1fr); font-size: 0.85rem;">
-                    <div class="text-muted"><i class="fas fa-user me-2 text-primary"></i><strong>Usuário:</strong> {{ problema.usuario.user.username }}</div>
-                    <div class="text-muted"><i class="fas fa-sitemap me-2 text-primary"></i><strong>Setor:</strong> {{ problema.setor.nome|default:"N/A" }}</div>
-                    <div class="text-muted"><i class="fas fa-calendar-alt me-2 text-primary"></i><strong>Data:</strong> {{ problema.criado_em|date:"d/m/Y H:i" }}</div>
+<div class="text-muted"><i class="fas fa-user me-2 text-primary"></i><strong>Criado por:</strong> {{ problema.usuario.nome_completo|default:problema.usuario.user.username }}</div>                    <div class="text-muted"><i class="fas fa-sitemap me-2 text-primary"></i><strong>Setor responsável:</strong> {{ problema.setor.nome|default:"N/A" }}</div>
+                    <div class="text-muted"><i class="fas fa-calendar-alt me-2 text-primary"></i><strong>Data de criação:</strong> {{ problema.criado_em|date:"d/m/Y H:i" }}</div>
                     <div class="text-muted">
                         <i class="fas fa-info-circle me-2 text-primary"></i><strong>Status:</strong>
                         {% if problema.status == 'R' %}<span class="badge rounded-pill status-badge bg-success">{{ problema.get_status_display }}</span>
