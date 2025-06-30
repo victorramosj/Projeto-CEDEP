@@ -10,11 +10,8 @@ Problemas
 <style>
 
 /* ================================================= */
-/* ESTILOS PERSONALIZADOS PARA OS FILTROS DE TABELAS */
+/* ESTILIZAÇÃO GERAL DO CSS PARA A TABELA DE LACUNAS */
 /* ================================================= */
-.form-select {
-    width: 160px;
-}
 table .form-select {
     color: #333; 
     padding: 5px 10px;      
@@ -23,15 +20,10 @@ table .form-select {
     transition: background-color 0.3s ease;
 }
 
-/* ============================================== */
-/* ESTILOS PERSONALIZADOS PARA OS FILTROS         */
-/* ============================================== */
-
-.form-select {
-    width: auto !important;
-    white-space: nowrap;     /* 1. Força o texto a ficar em uma única linha */
-    overflow: hidden;        /* 2. Esconde o que não couber na caixa */
-    text-overflow: ellipsis; /* 3. Adiciona os "..." no final */
+.status-atualizado td {
+    /* Azul claro suave */
+    background-color: #d1e7fd !important; 
+    transition: background-color 0.5s ease-out; /* Transição suave para a cor */
 }
 
 /* ============================================== */
@@ -183,14 +175,14 @@ justify-content: center; /* Centraliza o botão */
                     </div>
 
                     <!-- Botão de apagar -->
-                    <button class="btnAcao btn btn-danger">Apagar Problemas</button>
-                    
+                    <button class="btnAcao btn btn-danger">Apagar Problema(s)</button>
+
                 </div>
         </div>
 
         <!-- Tabela de Problemas -->
-        <div class="table-responsive">
-            <table class="table table-striped mt-2">
+        <div class="table-responsive mb-2">
+            <table class="table table-striped mt-2 mb-0">
                 <thead>
                     <tr>
                         <th><input type="checkbox" id="selectAllCheckboxes"></th>
@@ -238,8 +230,9 @@ justify-content: center; /* Centraliza o botão */
                     {% endfor %}
                 </tbody>
             </table>
+        </div>
 
-            <!-- Paginação -->
+        <!-- Paginação -->
             {% if problemas_page.paginator.num_pages > 1 %}
             <nav aria-label="Page navigation">
                 <ul class="pagination justify-content-center">
@@ -253,7 +246,7 @@ justify-content: center; /* Centraliza o botão */
                 </ul>
             </nav>
             {% endif %}
-        </div>    
+
     </div>
 </div>
 
