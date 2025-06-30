@@ -659,45 +659,6 @@ def apagar_avisos_automaticos(request):
 
 
 # =============================================================================
-#  VIEW DA DASHBOARD- CEDEPE(NOTIFICAÇÃO)
-# =============================================================================
-def dashboard(request):
-    if not request.user.is_authenticated:
-        return render(request, "cedepe/home.html")
-
-    try:
-        gre_user = request.user.greuser
-        setor = gre_user.setor
-        escolas = gre_user.escolas.all()
-
-        # Filtrar lacunas apenas das escolas do usuário
-        lacunas_pendentes = Lacuna.objects.filter(escola__in=escolas, status='P')
-        # Filtrar problemas apenas do setor do usuário
-        problemas_pendentes = ProblemaUsuario.objects.filter(setor=setor, status='P')
-
-        alerts = []
-        if lacunas_pendentes.exists():
-            alerts.append({
-                'type': 'lacuna',
-                'count': lacunas_pendentes.count(),
-                'url': 'tela_lacunas',
-                'text': f"Você tem {lacunas_pendentes.count()} lacuna(s) pendente(s)."
-            })
-        if problemas_pendentes.exists():
-            alerts.append({
-                'type': 'problema',
-                'count': problemas_pendentes.count(),
-                'url': 'tela_problemas',
-                'text': f"Você tem {problemas_pendentes.count()} problema(s) pendente(s)."
-            })
-
-        return render(request, "cedepe/home.html", {"alerts": alerts})
-
-    except GREUser.DoesNotExist:
-        
-        return render(request, "cedepe/home.html")
-
-# =============================================================================
 #  VIEW DA CONFIRMAÇÃO DE VISUALIZAÇÃO DE AVISO
 # =============================================================================
 @login_required

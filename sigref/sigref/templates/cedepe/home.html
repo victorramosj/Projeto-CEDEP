@@ -130,26 +130,29 @@
         {% if user.is_authenticated %}
 
         {% if alerts %}
-        <div class="alert alert-info alert-dismissible fade show mb-4" role="alert">
-            <div class="d-flex align-items-center">
-                <i class="bi bi-bell-fill me-2 fs-3 text-primary"></i>
-                <div>
-                    <h5 class="alert-heading"><strong>Novos Alertas</strong></h5>
-                    <ul class="mb-0">
-                        {% for alert in alerts %}
-                        <li>
-                            {{ alert.text }}
-                            <br>
-                            <a href="{% url alert.url %}" class="alert-link">Clique aqui para visualizar</a>
-                        </li>
-                        {% endfor %}
-                    </ul>
+        <div class="card shadow-sm mb-4">
+            <div class="card-body">
+                <div class="d-flex align-items-start">
+                    <i class="bi bi-bell-fill me-3 fs-2 text-primary"></i>
+                    <div>
+                        <h5 class="card-title mb-2"><strong>Notificações Importantes</strong></h5>
+                        <p class="card-text text-muted mb-3">Você tem novas pendências. Revise-as abaixo:</p>
+                        <ul class="list-unstyled mb-0">
+                            {% for alert in alerts %}
+                            <li class="mb-2">
+                                <span class="fw-semibold">{{ alert.text }}</span>
+                                <a href="{% url alert.url %}" class="btn btn-sm btn-outline-primary ms-2" role="button">
+                                    Visualizar <i class="bi bi-arrow-right"></i>
+                                </a>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert" aria-label="Fechar alerta"></button>
                 </div>
             </div>
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
         {% endif %}
-
         {% if user.is_superuser %}
         <div class="text-center mb-5">
             <div class="welcome-animation mb-4">

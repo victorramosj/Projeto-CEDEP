@@ -38,7 +38,7 @@ urlpatterns = [
     path('relatar-problema/<int:escola_id>/', views.relatar_problema_view, name='relatar_problema'),
     path('relatar-lacuna/<int:escola_id>/', views.relatar_lacuna_view, name='relatar_lacuna'),  
 
-    path('alertas/', views.dashboard, name='alertas'),
+    
     path('lacunas/', views.tela_lacuna_view, name='tela_lacunas'),
     path('problemas/', views.tela_problema_view, name='tela_problemas'),
 
