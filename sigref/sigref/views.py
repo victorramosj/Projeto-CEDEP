@@ -21,7 +21,7 @@ def dashboard(request):
         gre_user = request.user.greuser
         
         # Obter o setor do usuário (se for um "Chefe de Setor" ou "Coordenador")
-        setor_do_usuario = gre_user.setor
+        setor_do_usuario = gre_user.setor # <--- Variável definida aqui
         escolas = gre_user.escolas.all()  # Obtendo as escolas do usuário, caso ele tenha várias
 
         # Filtrar lacunas para as escolas do usuário
@@ -34,7 +34,8 @@ def dashboard(request):
         alerts = []
 
         # Se houver lacunas pendentes
-        if lacunas_pendentes.exists():
+        # LINHA 37 ORIGINALMENTE COM ERRO: if setor and setor.nome.strip().upper() in ['CGAF', 'UDP']:
+        if setor_do_usuario and setor_do_usuario.nome.strip().upper() in ['CGAF', 'UDP']: # <--- CORRIGIDO AQUI!
             alerts.append({
                 'type': 'lacuna',
                 'count': lacunas_pendentes.count(),
