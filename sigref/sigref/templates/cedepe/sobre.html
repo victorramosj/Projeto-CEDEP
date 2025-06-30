@@ -110,6 +110,38 @@
     .card-equipe .team-social-link:hover {
         color: var(--primary-color);
     }
+    /* Secção Tecnologias */
+    .card-tecnologia {
+        background-color: #fff;
+        border: 1px solid #eef2f7;
+        border-radius: var(--border-radius-md);
+        padding: 2rem 1rem;
+        text-align: center;
+        transition: all 0.3s ease-in-out;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        height: 100%;
+    }
+    .card-tecnologia:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 25px rgba(38, 50, 109, 0.1); /* Sombra mais forte com o tom primário */
+        border-color: var(--primary-color);
+    }
+    .card-tecnologia .tech-logo {
+        height: 50px;
+        margin-bottom: 1.5rem;
+        filter: grayscale(100%); /* Logo em escala de cinza por padrão */
+        transition: filter 0.3s ease-in-out;
+    }
+    .card-tecnologia:hover .tech-logo {
+        filter: grayscale(0%); /* Logo volta a ter cor no hover */
+    }
+    .card-tecnologia h5 {
+        color: var(--text-dark);
+        font-size: 1rem;
+        font-weight: 600;
+        margin: 0;
+    }
+
 </style>
 {% endblock %}
 
@@ -168,7 +200,7 @@
             </div>
         </div>
     </div>
-
+    
     <!-- ================================================================== -->
     <!--                  Secção Equipe de Desenvolvimento                  -->
     <!-- ================================================================== -->
@@ -232,9 +264,51 @@
                     </div>
                 </div>
             </div>
-            
+    
+    <!-- ================================================================== -->
+    <!--                   Secção Tecnologias Utilizadas                    -->
+    <!-- ================================================================== -->
+    <div class="my-5">
+        <h2 class="titulo-secao">Tecnologias Utilizadas</h2>
+        <div class="row g-4 row-cols-2 row-cols-sm-3 row-cols-md-4 row-cols-lg-5 justify-content-center">
+            <div class="col d-flex">
+                <div class="card-tecnologia w-100">
+                    <img src="https://cdn.jsdelivr.net/npm/simple-icons@v11/icons/python.svg" class="tech-logo" alt="Logótipo Python">
+                    <h5>Python</h5>
+                </div>
+            </div>
+            <div class="col d-flex">
+                <div class="card-tecnologia w-100">
+                    <img src="https://cdn.jsdelivr.net/npm/simple-icons@v11/icons/django.svg" class="tech-logo" alt="Logótipo Django">
+                    <h5>Django</h5>
+                </div>
+            </div>
+            <div class="col d-flex">
+                <div class="card-tecnologia w-100">
+                    <img src="https://cdn.jsdelivr.net/npm/simple-icons@v11/icons/html5.svg" class="tech-logo" alt="Logótipo HTML5">
+                    <h5>HTML5</h5>
+                </div>
+            </div>
+            <div class="col d-flex">
+                <div class="card-tecnologia w-100">
+                    <img src="https://cdn.jsdelivr.net/npm/simple-icons@v11/icons/css3.svg" class="tech-logo" alt="Logótipo CSS3">
+                    <h5>CSS3</h5>
+                </div>
+            </div>
+            <div class="col d-flex">
+                <div class="card-tecnologia w-100">
+                    <img src="https://cdn.jsdelivr.net/npm/simple-icons@v11/icons/javascript.svg" class="tech-logo" alt="Logótipo JavaScript">
+                    <h5>JavaScript</h5>
+                </div>
+            </div>
+        </div>
+    </div>
 
+
+
+    
         </div>
     </div>
 </div>
+
 {% endblock %}
