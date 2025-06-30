@@ -131,6 +131,10 @@
   color: #25d366;
 }
 
+.bi-info-circle:hover {
+  color:rgb(229, 255, 0);
+}
+
 @media (max-width: 767px) {
   .footer-content {
     gap: 0.5rem;
@@ -444,28 +448,46 @@
           </p>
         </div>
 
-        {# Coluna 3: Links Sociais #}
+       {# Coluna 3: Links Sociais #}
 <div class="col-12 col-md-3 d-flex flex-column align-items-center align-items-md-end">
-    {# Título da Coluna: Melhorado para texto e centralização #}
-    <p class="footer-text mb-1">
-            <span class="gradiente-texto">Conheça nossas Redes Sociais</span></p>
     
-    <div class="social-links d-flex">
+    {# Título da Coluna #}
+    <p class="footer-text mb-2">
+        <span class="gradiente-texto">Conheça nossas Redes Sociais e Sobre</span>
+    </p>
+    
+    {# Container dos links #}
+    <div class="social-links d-flex gap-3"> 
+        
+        {# Instagram #}
         <a href="https://www.instagram.com/grefloresta.oficial/" target="_blank" 
            class="social-link" 
            aria-label="Visite nosso Instagram"
-           title="Instagram">
+           title="Instagram"> 
             <i class="bi bi-instagram"></i>
         </a>
+        
+        {# WhatsApp #}
         <a href="https://wa.me/558791019828?text=Ol%C3%A1%2C%20gostaria%20de%20saber%20mais%20sobre%20o%20Sistema%20Integrado%20GRE%20FLORESTA." 
            target="_blank" 
            class="social-link" 
            aria-label="Fale conosco via WhatsApp"
-           title="WhatsApp">
+           title="WhatsApp">  
             <i class="bi bi-whatsapp"></i>
-        </a>           
+        </a>
+        
+        {# Sobre #}
+        <a href="{% url 'sobre' %}"
+           target="_blank" 
+           class="social-link" 
+           aria-label="Conheça mais sobre nós"
+           title="Sobre o sistema"> 
+            <i class="bi bi-info-circle"></i>
+        </a>
+        
     </div>
 </div>
+
 
       </div> {# Fim da row principal #}
     </div> {# Fim do footer-content #}

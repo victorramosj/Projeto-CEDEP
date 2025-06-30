@@ -24,6 +24,10 @@ urlpatterns = [
     
 
     path('problemas/', include('problemas.urls')),
+    # Página Sobre
+    
+    path('sobre/', views.sobre, name='sobre'),  
+
     
 ]
 # Servir arquivos de mídia em DEBUG

@@ -12,6 +12,10 @@ from django.shortcuts import redirect, render
 from monitoramento.models import GREUser
 from problemas.models import Lacuna, ProblemaUsuario
 
+# =============================================================================
+#  VIEW PARA DA PÁGINA PRINCIPAL (DASHBOARD)
+#  Esta view verifica o tipo de usuário logado e exibe alertas de lacunas
+# =============================================================================
 def dashboard(request):
     if not request.user.is_authenticated:
         return render(request, "cedepe/home.html")
@@ -71,6 +75,10 @@ from django.contrib import messages
 from .forms import LoginForm  # Certifique-se de importar corretamente
 from monitoramento.models import GREUser  # Importa o modelo de usuário extendido
 
+# =============================================================================
+#  VIEW PARA O LOGIN DO USUÁRIO
+# =============================================================================
+# Esta view lida com o processo de login do usuário, autenticando-o e redirecionando-o para a página apropriada com base no seu tipo de usuário.
 def user_login(request):
     if request.method == "POST":
         form = LoginForm(request, data=request.POST)
@@ -117,7 +125,9 @@ def user_login(request):
     
     return render(request, "cedepe/login.html", {"form": form})
 
-
+# =============================================================================
+#  VIEW PARA FAZER LOGOUT DO USUÁRIO
+# =============================================================================
 def user_logout(request):
     logout(request)
     messages.info(request, "Você saiu da conta.")
@@ -134,3 +144,17 @@ def register(request):
     else:
         form = UserCreationForm()
     return render(request, "cedepe/register.html", {"form": form})
+
+
+
+
+# =============================================================================
+#  VIEW PARA DA PÁGINA 'SOBRE'
+# =============================================================================
+def sobre(request):
+    """Esta view renderiza a página 'Sobre'"""
+    context = {
+        'versao': '1.0.0',
+        'autores': 'Giselle Souza Novaes de Sá, João Victor, Lucas Vinicius de Souza Bastos e Victor Kauê da Silva Alves', # Lista de autores
+    }
+    return render(request, 'cedepe/sobre.html', context)
