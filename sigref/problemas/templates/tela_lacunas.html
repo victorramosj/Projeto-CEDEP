@@ -8,24 +8,157 @@ Lacunas
 {% block extra_style %}
 <link rel="stylesheet" href="{% static 'css/tabelas.css' %}" />
 <style>
+/* ================================================= */
+/* ESTILOS GERAIS E CORES (BASE)                     */
+/* ================================================= */
+:root {
+    --cor-fundo-atualizado: #d1e7fd; /* Azul claro suave */
+    --cor-status-pendente: #ffcccc; /* Vermelho claro */
+    --cor-status-resolvido: #ccffcc; /* Verde claro */
+    --cor-status-andamento: #ffffcc; /* Amarelo claro */
+}
+
 table .form-select {
-    color: #333; 
-    padding: 5px 10px;     
-    border-radius: 5px;       
+    color: #333;
+    padding: 5px 10px;
+    border-radius: 5px;
     border: none;
-    transition: background-color 0.3s ease; /* Transição suave para a cor */
+    transition: background-color 0.3s ease;/* Transição suave para a cor */
 }
 
 .status-atualizado td {
-    /* Azul claro suave */
-    background-color: #d1e7fd !important; 
+    background-color: var(--cor-fundo-atualizado) !important;
     transition: background-color 0.5s ease-out; /* Transição suave para a cor */
 }
+
+/* ============================================== */
+/* ESTILOS PADRÃO PARA TELAS PEQUENAS             */
+/* ============================================== */
+
+/* --- Container Principal dos Filtros --- */
+.container-filtros {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+/* --- Barra de Pesquisa --- */
+.form-pesquisa {
+    width: 100%; 
+}
+
+/* --- Grupo de Controles (Selects e Botão) --- */
+.grupo-controles {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem; 
+    width: 100%;
+}
+
+.grupo-selects {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    width: 100%;
+}
+
+.grupo-selects > .form-select {
+        flex: 1;
+}
+
+.btnAcao{
+    display: flex;
+    width: 100%;
+    justify-content: center;
+}
+
+/* ============================================== */
+/* RESPONSIVIDADE DE LAYOUT                       */
+/* ============================================== */
+
+/* --- Telas de Celular na Vertical (>= 370px) --- */
+@media (min-width: 370px) {
+
+    .grupo-selects {
+        flex-direction: row;
+        width: 100%; /* Garante que os selects ocupem toda a largura */
+    }
+
+}
+
+
+/* --- Telas de Celular na Horizontal (>= 576px) --- */
+/* Garante que os filtros fiquem lado a lado */
+@media (min-width: 576px) {
+
+    .grupo-selects {
+        flex-direction: row;
+        width: 100%; /* Garante que os selects ocupem toda a largura */
+    }
+    .grupo-selects > .form-select {
+        flex: 1;
+    }
+    .grupo-controles {
+        flex-direction: column;
+        align-items: center;
+        width: 100%;
+    }
+    .btnAcao {
+        width: 100%; /* Botão ocupa 100% da largura */
+        justify-content: center; /* Centraliza o botão */
+    }
+}
+
+/* --- Telas Médias / Tablets (>= 768px) --- */
+/* Cria o layout de 2 linhas. */
+@media (min-width: 1008px) {
+
+    .grupo-controles {
+        flex-direction: row;
+        align-items: center;
+        width: auto; /* Permite que o grupo se ajuste ao conteúdo */
+        justify-content: space-between;
+        gap: 10px; /* Reduz o espaçamento entre os controles */
+    }
+
+    .grupo-selects {
+        gap: 10px; /* Reduz o espaçamento entre os selects */
+        width: auto;
+    }
+    
+    /* O botão de ação deixa de ocupar 100% da largura */
+    .btnAcao {
+        width: auto; 
+        display: flex;
+        align-items: right; 
+    }
+}
+
+/* --- Telas Grandes / Desktops (>= 992px) --- */
+/* Cria o layout final de 1 linha. */
+@media (min-width: 1500px) {
+
+    .container-filtros {
+        flex-direction: row;
+        align-items: center;
+    }
+
+    /* Faz a barra de pesquisa crescer para ocupar o espaço */
+    .form-pesquisa {
+        flex-grow: 1;
+    }
+
+    .grupo-controles {
+        flex-shrink: 0; /* Impede que os controles encolham */
+    }
+}
+
 </style>
 {% endblock %}
 
 {% block content %}
 <div class="container mt-4">
+
     <div class="d-flex flex-column flex-md-row justify-content-between align-items-center mb-4">
         <h2 class="mb-3 mb-md-0 ">
             Lacunas (<span id="lacunas-count">{{ todas_lacunas }}</span>)
@@ -36,43 +169,44 @@ table .form-select {
     </div>
 
     <div class="col-12 mt-3">
-        <div class="d-flex justify-content-between gap-2 mb-2">
+
+        <div class="container-filtros mb-2">
             
-            <div class="d-flex align-items-left gap-2">
                 <!-- Barra de pesquisa -->
-                <form method="GET" action="{% url 'tela_lacunas' %}" class="input-group" style="width: 600px;">
+                <form method="GET" action="{% url 'tela_lacunas' %}" class="input-group form-pesquisa">
                     {% csrf_token %}
                     <span class="input-group-text"><i class="fas fa-search"></i></span>
                     <input type="text" class="form-control" name="q" value="{{ search_query }}" placeholder="Pesquise por Escola...">
                 </form>
                 
-                <div class="d-flex gap-2">
+                <div class="grupo-controles">
                     <!-- Filtros -->
-                    <select class="form-select" name="data" aria-label="Filtro Data">
-                        <option value="" {% if not request.GET.data %} selected {% endif %}>Data (Todas)</option>
-                        <option value="1" {% if request.GET.data == '1' %} selected {% endif %}>Última semana</option>
-                        <option value="2" {% if request.GET.data == '2' %} selected {% endif %}>Último mês</option>
-                        <option value="3" {% if request.GET.data == '3' %} selected {% endif %}>Último ano</option>
-                    </select>
-                    <select class="form-select" name="status" aria-label="Filtro Status">
-                        <option value="" {% if not request.GET.status %}selected{% endif %}>Status (Todos)</option>
-                        <option value="P" {% if request.GET.status == 'P' %} selected {% endif %}>Pendente</option>
-                        <option value="R" {% if request.GET.status == 'R' %} selected {% endif %}>Resolvido</option>
-                        <option value="E" {% if request.GET.status == 'E' %} selected {% endif %}>Em Andamento</option>
-                    </select>
-                </div>
-            </div>
+                    <div class="grupo-selects">
+                        <select class="form-select" name="data" aria-label="Filtro Data">
+                            <option value="" {% if not request.GET.data %} selected {% endif %}>Data (Todas)</option>
+                            <option value="1" {% if request.GET.data == '1' %} selected {% endif %}>Última semana</option>
+                            <option value="2" {% if request.GET.data == '2' %} selected {% endif %}>Último mês</option>
+                            <option value="3" {% if request.GET.data == '3' %} selected {% endif %}>Último ano</option>
+                        </select>
+                        <select class="form-select" name="status" aria-label="Filtro Status">
+                            <option value="" {% if not request.GET.status %}selected{% endif %}>Status (Todos)</option>
+                            <option value="P" {% if request.GET.status == 'P' %} selected {% endif %}>Pendente</option>
+                            <option value="R" {% if request.GET.status == 'R' %} selected {% endif %}>Resolvido</option>
+                            <option value="E" {% if request.GET.status == 'E' %} selected {% endif %}>Em Andamento</option>
+                        </select>
+                    </div>
 
-            <div class="d-flex gap-2">
-                <!-- Botões de ação -->
-                <button class="btnAcao btn btn-danger">Apagar Lacunas</button> 
-            </div>
+                    <!-- Botão de apagar -->
+                    <button class="btnAcao btn btn-danger">Apagar Lacuna(s)</button>
+                    
+                </div>
+
         </div>
 
 
         <!--Tabela de Lacunas-->
-        <div class="table-responsive">
-            <table class="table table-striped mt-2">
+        <div class="table-responsive mb-2">
+            <table class="table table-striped mt-2 mb-0">
                 <thead>
                     <tr>
                         <th><input type="checkbox" id="selectAllCheckboxes"></th>
@@ -108,8 +242,9 @@ table .form-select {
                     {% endfor %}
                 </tbody>
             </table>
+        </div>
 
-            <!-- Paginação -->
+        <!-- Paginação -->
             {% if lacunas_page.paginator.num_pages > 1 %}
             <nav aria-label="Page navigation">
                 <ul class="pagination justify-content-center">
@@ -123,7 +258,7 @@ table .form-select {
                 </ul>
             </nav>
             {% endif %}
-        </div>
+
     </div>
 </div>
 

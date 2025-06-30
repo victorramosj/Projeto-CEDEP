@@ -8,9 +8,10 @@ Problemas
 {% block extra_style %}
 <link rel="stylesheet" href="{% static 'css/tabelas.css' %}" />
 <style>
-.form-select {
-    width: 160px;
-}
+
+/* ================================================= */
+/* ESTILIZAÇÃO GERAL DO CSS PARA A TABELA DE LACUNAS */
+/* ================================================= */
 table .form-select {
     color: #333; 
     padding: 5px 10px;      
@@ -19,25 +20,34 @@ table .form-select {
     transition: background-color 0.3s ease;
 }
 
-/*FILTROS*/
+.status-atualizado td {
+    /* Azul claro suave */
+    background-color: #d1e7fd !important; 
+    transition: background-color 0.5s ease-out; /* Transição suave para a cor */
+}
+
+/* ============================================== */
+/* REGRAS DE LAYOUT                               */
+/* ============================================== */
 .container-filtros {
     display: flex;
     flex-direction: column;
-    gap: 1rem; /* Equivalente ao 'gap-3' do Bootstrap */
-
+    gap: 1rem;
 }
 
 .grupo-controles {
     display: flex;
     flex-direction: column;
-    gap: 0.75rem; /* Equivalente ao 'gap-2' do Bootstrap */
+    gap: 0.75rem; 
     width: 100%;
+    align-items: center; /* Centraliza os itens horizontalmente em telas pequenas */
 }
 
 .grupo-selects {
-display: flex;
-gap: 0.75rem;
-width: 100%;
+    display: flex;
+    gap: 0.75rem;
+    width: 100%;
+    flex-direction: row; 
 }
 
 .btnAcao{
@@ -49,8 +59,10 @@ justify-content: center; /* Centraliza o botão */
 /* --- Telas de Celular na Horizontal (>= 576px) --- */
 /* Garante que os filtros fiquem lado a lado */
 @media (min-width: 576px) {
+
     .grupo-selects {
         flex-direction: row;
+        width: 100%; /* Garante que os selects ocupem toda a largura */
     }
     .grupo-selects > .form-select {
         flex: 1;
@@ -70,14 +82,17 @@ justify-content: center; /* Centraliza o botão */
 /* --- Telas Médias / Tablets (>= 768px) --- */
 /* Cria o layout de 2 linhas. */
 @media (min-width: 1008px) {
+
     .grupo-controles {
         flex-direction: row;
         align-items: center;
         width: auto; /* Permite que o grupo se ajuste ao conteúdo */
         justify-content: space-between;
+        gap: 10px; /* Reduz o espaçamento entre os controles */
     }
 
     .grupo-selects {
+        gap: 10px; /* Reduz o espaçamento entre os selects */
         width: auto;
     }
     
@@ -92,6 +107,7 @@ justify-content: center; /* Centraliza o botão */
 /* --- Telas Grandes / Desktops (>= 992px) --- */
 /* Cria o layout final de 1 linha. */
 @media (min-width: 1500px) {
+
     .container-filtros {
         flex-direction: row;
         align-items: center;
@@ -159,14 +175,14 @@ justify-content: center; /* Centraliza o botão */
                     </div>
 
                     <!-- Botão de apagar -->
-                    <button class="btnAcao btn btn-danger">Apagar Problemas</button>
-                    
+                    <button class="btnAcao btn btn-danger">Apagar Problema(s)</button>
+
                 </div>
         </div>
 
         <!-- Tabela de Problemas -->
-        <div class="table-responsive">
-            <table class="table table-striped mt-2">
+        <div class="table-responsive mb-2">
+            <table class="table table-striped mt-2 mb-0">
                 <thead>
                     <tr>
                         <th><input type="checkbox" id="selectAllCheckboxes"></th>
@@ -214,8 +230,9 @@ justify-content: center; /* Centraliza o botão */
                     {% endfor %}
                 </tbody>
             </table>
+        </div>
 
-            <!-- Paginação -->
+        <!-- Paginação -->
             {% if problemas_page.paginator.num_pages > 1 %}
             <nav aria-label="Page navigation">
                 <ul class="pagination justify-content-center">
@@ -229,7 +246,7 @@ justify-content: center; /* Centraliza o botão */
                 </ul>
             </nav>
             {% endif %}
-        </div>    
+
     </div>
 </div>
 
