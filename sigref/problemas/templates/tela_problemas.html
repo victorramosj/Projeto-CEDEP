@@ -26,6 +26,12 @@ table .form-select {
     transition: background-color 0.3s ease;/* Transição suave para a cor */
 }
 
+.status-updater {
+    min-width: 140px; 
+    border-radius: 5px !important;
+    height: 38px;
+}
+
 .status-atualizado td {
     background-color: var(--cor-fundo-atualizado) !important;
     transition: background-color 0.5s ease-out; /* Transição suave para a cor */
@@ -123,6 +129,10 @@ table .form-select {
         width: auto;
     }
     
+    .grupo-selects select{
+        min-width: 140px;
+    }
+
     /* O botão de ação deixa de ocupar 100% da largura */
     .btnAcao {
         width: auto; 
@@ -147,6 +157,10 @@ table .form-select {
 
     .grupo-controles {
         flex-shrink: 0; /* Impede que os controles encolham */
+    }
+
+    .grupo-selects select{
+        min-width: 140px;
     }
 }
 </style>
