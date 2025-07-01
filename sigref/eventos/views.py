@@ -277,7 +277,8 @@ class FullCalendarEventsView(APIView):
             'extendedProps': {
                 'salas': [sala.nome for sala in agendamento.salas.all()],
                 'descricao': agendamento.evento.descricao,
-                'horario': f"{timezone.localtime(agendamento.inicio).strftime('%H:%M')} - {timezone.localtime(agendamento.fim).strftime('%H:%M')}"
+                'horario': f"{timezone.localtime(agendamento.inicio).strftime('%H:%M')} - {timezone.localtime(agendamento.fim).strftime('%H:%M')}",
+                'organizador': agendamento.evento.organizador,
             }
         } for agendamento in agendamentos]
         return Response(events)
