@@ -1,12 +1,7 @@
 .form-select {
     width: 100%;
     height: 45px;
-    font-size: 14px;
-    padding-left: 0.5rem; /* Espaço para o texto */
-    padding-right: 1rem; /* Espaço para a seta do select */
-    white-space: nowrap; /* Impede quebra de linha */
-    overflow: hidden; /* Esconde o texto que não couber */
-    text-overflow: ellipsis; /* Adiciona "..." ao final se o texto não couber */
+    font-size: 15px;
 }
 
 .form-control {
@@ -18,17 +13,6 @@
 /* Estilo para os botões de ação -----------------------------------*/
 .btnAcao {
     width: 180px;
-}
-
-.btn-info {
-    background-color: #0cbbdf;
-    color: white;
-    font-weight: bold;
-}
-
-.btn-info:hover {
-    background-color: #109ab6;
-    color: white;
 }
 
 .btn-danger {
