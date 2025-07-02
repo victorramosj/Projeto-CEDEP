@@ -167,4 +167,6 @@ def sobre(request):
 #  VIEW PARA DA PÁGINA 'MANUAL'
 # =============================================================================
 def manual_view(request):
+    """Esta view renderiza a página 'Manual de Uso'"""
+    # Renderiza o template 'manual.html'
     return render(request, 'cedepe/manual.html')
