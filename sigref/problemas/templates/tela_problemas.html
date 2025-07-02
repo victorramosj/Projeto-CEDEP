@@ -39,6 +39,12 @@ Problemas
     height: 45px;
     font-size: 15px;
     min-width: 150px;
+    border-radius: 5px;
+}
+
+.form-pesquisa.input-group {
+    border-radius: 5px;
+    overflow: hidden; /* Garante que os cantos dos filhos sejam cortados */
 }
 
 /* --- Select de Status (Tabela) --- */
@@ -56,16 +62,20 @@ table .form-select {
     height: 38px;
 }
 
-/* --- Botões de Ação --- */
+/* --- Botão de Ação --- */
 .btnAcao {
     width: 180px; /* Largura padrão para o botão de apagar */
-}
-
-.btn-danger {
+    font-size: 15px;
+    padding: 10px 15px;
     font-weight: bold;
 }
 
 /* --- Tabela --- */
+.table-responsive {
+    border-radius: 8px; /* Arredonda o container da tabela */
+    overflow: hidden;   /* Esconde as bordas retas da tabela que "vazam" */
+}
+
 .table th,
 .table td {
     text-align: left;
@@ -79,6 +89,10 @@ table .form-select {
     color: white;
     font-size: 17px;
     padding: 12px;
+}
+
+.table th:nth-child(6), .table td:nth-child(6) {
+    width: 160px;
 }
 
 /* ====================================================================== */
@@ -222,7 +236,7 @@ table .form-select {
 
     <div class="col-12 mt-3">
 
-        <div class="container-filtros mb-2">
+        <div class="container-filtros mb-3">
 
                 <!-- Barra de pesquisa -->
                 <form method="GET" action="{% url 'tela_problemas' %}" class="input-group form-pesquisa">
@@ -264,8 +278,8 @@ table .form-select {
         </div>
 
         <!-- Tabela de Problemas -->
-        <div class="table-responsive mb-3">
-            <table class="table table-striped mt-2 mb-0">
+        <div class="table-responsive mb-3 mt-2">
+            <table class="table table-striped mb-0">
                 <thead>
                     <tr>
                         <th><input type="checkbox" id="selectAllCheckboxes"></th>
