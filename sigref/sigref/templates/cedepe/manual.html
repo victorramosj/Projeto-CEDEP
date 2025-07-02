@@ -1,0 +1,457 @@
+{% extends "cedepe/base.html" %}
+{% load static %}
+
+{% block title %}Manual do Utilizador - SIGREF{% endblock %}
+
+{% block extra_style %}
+<style>
+    /* Estilos personalizados para o Manual do Utilizador */
+    :root {
+        --primary-color: #26326D;
+        --accent-color: #E53935;
+        --light-gray: #f8f9fc;
+        --text-dark: #263238;
+        --text-muted: #546E7A;
+        --border-radius-lg: 12px;
+        --border-radius-md: 8px;
+        --green-color: #43A047;
+        --orange-color: #FFB300;
+    }
+
+    .manual-container {
+        padding-top: 2rem;
+    }
+
+    /* Menu de Navegação Lateral */
+    .manual-nav {
+        position: sticky;
+        top: 100px;
+    }
+    .manual-nav .nav-title {
+        font-weight: 700;
+        color: var(--primary-color);
+        padding: 0.75rem 1.25rem;
+        font-size: 1.1rem;
+    }
+    .manual-nav .list-group-item {
+        border: none;
+        padding: 0.75rem 1.25rem;
+        font-weight: 500;
+        color: var(--text-muted);
+        border-left: 3px solid transparent;
+        transition: all 0.2s ease-in-out;
+    }
+    .manual-nav .list-group-item:hover {
+        background-color: #e9ecef;
+        color: var(--primary-color);
+    }
+    .manual-nav .list-group-item.active {
+        background-color: #e8eaf6;
+        color: var(--primary-color);
+        font-weight: 700;
+        border-left-color: var(--primary-color);
+    }
+
+    /* Secções do Manual */
+    .manual-section {
+        padding-top: 80px;
+        margin-top: -80px;
+    }
+    .manual-section h2 {
+        font-weight: 700;
+        color: var(--primary-color);
+        margin-bottom: 1.5rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 2px solid var(--primary-color);
+    }
+    .manual-section h4 {
+        font-weight: 600;
+        color: var(--text-dark);
+        margin-top: 2rem;
+        margin-bottom: 1rem;
+    }
+    .manual-section p, .manual-section li {
+        color: var(--text-muted);
+        line-height: 1.8;
+    }
+    .manual-section .screenshot {
+        border-radius: var(--border-radius-md);
+        border: 1px solid #dee2e6;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.07);
+        margin-top: 1rem;
+        margin-bottom: 1rem;
+    }
+    
+    .card-guia {
+        border: 1px solid #eef2f7;
+        border-radius: var(--border-radius-md);
+        box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        transition: all 0.3s ease;
+    }
+    .card-guia:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+    }
+    .card-guia .card-header {
+        background-color: var(--primary-color);
+        color: white;
+        font-weight: 600;
+    }
+    .card-guia .badge {
+        font-size: 0.8rem;
+    }
+
+    /* Estilo para os cards de conteúdo do manual */
+    .manual-card {
+        background-color: #fff;
+        border-radius: var(--border-radius-lg);
+        box-shadow: 0 6px 20px rgba(38, 50, 109, 0.08);
+        border: 1px solid #eef2f7;
+    }
+
+    /* Botão Voltar ao Topo */
+    .back-to-top {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        display: none;
+        background-color: var(--primary-color);
+        color: white;
+        border: none;
+        border-radius: 50%;
+        width: 50px;
+        height: 50px;
+        font-size: 1.5rem;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        transition: opacity 0.3s, visibility 0.3s;
+        z-index: 1000;
+    }
+    .back-to-top:hover {
+        background-color: #1a237e;
+    }
+    
+    /* Container para alinhar o botão Voltar à direita */
+    .back-button-container {
+        display: flex;
+        justify-content: flex-end;
+        width: 100%;
+        margin-bottom: 1rem; /* Ajuste de margem */
+    }
+
+    /* Estilo para o botão Voltar */
+    .btn-back {
+        display: inline-block;
+        font-weight: 400;
+        line-height: 1.5;
+        color: #546E7A;
+        text-align: center;
+        text-decoration: none;
+        vertical-align: middle;
+        cursor: pointer;
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        user-select: none;
+        background-color: #e3f2fd;
+        border: 1px solid #ced4da;
+        padding: 0.375rem 0.75rem;
+        font-size: 1rem;
+        border-radius: var(--border-radius-md);
+        transition: color .15s ease-in-out,background-color .15s ease-in-out,border-color .15s ease-in-out,box-shadow .15s ease-in-out;
+    }
+    .btn-back:hover {
+        color: var(--primary-color);
+        background-color: #d1e9fc;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container manual-container">
+    <div class="row">
+        <!-- ================================================================== -->
+        <!--                 Coluna do Menu de Navegação Lateral                -->
+        <!-- ================================================================== -->
+        <div class="col-lg-3 d-none d-lg-block">
+            <nav id="manual-nav-menu" class="manual-nav">
+                
+                <div class="list-group">
+                    <div class="nav-title">Menu Rápido</div>
+                    <a class="list-group-item list-group-item-action active" href="#introducao">Introdução</a>
+                    <a class="list-group-item list-group-item-action" href="#guia-rapido">Guia Rápido</a>
+                    
+                    <div class="nav-title mt-3">Guia por Perfil</div>
+                    <a class="list-group-item list-group-item-action" href="#guia-escola">Para Escolas</a>
+                    <a class="list-group-item list-group-item-action" href="#guia-admin">Para Administradores</a>
+
+                    <div class="nav-title mt-3">Funcionalidades</div>
+                    <a class="list-group-item list-group-item-action" href="#pesquisa-filtros">Pesquisa e Filtros</a>
+                    <a class="list-group-item list-group-item-action" href="#monitoramento">Monitoramento</a>
+                    <a class="list-group-item list-group-item-action" href="#faq">Resolução de Problemas</a>
+                </div>
+            </nav>
+        </div>
+
+        <!-- Coluna do Conteúdo do Manual -->
+        <div class="col-lg-9">
+            
+            <!-- ================================================================== -->
+            <!--                Menu de Navegação Mobile                            -->
+            <!-- ================================================================== -->
+            <div class="d-lg-none mb-4">
+                <div class="dropdown">
+                    <button class="btn btn-outline-primary w-100 dropdown-toggle" type="button" id="manualMenuMobile" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="fas fa-bars me-2"></i>Navegar no Manual
+                    </button>
+                    <ul class="dropdown-menu w-100" aria-labelledby="manualMenuMobile">
+                        <li><h6 class="dropdown-header">Menu Rápido</h6></li>
+                        <li><a class="dropdown-item" href="#introducao">Introdução</a></li>
+                        <li><a class="dropdown-item" href="#guia-rapido">Guia Rápido</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><h6 class="dropdown-header">Guia por Perfil</h6></li>
+                        <li><a class="dropdown-item" href="#guia-escola">Para Escolas</a></li>
+                        <li><a class="dropdown-item" href="#guia-admin">Para Administradores</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><h6 class="dropdown-header">Funcionalidades</h6></li>
+                        <li><a class="dropdown-item" href="#pesquisa-filtros">Pesquisa e Filtros</a></li>
+                        <li><a class="dropdown-item" href="#monitoramento">Monitoramento</a></li>
+                        <li><a class="dropdown-item" href="#faq">Resolução de Problemas</a></li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- ================================================================== -->
+            <!--                Container do Botão Voltar                           -->
+            <!-- ================================================================== -->
+            <div class="back-button-container">
+            <!-- Botão Voltar -->
+                <a href="{% url 'sobre' %}" class="btn-back">
+                    <i class="fas fa-arrow-left me-2"></i>Voltar para a página Sobre
+                </a>
+            </div>
+
+            <!-- ================================================================== -->
+            <!--                      Seção Introdução                                         -->
+            <!-- ================================================================== -->
+            <section id="introducao" class="manual-section mb-5">
+                <div class="card manual-card">
+                    <div class="card-body p-4 p-md-5">
+                        <h2><i class="fas fa-book-open me-2"></i>Introdução ao SIGREF</h2>
+                        <p>
+                            Bem-vindo ao Manual do Utilizador do SIGREF. Este guia foi criado para o ajudar a navegar e a utilizar todas as funcionalidades que a nossa plataforma oferece, desde o registo de problemas até à visualização de relatórios.
+                        </p>
+                        <p>
+                            O objetivo do SIGREF é centralizar e otimizar a comunicação sobre problemas e lacunas nas instituições de ensino, permitindo uma gestão mais eficiente e uma resolução mais rápida das questões que surgem no dia a dia.
+                        </p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ================================================================== -->
+            <!--                      Seção guia rápido                             -->
+            <!-- ================================================================== -->
+            <section id="guia-rapido" class="manual-section mb-5">
+                 <div class="card manual-card">
+                    <div class="card-body p-4 p-md-5">
+                        <h2><i class="fas fa-rocket me-2"></i>Guia Rápido</h2>
+                        <p>Precisa de realizar uma tarefa rapidamente? Siga os guias abaixo.</p>
+                        <div class="row g-4">
+                            <div class="col-md-4">
+                                <div class="card card-guia h-100">
+                                    <div class="card-header"><i class="fas fa-tasks me-2"></i>Relatar um Problema</div>
+                                    <div class="card-body">
+                                        <p class="small text-muted">Vá ao <strong>Dashboard</strong>, clique em <strong>"Relatar Problema"</strong>, preencha o formulário no modal e submeta.</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="card card-guia h-100">
+                                    <div class="card-header"><i class="fas fa-puzzle-piece me-2"></i>Relatar uma Lacuna</div>
+                                    <div class="card-body">
+                                        <p class="small text-muted">No <strong>Dashboard</strong>, clique em <strong>"Relatar Lacuna"</strong>, preencha os campos da disciplina e carga horária, e submeta.</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="card card-guia h-100">
+                                    <div class="card-header"><i class="fas fa-history me-2"></i>Acompanhar um Registo</div>
+                                    <div class="card-body">
+                                        <p class="small text-muted">No <strong>Dashboard</strong>, na secção de Históricos, clique em <strong>"Ver Detalhes"</strong> para ver a lista completa e pesquisar.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- ================================================================== -->
+            <!--           Seções por Perfil de Utilizador                          -->    
+            <!-- ================================================================== -->
+            <section id="guia-escola" class="manual-section mb-5">
+                <div class="card manual-card">
+                    <div class="card-body p-4 p-md-5">
+                        <h2><i class="fas fa-school me-2"></i>Guia para Utilizadores de Escola</h2>
+                        <p>Esta secção detalha as funcionalidades disponíveis para os perfis associados a uma escola.</p>
+                        
+                        <h4>O Dashboard da Escola</h4>
+                        <p>É o seu ponto de partida. Aqui, pode ver um resumo das atividades, como o número de problemas pendentes <span class="badge bg-danger">Pendente</span>, em andamento <span class="badge bg-warning text-dark">Em Andamento</span> e resolvidos <span class="badge bg-success">Resolvido</span>, para além dos avisos importantes.</p>
+                        <img src="https://i.imgur.com/8a6YJ5c.jpeg" class="img-fluid screenshot" alt="Screenshot do Dashboard do SIGREF">
+
+                        <h4>Relatar Problemas e Lacunas</h4>
+                        <p>Utilize os botões no dashboard para abrir os formulários e registar novas ocorrências. Preencha a informação solicitada de forma clara para agilizar o processo.</p>
+                        
+                        <h4>Acompanhar Históricos</h4>
+                        <p>Ao clicar em "Ver Detalhes", acede à lista completa de problemas ou lacunas. Nesta tela, pode usar a barra de pesquisa para encontrar registos específicos e clicar em cada um para ver mais detalhes ou alterar o seu estado, se tiver permissão.</p>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- ================================================================== -->
+            <!--           Seção guia para Administradores (GRE)                   -->
+            <!-- ================================================================== -->
+            <section id="guia-admin" class="manual-section mb-5">
+                <div class="card manual-card">
+                    <div class="card-body p-4 p-md-5">
+                        <h2><i class="fas fa-user-shield me-2"></i>Guia para Administradores (GRE)</h2>
+                        <p>Esta secção é dedicada às funcionalidades exclusivas do perfil de administrador.</p>
+                        
+                        <h4>Dashboards Globais</h4>
+                        <p>Para além do dashboard de cada escola, os administradores têm acesso a dashboards globais (em "Monitoramentos") que agregam dados de todas as instituições, permitindo uma visão macro do sistema.</p>
+
+                        <h4>Gestão de Avisos</h4>
+                        <p>Os administradores são os únicos que podem criar, editar e apagar avisos para as escolas. Utilize esta funcionalidade para comunicações importantes, definindo prioridades e datas de expiração.</p>
+                        
+                        <h4>Gestão de Utilizadores e Entidades</h4>
+                        <p>A criação e gestão de novas escolas, setores e contas de utilizador é feita através da área administrativa do Django, acessível em <code>/admin</code>. Esta área oferece controlo total sobre os dados do sistema.</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ================================================================== -->
+            <!--           Seção Pesquisa e Filtros                               -->
+            <!-- ================================================================== -->
+            <section id="pesquisa-filtros" class="manual-section mb-5">
+                 <div class="card manual-card">
+                    <div class="card-body p-4 p-md-5">
+                        <h2><i class="fas fa-filter me-2"></i>Pesquisa e Filtros</h2>
+                        <p>Nas páginas de histórico, pode utilizar a barra de pesquisa para encontrar rapidamente o que procura. A pesquisa é sensível ao contexto:</p>
+                        <ul>
+                            <li><strong>No histórico de problemas:</strong> Pode pesquisar por nome do utilizador, nome do setor ou palavras na descrição.</li>
+                            <li><strong>No histórico de lacunas:</strong> A pesquisa foca-se no nome da disciplina.</li>
+                        </ul>
+                        <p>Para além da pesquisa, pode também utilizar os filtros de estado para refinar ainda mais os resultados.</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ================================================================== -->
+            <!--           Seção Monitoramento                                      -->
+            <!-- ================================================================== -->
+            <section id="monitoramento" class="manual-section mb-5">
+                <div class="card manual-card">
+                    <div class="card-body p-4 p-md-5">
+                        <h2><i class="fas fa-chart-line me-2"></i>Monitoramento</h2>
+                        <p>
+                            Acessa os dados e estatísticas para uma visão geral da gestão e performance da sua instituição.
+                        </p>
+                        <!-- IMPORTANTE: Atualize o caminho 'src' para a sua imagem -->
+                        <img src="{% static 'images/monitoramento_screenshot.png' %}" class="img-fluid screenshot" alt="Screenshot da funcionalidade de Monitoramento" 
+                        onerror="this.onerror=null;this.src='https://placehold.co/800x400/26326D/FFFFFF?text=Monitoramento';">
+                    </div>
+                </div>
+            </section>
+
+            <!-- ================================================================== -->
+            <!--           Seção Resolução de Problemas Comuns                      -->
+            <!-- ================================================================== -->
+            <section id="faq" class="manual-section mb-5">
+                <div class="card manual-card">
+                    <div class="card-body p-4 p-md-5">
+                        <h2><i class="fas fa-question-circle me-2"></i>Resolução de Problemas Comuns</h2>
+                        
+                        <h4>O que acontece depois de eu relatar um problema?</h4>
+                        <p>Após o registo, o problema é encaminhado para o setor responsável selecionado. Poderá acompanhar a mudança de estado na página de histórico.</p>
+
+                        <h4>Posso editar um problema ou lacuna depois de o ter criado?</h4>
+                        <p>Atualmente, a edição não está disponível para utilizadores de escola. Se precisar de corrigir alguma informação, por favor, entre em contacto com um administrador do sistema.</p>
+                        
+                        <h4>Esqueci-me da minha palavra-passe. O que faço?</h4>
+                        <p>Na página de login, clique em "Esqueceu-se da palavra-passe?". Siga as instruções para receber um e-mail com um link para redefinir a sua palavra-passe.</p>
+                    </div>
+                </div>
+            </section>
+            
+        </div>
+    </div>
+</div>
+
+<!-- ================================================================== -->
+<!--           Botão Voltar ao Topo                                      -->
+<!-- ================================================================== -->
+<button id="back-to-top-btn" class="btn back-to-top" title="Voltar ao topo">
+    <i class="fas fa-arrow-up"></i>
+</button>
+{% endblock %}
+
+{% block extra_script %}
+<script>
+// Script para o manual de uso do SIGREF
+// Este script adiciona funcionalidades de navegação suave, destaque de links ativos e um botão "
+document.addEventListener('DOMContentLoaded', function() {
+    const navMenu = document.getElementById('manual-nav-menu');
+    const mobileNavLinks = document.querySelectorAll('#manualMenuMobile a');
+    const backToTopBtn = document.getElementById('back-to-top-btn');
+
+    // Função para scroll suave
+    function handleScrollLink(e) {
+        e.preventDefault();
+        const targetId = this.getAttribute('href');
+        const targetElement = document.querySelector(targetId);
+        if (targetElement) {
+            targetElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+    }
+
+    // Ativa o link de navegação ativo ao rolar a página (Desktop)
+    if (navMenu) {
+        const navLinks = navMenu.querySelectorAll('.list-group-item');
+        const sections = document.querySelectorAll('.manual-section');
+        
+        const observer = new IntersectionObserver(entries => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    navLinks.forEach(link => {
+                        link.classList.remove('active');
+                        if (link.getAttribute('href').substring(1) === entry.target.id) {
+                            link.classList.add('active');
+                        }
+                    });
+                }
+            });
+        }, { threshold: 0.3, rootMargin: '-80px 0px -40% 0px' });
+
+        sections.forEach(section => observer.observe(section));
+        navLinks.forEach(link => link.addEventListener('click', handleScrollLink));
+    }
+
+    // Adiciona scroll suave para links no menu mobile
+
+    mobileNavLinks.forEach(link => link.addEventListener('click', handleScrollLink));
+
+    // Lógica para o botão "Voltar ao Topo"
+    if(backToTopBtn) {
+        window.onscroll = function() {
+            if (document.body.scrollTop > 200 || document.documentElement.scrollTop > 200) {
+                backToTopBtn.style.display = "block";
+            } else {
+                backToTopBtn.style.display = "none";
+            }
+        };
+
+        backToTopBtn.addEventListener('click', function() {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+    }
+});
+</script>
+{% endblock %}

@@ -134,6 +134,9 @@ def user_logout(request):
     messages.info(request, "Você saiu da conta.")
     return redirect("home")
 
+# =============================================================================
+#  VIEW PARA REGISTRO DE NOVO USUÁRIO
+# =============================================================================
 def register(request):
     if request.method == "POST":
         form = UserCreationForm(request.POST)
@@ -147,8 +150,6 @@ def register(request):
     return render(request, "cedepe/register.html", {"form": form})
 
 
-
-
 # =============================================================================
 #  VIEW PARA DA PÁGINA 'SOBRE'
 # =============================================================================
@@ -158,4 +159,12 @@ def sobre(request):
         'versao': '1.0.0',
         'autores': 'Giselle Souza Novaes de Sá, João Victor, Lucas Vinicius de Souza Bastos e Victor Kauê da Silva Alves', # Lista de autores
     }
+    # Renderiza o template 'sobre.html' com o contexto fornecido
     return render(request, 'cedepe/sobre.html', context)
+
+
+# =============================================================================
+#  VIEW PARA DA PÁGINA 'MANUAL'
+# =============================================================================
+def manual_view(request):
+    return render(request, 'cedepe/manual.html')
