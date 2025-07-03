@@ -435,6 +435,41 @@ class SelecionarEscolaView(LoginRequiredMixin, ListView):
         ctx['q'] = self.request.GET.get('q', '')
         ctx['setores'] = Setor.objects.all().order_by('nome')
         return ctx
+    
+# --- NOVA API para Seleção de Escolas ---
+class EscolaSelectionAPIView(APIView):
+    # Permissões: Para um app, você provavelmente usará TokenAuthentication ou SessionAuthentication
+    # Use IsAuthenticated para garantir que o usuário esteja logado.
+    permission_classes = [permissions.IsAuthenticated] 
+
+    def get(self, request, format=None):
+        user = request.user
+        
+        # Replicando a lógica de get_queryset da SelecionarEscolaView para a API
+        if hasattr(user, 'greuser'):
+            gre_user = user.greuser
+            # Se o usuário for Escola ou Monitor, ele só vê as escolas associadas ao seu GREUser
+            # Para outros tipos (Admin, Coordenador, Chefe de Setor, CEDEPE), eles podem ver todas as escolas
+            if gre_user.is_escola() or gre_user.is_monitor():
+                queryset = gre_user.escolas.all()
+            else: # Admin, Coordenador, Chefe de Setor, CEDEPE (ou outros que podem ver todas)
+                queryset = Escola.objects.all()
+        else:
+            queryset = Escola.objects.none() # Usuários sem GREUser associado não veem escolas
+
+        # Lógica de busca (q=query)
+        q = request.GET.get('q', '').strip()
+        if q:
+            queryset = queryset.filter(
+                Q(nome__icontains=q) |
+                Q(inep__icontains=q) |
+                Q(nome_gestor__icontains=q)
+            ).distinct()
+        
+        # Serializa os dados das escolas
+        # É crucial passar o 'request' no contexto para que 'build_absolute_uri' funcione no serializer
+        serializer = EscolaSerializer(queryset, many=True, context={'request': request})
+        return Response(serializer.data)
 
 
 from django.shortcuts import render, get_object_or_404
@@ -900,3 +935,382 @@ def greuser_search(request):
         for u in users
     ]
     return JsonResponse({"results": results})
+
+
+
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import permissions, status # Importe permissions e status
+from rest_framework.authtoken.models import Token # Importe Token
+
+# Importe todos os modelos necessários
+from .models import Escola, Setor, Questionario, Pergunta, Monitoramento, Resposta, GREUser
+from problemas.models import Lacuna, ProblemaUsuario, AvisoImportante, ConfirmacaoAviso
+from .serializers import (
+    EscolaSerializer, SetorSerializer, QuestionarioSerializer, PerguntaSerializer, 
+    MonitoramentoSerializer, RespostaSerializer, GREUserSerializer,
+    
+)
+from problemas.serializers import (LacunaSerializer, ProblemaUsuarioSerializer, AvisoImportanteSerializer )
+# --- Suas views existentes (mantidas para contexto) ---
+# class SelecionarEscolaView(LoginRequiredMixin, ListView): ...
+# def api_login(request): ... (já ajustada no chat anterior para retornar token)
+
+# --- API para o Dashboard da Escola (AJUSTADA: Avisos Re-incluídos) ---
+class EscolaDashboardAPIView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request, escola_id=None, format=None):
+        user = request.user
+        gre_user = None
+        
+        try:
+            gre_user = user.greuser
+        except GREUser.DoesNotExist:
+            return Response({"detail": "Perfil de usuário GRE não encontrado."}, status=status.HTTP_403_FORBIDDEN)
+
+        escola = None
+        if gre_user.is_escola() or gre_user.is_monitor():
+            if escola_id:
+                escola = get_object_or_404(gre_user.escolas.all(), id=escola_id)
+            else:
+                escola = gre_user.escolas.first()
+                if not escola:
+                    return Response({"detail": "Nenhuma escola associada ao seu perfil."}, status=status.HTTP_404_NOT_FOUND)
+        else:
+            if escola_id:
+                escola = get_object_or_404(Escola, id=escola_id)
+            else:
+                return Response({"detail": "ID da escola é obrigatório para este tipo de usuário."}, status=status.HTTP_400_BAD_REQUEST)
+
+        if not (gre_user.is_admin() or gre_user.is_coordenador() or gre_user.is_cedepes() or gre_user.pode_acessar_escola(escola)):
+            return Response({"detail": "Você não tem permissão para acessar o dashboard desta escola."}, status=status.HTTP_403_FORBIDDEN)
+
+        if escola is None:
+            return Response({"detail": "Escola não encontrada ou não associada ao usuário."}, status=status.HTTP_404_NOT_FOUND)
+
+        # =================================================================
+        # LÓGICA DE DADOS DO DASHBOARD (Avisos Re-incluídos)
+        # =================================================================
+        agora = timezone.now()
+
+        # Dados da Escola
+        escola_data = EscolaSerializer(escola, context={'request': request}).data
+
+        # --- Lógica de Avisos RE-INCLUÍDA ---
+        avisos_queryset = AvisoImportante.objects.filter(
+            escola=escola,
+            ativo=True
+        ).filter(
+            Q(data_expiracao__isnull=True) | Q(data_expiracao__gte=agora)
+        ).order_by('-prioridade', '-data_criacao')
+
+        avisos_visualizados_ids = set(ConfirmacaoAviso.objects.filter(
+            escola=escola,
+            status='visualizado'
+        ).values_list('aviso_id', flat=True))
+
+        avisos_data = []
+        for aviso in avisos_queryset:
+            # USA SEU AvisoImportanteSerializer existente
+            aviso_serializer = AvisoImportanteSerializer(aviso, context={'request': request}).data
+            aviso_serializer['ja_visualizado'] = aviso.id in avisos_visualizados_ids
+            avisos_data.append(aviso_serializer)
+        
+        # Estatísticas de lacunas (mantida)
+        total_lacunas = Lacuna.objects.filter(escola=escola).count()
+        lacunas_resolvidas = Lacuna.objects.filter(escola=escola, status='R').count()
+        lacunas_pendentes = Lacuna.objects.filter(escola=escola, status='P').count()
+        lacunas_andamento = Lacuna.objects.filter(escola=escola, status='E').count()
+        lacunas_este_mes = Lacuna.objects.filter(escola=escola, criado_em__month=agora.month, criado_em__year=agora.year).count()
+        
+        # Estatísticas de problemas (mantida)
+        total_problemas = ProblemaUsuario.objects.filter(escola=escola).count()
+        problemas_resolvidos = ProblemaUsuario.objects.filter(escola=escola, status='R').count()
+        problemas_pendentes = ProblemaUsuario.objects.filter(escola=escola, status='P').count()
+        problemas_andamento = ProblemaUsuario.objects.filter(escola=escola, status='E').count()
+        problemas_este_mes = ProblemaUsuario.objects.filter(escola=escola, criado_em__month=agora.month, criado_em__year=agora.year).count()
+
+        dashboard_data = {
+            'escola': escola_data,
+            'avisos': avisos_data, # Retorna a lista de avisos reais
+            'lacunas_stats': {
+                'total': total_lacunas,
+                'resolvidas': lacunas_resolvidas,
+                'pendentes': lacunas_pendentes,
+                'em_andamento': lacunas_andamento,
+                'este_mes': lacunas_este_mes,
+            },
+            'problemas_stats': {
+                'total': total_problemas,
+                'resolvidos': problemas_resolvidos,
+                'pendentes': problemas_pendentes,
+                'em_andamento': problemas_andamento,
+                'este_mes': problemas_este_mes,
+            },
+            'user_is_escola': gre_user.is_escola(),
+            'user_is_monitor': gre_user.is_monitor(),
+            'user_is_admin': gre_user.is_admin(),
+            'user_is_coordenador': gre_user.is_coordenador(),
+            'user_is_chefe_setor': gre_user.is_chefe_setor(),
+            'user_is_cedepes': gre_user.is_cedepes(),
+        }
+
+        return Response(dashboard_data)
+
+# --- API para Marcar Aviso como Visualizado (mantida) ---
+class ConfirmarVisualizacaoAvisoAPIView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request, aviso_id, format=None):
+        user = request.user
+        escola_id = request.data.get('escola_id')
+
+        if not escola_id:
+            return Response({"detail": "ID da escola é obrigatório."}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            aviso = get_object_or_404(AvisoImportante, id=aviso_id)
+            escola = get_object_or_404(Escola, id=escola_id)
+
+            if hasattr(user, 'greuser'):
+                gre_user = user.greuser
+                if (gre_user.is_escola() or gre_user.is_monitor()) and escola not in gre_user.escolas.all():
+                    return Response({"detail": "Você não tem permissão para marcar avisos para esta escola."}, status=status.HTTP_403_FORBIDDEN)
+            else:
+                return Response({"detail": "Perfil de usuário não encontrado."}, status=status.HTTP_403_FORBIDDEN)
+
+            confirmacao, created = ConfirmacaoAviso.objects.get_or_create(
+                aviso=aviso,
+                escola=escola,
+                defaults={'status': 'visualizado'}
+            )
+            
+            if not created:
+                if confirmacao.status != 'visualizado':
+                    confirmacao.status = 'visualizado'
+                    confirmacao.save()
+                    return Response({"status": "success", "message": "Aviso atualizado para visualizado."})
+                return Response({"status": "already_viewed", "message": "Aviso já estava marcado como visualizado."})
+            
+            return Response({"status": "success", "message": "Aviso marcado como visualizado."})
+
+        except AvisoImportante.DoesNotExist:
+            return Response({"detail": "Aviso não encontrado."}, status=status.HTTP_404_NOT_FOUND)
+        except Escola.DoesNotExist:
+            return Response({"detail": "Escola não encontrada."}, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            print(f"Erro ao marcar aviso como visualizado: {e}")
+            return Response({"detail": "Ocorreu um erro interno."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        
+# --- NOVA API para Listar Questionários por Escola ---
+class QuestionariosEscolaAPIView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request, escola_id, format=None):
+        user = request.user
+        escola = get_object_or_404(Escola, id=escola_id)
+
+        gre_user = None
+        try:
+            gre_user = user.greuser
+        except GREUser.DoesNotExist:
+            return Response({"detail": "Perfil de usuário GRE não encontrado."}, status=status.HTTP_403_FORBIDDEN)
+
+        if not gre_user.pode_acessar_escola(escola):
+            return Response({"detail": "Você não tem permissão para acessar esta escola."}, status=status.HTTP_403_FORBIDDEN)
+
+        agora = timezone.localtime(timezone.now())
+        inicio_hoje = agora.replace(hour=0, minute=0, second=0, microsecond=0)
+        fim_hoje = agora.replace(hour=23, minute=59, second=59, microsecond=999999)
+        
+        # Monitoramentos do usuário logado para esta escola
+        meus_monitoramentos = Monitoramento.objects.filter(
+            escola=escola,
+            respondido_por=user
+        )
+        
+        meus_monitoramentos_hoje = meus_monitoramentos.filter(
+            criado_em__range=(inicio_hoje, fim_hoje)
+        ).count()
+        
+        meus_monitoramentos_total = meus_monitoramentos.count()
+        
+        # Setores que o usuário já respondeu questionários HOJE
+        setores_respondidos_hoje = Setor.objects.filter(
+            questionario__monitoramentos__escola=escola,
+            questionario__monitoramentos__respondido_por=user,
+            questionario__monitoramentos__criado_em__range=(inicio_hoje, fim_hoje)
+        ).distinct()
+        
+        # Questionários que o usuário já respondeu HOJE
+        questionarios_respondidos_hoje = Questionario.objects.filter(
+            monitoramentos__escola=escola,
+            monitoramentos__respondido_por=user,
+            monitoramentos__criado_em__range=(inicio_hoje, fim_hoje)
+        ).distinct()
+        
+        # Filtra os questionários da escola e anota contagens
+        questionarios_queryset = Questionario.objects.filter(
+            escolas_destino=escola
+        ).annotate(
+            total_respostas=Count('monitoramentos'),
+            respostas_hoje=Count(
+                'monitoramentos', 
+                filter=Q(monitoramentos__criado_em__range=(inicio_hoje, fim_hoje))
+            )
+        ).prefetch_related(
+            Prefetch('monitoramentos', queryset=Monitoramento.objects.order_by('-criado_em'), to_attr='latest_monitoramentos')
+        )
+        
+        # Serializa os questionários e adiciona a data da última resposta
+        questionarios_data = []
+        for q in questionarios_queryset:
+            q_data = QuestionarioSerializer(q, context={'request': request}).data
+            q_data['respostas_hoje'] = q.respostas_hoje
+            q_data['total_respostas'] = q.total_respostas
+            # Adiciona a última resposta para 'timesince'
+            q_data['ultima_resposta_criado_em'] = q.latest_monitoramentos[0].criado_em.isoformat() if q.latest_monitoramentos else None
+            questionarios_data.append(q_data)
+
+        total_hoje = sum(q.respostas_hoje for q in questionarios_queryset)
+        total_geral = sum(q.total_respostas for q in questionarios_queryset)
+        
+        ultima_resposta_geral = Monitoramento.objects.filter(
+            escola=escola
+        ).order_by('-criado_em').values_list('criado_em', flat=True).first()
+
+        response_data = {
+            'escola': EscolaSerializer(escola, context={'request': request}).data,
+            'questionarios': questionarios_data,
+            'total_hoje': total_hoje,
+            'total_geral': total_geral,
+            'ultima_resposta_geral': ultima_resposta_geral.isoformat() if ultima_resposta_geral else None,
+            'hoje': agora.date().isoformat(),
+            'meus_monitoramentos_hoje': meus_monitoramentos_hoje,
+            'meus_monitoramentos_total': meus_monitoramentos_total,
+            'setores_respondidos': SetorSerializer(setores_respondidos_hoje, many=True).data,
+            'questionarios_respondidos': QuestionarioSerializer(questionarios_respondidos_hoje, many=True).data,
+            'user_is_monitor': gre_user.is_monitor(), # Para lógica de exibição no frontend
+        }
+        return Response(response_data)
+
+# --- NOVA API para Responder Questionário ---
+class ResponderQuestionarioAPIView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+    # Se for lidar com upload de arquivo (foto_comprovante), descomente as linhas abaixo:
+    # parser_classes = [JSONParser, MultiPartParser, FormParser] 
+
+    def get(self, request, escola_id, questionario_id, format=None):
+        user = request.user
+        escola = get_object_or_404(Escola, id=escola_id)
+        questionario = get_object_or_404(Questionario, id=questionario_id)
+
+        # Verificar permissão de acesso à escola
+        gre_user = None
+        try:
+            gre_user = user.greuser
+        except GREUser.DoesNotExist:
+            return Response({"detail": "Perfil de usuário GRE não encontrado."}, status=status.HTTP_403_FORBIDDEN)
+
+        if not (gre_user.is_admin() or gre_user.is_coordenador() or gre_user.is_cedepes() or gre_user.pode_acessar_escola(escola)):
+            return Response({"detail": "Você não tem permissão para acessar este questionário para esta escola."}, status=status.HTTP_403_FORBIDDEN)
+        
+        # Verificar se o questionário está atribuído a esta escola
+        if escola not in questionario.escolas_destino.all():
+            return Response({"detail": "Este questionário não está atribuído a esta escola."}, status=status.HTTP_403_FORBIDDEN)
+
+        perguntas = Pergunta.objects.filter(questionario=questionario).order_by('ordem')
+        
+        # Serializa os dados
+        escola_data = EscolaSerializer(escola, context={'request': request}).data
+        questionario_data = QuestionarioSerializer(questionario, context={'request': request}).data
+        perguntas_data = PerguntaSerializer(perguntas, many=True, context={'request': request}).data
+
+        # Adiciona o tipo de resposta display para o frontend
+        for pergunta_item in perguntas_data:
+            pergunta_obj = get_object_or_404(Pergunta, id=pergunta_item['id'])
+            pergunta_item['tipo_resposta_display'] = pergunta_obj.get_tipo_resposta_display()
+
+        response_data = {
+            'escola': escola_data,
+            'questionario': questionario_data,
+            'perguntas': perguntas_data,
+            'hoje': timezone.now().isoformat(), # Retorna a data de hoje no formato ISO
+        }
+        return Response(response_data)
+
+    def post(self, request, escola_id, questionario_id, format=None):
+        user = request.user
+        escola = get_object_or_404(Escola, id=escola_id)
+        questionario = get_object_or_404(Questionario, id=questionario_id)
+
+        # Verificar permissão
+        gre_user = None
+        try:
+            gre_user = user.greuser
+        except GREUser.DoesNotExist:
+            return Response({"detail": "Perfil de usuário GRE não encontrado."}, status=status.HTTP_403_FORBIDDEN)
+
+        if not (gre_user.is_admin() or gre_user.is_coordenador() or gre_user.is_cedepes() or gre_user.pode_acessar_escola(escola)):
+            return Response({"detail": "Você não tem permissão para responder questionários para esta escola."}, status=status.HTTP_403_FORBIDDEN)
+        
+        if escola not in questionario.escolas_destino.all():
+            return Response({"detail": "Este questionário não está atribuído a esta escola."}, status=status.HTTP_403_FORBIDDEN)
+
+        # Processar as respostas
+        # request.data já contém o corpo da requisição parseado (JSON, Form Data, etc.)
+        respostas_data = request.data.get('respostas', [])
+        # foto_comprovante_data = request.FILES.get('foto_comprovante') # Se for lidar com upload de arquivo
+
+        if not respostas_data:
+            return Response({"detail": "Nenhuma resposta fornecida."}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Cria um novo Monitoramento
+        monitoramento = Monitoramento.objects.create(
+            questionario=questionario,
+            escola=escola,
+            respondido_por=user,
+            # foto_comprovante=foto_comprovante_data # Atribuir se houver upload de arquivo
+        )
+
+        # Salva as respostas
+        for resposta_item in respostas_data:
+            pergunta_id = resposta_item.get('pergunta_id')
+            
+            # Validação básica para garantir que a pergunta pertence a este questionário
+            try:
+                pergunta = Pergunta.objects.get(id=pergunta_id, questionario=questionario)
+            except Pergunta.DoesNotExist:
+                # Se a pergunta não for encontrada ou não pertencer ao questionário,
+                # você pode logar, ignorar ou retornar um erro.
+                # Para este exemplo, vamos retornar um erro.
+                monitoramento.delete() # Remove o monitoramento criado se houver erro nas perguntas
+                return Response({"detail": f"Pergunta com ID {pergunta_id} não encontrada ou não pertence a este questionário."}, status=status.HTTP_400_BAD_REQUEST)
+            
+            # Adaptação para os tipos de resposta
+            resposta_sn = None
+            resposta_num = None
+            resposta_texto = None
+
+            if pergunta.tipo_resposta == 'SN':
+                resposta_sn = resposta_item.get('resposta_sn')
+            elif pergunta.tipo_resposta == 'NU':
+                # Tenta converter para float, validação mais robusta pode ser feita no serializer
+                try:
+                    resposta_num = float(resposta_item.get('resposta_num'))
+                except (ValueError, TypeError):
+                    monitoramento.delete()
+                    return Response({"detail": f"Resposta numérica inválida para pergunta {pergunta.id}."}, status=status.HTTP_400_BAD_REQUEST)
+            elif pergunta.tipo_resposta == 'TX':
+                resposta_texto = resposta_item.get('resposta_texto')
+
+            Resposta.objects.create(
+                monitoramento=monitoramento,
+                pergunta=pergunta,
+                resposta_sn=resposta_sn,
+                resposta_num=resposta_num,
+                resposta_texto=resposta_texto
+            )
+        
+        return Response({"status": "success", "message": "Questionário respondido com sucesso!", "monitoramento_id": monitoramento.id}, status=status.HTTP_201_CREATED)

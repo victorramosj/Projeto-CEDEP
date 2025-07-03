@@ -37,6 +37,7 @@ class EscolaSerializer(serializers.ModelSerializer):
             return self.context['request'].build_absolute_uri(obj.foto_fachada.url)
         return None
 
+
 class GREUserSerializer(serializers.ModelSerializer):
     user = UserSerializer()
     setor = serializers.PrimaryKeyRelatedField(queryset=Setor.objects.all(), allow_null=True)

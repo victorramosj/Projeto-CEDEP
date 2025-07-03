@@ -1,399 +1,384 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { 
   View, 
-  TextInput, 
   Text, 
   StyleSheet, 
   ActivityIndicator, 
-  Modal, 
-  TouchableOpacity, 
-  Image,
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
-  Dimensions
+  ScrollView, 
+  RefreshControl,
+  Image
 } from 'react-native';
-import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import NetInfo from '@react-native-community/netinfo';
-import gre from '../assets/CARD DA GRE.png';
-import sigref from '../assets/SIGREF.png';
-// const API_BASE_URL = 'http://127.0.0.1:8000'; //para pc
-const API_BASE_URL = 'http://10.0.2.2:8000'; //para emulador android
-//const API_BASE_URL = 'https://grefloresta.com.br';  URL do servidor remoto
-const { width, height } = Dimensions.get('window');
+import axios from 'axios';
+import { useRoute, useNavigation } from '@react-navigation/native';
 
-const LoginScreen = ({ navigation }) => {
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [showErrorModal, setShowErrorModal] = useState(false);
-  const [errorMessage, setErrorMessage] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
+const API_BASE_URL = 'http://10.0.2.2:8000';
+const SCHOOL_DASHBOARD_CACHE_KEY = '@school_dashboard_cache_'; 
 
-  const handleLogin = async () => {
-    if (!username || !password) {
-      setErrorMessage('Preencha todos os campos.');
-      setShowErrorModal(true);
-      return;
+const SchoolDashboardScreen = () => {
+  const route = useRoute();
+  const navigation = useNavigation();
+  const { escolaId, userData } = route.params;
+
+  const [dashboardData, setDashboardData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [isOffline, setIsOffline] = useState(false);
+
+  const loadDashboardFromCache = useCallback(async () => {
+    try {
+      const cachedData = await AsyncStorage.getItem(`${SCHOOL_DASHBOARD_CACHE_KEY}${escolaId}`);
+      if (cachedData) {
+        setDashboardData(JSON.parse(cachedData));
+      }
+    } catch (e) {
+      console.error('Erro ao carregar cache:', e);
     }
+  }, [escolaId]);
 
-    setLoading(true);
-    
+  const fetchDashboardData = useCallback(async () => {
+    setRefreshing(true);
     try {
       const netInfoState = await NetInfo.fetch();
-      if (!netInfoState.isConnected) {
-        setErrorMessage('Você está offline. Conecte-se à internet para fazer login.');
-        setShowErrorModal(true);
-        setLoading(false);
+      setIsOffline(!netInfoState.isConnected);
+      if (!netInfoState.isConnected) return;
+
+      const token = userData?.token;
+      if (!token) {
+        navigation.replace('Login');
         return;
       }
 
-      const response = await axios.post(`${API_BASE_URL}/api/login/`, { 
-        username,
-        password
-      }, {
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json'
-        }
+      const url = `${API_BASE_URL}/monitoramento/api/escola-dashboard/${escolaId}/`;
+      const response = await axios.get(url, {
+        headers: { 'Authorization': `Token ${token}` }
       });
-
-      if (response.data.success) {
-        const userData = {
-          fullName: response.data.full_name,
-          userType: response.data.user_type,
-          userTypeDisplay: response.data.user_type_display,
-          accessLevel: response.data.access_level,
-          email: response.data.email,
-          username: response.data.username,
-          celular: response.data.celular,
-          cpf: response.data.cpf,
-          escolas: response.data.escolas || [],
-          setor: response.data.setor || null,
-        };
-
-        await AsyncStorage.setItem('userData', JSON.stringify(userData));
-        navigation.replace('Home', { userData });
-      } else {
-        setErrorMessage(response.data.message || 'Erro desconhecido na resposta do servidor.');
-        setShowErrorModal(true);
-      }
+      
+      setDashboardData(response.data);
+      await AsyncStorage.setItem(`${SCHOOL_DASHBOARD_CACHE_KEY}${escolaId}`, JSON.stringify(response.data));
     } catch (error) {
-      console.error("Erro na requisição de login:", error);
-      if (error.response) {
-        setErrorMessage(error.response.data.message || 'Erro na resposta do servidor.');
-      } else if (error.request) {
-        setErrorMessage('Não foi possível conectar ao servidor. Verifique sua conexão ou o endereço do servidor.');
-      } else {
-        setErrorMessage('Ocorreu um erro inesperado ao tentar fazer login.');
-      }
-      setShowErrorModal(true);
+      console.error('Erro ao buscar dados:', error);
+      setIsOffline(true);
     } finally {
-      setLoading(false);
+      setRefreshing(false);
     }
-  };
+  }, [escolaId, userData, navigation]);
+
+  useEffect(() => {
+    const initializeData = async () => {
+      setLoading(true);
+      await loadDashboardFromCache();
+      setLoading(false);
+      fetchDashboardData();
+    };
+    initializeData();
+  }, [loadDashboardFromCache, fetchDashboardData]);
+
+  const onRefresh = useCallback(() => {
+    fetchDashboardData();
+  }, [fetchDashboardData]);
+
+  if (loading || !dashboardData) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#0000ff" />
+        <Text style={styles.loadingText}>Carregando dados da escola...</Text>
+      </View>
+    );
+  }
+
+  const escola = dashboardData.escola;
+  const lacunasStats = dashboardData.lacunas_stats;
+  const problemasStats = dashboardData.problemas_stats;
+  const avisos = dashboardData.avisos;
 
   return (
-    <KeyboardAvoidingView
+    <ScrollView 
       style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      contentContainerStyle={styles.contentContainer}
+      refreshControl={
+        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+      }
     >
-      <ScrollView 
-        contentContainerStyle={styles.scrollContainer}
-        keyboardShouldPersistTaps="handled"
-      >
-        {/* Logos */}
-        <View style={styles.logoContainer}>
-          <Image 
-            source={sigref}  
-            style={styles.sigrefLogo}
-            resizeMode="contain"
-          />
-         
+      {isOffline && (
+        <View style={styles.offlineBanner}>
+          <Text style={styles.offlineText}>Modo offline - Dados podem estar desatualizados</Text>
         </View>
-        
-        <Text style={styles.title}>Sistema Integrado de Gerência Regional de Educação de Floresta</Text>
-        
-        {/* Formulário de Login */}
-        <View style={styles.formContainer}>
-          <View style={styles.inputContainer}>
-            <Text style={styles.inputLabel}>Usuário</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="Digite seu usuário"
-              placeholderTextColor="#999"
-              value={username}
-              onChangeText={setUsername}
-              autoCapitalize="none"
-              autoCorrect={false}
-            />
-          </View>
+      )}
+
+      {/* Informações da Escola */}
+      <View style={styles.headerEscola}>
+        <View style={styles.infoEscola}>
+          <Text style={styles.escolaTitle}>{escola.nome} - {escola.inep}</Text>
           
-          <View style={styles.inputContainer}>
-            <Text style={styles.inputLabel}>Senha</Text>
-            <View style={styles.passwordContainer}>
-              <TextInput
-                style={[styles.input, styles.passwordInput]}
-                placeholder="Digite sua senha"
-                placeholderTextColor="#999"
-                secureTextEntry={!showPassword}
-                value={password}
-                onChangeText={setPassword}
-              />
-              <TouchableOpacity 
-                style={styles.showPasswordButton}
-                onPress={() => setShowPassword(!showPassword)}
-              >
-                <Text style={styles.showPasswordText}>
-                  {showPassword ? 'Ocultar' : 'Mostrar'}
-                </Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-          
-          {/* Botão de Login */}
-          <TouchableOpacity 
-            style={styles.loginButton}
-            onPress={handleLogin}
-            disabled={loading}
-          >
-            {loading ? (
-              <ActivityIndicator size="small" color="#fff" />
-            ) : (
-              <Text style={styles.loginButtonText}>Entrar</Text>
-            )}
-          </TouchableOpacity>
-          
-          {/* Esqueceu a senha? */}
-          <TouchableOpacity style={styles.forgotPassword}>
-            <Text style={styles.forgotPasswordText}>Esqueceu sua senha?</Text>
-          </TouchableOpacity>
-        </View>
-        
-        {/* Rodapé */}
-        <View style={styles.footer}>
-           <Image 
-            source={gre} 
-            style={styles.greLogo}
-            resizeMode="contain"
-          />
-          <Text style={styles.footerText}>© 2025 SIGREF - GRE Floresta</Text>
-          <Text style={styles.footerText}>Versão 1.0.0</Text>
-        </View>
-      </ScrollView>
-      
-      {/* Modal de Erro Personalizado */}
-      <Modal
-        animationType="fade"
-        transparent={true}
-        visible={showErrorModal}
-        onRequestClose={() => {
-          setShowErrorModal(!showErrorModal);
-        }}
-      >
-        <View style={styles.centeredView}>
-          <View style={styles.modalView}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Erro no Login</Text>
-            </View>
-            <View style={styles.modalBody}>
-             
-              <Text style={styles.modalText}>{errorMessage}</Text>
-            </View>
-            <TouchableOpacity
-              style={styles.buttonClose}
-              onPress={() => setShowErrorModal(false)}
-            >
-              <Text style={styles.textStyle}>Entendido</Text>
-            </TouchableOpacity>
+          <View style={styles.infoEscolaDetalhes}>
+            <Text style={styles.detailText}>📍 {escola.endereco || "Endereço não cadastrado"}</Text>
+            <Text style={styles.detailText}>📞 {escola.telefone || "Telefone não cadastrado"}</Text>
+            <Text style={styles.detailText}>✉️ Email: {escola.email_escola}</Text>
+            <Text style={styles.detailText}>👤 Gestor: {escola.nome_gestor}</Text>
+            <Text style={styles.detailText}>📞 Telefone Gestor: {escola.telefone_gestor || "Não cadastrado"}</Text>
+            
           </View>
         </View>
-      </Modal>
-    </KeyboardAvoidingView>
+        
+        <View style={styles.imagemEscola}>
+          {escola.foto_fachada_url ? (
+            <Image source={{ uri: escola.foto_fachada_url }} style={styles.schoolMainImage} />
+          ) : (
+            <Image source={require('../assets/default-school.jpeg')} style={styles.schoolMainImage} />
+          )}
+        </View>
+      </View>
+
+      {/* Indicadores Principais */}
+      <View style={styles.row}>
+        <View style={styles.cardIndicador}>
+          <Text style={styles.cardIndicadorText}>LACUNAS EXISTENTES</Text>
+          <Text style={styles.cardIndicadorValue}>{lacunasStats.total}</Text>
+        </View>
+        
+        <View style={styles.cardIndicador}>
+          <Text style={styles.cardIndicadorText}>PROBLEMAS EXISTENTES</Text>
+          <Text style={styles.cardIndicadorValue}>{problemasStats.total}</Text>
+        </View>
+      </View>
+
+      {/* Avisos Importantes */}
+      <View style={styles.avisosImportantes}>
+        <Text style={styles.avisosTitle}>AVISOS IMPORTANTES</Text>
+        
+        {avisos && avisos.length > 0 ? (
+          avisos.slice(0, 3).map(aviso => (
+            <View key={aviso.id} style={styles.avisoItem}>
+              <Text style={styles.avisoTitulo}>{aviso.titulo}</Text>
+              <Text style={styles.avisoMensagem}>{aviso.mensagem}</Text>
+              <Text style={styles.avisoData}>
+                {new Date(aviso.data_criacao).toLocaleDateString('pt-BR')}
+              </Text>
+            </View>
+          ))
+        ) : (
+          <Text style={styles.noAvisosText}>Nenhum aviso no momento</Text>
+        )}
+      </View>
+
+      {/* Estatísticas de Problemas */}
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>ESTATÍSTICAS DE PROBLEMAS</Text>
+        <View style={styles.statsContainer}>
+          <View style={styles.statItem}>
+            <Text style={styles.statValue}>{problemasStats.resolvidos}</Text>
+            <Text style={styles.statLabel}>Resolvidos</Text>
+          </View>
+          <View style={styles.statItem}>
+            <Text style={styles.statValue}>{problemasStats.pendentes}</Text>
+            <Text style={styles.statLabel}>Pendentes</Text>
+          </View>
+          <View style={styles.statItem}>
+            <Text style={styles.statValue}>{problemasStats.em_andamento}</Text>
+            <Text style={styles.statLabel}>Em Andamento</Text>
+          </View>
+          <View style={styles.statItem}>
+            <Text style={styles.statValue}>{problemasStats.este_mes}</Text>
+            <Text style={styles.statLabel}>Este Mês</Text>
+          </View>
+        </View>
+      </View>
+
+      {/* Estatísticas de Lacunas */}
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>ESTATÍSTICAS DE LACUNAS</Text>
+        <View style={styles.statsContainer}>
+          <View style={styles.statItem}>
+            <Text style={styles.statValue}>{lacunasStats.resolvidas}</Text>
+            <Text style={styles.statLabel}>Resolvidas</Text>
+          </View>
+          <View style={styles.statItem}>
+            <Text style={styles.statValue}>{lacunasStats.pendentes}</Text>
+            <Text style={styles.statLabel}>Pendentes</Text>
+          </View>
+          <View style={styles.statItem}>
+            <Text style={styles.statValue}>{lacunasStats.em_andamento}</Text>
+            <Text style={styles.statLabel}>Em Andamento</Text>
+          </View>
+          <View style={styles.statItem}>
+            <Text style={styles.statValue}>{lacunasStats.este_mes}</Text>
+            <Text style={styles.statLabel}>Este Mês</Text>
+          </View>
+        </View>
+      </View>
+    </ScrollView>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8f9fc',
+    backgroundColor: '#f5f5f5',
   },
-  scrollContainer: {
-    flexGrow: 1,
+  contentContainer: {
+    padding: 16,
+    paddingBottom: 30,
+  },
+  loadingContainer: {
+    flex: 1,
     justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#f5f5f5',
+  },
+  loadingText: {
+    marginTop: 16,
+    fontSize: 16,
+    color: '#333',
+  },
+  offlineBanner: {
+    backgroundColor: '#ffcc00',
+    padding: 10,
+    borderRadius: 8,
+    marginBottom: 16,
+    alignItems: 'center',
+  },
+  offlineText: {
+    color: '#333',
+    fontWeight: 'bold',
+  },
+  headerEscola: {
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    marginBottom: 24,
+    elevation: 3,
+    overflow: 'hidden',
+  },
+  infoEscola: {
     padding: 20,
   },
-  logoContainer: {
-    alignItems: 'center',
-    marginBottom: 30,
+  escolaTitle: {
+    color: '#26326D',
+    fontSize: 22,
+    fontWeight: 'bold',
+    marginBottom: 16,
   },
-  sigrefLogo: {
-    width: width * 0.7,
-    height: 80,
-    marginBottom: 20,
+  infoEscolaDetalhes: {
+    marginBottom: 16,
   },
-  greLogo: {
-    width: width * 0.5,
-    height: 60,
-  },
-  title: {
-    fontSize: 18,
-    fontWeight: '600',
-    textAlign: 'center',
-    marginBottom: 30,
-    color: '#2d3748',
-  },
-  formContainer: {
-    backgroundColor: '#ffffff',
-    borderRadius: 16,
-    padding: 25,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 5,
-    marginBottom: 20,
-  },
-  inputContainer: {
-    marginBottom: 20,
-  },
-  inputLabel: {
-    fontSize: 16,
-    fontWeight: '500',
+  detailText: {
+    fontSize: 15,
+    color: '#546E7A',
     marginBottom: 8,
-    color: '#4a5568',
   },
-  input: {
-    height: 50,
-    borderColor: '#e2e8f0',
-    borderWidth: 1,
-    paddingHorizontal: 15,
-    borderRadius: 10,
-    backgroundColor: '#f8fafc',
-    fontSize: 16,
-    color: '#1a202c',
+  imagemEscola: {
+    width: '100%',
+    height: 200,
   },
-  passwordContainer: {
+  schoolMainImage: {
+    width: '100%',
+    height: '100%',
+    resizeMode: 'cover',
+  },
+  row: {
     flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 24,
+  },
+  cardIndicador: {
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    padding: 20,
+    width: '48%',
+    elevation: 2,
     alignItems: 'center',
-    borderColor: '#e2e8f0',
-    borderWidth: 1,
-    borderRadius: 10,
-    backgroundColor: '#f8fafc',
   },
-  passwordInput: {
-    flex: 1,
-    height: 50,
-    paddingHorizontal: 15,
-    borderWidth: 0,
+  cardIndicadorText: {
+    color: '#546E7A',
+    fontWeight: '500',
+    fontSize: 14,
+    marginBottom: 8,
+    textAlign: 'center',
   },
-  showPasswordButton: {
-    paddingHorizontal: 15,
-    height: 50,
-    justifyContent: 'center',
+  cardIndicadorValue: {
+    fontSize: 36,
+    fontWeight: '700',
+    color: '#26326D',
   },
-  showPasswordText: {
-    color: '#4e73df',
-    fontWeight: '600',
+  avisosImportantes: {
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    padding: 20,
+    marginBottom: 24,
+    elevation: 2,
   },
-  loginButton: {
-    backgroundColor: '#4e73df',
-    borderRadius: 10,
-    height: 50,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginTop: 10,
-    shadowColor: '#4e73df',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 6,
-    elevation: 4,
+  avisosTitle: {
+    color: '#E53935',
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 16,
   },
-  loginButtonText: {
-    color: 'white',
+  avisoItem: {
+    marginBottom: 16,
+    paddingBottom: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
+  },
+  avisoTitulo: {
+    fontWeight: 'bold',
+    fontSize: 16,
+    marginBottom: 8,
+    color: '#263238',
+  },
+  avisoMensagem: {
+    color: '#546E7A',
+    fontSize: 14,
+    marginBottom: 8,
+  },
+  avisoData: {
+    fontSize: 12,
+    color: '#90A4AE',
+    textAlign: 'right',
+  },
+  noAvisosText: {
+    color: '#90A4AE',
+    textAlign: 'center',
+    fontStyle: 'italic',
+    paddingVertical: 16,
+  },
+  section: {
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    padding: 20,
+    marginBottom: 24,
+    elevation: 2,
+  },
+  sectionTitle: {
+    color: '#263238',
     fontWeight: 'bold',
     fontSize: 18,
+    marginBottom: 16,
   },
-  forgotPassword: {
-    alignSelf: 'center',
-    marginTop: 20,
+  statsContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
   },
-  forgotPasswordText: {
-    color: '#4e73df',
-    fontWeight: '600',
-  },
-  footer: {
-    marginTop: 20,
+  statItem: {
+    width: '48%',
+    backgroundColor: '#F5F7FA',
+    borderRadius: 8,
+    padding: 16,
+    marginBottom: 16,
     alignItems: 'center',
   },
-  footerText: {
-    fontSize: 12,
-    color: '#718096',
-    marginBottom: 5,
+  statValue: {
+    fontSize: 24,
+    fontWeight: '700',
+    color: '#26326D',
+    marginBottom: 8,
   },
-  // Estilos para o Modal
-  centeredView: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-  },
-  modalView: {
-    margin: 20,
-    backgroundColor: 'white',
-    borderRadius: 20,
-    overflow: 'hidden',
-    width: '90%',
-    maxWidth: 400,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-    elevation: 5,
-  },
-  modalHeader: {
-    backgroundColor: '#4e73df',
-    padding: 15,
-    alignItems: 'center',
-  },
-  modalTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: 'white',
-  },
-  modalBody: {
-    padding: 25,
-    alignItems: 'center',
-  },
-  modalLogo: {
-    width: 80,
-    height: 40,
-    marginBottom: 20,
-  },
-  modalText: {
-    marginBottom: 15,
+  statLabel: {
+    fontSize: 14,
+    color: '#546E7A',
     textAlign: 'center',
-    fontSize: 16,
-    color: '#555',
-    lineHeight: 24,
-  },
-  buttonClose: {
-    backgroundColor: '#4e73df',
-    borderRadius: 10,
-    padding: 12,
-    elevation: 2,
-    margin: 20,
-    alignItems: 'center',
-  },
-  textStyle: {
-    color: 'white',
-    fontWeight: 'bold',
-    fontSize: 16,
   },
 });
 
-export default LoginScreen;
+export default SchoolDashboardScreen;

@@ -29,7 +29,7 @@ from rest_framework.views import APIView
 from monitoramento.models import Escola, GREUser, Setor
 
 from .forms import AvisoForm, LacunaForm, ProblemaUsuarioForm
-from .models import (AvisoImportante, ConfirmacaoAviso, Lacuna,ProblemaUsuario, STATUS_CHOICES)
+from .models import (AvisoImportante,  Lacuna,ProblemaUsuario, STATUS_CHOICES)
 from .serializers import (AvisoImportanteSerializer, LacunaSerializer,ProblemaUsuarioSerializer)
 
 # ADICIONADO DEPOIS 

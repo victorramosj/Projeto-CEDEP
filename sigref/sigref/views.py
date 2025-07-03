@@ -146,9 +146,9 @@ import json
 from .forms import LoginForm
 from monitoramento.models import GREUser, Escola, Setor # Importe Escola e Setor também
 from problemas.models import Lacuna, ProblemaUsuario # Para o dashboard, se necessário
+from rest_framework.authtoken.models import Token # Importe o modelo Token
 
 
-# --- NOVA View de Login para API (para o app React Native) ---
 @csrf_exempt
 def api_login(request):
     if request.method == "POST":
@@ -167,32 +167,32 @@ def api_login(request):
                 try:
                     gre_user = GREUser.objects.get(user=user)
                     
+                    # Gera ou recupera o token de autenticação para o usuário
+                    token, created = Token.objects.get_or_create(user=user)
+
                     user_data = {
                         'success': True,
+                        'token': token.key, # Retorna o token de autenticação
                         'full_name': gre_user.nome_completo,
-                        'user_type': gre_user.tipo_usuario, # O código do tipo (ex: 'ESCOLA')
-                        'user_type_display': gre_user.get_tipo_usuario_display(), # O nome legível (ex: 'Escola')
+                        'user_type': gre_user.tipo_usuario,
+                        'user_type_display': gre_user.get_tipo_usuario_display(),
                         'access_level': gre_user.nivel_acesso,
-                        'email': user.email, # E-mail do usuário do Django
-                        'username': user.username, # Username do Django
+                        'email': user.email,
+                        'username': user.username,
                         'celular': gre_user.celular,
                         'cpf': gre_user.cpf,
                     }
 
-                    # Adiciona informações específicas baseadas no tipo de usuário
                     if gre_user.is_escola() or gre_user.is_monitor():
-                        # Inclui IDs e nomes das escolas associadas
                         user_data['escolas'] = list(gre_user.escolas.values('id', 'nome', 'inep', 'email_escola', 'nome_gestor'))
                     
                     if gre_user.setor:
-                        # Inclui informações do setor
                         user_data['setor'] = {
                             'id': gre_user.setor.id,
                             'nome': gre_user.setor.nome,
                             'hierarquia_completa': gre_user.setor.hierarquia_completa,
-                        }                   
+                        }
                     
-
                     return JsonResponse(user_data)
 
                 except GREUser.DoesNotExist:
@@ -202,8 +202,7 @@ def api_login(request):
         except json.JSONDecodeError:
             return JsonResponse({'success': False, 'message': 'Requisição JSON inválida.'}, status=400)
         except Exception as e:
-            # Captura exceções gerais para depuração
-            print(f"Erro na api_login: {e}") # Loga o erro no console do servidor
+            print(f"Erro na api_login: {e}")
             return JsonResponse({'success': False, 'message': f'Um erro inesperado ocorreu: {str(e)}'}, status=500)
     else:
         return JsonResponse({'success': False, 'message': 'Método não permitido.'}, status=405)

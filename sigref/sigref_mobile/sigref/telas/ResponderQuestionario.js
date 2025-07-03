@@ -1,399 +1,527 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { 
   View, 
-  TextInput, 
   Text, 
   StyleSheet, 
   ActivityIndicator, 
-  Modal, 
-  TouchableOpacity, 
-  Image,
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
-  Dimensions
+  ScrollView, 
+  RefreshControl,
+  TouchableOpacity,
+  TextInput,
+  Alert,
+  Button // Importe Button
 } from 'react-native';
-import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import NetInfo from '@react-native-community/netinfo';
-import gre from '../assets/CARD DA GRE.png';
-import sigref from '../assets/SIGREF.png';
-// const API_BASE_URL = 'http://127.0.0.1:8000'; //para pc
-const API_BASE_URL = 'http://10.0.2.2:8000'; //para emulador android
-//const API_BASE_URL = 'https://grefloresta.com.br';  URL do servidor remoto
-const { width, height } = Dimensions.get('window');
+import axios from 'axios';
+import { useRoute, useNavigation } from '@react-navigation/native';
+import { format, parseISO } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 
-const LoginScreen = ({ navigation }) => {
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [showErrorModal, setShowErrorModal] = useState(false);
-  const [errorMessage, setErrorMessage] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
+// URL base da sua API Django
+const API_BASE_URL = 'http://10.0.2.2:8000'; // para emulador android
 
-  const handleLogin = async () => {
-    if (!username || !password) {
-      setErrorMessage('Preencha todos os campos.');
-      setShowErrorModal(true);
-      return;
-    }
+const ResponderQuestionarioScreen = () => {
+  const route = useRoute();
+  const navigation = useNavigation();
+  const { escolaId, questionarioId, userData } = route.params; // Recebe IDs e userData
 
-    setLoading(true);
-    
+  const [questionarioData, setQuestionarioData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [isOffline, setIsOffline] = useState(false);
+  const [respostas, setRespostas] = useState({}); // Armazena as respostas do usuário {pergunta_id: valor}
+
+  // Função para buscar dados do questionário da API
+  const fetchQuestionarioData = useCallback(async (showAlert = true) => {
+    setRefreshing(true);
     try {
       const netInfoState = await NetInfo.fetch();
+      setIsOffline(!netInfoState.isConnected);
+
       if (!netInfoState.isConnected) {
-        setErrorMessage('Você está offline. Conecte-se à internet para fazer login.');
-        setShowErrorModal(true);
-        setLoading(false);
+        if (showAlert) {
+          Alert.alert('Modo Offline', 'Você está offline. Não é possível carregar o questionário. Conecte-se à internet.');
+        }
         return;
       }
 
-      const response = await axios.post(`${API_BASE_URL}/api/login/`, { 
-        username,
-        password
-      }, {
+      const token = userData?.token;
+      if (!token) {
+        Alert.alert('Erro de Autenticação', 'Token de autenticação não encontrado. Por favor, faça login novamente.');
+        navigation.replace('Login');
+        return;
+      }
+
+      const url = `${API_BASE_URL}/monitoramento/api/escola/${escolaId}/questionario/${questionarioId}/responder/`;
+      const response = await axios.get(url, {
+        headers: { 'Authorization': `Token ${token}` }
+      });
+      
+      setQuestionarioData(response.data);
+      // Não cacheamos o questionário aqui, pois ele pode mudar e não queremos respostas antigas.
+      // O cache seria para a lista de questionários, não para o formulário em si.
+      console.log('Questionário carregado da API.');
+
+    } catch (error) {
+      console.error('Erro ao buscar questionário:', error);
+      if (error.response && (error.response.status === 403 || error.response.status === 401)) {
+        Alert.alert('Acesso Negado', 'Você não tem permissão para acessar este questionário ou sua sessão expirou. Por favor, faça login novamente.');
+        navigation.replace('Login');
+      } else {
+        Alert.alert('Erro', 'Não foi possível carregar o questionário. Verifique a conexão ou tente novamente.');
+      }
+      setIsOffline(true);
+    } finally {
+      setRefreshing(false);
+      setLoading(false); // Desativa o loading mesmo em caso de erro
+    }
+  }, [escolaId, questionarioId, userData, navigation]);
+
+  useEffect(() => {
+    setLoading(true);
+    fetchQuestionarioData();
+  }, [fetchQuestionarioData]);
+
+  const onRefresh = useCallback(() => {
+    fetchQuestionarioData(true);
+  }, [fetchQuestionarioData]);
+
+  const handleRespostaChange = (perguntaId, tipoResposta, value) => {
+    setRespostas(prevRespostas => ({
+      ...prevRespostas,
+      [perguntaId]: { tipo: tipoResposta, valor: value }
+    }));
+  };
+
+  const handleSubmit = async () => {
+    // Validação básica: verificar se todas as perguntas foram respondidas
+    const todasRespondidas = questionarioData.perguntas.every(pergunta => {
+      const resposta = respostas[pergunta.id];
+      if (!resposta) return false; // Não respondida
+      
+      // Lógica de validação mais específica para cada tipo de resposta
+      if (pergunta.tipo_resposta === 'SN' && (resposta.valor !== 'S' && resposta.valor !== 'N')) return false;
+      if (pergunta.tipo_resposta === 'NU' && (isNaN(parseFloat(resposta.valor)))) return false;
+      if (pergunta.tipo_resposta === 'TX' && !resposta.valor.trim()) return false;
+
+      return true;
+    });
+
+    if (!todasRespondidas) {
+      Alert.alert('Erro', 'Por favor, responda todas as perguntas.');
+      return;
+    }
+
+    setLoading(true); // Ativa loading para envio
+    try {
+      const token = userData?.token;
+      if (!token) {
+        Alert.alert('Erro de Autenticação', 'Token de autenticação não encontrado. Por favor, faça login novamente.');
+        navigation.replace('Login');
+        return;
+      }
+
+      const formattedRespostas = questionarioData.perguntas.map(pergunta => {
+        const resposta = respostas[pergunta.id];
+        const data = {
+          pergunta_id: pergunta.id,
+        };
+        if (pergunta.tipo_resposta === 'SN') {
+          data.resposta_sn = resposta.valor;
+        } else if (pergunta.tipo_resposta === 'NU') {
+          data.resposta_num = parseFloat(resposta.valor);
+        } else if (pergunta.tipo_resposta === 'TX') {
+          data.resposta_texto = resposta.valor;
+        }
+        return data;
+      });
+
+      const payload = {
+        respostas: formattedRespostas,
+        // foto_comprovante: null, // Se for implementar upload de imagem, adicione aqui
+      };
+
+      const url = `${API_BASE_URL}/monitoramento/api/escola/${escolaId}/questionario/${questionarioId}/responder/`;
+      const response = await axios.post(url, payload, {
         headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json'
+          'Authorization': `Token ${token}`,
+          'Content-Type': 'application/json', // Importante para JSON
         }
       });
 
-      if (response.data.success) {
-        const userData = {
-          fullName: response.data.full_name,
-          userType: response.data.user_type,
-          userTypeDisplay: response.data.user_type_display,
-          accessLevel: response.data.access_level,
-          email: response.data.email,
-          username: response.data.username,
-          celular: response.data.celular,
-          cpf: response.data.cpf,
-          escolas: response.data.escolas || [],
-          setor: response.data.setor || null,
-        };
+      if (response.data.status === 'success') {
+        Alert.alert('Sucesso', 'Questionário respondido com sucesso!');
+        navigation.goBack(); // Volta para a tela anterior (Dashboard da Escola)
+      } else {
+        Alert.alert('Erro', response.data.message || 'Falha ao enviar questionário.');
+      }
 
-        await AsyncStorage.setItem('userData', JSON.stringify(userData));
-        navigation.replace('Home', { userData });
-      } else {
-        setErrorMessage(response.data.message || 'Erro desconhecido na resposta do servidor.');
-        setShowErrorModal(true);
-      }
     } catch (error) {
-      console.error("Erro na requisição de login:", error);
-      if (error.response) {
-        setErrorMessage(error.response.data.message || 'Erro na resposta do servidor.');
-      } else if (error.request) {
-        setErrorMessage('Não foi possível conectar ao servidor. Verifique sua conexão ou o endereço do servidor.');
-      } else {
-        setErrorMessage('Ocorreu um erro inesperado ao tentar fazer login.');
-      }
-      setShowErrorModal(true);
+      console.error('Erro ao enviar questionário:', error.response?.data || error.message);
+      Alert.alert('Erro', error.response?.data?.message || 'Não foi possível enviar o questionário. Verifique a conexão.');
     } finally {
-      setLoading(false);
+      setLoading(false); // Desativa loading após envio
     }
   };
 
+  if (loading || !questionarioData) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#0000ff" />
+        <Text style={styles.loadingText}>Carregando questionário...</Text>
+      </View>
+    );
+  }
+
+  const escola = questionarioData.escola;
+  const questionario = questionarioData.questionario;
+  const perguntas = questionarioData.perguntas;
+
+  // Calcula o progresso
+  const answeredQuestionsCount = perguntas.filter(pergunta => {
+    const resposta = respostas[pergunta.id];
+    if (!resposta) return false;
+    
+    if (pergunta.tipo_resposta === 'SN' && (resposta.valor === 'S' || resposta.valor === 'N')) return true;
+    if (pergunta.tipo_resposta === 'NU' && !isNaN(parseFloat(resposta.valor))) return true;
+    if (pergunta.tipo_resposta === 'TX' && resposta.valor.trim()) return true;
+    
+    return false;
+  }).length;
+  const totalQuestions = perguntas.length;
+  const progressPercentage = (answeredQuestionsCount / totalQuestions) * 100;
+
   return (
-    <KeyboardAvoidingView
-      style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-    >
+    <View style={styles.container}>
       <ScrollView 
-        contentContainerStyle={styles.scrollContainer}
-        keyboardShouldPersistTaps="handled"
+        contentContainerStyle={styles.contentContainer}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }
       >
-        {/* Logos */}
-        <View style={styles.logoContainer}>
-          <Image 
-            source={sigref}  
-            style={styles.sigrefLogo}
-            resizeMode="contain"
-          />
-         
+        {isOffline && (
+          <View style={styles.offlineBanner}>
+            <Text style={styles.offlineText}>Você está offline. Não é possível enviar respostas.</Text>
+          </View>
+        )}
+
+        {/* Header */}
+        <View style={styles.header}>
+          <View style={styles.headerInfo}>
+            <Text style={styles.headerTitle}>Responder Questionário</Text>
+            <Text style={styles.headerSubtitle}>{escola.nome}</Text>
+            <Text style={styles.headerDate}>{format(parseISO(questionarioData.hoje), 'dd/MM/yyyy', { locale: ptBR })}</Text>
+          </View>
+          <Text style={styles.questionarioTitle}>{questionario.titulo}</Text>
+          <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
+            <Text style={styles.backButtonText}>Voltar</Text>
+          </TouchableOpacity>
         </View>
-        
-        <Text style={styles.title}>Sistema Integrado de Gerência Regional de Educação de Floresta</Text>
-        
-        {/* Formulário de Login */}
-        <View style={styles.formContainer}>
-          <View style={styles.inputContainer}>
-            <Text style={styles.inputLabel}>Usuário</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="Digite seu usuário"
-              placeholderTextColor="#999"
-              value={username}
-              onChangeText={setUsername}
-              autoCapitalize="none"
-              autoCorrect={false}
-            />
+
+        {/* Progress Bar */}
+        <View style={styles.progressContainer}>
+          <View style={styles.progressTextContainer}>
+            <Text>Progresso</Text>
+            <Text>{answeredQuestionsCount}/{totalQuestions}</Text>
           </View>
-          
-          <View style={styles.inputContainer}>
-            <Text style={styles.inputLabel}>Senha</Text>
-            <View style={styles.passwordContainer}>
-              <TextInput
-                style={[styles.input, styles.passwordInput]}
-                placeholder="Digite sua senha"
-                placeholderTextColor="#999"
-                secureTextEntry={!showPassword}
-                value={password}
-                onChangeText={setPassword}
-              />
-              <TouchableOpacity 
-                style={styles.showPasswordButton}
-                onPress={() => setShowPassword(!showPassword)}
-              >
-                <Text style={styles.showPasswordText}>
-                  {showPassword ? 'Ocultar' : 'Mostrar'}
-                </Text>
-              </TouchableOpacity>
+          <View style={styles.progressBarBackground}>
+            <View style={[styles.progressBarFill, { width: `${progressPercentage}%` }]} />
+          </View>
+        </View>
+
+        {/* Perguntas */}
+        <View style={styles.questionsAccordion}>
+          {perguntas.map((pergunta, index) => (
+            <View key={pergunta.id} style={styles.perguntaCard}>
+              <View style={styles.cardHeader}>
+                <Text style={styles.perguntaNumber}>Pergunta #{index + 1}</Text>
+                <Text style={styles.badge}>{pergunta.tipo_resposta_display || pergunta.tipo_resposta}</Text>
+              </View>
+              <View style={styles.cardBody}>
+                <Text style={styles.perguntaText}>{pergunta.texto}</Text>
+                
+                {pergunta.tipo_resposta === 'SN' && (
+                  <View style={styles.respostaButtonGroup}>
+                    <TouchableOpacity
+                      style={[styles.respostaButton, respostas[pergunta.id]?.valor === 'S' && styles.respostaButtonActiveSuccess]}
+                      onPress={() => handleRespostaChange(pergunta.id, 'SN', 'S')}
+                    >
+                      <Text style={styles.respostaButtonText}>Sim</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={[styles.respostaButton, respostas[pergunta.id]?.valor === 'N' && styles.respostaButtonActiveDanger]}
+                      onPress={() => handleRespostaChange(pergunta.id, 'SN', 'N')}
+                    >
+                      <Text style={styles.respostaButtonText}>Não</Text>
+                    </TouchableOpacity>
+                  </View>
+                )}
+
+                {pergunta.tipo_resposta === 'NU' && (
+                  <TextInput
+                    style={styles.textInput}
+                    keyboardType="numeric"
+                    placeholder="Digite um número"
+                    value={respostas[pergunta.id]?.valor || ''}
+                    onChangeText={(text) => handleRespostaChange(pergunta.id, 'NU', text)}
+                  />
+                )}
+
+                {pergunta.tipo_resposta === 'TX' && (
+                  <TextInput
+                    style={styles.textInputMultiline}
+                    multiline
+                    numberOfLines={4}
+                    placeholder="Digite sua resposta"
+                    value={respostas[pergunta.id]?.valor || ''}
+                    onChangeText={(text) => handleRespostaChange(pergunta.id, 'TX', text)}
+                  />
+                )}
+              </View>
             </View>
-          </View>
-          
-          {/* Botão de Login */}
+          ))}
+        </View>
+
+        {/* Botões de Ação */}
+        <View style={styles.actionButtonsContainer}>
+          <Button title="Enviar Respostas" onPress={handleSubmit} color="#007bff" />
+        </View>
+
+        {/* Botões de Navegação Adicionais */}
+        <View style={styles.additionalButtonsContainer}>
           <TouchableOpacity 
-            style={styles.loginButton}
-            onPress={handleLogin}
-            disabled={loading}
+            style={styles.additionalButton} 
+            onPress={() => navigation.navigate('VisualizarQuestionario', { questionarioId: questionario.id, escolaId: escola.id, userData: userData })}
           >
-            {loading ? (
-              <ActivityIndicator size="small" color="#fff" />
-            ) : (
-              <Text style={styles.loginButtonText}>Entrar</Text>
-            )}
+            <Text style={styles.additionalButtonText}>Visualizar Relatório deste Questionário</Text>
           </TouchableOpacity>
-          
-          {/* Esqueceu a senha? */}
-          <TouchableOpacity style={styles.forgotPassword}>
-            <Text style={styles.forgotPasswordText}>Esqueceu sua senha?</Text>
+          <TouchableOpacity 
+            style={styles.additionalButton} 
+            onPress={() => navigation.navigate('RelatarProblemas', { escolaId: escola.id, userData: userData })}
+          >
+            <Text style={styles.additionalButtonText}>Relatar Problemas para esta Escola</Text>
           </TouchableOpacity>
         </View>
-        
-        {/* Rodapé */}
-        <View style={styles.footer}>
-           <Image 
-            source={gre} 
-            style={styles.greLogo}
-            resizeMode="contain"
-          />
-          <Text style={styles.footerText}>© 2025 SIGREF - GRE Floresta</Text>
-          <Text style={styles.footerText}>Versão 1.0.0</Text>
-        </View>
+
       </ScrollView>
-      
-      {/* Modal de Erro Personalizado */}
-      <Modal
-        animationType="fade"
-        transparent={true}
-        visible={showErrorModal}
-        onRequestClose={() => {
-          setShowErrorModal(!showErrorModal);
-        }}
-      >
-        <View style={styles.centeredView}>
-          <View style={styles.modalView}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Erro no Login</Text>
-            </View>
-            <View style={styles.modalBody}>
-             
-              <Text style={styles.modalText}>{errorMessage}</Text>
-            </View>
-            <TouchableOpacity
-              style={styles.buttonClose}
-              onPress={() => setShowErrorModal(false)}
-            >
-              <Text style={styles.textStyle}>Entendido</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
-    </KeyboardAvoidingView>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8f9fc',
+    backgroundColor: '#f8f9fa',
   },
-  scrollContainer: {
-    flexGrow: 1,
-    justifyContent: 'center',
-    padding: 20,
+  contentContainer: {
+    padding: 15,
+    paddingBottom: 30,
   },
-  logoContainer: {
-    alignItems: 'center',
-    marginBottom: 30,
-  },
-  sigrefLogo: {
-    width: width * 0.7,
-    height: 80,
-    marginBottom: 20,
-  },
-  greLogo: {
-    width: width * 0.5,
-    height: 60,
-  },
-  title: {
-    fontSize: 18,
-    fontWeight: '600',
-    textAlign: 'center',
-    marginBottom: 30,
-    color: '#2d3748',
-  },
-  formContainer: {
-    backgroundColor: '#ffffff',
-    borderRadius: 16,
-    padding: 25,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 5,
-    marginBottom: 20,
-  },
-  inputContainer: {
-    marginBottom: 20,
-  },
-  inputLabel: {
-    fontSize: 16,
-    fontWeight: '500',
-    marginBottom: 8,
-    color: '#4a5568',
-  },
-  input: {
-    height: 50,
-    borderColor: '#e2e8f0',
-    borderWidth: 1,
-    paddingHorizontal: 15,
-    borderRadius: 10,
-    backgroundColor: '#f8fafc',
-    fontSize: 16,
-    color: '#1a202c',
-  },
-  passwordContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderColor: '#e2e8f0',
-    borderWidth: 1,
-    borderRadius: 10,
-    backgroundColor: '#f8fafc',
-  },
-  passwordInput: {
+  loadingContainer: {
     flex: 1,
-    height: 50,
-    paddingHorizontal: 15,
-    borderWidth: 0,
-  },
-  showPasswordButton: {
-    paddingHorizontal: 15,
-    height: 50,
-    justifyContent: 'center',
-  },
-  showPasswordText: {
-    color: '#4e73df',
-    fontWeight: '600',
-  },
-  loginButton: {
-    backgroundColor: '#4e73df',
-    borderRadius: 10,
-    height: 50,
     justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: '#f8f9fa',
+  },
+  loadingText: {
     marginTop: 10,
-    shadowColor: '#4e73df',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 6,
-    elevation: 4,
+    fontSize: 16,
+    color: '#333',
   },
-  loginButtonText: {
-    color: 'white',
-    fontWeight: 'bold',
-    fontSize: 18,
-  },
-  forgotPassword: {
-    alignSelf: 'center',
-    marginTop: 20,
-  },
-  forgotPasswordText: {
-    color: '#4e73df',
-    fontWeight: '600',
-  },
-  footer: {
-    marginTop: 20,
+  offlineBanner: {
+    backgroundColor: '#ffcc00',
+    padding: 10,
+    borderRadius: 8,
+    marginBottom: 10,
     alignItems: 'center',
   },
-  footerText: {
-    fontSize: 12,
-    color: '#718096',
+  offlineText: {
+    color: '#333',
+    fontWeight: 'bold',
+  },
+  header: {
+    marginBottom: 20,
+    paddingBottom: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
+  },
+  headerInfo: {
+    marginBottom: 10,
+  },
+  headerTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#0d6efd',
     marginBottom: 5,
   },
-  // Estilos para o Modal
-  centeredView: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  headerSubtitle: {
+    fontSize: 18,
+    color: '#6c757d',
+    marginBottom: 5,
   },
-  modalView: {
-    margin: 20,
-    backgroundColor: 'white',
-    borderRadius: 20,
-    overflow: 'hidden',
-    width: '90%',
-    maxWidth: 400,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-    elevation: 5,
+  headerDate: {
+    fontSize: 14,
+    color: '#6c757d',
   },
-  modalHeader: {
-    backgroundColor: '#4e73df',
-    padding: 15,
-    alignItems: 'center',
-  },
-  modalTitle: {
+  questionarioTitle: {
     fontSize: 20,
     fontWeight: 'bold',
+    color: '#333',
+    marginBottom: 15,
+  },
+  backButton: {
+    backgroundColor: '#6c757d',
+    paddingVertical: 8,
+    paddingHorizontal: 15,
+    borderRadius: 8,
+    alignSelf: 'flex-start',
+    marginTop: 10,
+  },
+  backButtonText: {
     color: 'white',
+    fontWeight: 'bold',
   },
-  modalBody: {
-    padding: 25,
-    alignItems: 'center',
+  progressContainer: {
+    marginBottom: 20,
+    backgroundColor: 'white',
+    borderRadius: 8,
+    padding: 15,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
   },
-  modalLogo: {
-    width: 80,
-    height: 40,
+  progressTextContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 8,
+  },
+  progressBarBackground: {
+    height: 10,
+    backgroundColor: '#e9ecef',
+    borderRadius: 10,
+    overflow: 'hidden',
+  },
+  progressBarFill: {
+    height: '100%',
+    backgroundColor: '#0d6efd',
+    borderRadius: 10,
+  },
+  questionsAccordion: {
     marginBottom: 20,
   },
-  modalText: {
-    marginBottom: 15,
-    textAlign: 'center',
-    fontSize: 16,
-    color: '#555',
-    lineHeight: 24,
+  perguntaCard: {
+    backgroundColor: 'white',
+    borderRadius: 12,
+    marginBottom: 10,
+    borderLeftWidth: 4,
+    borderLeftColor: '#0d6efd',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
-  buttonClose: {
-    backgroundColor: '#4e73df',
-    borderRadius: 10,
-    padding: 12,
-    elevation: 2,
-    margin: 20,
+  cardHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    backgroundColor: '#f8f9fa',
+    padding: 15,
+    borderTopLeftRadius: 8,
+    borderTopRightRadius: 8,
+  },
+  perguntaNumber: {
+    fontWeight: 'bold',
+    color: '#333',
+    fontSize: 16,
+  },
+  badge: {
+    backgroundColor: '#6c757d',
+    color: 'white',
+    paddingVertical: 5,
+    paddingHorizontal: 10,
+    borderRadius: 5,
+    fontSize: 12,
+    fontWeight: 'bold',
+  },
+  cardBody: {
+    padding: 15,
+  },
+  perguntaText: {
+    fontSize: 16,
+    marginBottom: 15,
+    color: '#333',
+  },
+  respostaButtonGroup: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    borderRadius: 8,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: '#0d6efd',
+  },
+  respostaButton: {
+    flex: 1,
+    paddingVertical: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'white',
+  },
+  respostaButtonText: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#0d6efd',
+  },
+  respostaButtonActiveSuccess: {
+    backgroundColor: '#28a745', // green
+  },
+  respostaButtonActiveDanger: {
+    backgroundColor: '#dc3545', // red
+  },
+  textInput: {
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 8,
+    padding: 10,
+    fontSize: 16,
+    backgroundColor: 'white',
+  },
+  textInputMultiline: {
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 8,
+    padding: 10,
+    fontSize: 16,
+    backgroundColor: 'white',
+    minHeight: 100,
+    textAlignVertical: 'top', // Para Android, alinha o texto no topo em multiline
+  },
+  actionButtonsContainer: {
+    marginTop: 20,
+    marginBottom: 20,
+  },
+  additionalButtonsContainer: {
+    marginTop: 10,
+    marginBottom: 20,
     alignItems: 'center',
   },
-  textStyle: {
+  additionalButton: {
+    backgroundColor: '#6c757d',
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+    marginBottom: 10,
+    width: '100%',
+    alignItems: 'center',
+  },
+  additionalButtonText: {
     color: 'white',
     fontWeight: 'bold',
     fontSize: 16,
   },
 });
 
-export default LoginScreen;
+export default ResponderQuestionarioScreen;

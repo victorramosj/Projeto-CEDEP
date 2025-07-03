@@ -61,6 +61,7 @@ const LoginScreen = ({ navigation }) => {
 
       if (response.data.success) {
         const userData = {
+          token: response.data.token,
           fullName: response.data.full_name,
           userType: response.data.user_type,
           userTypeDisplay: response.data.user_type_display,
