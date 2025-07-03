@@ -134,3 +134,76 @@ def register(request):
     else:
         form = UserCreationForm()
     return render(request, "cedepe/register.html", {"form": form})
+
+from django.shortcuts import render, redirect
+from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.forms import UserCreationForm
+from django.contrib import messages
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+import json
+
+from .forms import LoginForm
+from monitoramento.models import GREUser, Escola, Setor # Importe Escola e Setor também
+from problemas.models import Lacuna, ProblemaUsuario # Para o dashboard, se necessário
+
+
+# --- NOVA View de Login para API (para o app React Native) ---
+@csrf_exempt
+def api_login(request):
+    if request.method == "POST":
+        try:
+            data = json.loads(request.body)
+            username = data.get('username')
+            password = data.get('password')
+
+            if not username or not password:
+                return JsonResponse({'success': False, 'message': 'Usuário e senha são obrigatórios.'}, status=400)
+
+            user = authenticate(request, username=username, password=password)
+
+            if user is not None:
+                # Autenticação bem-sucedida, agora busca os detalhes do GREUser
+                try:
+                    gre_user = GREUser.objects.get(user=user)
+                    
+                    user_data = {
+                        'success': True,
+                        'full_name': gre_user.nome_completo,
+                        'user_type': gre_user.tipo_usuario, # O código do tipo (ex: 'ESCOLA')
+                        'user_type_display': gre_user.get_tipo_usuario_display(), # O nome legível (ex: 'Escola')
+                        'access_level': gre_user.nivel_acesso,
+                        'email': user.email, # E-mail do usuário do Django
+                        'username': user.username, # Username do Django
+                        'celular': gre_user.celular,
+                        'cpf': gre_user.cpf,
+                    }
+
+                    # Adiciona informações específicas baseadas no tipo de usuário
+                    if gre_user.is_escola() or gre_user.is_monitor():
+                        # Inclui IDs e nomes das escolas associadas
+                        user_data['escolas'] = list(gre_user.escolas.values('id', 'nome', 'inep', 'email_escola', 'nome_gestor'))
+                    
+                    if gre_user.setor:
+                        # Inclui informações do setor
+                        user_data['setor'] = {
+                            'id': gre_user.setor.id,
+                            'nome': gre_user.setor.nome,
+                            'hierarquia_completa': gre_user.setor.hierarquia_completa,
+                        }                   
+                    
+
+                    return JsonResponse(user_data)
+
+                except GREUser.DoesNotExist:
+                    return JsonResponse({'success': False, 'message': 'Perfil de usuário não configurado. Contate o administrador.'}, status=403)
+            else:
+                return JsonResponse({'success': False, 'message': 'Usuário ou senha inválidos.'}, status=401)
+        except json.JSONDecodeError:
+            return JsonResponse({'success': False, 'message': 'Requisição JSON inválida.'}, status=400)
+        except Exception as e:
+            # Captura exceções gerais para depuração
+            print(f"Erro na api_login: {e}") # Loga o erro no console do servidor
+            return JsonResponse({'success': False, 'message': f'Um erro inesperado ocorreu: {str(e)}'}, status=500)
+    else:
+        return JsonResponse({'success': False, 'message': 'Método não permitido.'}, status=405)

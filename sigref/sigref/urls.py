@@ -25,6 +25,9 @@ urlpatterns = [
 
     path('problemas/', include('problemas.urls')),
     
+    # API de login para o app React Native
+    path('api/login/', views.api_login, name='api_login'),
+    
 ]
 # Servir arquivos de mídia em DEBUG
 if settings.DEBUG:

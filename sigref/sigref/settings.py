@@ -47,6 +47,7 @@ INSTALLED_APPS = [
     'rest_framework.authtoken', 
     'django.contrib.humanize',
     'problemas',
+    'corsheaders',
 ]
 
 MIDDLEWARE = [
@@ -58,6 +59,8 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
+    'django.middleware.common.CommonMiddleware',
 ]
 
 ROOT_URLCONF = 'sigref.urls'
@@ -77,6 +80,10 @@ TEMPLATES = [
         },
     },
 ]
+
+CORS_ALLOW_ALL_ORIGINS = True  # Para desenvolvimento
+# Para produção:
+# CORS_ALLOWED_ORIGINS = ['http://localhost:19006', 'exp://192.168.x.x:19000']
 
 WSGI_APPLICATION = 'sigref.wsgi.application'
 
