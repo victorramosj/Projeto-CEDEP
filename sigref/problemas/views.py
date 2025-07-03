@@ -461,50 +461,56 @@ def tela_lacuna_view(request):
 # =============================================================================
 #  VIEW DA TELA PROBLEMA
 # =============================================================================
+@login_required
 def tela_problema_view(request):
-    problemas_list = ProblemaUsuario.objects.select_related('escola', 'usuario__user', 'setor').all()
+    gre_user = request.user.greuser  # obtém o GREUser relacionado ao user
 
-    # Obter os parâmetros de filtro da URL (busca por escola, data e status)
-    escola_query = request.GET.get('escola', '') 	# Pesquisa pela escola
-    data_filter = request.GET.get('data', '')     # Filtro de data
-    status_filter = request.GET.get('status', '')     # Filtro de status
-    setor_filter = request.GET.get('setor', '')   # Filtro de setor
+    # Obtém todos os setores que esse usuário tem permissão para acessar
+    setores_permitidos = gre_user.setores_permitidos()
 
-    # Filtro por Escola
+    # Começa filtrando só pelos setores permitidos
+    problemas_list = ProblemaUsuario.objects.select_related('escola', 'usuario__user', 'setor') \
+        .filter(setor__in=setores_permitidos)
+
+    # Filtros opcionais
+    escola_query = request.GET.get('escola', '')
+    data_filter = request.GET.get('data', '')
+    status_filter = request.GET.get('status', '')
+    setor_filter = request.GET.get('setor', '')
+
     if escola_query:
         problemas_list = problemas_list.filter(escola__nome__icontains=escola_query)
 
-    # Filtro por Data
-    if data_filter == '1': 	# Última semana
+    if data_filter == '1':
         problemas_list = problemas_list.filter(criado_em__gte=datetime.now() - timedelta(weeks=1))
-    elif data_filter == '2': 	# Último mês
+    elif data_filter == '2':
         problemas_list = problemas_list.filter(criado_em__gte=datetime.now() - timedelta(days=30))
-    elif data_filter == '3': 	# Último ano
+    elif data_filter == '3':
         problemas_list = problemas_list.filter(criado_em__gte=datetime.now() - timedelta(days=365))
 
-    #  Filtro por Status
     if status_filter:
         problemas_list = problemas_list.filter(status=status_filter)
 
-    # Filtro por Setor
     if setor_filter:
-        problemas_list = problemas_list.filter(setor__id=setor_filter) 
+        # Garante que o setor filtrado também esteja entre os permitidos
+        if setores_permitidos.filter(id=setor_filter).exists():
+            problemas_list = problemas_list.filter(setor__id=setor_filter)
+        else:
+            problemas_list = problemas_list.none()  # impede acesso indevido
 
-    todos_os_setores = Setor.objects.all().order_by('nome')
+    todos_os_setores = setores_permitidos.order_by('nome')  # só os setores visíveis ao usuário
 
-    # Paginação
-    paginator = Paginator(problemas_list, 6) 	# 6 itens por página
+    paginator = Paginator(problemas_list, 6)
     page_number = request.GET.get('page')
     problemas_page = paginator.get_page(page_number)
-    total_problemas = problemas_list.count() 	# Total de problemas filtrados
+    total_problemas = problemas_list.count()
 
-    # Passar os dados para o template
     context = {
         'problemas_page': problemas_page,
-        'total_problemas': total_problemas, 	# Total de problemas filtrados
-        'search_query': escola_query, 	# Termo de busca (para manter na barra de pesquisa)
-        'request': request, # Passa o request para o template
-        'status_choices': STATUS_CHOICES, #Passa as opções para o template
+        'total_problemas': total_problemas,
+        'search_query': escola_query,
+        'request': request,
+        'status_choices': STATUS_CHOICES,
         'todos_os_setores': todos_os_setores,
     }
 
