@@ -238,7 +238,6 @@ table .form-select {
 
         <div class="container-filtros mb-3">
 
-                <!-- Barra de pesquisa -->
                 <form method="GET" action="{% url 'tela_problemas' %}" class="input-group form-pesquisa">
                     {% csrf_token %}
                     <span class="input-group-text"><i class="fas fa-search"></i></span>
@@ -247,7 +246,6 @@ table .form-select {
 
                 
                 <div class="grupo-controles">
-                    <!-- Filtros -->
                     <div class="grupo-selects">
                         <select class="form-select" name="data" aria-label="Filtro Data">
                             <option value="" {% if not request.GET.data %} selected {% endif %}>Data (Todas)</option>
@@ -271,13 +269,11 @@ table .form-select {
                         </select>
                     </div>
 
-                    <!-- Botão de apagar -->
                     <button class="btnAcao btn btn-danger">Apagar Problema(s)</button>
 
                 </div>
         </div>
 
-        <!-- Tabela de Problemas -->
         <div class="table-responsive mb-3 mt-2">
             <table class="table table-striped mb-0">
                 <thead>
@@ -322,15 +318,14 @@ table .form-select {
                         </tr>
                     {% empty %}
                         <tr>
-                            <td colspan="7" class="text-center p-4">Nenhum problema encontrado.</td>
+                            <td colspan="8" class="text-center p-4">Nenhum problema encontrado.</td>
                         </tr>
                     {% endfor %}
                 </tbody>
             </table>
         </div>
 
-        <!-- Paginação -->
-            {% if problemas_page.paginator.num_pages > 1 %}
+        {% if problemas_page.paginator.num_pages > 1 %}
             <nav aria-label="Page navigation">
                 <ul class="pagination justify-content-center">
                     {% if problemas_page.has_previous %}
@@ -347,11 +342,43 @@ table .form-select {
     </div>
 </div>
 
+<div class="modal fade" id="modalCriarAviso" tabindex="-1" aria-labelledby="modalAvisoLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="modalAvisoLabel">Enviar Aviso sobre Atualização</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+      </div>
+      <div class="modal-body">
+        <form id="form-criar-aviso">
+            <div class="mb-3">
+                <label for="aviso-escola" class="form-label"><b>Escola:</b></label>
+                <input type="text" id="aviso-escola-nome" class="form-control" disabled>
+            </div>
+            <div class="mb-3">
+                <label for="aviso-titulo" class="form-label">Título do Aviso</label>
+                <input type="text" id="aviso-titulo" class="form-control" required>
+            </div>
+            <div class="mb-3">
+                <label for="aviso-mensagem" class="form-label">Mensagem do Aviso</label>
+                <textarea id="aviso-mensagem" class="form-control" rows="5" required></textarea>
+            </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button type="button" id="btn-enviar-aviso" class="btn btn-primary">Atualizar Status e Enviar Aviso</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
 <script>
 document.addEventListener('DOMContentLoaded', () => {
 
     // ==================================================================
-    // PARTE 1: LÓGICA PARA OS FILTROS (MÉTODO MAIS SIMPLES E ROBUSTO)
+    // PARTE 1: LÓGICA PARA OS FILTROS
     // ==================================================================
     const searchInput = document.querySelector("input[name='escola']");
     const selectData = document.querySelector("select[name='data']");
@@ -360,137 +387,181 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Função para aplicar os filtros e redirecionar
     function aplicarFiltros() {
-        // Pega a URL base sem parâmetros
         const baseUrl = window.location.origin + window.location.pathname;
-        
-        // Cria os parâmetros de busca
         const params = new URLSearchParams();
         params.set('escola', searchInput.value);
         params.set('data', selectData.value);
         params.set('status', selectStatus.value);
         params.set('setor', selectSetor.value);
-
-        // Redireciona para a página com os filtros corretos.
         window.location.href = `${baseUrl}?${params.toString()}`;
     }
 
-    // Adiciona o evento de 'change' para cada select
+    // Adiciona o evento de 'change' para cada select de filtro
     selectData.addEventListener('change', aplicarFiltros);
     selectStatus.addEventListener('change', aplicarFiltros);
     selectSetor.addEventListener('change', aplicarFiltros);
 
     // ==================================================================
-    // PARTE 2: LÓGICA PARA ATUALIZAÇÃO DE STATUS (COM DELEGAÇÃO DE EVENTOS)
+    // PARTE 2: LÓGICA ATUALIZADA PARA ATUALIZAÇÃO DE STATUS COM MODAL
     // ==================================================================
     const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
     const tabelaContainer = document.querySelector('.table-responsive');
+    const modalElement = document.getElementById('modalCriarAviso');
+    const modal = new bootstrap.Modal(modalElement);
 
-    const statusColors = {
-        'P': '#ffcccc', 'R': '#ccffcc', 'E': '#ffffcc'
-    };
+    // Seletores dos elementos do Modal
+    const modalTituloInput = document.getElementById('aviso-titulo');
+    const modalMensagemInput = document.getElementById('aviso-mensagem');
+    const modalEscolaNomeInput = document.getElementById('aviso-escola-nome');
+    const btnEnviarAviso = document.getElementById('btn-enviar-aviso');
 
-    function setSelectColor(selectElement) {
-        selectElement.style.backgroundColor = statusColors[selectElement.value] || '#ffffff';
-    }
+    // Variáveis para guardar o contexto da ação
+    let selectAtual = null;
+    let statusOriginal = null;
+    let problemaId = null;
+    let novoStatus = null;
+    let foiEnviado = false; // Flag para controlar se o aviso foi enviado ou cancelado
 
-    // Aplica a cor inicial a todos os selects que já estão na página
-    document.querySelectorAll('.status-updater').forEach(setSelectColor);
-
-    // DELEGAÇÃO DE EVENTO: O "ouvinte" fica no container da tabela, que não é destruído.
-    tabelaContainer.addEventListener('change', function(event) {
-        
-        // Verifica se o elemento que disparou o evento é um select de atualização
+    // Colore os selects de status iniciais
+    const statusColors = {'P': '#ffcccc', 'R': '#ccffcc', 'E': '#ffffcc'};
+    document.querySelectorAll('.status-updater').forEach(select => {
+        select.style.backgroundColor = statusColors[select.value] || '#ffffff';
+    });
+    
+    // Guarda o status original quando o select ganha foco
+    tabelaContainer.addEventListener('focusin', function(event) {
         if (event.target.matches('.status-updater')) {
-            const selectElement = event.target;
-            const problemaId = selectElement.dataset.problemaId;
-            const novoStatus = selectElement.value;
+            statusOriginal = event.target.value;
+        }
+    });
 
-            setSelectColor(selectElement);
+    // Delegação de evento para o 'change' do select de status
+    tabelaContainer.addEventListener('change', function(event) {
+        if (event.target.matches('.status-updater')) {
+            selectAtual = event.target;
+            problemaId = selectAtual.dataset.problemaId;
+            novoStatus = selectAtual.value;
+            const novoStatusTexto = selectAtual.options[selectAtual.selectedIndex].text;
+            
+            const linhaTabela = selectAtual.closest('tr');
+            const nomeEscola = linhaTabela.cells[2].textContent.trim();
+            const descricaoProblema = linhaTabela.cells[1].textContent.trim();
 
-            const url = `{% url 'api_atualizar_status_problema' 0 %}`.replace('0', problemaId);
+            modalEscolaNomeInput.value = nomeEscola;
+            modalTituloInput.value = `Atualização sobre o problema: "${descricaoProblema}"`;
+            modalMensagemInput.value = `Olá! O status do problema reportado ("${descricaoProblema}") foi atualizado para: "${novoStatusTexto}".`;
+            
+            foiEnviado = false; 
+            modal.show();
+        }
+    });
 
-            fetch(url, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': csrftoken
-                },
-                body: JSON.stringify({ status: novoStatus })
+    // Ação do botão de enviar no modal
+    btnEnviarAviso.addEventListener('click', () => {
+        const tituloAviso = modalTituloInput.value;
+        const mensagemAviso = modalMensagemInput.value;
+
+        if (!tituloAviso || !mensagemAviso) {
+            alert('Por favor, preencha o título e a mensagem do aviso.');
+            return;
+        }
+
+        const url = `{% url 'api_atualizar_status_problema' 0 %}`.replace('0', problemaId);
+
+        fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrftoken
+            },
+            body: JSON.stringify({ 
+                status: novoStatus,
+                titulo: tituloAviso,
+                mensagem: mensagemAviso
             })
-            .then(response => {
-                if (!response.ok) throw new Error('Falha na API');
-                return response.json();
-            })
-            .then(data => {
-                console.log('Status atualizado com sucesso:', data);
-                const linhaTabela = document.getElementById(`problema-row-${problemaId}`);
-                if (linhaTabela) {
-                    linhaTabela.classList.add('status-atualizado');
-                    setTimeout(() => {
-                        linhaTabela.classList.remove('status-atualizado');
-                    }, 2000);
+        })
+        .then(response => {
+            const contentType = response.headers.get("content-type");
+            if (contentType && contentType.indexOf("application/json") !== -1) {
+                if (!response.ok) {
+                    return response.json().then(err => { throw new Error(err.detail || 'Falha na API') });
                 }
-            })
-            .catch(error => {
-                console.error('Erro ao atualizar status:', error);
-                alert('Ocorreu um erro ao atualizar o status.');
-            });
+                return response.json();
+            } else {
+                throw new Error("Sua sessão pode ter expirado. Por favor, recarregue a página e tente novamente.");
+            }
+        })
+        .then(data => {
+            console.log('Resposta da API:', data);
+            foiEnviado = true;
+
+            const linhaTabela = document.getElementById(`problema-row-${problemaId}`);
+            if (linhaTabela) {
+                selectAtual.style.backgroundColor = statusColors[novoStatus] || '#ffffff';
+                linhaTabela.classList.add('status-atualizado');
+                setTimeout(() => {
+                    linhaTabela.classList.remove('status-atualizado');
+                }, 2000);
+            }
+            modal.hide();
+        })
+        .catch(error => {
+            console.error('Erro ao atualizar status e enviar aviso:', error);
+            alert(`Ocorreu um erro: ${error.message}`);
+
+            if (selectAtual) {
+                selectAtual.value = statusOriginal;
+                selectAtual.style.backgroundColor = statusColors[statusOriginal] || '#ffffff';
+            }
+            modal.hide();
+        });
+    });
+
+    // Evento que dispara quando o modal é fechado (para lidar com cancelamento)
+    modalElement.addEventListener('hidden.bs.modal', () => {
+        if (!foiEnviado && selectAtual) {
+            selectAtual.value = statusOriginal;
         }
     });
 
     // ==================================================================
     // PARTE 3: LÓGICA PARA APAGAR PROBLEMAS SELECIONADOS
     // ==================================================================
-
     const selectAllCheckbox = document.getElementById('selectAllCheckboxes');
     let problemaCheckboxes = document.querySelectorAll('input[name="selected_problemas"]');
-    const botaoApagar = document.querySelector('.btnAcao');
+    const botaoApagar = document.querySelector('.btnAcao.btn-danger');
     const problemasCount = document.getElementById('problemas-count');
 
-    // Função para atualizar o estado do botão de apagar
     function atualizarBotaoApagar() {
-        // Verifica se o botão de apagar existe
+        if (!botaoApagar) return;
         problemaCheckboxes = document.querySelectorAll('input[name="selected_problemas"]');
-
         const anyCheckboxSelected = Array.from(problemaCheckboxes).some(checkbox => checkbox.checked);
         botaoApagar.disabled = !anyCheckboxSelected;
     }
 
-    // Inicializa o estado do botão
     atualizarBotaoApagar();
 
-    // Evento para selecionar/deselecionar todos os checkboxes
-    if (selectAllCheckboxes){
-        selectAllCheckboxes.addEventListener('change', () => {
+    if (selectAllCheckbox){
+        selectAllCheckbox.addEventListener('change', () => {
             problemaCheckboxes.forEach(checkbox => {
-                checkbox.checked = selectAllCheckboxes.checked;
+                checkbox.checked = selectAllCheckbox.checked;
             });
             atualizarBotaoApagar();
-        });    
+        });     
     }
 
-    // Evento para atualizar o estado do botão ao alterar qualquer checkbox
     problemaCheckboxes.forEach(checkbox => {
         checkbox.addEventListener('change',() => {
-
-            // Se algum checkbox for desmarcado, desmarca o "selecionar todos"
-            if (!checkbox.checked) {
-                if (selectAllCheckboxes){
-                    selectAllCheckboxes.checked = false;
+            if (selectAllCheckbox) {
+                if (!checkbox.checked) {
+                    selectAllCheckbox.checked = false;
                 }
+                const allChecked = Array.from(problemaCheckboxes).every(cb => cb.checked);
+                selectAllCheckbox.checked = allChecked;
             }
-
-            // Se algum checkbox individuais forem marcados, marca o "selecionar todos"
-            const allChecked = Array.from(problemaCheckboxes).every(checkbox => checkbox.checked);
-            if (selectAllCheckboxes) {
-                selectAllCheckboxes.checked = allChecked;
-            }
-
             atualizarBotaoApagar();
         });
     });
-
-    // Evento para apagar problemas selecionadas
 
     if( botaoApagar ) {
         botaoApagar.addEventListener('click', async () => {
@@ -522,27 +593,19 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
 
                 const data = await response.json();
-                console.log('Problemas apagados com sucesso:', data);
                 alert(data.message);
-
-                // Remover as linhas da tabela para os problemas apagados
 
                 selectedProblemas.forEach(id => {
                     const row = document.getElementById(`problema-row-${id}`);
-                    if (row) {
-                        row.remove();
-                    }
+                    if (row) row.remove();
                 });
 
-                // Atualizar a contagem de problemas
                 const currentCount = parseInt(problemasCount.textContent);
                 problemasCount.textContent = currentCount - selectedProblemas.length;
 
-                //Limpar seleção e desabilitar botão
-                if (selectAllCheckboxes) {
-                    selectAllCheckboxes.checked = false;
+                if (selectAllCheckbox) {
+                    selectAllCheckbox.checked = false;
                 }
-
                 atualizarBotaoApagar();
 
             } catch (error) {
@@ -551,8 +614,6 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     }
-    
 });
 </script>
-
 {% endblock %}

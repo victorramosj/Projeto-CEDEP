@@ -24,6 +24,7 @@ from django.core.paginator import EmptyPage, PageNotAnInteger
 from rest_framework import permissions, status, viewsets
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework.permissions import IsAuthenticated
 
 # -----------------------------------------------------------------------------
 # Imports da aplicação local
@@ -145,17 +146,72 @@ class EscolaDashboardView(LoginRequiredMixin, TemplateView):
 # =============================================================================
 #  VIEW DA ATUALIZAÇÃO DE STATUS DA LACUNA
 # =============================================================================
+# Adicione estas importações se ainda não tiver
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.authentication import SessionAuthentication
+# Lembre-se de importar seus outros modelos, como AvisoImportante
+
 class UpdateStatusLacuna(APIView):
+    """
+    Atualiza o status de uma lacuna e cria um aviso para a escola associada.
+    """
+    # Garante que o usuário esteja logado e usa autenticação de sessão
+    authentication_classes = [SessionAuthentication]
+    permission_classes = [IsAuthenticated]
+
     def post(self, request, lacuna_id):
         lacuna = get_object_or_404(Lacuna, id=lacuna_id)
+        
+        # Pega todos os dados da requisição
         new_status = request.data.get('status')
+        titulo_aviso = request.data.get('titulo')
+        mensagem_aviso = request.data.get('mensagem')
 
-        if new_status in ['P', 'R', 'E']: 	# Validar o status
-            lacuna.status = new_status
-            lacuna.save()
-            return Response(LacunaSerializer(lacuna).data, status=status.HTTP_200_OK)
-        else:
-            return Response({"detail": "Status inválido"}, status=status.HTTP_400_BAD_REQUEST)
+        # Validação completa dos dados
+        if not all([new_status, titulo_aviso, mensagem_aviso]):
+            return Response(
+                {"detail": "Dados incompletos. 'status', 'titulo' e 'mensagem' são obrigatórios."}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        status_validos = [choice[0] for choice in Lacuna.STATUS_CHOICES]
+        if new_status not in status_validos:
+            return Response(
+                {"detail": f"O status '{new_status}' é inválido."}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # 1. Atualiza o status da lacuna
+        lacuna.status = new_status
+        lacuna.save()
+
+        # 2. Cria o Aviso Importante
+        try:
+            gre_user = getattr(request.user, 'greuser', None)
+            if not gre_user:
+                return Response(
+                    {"detail": "Status atualizado, mas falha ao criar o aviso: Usuário logado não possui um perfil 'greuser' associado."},
+                    status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                )
+
+            AvisoImportante.objects.create(
+                titulo=titulo_aviso,
+                mensagem=mensagem_aviso,
+                prioridade='normal',
+                criado_por=gre_user,
+                escola=lacuna.escola, # Usa a escola da lacuna
+                ativo=True
+            )
+        except Exception as e:
+            return Response(
+                {"detail": f"Status atualizado, mas falha ao criar o aviso. Erro interno: {str(e)}"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+        return Response(
+            {"message": "Status atualizado e aviso enviado com sucesso!"},
+            status=status.HTTP_200_OK
+        )
 
 
 # =============================================================================
@@ -187,17 +243,76 @@ def deletar_lacunas_api(request):
 # =============================================================================
 #  VIEW DA ATUALIZAÇÃO DE STATUS DO PROBLEMA
 # =============================================================================
-class UpdateStatusProblema(APIView):
-    def post(self, request, problema_id):
-        problema = get_object_or_404(ProblemaUsuario, id=problema_id)
-        new_status = request.data.get('status')
+# problemas/views.py
 
-        if new_status in ['P', 'R', 'E']: 	# Validar o status
-            problema.status = new_status
-            problema.save()
-            return Response(ProblemaUsuarioSerializer(problema).data, status=status.HTTP_200_OK)
-        else:
-            return Response({"detail": "Status inválido"}, status=status.HTTP_400_BAD_REQUEST)
+# ...suas outras importações...
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.authentication import SessionAuthentication # <-- 1. IMPORTE AQUI
+
+from .models import ProblemaUsuario, AvisoImportante
+# ...
+
+class UpdateStatusProblema(APIView):
+    """
+    Atualiza o status de um problema e cria um aviso para a escola associada.
+    """
+    # 2. ADICIONE AS DUAS LINHAS ABAIXO:
+    authentication_classes = [SessionAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, problema_id):
+        # O resto da sua view continua exatamente igual...
+        problema = get_object_or_404(ProblemaUsuario, id=problema_id)
+        
+        new_status = request.data.get('status')
+        titulo_aviso = request.data.get('titulo')
+        mensagem_aviso = request.data.get('mensagem')
+
+        if not all([new_status, titulo_aviso, mensagem_aviso]):
+            return Response(
+                {"detail": "Dados incompletos. 'status', 'titulo' e 'mensagem' são obrigatórios."}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        status_validos = [choice[0] for choice in ProblemaUsuario.STATUS_CHOICES]
+        if new_status not in status_validos:
+            return Response(
+                {"detail": f"O status '{new_status}' é inválido."}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        problema.status = new_status
+        problema.save()
+
+        try:
+            gre_user = getattr(request.user, 'greuser', None)
+            if not gre_user:
+                return Response(
+                    {"detail": "Status atualizado, mas falha ao criar o aviso: Usuário logado não possui um perfil 'greuser' associado."},
+                    status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                )
+
+            AvisoImportante.objects.create(
+                titulo=titulo_aviso,
+                mensagem=mensagem_aviso,
+                prioridade='normal',
+                criado_por=gre_user,
+                escola=problema.escola,
+                ativo=True
+            )
+        except Exception as e:
+            return Response(
+                {"detail": f"Status atualizado, mas falha ao criar o aviso. Erro interno: {str(e)}"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+        return Response(
+            {"message": "Status atualizado e aviso enviado com sucesso!"},
+            status=status.HTTP_200_OK
+        )
 
 # =============================================================================
 #  API PARA DELETAR PROBLEMAS

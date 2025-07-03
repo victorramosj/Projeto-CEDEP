@@ -327,159 +327,202 @@ table .form-select {
 
     </div>
 </div>
+<div class="modal fade" id="modalCriarAviso" tabindex="-1" aria-labelledby="modalAvisoLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="modalAvisoLabel">Enviar Aviso sobre Atualização</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+      </div>
+      <div class="modal-body">
+        <form id="form-criar-aviso">
+            <div class="mb-3">
+                <label for="aviso-escola" class="form-label"><b>Escola:</b></label>
+                <input type="text" id="aviso-escola-nome" class="form-control" disabled>
+            </div>
+            <div class="mb-3">
+                <label for="aviso-titulo" class="form-label">Título do Aviso</label>
+                <input type="text" id="aviso-titulo" class="form-control" required>
+            </div>
+            <div class="mb-3">
+                <label for="aviso-mensagem" class="form-label">Mensagem do Aviso</label>
+                <textarea id="aviso-mensagem" class="form-control" rows="5" required></textarea>
+            </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button type="button" id="btn-enviar-aviso" class="btn btn-primary">Atualizar Status e Enviar Aviso</button>
+      </div>
+    </div>
+  </div>
+</div>
 
 <script>
 document.addEventListener('DOMContentLoaded', () => {
 
     // ==================================================================
-    // PARTE 1: LÓGICA PARA OS FILTROS (MÉTODO MAIS SIMPLES E ROBUSTO)
+    // PARTE 1: LÓGICA PARA OS FILTROS
     // ==================================================================
     const searchInput = document.querySelector("input[name='q']");
     const selectData = document.querySelector("select[name='data']");
     const selectStatus = document.querySelector("select[name='status']");
     
     function aplicarFiltros() {
-        // Pega a URL base sem parâmetros
         const baseUrl = window.location.origin + window.location.pathname;
-        
-        // Cria os parâmetros de busca
         const params = new URLSearchParams();
-        params.set('escola', searchInput.value);
+        params.set('q', searchInput.value);
         params.set('data', selectData.value);
         params.set('status', selectStatus.value);
-        
-        // Redireciona para a página com os filtros corretos.
-        // Isso causa um recarregamento limpo da página, garantindo que tudo funcione.
         window.location.href = `${baseUrl}?${params.toString()}`;
     }
 
-    // Adiciona o evento para aplicar os filtros ao clicar num botão ou ao mudar a seleção
-    // Sugestão: adicione um botão de "Filtrar" no seu HTML para acionar isso
     selectData.addEventListener('change', aplicarFiltros);
     selectStatus.addEventListener('change', aplicarFiltros);
-    // Para a barra de busca, o ideal é usar um botão de submit no form,
-    // mas se quiser que filtre ao digitar, a lógica abaixo funcionaria, 
-    // embora possa ser ineficiente. A melhoria seria usar o submit do form.
-
 
     // ==================================================================
-    // PARTE 2: LÓGICA PARA ATUALIZAÇÃO DE STATUS (COM DELEGAÇÃO DE EVENTOS)
+    // PARTE 2: LÓGICA ATUALIZADA PARA ATUALIZAÇÃO DE STATUS COM MODAL
     // ==================================================================
     const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
     const tabelaContainer = document.querySelector('.table-responsive');
+    const modalElement = document.getElementById('modalCriarAviso');
+    const modal = new bootstrap.Modal(modalElement);
 
-    const statusColors = {
-        'P': '#ffcccc', 'R': '#ccffcc', 'E': '#ffffcc'
-    };
+    const modalTituloInput = document.getElementById('aviso-titulo');
+    const modalMensagemInput = document.getElementById('aviso-mensagem');
+    const modalEscolaNomeInput = document.getElementById('aviso-escola-nome');
+    const btnEnviarAviso = document.getElementById('btn-enviar-aviso');
 
-    function setSelectColor(selectElement) {
-        selectElement.style.backgroundColor = statusColors[selectElement.value] || '#ffffff';
-    }
+    let selectAtual = null;
+    let statusOriginal = null;
+    let lacunaId = null; // Adaptado para lacunaId
+    let novoStatus = null;
+    let foiEnviado = false;
 
-    // Aplica a cor inicial a todos os selects que já estão na página
-    document.querySelectorAll('.status-updater').forEach(setSelectColor);
-
-    // DELEGAÇÃO DE EVENTO: O "ouvinte" fica no container da tabela, que não é destruído.
-    tabelaContainer.addEventListener('change', function(event) {
-        
-        // Verifica se o elemento que disparou o evento é um select de atualização
+    const statusColors = {'P': '#ffcccc', 'R': '#ccffcc', 'E': '#ffffcc'};
+    document.querySelectorAll('.status-updater').forEach(select => {
+        select.style.backgroundColor = statusColors[select.value] || '#ffffff';
+    });
+    
+    tabelaContainer.addEventListener('focusin', function(event) {
         if (event.target.matches('.status-updater')) {
-            const selectElement = event.target;
-            const lacunaId = selectElement.dataset.lacunaId;
-            const novoStatus = selectElement.value;
+            statusOriginal = event.target.value;
+        }
+    });
 
-            setSelectColor(selectElement);
+    tabelaContainer.addEventListener('change', function(event) {
+        if (event.target.matches('.status-updater')) {
+            selectAtual = event.target;
+            lacunaId = selectAtual.dataset.lacunaId; // Adaptado para lacunaId
+            novoStatus = selectAtual.value;
+            const novoStatusTexto = selectAtual.options[selectAtual.selectedIndex].text;
+            
+            const linhaTabela = selectAtual.closest('tr');
+            const nomeEscola = linhaTabela.cells[1].textContent.trim(); // Célula 1 para Escola
+            const nomeDisciplina = linhaTabela.cells[2].textContent.trim(); // Célula 2 para Disciplina
 
-            const url = `{% url 'api_atualizar_status_lacuna' 0 %}`.replace('0', lacunaId);
+            modalEscolaNomeInput.value = nomeEscola;
+            modalTituloInput.value = `Atualização sobre a lacuna: "${nomeDisciplina}"`;
+            modalMensagemInput.value = `Olá! O status da lacuna de "${nomeDisciplina}" foi atualizado para: "${novoStatusTexto}".`;
+            
+            foiEnviado = false; 
+            modal.show();
+        }
+    });
 
-            fetch(url, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': csrftoken
-                },
-                body: JSON.stringify({ status: novoStatus })
+    btnEnviarAviso.addEventListener('click', () => {
+        const tituloAviso = modalTituloInput.value;
+        const mensagemAviso = modalMensagemInput.value;
+
+        if (!tituloAviso || !mensagemAviso) {
+            alert('Por favor, preencha o título e a mensagem do aviso.');
+            return;
+        }
+
+        const url = `{% url 'api_atualizar_status_lacuna' 0 %}`.replace('0', lacunaId);
+
+        fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrftoken
+            },
+            body: JSON.stringify({ 
+                status: novoStatus,
+                titulo: tituloAviso,
+                mensagem: mensagemAviso
             })
-            .then(response => {
-                if (!response.ok) throw new Error('Falha na API');
-                return response.json();
-            })
-            .then(data => {
-                console.log('Status atualizado com sucesso:', data);
-                const linhaTabela = document.getElementById(`lacuna-row-${lacunaId}`);
-                if (linhaTabela) {
-                    linhaTabela.classList.add('status-atualizado');
-                    setTimeout(() => {
-                        linhaTabela.classList.remove('status-atualizado');
-                    }, 2000);
+        })
+        .then(response => {
+            const contentType = response.headers.get("content-type");
+            if (contentType && contentType.indexOf("application/json") !== -1) {
+                if (!response.ok) {
+                    return response.json().then(err => { throw new Error(err.detail || 'Falha na API') });
                 }
-            })
-            .catch(error => {
-                console.error('Erro ao atualizar status:', error);
-                alert('Ocorreu um erro ao atualizar o status.');
-            });
+                return response.json();
+            } else {
+                throw new Error("Sua sessão pode ter expirado. Por favor, recarregue a página e tente novamente.");
+            }
+        })
+        .then(data => {
+            console.log('Resposta da API:', data);
+            foiEnviado = true;
+            const linhaTabela = document.getElementById(`lacuna-row-${lacunaId}`); // Adaptado para lacuna-row
+            if (linhaTabela) {
+                selectAtual.style.backgroundColor = statusColors[novoStatus] || '#ffffff';
+                linhaTabela.classList.add('status-atualizado');
+                setTimeout(() => {
+                    linhaTabela.classList.remove('status-atualizado');
+                }, 2000);
+            }
+            modal.hide();
+        })
+        .catch(error => {
+            console.error('Erro ao atualizar status:', error);
+            alert(`Ocorreu um erro: ${error.message}`);
+            if (selectAtual) {
+                selectAtual.value = statusOriginal;
+                selectAtual.style.backgroundColor = statusColors[statusOriginal] || '#ffffff';
+            }
+            modal.hide();
+        });
+    });
+
+    modalElement.addEventListener('hidden.bs.modal', () => {
+        if (!foiEnviado && selectAtual) {
+            selectAtual.value = statusOriginal;
         }
     });
 
     // ==================================================================
     // PARTE 3: LÓGICA PARA APAGAR LACUNAS
     // ==================================================================
-
     const selectAllCheckbox = document.getElementById('selectAllCheckboxes');
-    let lacunaCheckboxes = document.querySelectorAll('input[name="selected_lacunas"]');
-    const botaoApagar = document.querySelector('.btnAcao');
-    const lacunasCount = document.getElementById('lacunas-count');
+    let lacunaCheckboxes = document.querySelectorAll('input[name="selected_lacunas"]'); // Adaptado
+    const botaoApagar = document.querySelector('.btnAcao.btn-danger');
+    const lacunasCount = document.getElementById('lacunas-count'); // Adaptado
 
-    // Função para atualizar o estado do botão de apagar
     function atualizarBotaoApagar() {
-        // Verifica se o botão de apagar existe
-        lacunaCheckboxes = document.querySelectorAll('input[name="selected_lacunas"]'); 
-
-        const anyCheckboxSelected = Array.from(lacunaCheckboxes).some(checkbox => checkbox.checked);
+        if (!botaoApagar) return;
+        const anyCheckboxSelected = Array.from(document.querySelectorAll('input[name="selected_lacunas"]')).some(c => c.checked);
         botaoApagar.disabled = !anyCheckboxSelected;
     }
 
-    // Inicializa o estado do botão
     atualizarBotaoApagar();
 
-    // Evento para selecionar/deselecionar todos os checkboxes
-    if (selectAllCheckboxes){
-        selectAllCheckboxes.addEventListener('change', () => {
-            lacunaCheckboxes.forEach(checkbox => {
-                checkbox.checked = selectAllCheckboxes.checked;
-            });
+    if (selectAllCheckbox){
+        selectAllCheckbox.addEventListener('change', () => {
+            document.querySelectorAll('input[name="selected_lacunas"]').forEach(c => { c.checked = selectAllCheckbox.checked; });
             atualizarBotaoApagar();
-        });    
+        });     
     }
 
-    // Evento para atualizar o estado do botão ao alterar qualquer checkbox
-    lacunaCheckboxes.forEach(checkbox => {
-        checkbox.addEventListener('change',() => {
-
-            // Se algum checkbox for desmarcado, desmarca o "selecionar todos"
-            if (!checkbox.checked) {
-                if (selectAllCheckboxes){
-                    selectAllCheckboxes.checked = false;
-                }
-            }
-
-            // Se algum checkbox individuais forem marcados, marca o "selecionar todos"
-            const allChecked = Array.from(lacunaCheckboxes).every(checkbox => checkbox.checked);
-            if (selectAllCheckboxes) {
-                selectAllCheckboxes.checked = allChecked;
-            }
-
-            atualizarBotaoApagar();
-        });
-    });
-
-    // Evento para apagar lacunas selecionadas
+    document.querySelectorAll('input[name="selected_lacunas"]').forEach(c => { c.addEventListener('change', atualizarBotaoApagar); });
 
     if( botaoApagar ) {
         botaoApagar.addEventListener('click', async () => {
-            const selectedLacunas = Array.from(lacunaCheckboxes)
-                .filter(checkbox => checkbox.checked)
-                .map(checkbox => checkbox.value);
+            const selectedLacunas = Array.from(document.querySelectorAll('input[name="selected_lacunas"]'))
+                .filter(c => c.checked).map(c => c.value);
 
             if (selectedLacunas.length === 0) {
                 alert('Selecione pelo menos uma lacuna para apagar.');
@@ -490,12 +533,10 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             try {
+                // Adapte para a sua URL de apagar lacunas
                 const response = await fetch("{% url 'api_deletar_lacunas' %}", {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRFToken': csrftoken
-                    },
+                    headers: {'Content-Type': 'application/json', 'X-CSRFToken': csrftoken },
                     body: JSON.stringify({ ids: selectedLacunas })
                 });
 
@@ -505,27 +546,17 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
 
                 const data = await response.json();
-                console.log('Lacunas apagadas com sucesso:', data);
                 alert(data.message);
 
-                // Remover as linhas da tabela para as lacunas apagadas
-
                 selectedLacunas.forEach(id => {
-                    const row = document.getElementById(`lacuna-row-${id}`);
-                    if (row) {
-                        row.remove();
-                    }
+                    const row = document.getElementById(`lacuna-row-${id}`); // Adaptado
+                    if (row) row.remove();
                 });
 
-                // Atualizar a contagem de lacunas
                 const currentCount = parseInt(lacunasCount.textContent);
                 lacunasCount.textContent = currentCount - selectedLacunas.length;
-
-                //Limpar seleção e desabilitar botão
-                if (selectAllCheckboxes) {
-                    selectAllCheckboxes.checked = false;
-                }
-
+                
+                if (selectAllCheckbox) selectAllCheckbox.checked = false;
                 atualizarBotaoApagar();
 
             } catch (error) {
@@ -536,5 +567,4 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 </script>
-
 {% endblock %}
