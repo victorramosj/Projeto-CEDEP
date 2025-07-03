@@ -202,3 +202,41 @@ android/fastlane/report.xml
 
 # VS Code workspace
 .vscode/
+
+
+# Environment files (separado do .env do backend)
+.env.local
+.env.development
+.env.test
+.env.production
+
+# React Native specific
+*.keystore
+*.p8
+*.jks
+*.p12
+*.key
+*.crt
+
+# Android Studio / Xcode
+.idea/
+*.iml
+*.xcworkspace
+*.xcodeproj
+*.xcuserstate
+*.xcuserdata
+
+# Watchman logs
+.watchmanconfig
+
+# Gradle cache
+.gradle/
+build/
+
+# Coverage reports
+coverage/
+
+# Jest cache
+jest.config.js
+jest.setup.js
+jest-test-results.json
