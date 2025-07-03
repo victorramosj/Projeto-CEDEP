@@ -104,8 +104,9 @@ FILE_UPLOAD_MAX_MEMORY_SIZE = 5 * 1024 * 1024
 CSRF_TRUSTED_ORIGINS = [
     'https://projeto-cedep-production.up.railway.app',
     'https://grefloresta.com.br',
-    'projeto-cedep-production-f58c.up.railway.app' 
+    'https://projeto-cedep-production-f58c.up.railway.app'  
 ]
+
 # Configurações de HTTPS (obrigatório para produção)
 if DEBUG:
     SECURE_SSL_REDIRECT = False  # Desative para testar
