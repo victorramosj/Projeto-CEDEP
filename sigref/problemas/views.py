@@ -413,40 +413,46 @@ def problema_dashboard_view(request):
 # =============================================================================
 #  VIEW DA TELA LACUNA
 # =============================================================================
+@login_required
 def tela_lacuna_view(request):
+    gre_user = request.user.greuser
+    setor_nome = gre_user.setor.nome if gre_user.setor else ''
+
+    # Lista de setores permitidos
+    setores_permitidos = ['CGAF', 'UDP']
+
+    # Verificação de acesso
+    if setor_nome.upper() not in setores_permitidos:
+        return redirect('home')
+
     lacunas_list = Lacuna.objects.select_related('escola').all()
     
-    # Pega os parâmetros da URL, exatamente como antes.
     search_query = request.GET.get('q', '')
     data_filter = request.GET.get('data', '')
     status_filter = request.GET.get('status', '')
-    # Filtro por Escola
+
     if search_query:
         lacunas_list = lacunas_list.filter(escola__nome__icontains=search_query)
 
-    # Filtro por Data
-    if data_filter == '1': 	# Última semana
+    if data_filter == '1':
         lacunas_list = lacunas_list.filter(criado_em__gte=datetime.now() - timedelta(weeks=1))
-    elif data_filter == '2': 	# Último mês
+    elif data_filter == '2':
         lacunas_list = lacunas_list.filter(criado_em__gte=datetime.now() - timedelta(days=30))
-    elif data_filter == '3': 	# Último ano
+    elif data_filter == '3':
         lacunas_list = lacunas_list.filter(criado_em__gte=datetime.now() - timedelta(days=365))
 
-    #  Filtro por Status
     if status_filter:
         lacunas_list = lacunas_list.filter(status=status_filter)
 
     lacunas_list = lacunas_list.order_by('-criado_em')
     
-    # Paginação, como antes.
     paginator = Paginator(lacunas_list, 8)
     page_number = request.GET.get('page')
     lacunas_page = paginator.get_page(page_number)
 
-    # Prepara o contexto para o template.
     context = {
         'lacunas_page': lacunas_page,
-        'todas_lacunas': paginator.count, # Usar paginator.count é mais eficiente aqui.
+        'todas_lacunas': paginator.count,
         'search_query': search_query,
         'data_filter': data_filter,
         'status_filter': status_filter,
@@ -454,7 +460,6 @@ def tela_lacuna_view(request):
         'status_choices': STATUS_CHOICES,
     }
 
-    # A view agora SEMPRE renderiza o template completo. 
     return render(request, 'tela_lacunas.html', context)
 
 
