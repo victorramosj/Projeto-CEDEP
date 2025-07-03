@@ -29,7 +29,7 @@ urlpatterns = [
     path('sobre/', views.sobre, name='sobre'),  
 
     # Página de manual de uso
-    path('manual/', views.manual_view, name='manual_usuario'),
+    path('manual/', views.manual_usuario, name='manual_usuario'),
 ]
 # Servir arquivos de mídia em DEBUG
 if settings.DEBUG:
