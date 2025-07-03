@@ -93,7 +93,7 @@ env = environ.Env()
 environ.Env.read_env()  # Isso carrega as variáveis do .env local (não usado no Railway)
 
 SECRET_KEY = env("SECRET_KEY", default="chave_secreta_fallback")
-DEBUG = env.bool("DEBUG", default=False)
+DEBUG = env.bool("DEBUG", default=True)
 
 
 # Em bytes: 10 MB para toda a requisição, por exemplo
