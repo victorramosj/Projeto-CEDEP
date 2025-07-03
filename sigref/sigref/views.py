@@ -170,4 +170,4 @@ from django.contrib.auth.decorators import login_required
 @login_required
 def manual_usuario(request):
     # Sua lógica para a página do manual aqui
-    return render(request, 'manual_usuario.html')
+    return render(request, 'cedepe/manual.html')
