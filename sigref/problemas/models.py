@@ -16,6 +16,18 @@ STATUS_CHOICES = [
 ]
 
 class Lacuna(models.Model):
+    # --- DEFINIÇÃO DOS STATUS (DENTRO DA CLASSE) ---
+    STATUS_PENDENTE = 'P'
+    STATUS_ANDAMENTO = 'E'
+    STATUS_RESOLVIDO = 'R'
+    
+    STATUS_CHOICES = [
+        (STATUS_PENDENTE, 'Pendente'),
+        (STATUS_ANDAMENTO, 'Em Andamento'),
+        (STATUS_RESOLVIDO, 'Resolvido'),
+    ]
+
+    # --- SEU CÓDIGO ORIGINAL ---
     escola = models.ForeignKey(
         Escola,
         on_delete=models.CASCADE,
@@ -35,10 +47,20 @@ class Lacuna(models.Model):
 
     def __str__(self):
         return f"{self.disciplina} ({self.escola.nome})"
-    
-
 
 class ProblemaUsuario(models.Model):
+    # --- DEFINIÇÃO CORRETA DOS STATUS (DENTRO DA CLASSE) ---
+    STATUS_PENDENTE = 'P'
+    STATUS_ANDAMENTO = 'E'
+    STATUS_RESOLVIDO = 'R'
+    
+    STATUS_CHOICES = [
+        (STATUS_PENDENTE, 'Pendente'),
+        (STATUS_ANDAMENTO, 'Em Andamento'),
+        (STATUS_RESOLVIDO, 'Resolvido'),
+    ]
+
+    # --- CAMPOS DO MODELO ---
     usuario = models.ForeignKey(
         GREUser,
         on_delete=models.CASCADE,
@@ -53,14 +75,17 @@ class ProblemaUsuario(models.Model):
     )
     descricao = models.TextField()
     criado_em = models.DateTimeField(auto_now_add=True)
+    
+    # Campo 'escola' corrigido para não usar default=1
     escola = models.ForeignKey(
         Escola,
         on_delete=models.CASCADE,
-        related_name='problemas',
-        default=1
+        related_name='problemas'
+        # Removido o 'default=1'
     )
+    
     status = models.CharField(max_length=1, choices=STATUS_CHOICES, default='P')
-    anexo = models.FileField(upload_to='problemas/anexos/', null= True, blank=True)
+    anexo = models.FileField(upload_to='problemas/anexos/', null=True, blank=True)
 
     class Meta:
         ordering = ['-criado_em']
