@@ -4,7 +4,7 @@ import {
   Text, 
   StyleSheet, 
   ActivityIndicator, 
-  ScrollView, 
+  ScrollView, // Removido do uso principal, mas mantido para o Modal e RefreshControl
   RefreshControl,
   Alert,
   Modal,
@@ -36,8 +36,7 @@ const CALENDAR_EVENTS_CACHE_KEY = '@calendar_events_cache';
 // URL base da sua API Django
 // const API_BASE_URL = 'http://127.0.0.1:8000'; //para pc
 const API_BASE_URL = 'http://10.0.2.2:8000'; //para emulador android
-//const API_BASE_URL = 'https://grefloresta.com.br';  URL do servidor remoto
-
+//const API_BASE_URL = 'https://grefloresta.com.br'; //URL do servidor remoto
 const CalendarScreen = () => {
   const [events, setEvents] = useState({});
   const [loading, setLoading] = useState(true);
@@ -52,6 +51,9 @@ const CalendarScreen = () => {
       const cachedEvents = await AsyncStorage.getItem(CALENDAR_EVENTS_CACHE_KEY);
       if (cachedEvents) {
         setEvents(JSON.parse(cachedEvents));
+        console.log('Dados carregados do cache.');
+      } else {
+        console.log('Nenhum dado encontrado no cache.');
       }
     } catch (e) {
       console.error('Erro ao carregar eventos do cache:', e);
@@ -59,13 +61,16 @@ const CalendarScreen = () => {
   }, []);
 
   // Função para buscar dados da API
-  const fetchEvents = useCallback(async () => {
+  const fetchEvents = useCallback(async (showAlert = true) => {
+    setRefreshing(true);
     try {
       const netInfoState = await NetInfo.fetch();
       setIsOffline(!netInfoState.isConnected);
 
       if (!netInfoState.isConnected) {
-        Alert.alert('Modo Offline', 'Você está offline. Exibindo dados em cache. Conecte-se à internet para atualizar.');
+        if (showAlert) {
+          Alert.alert('Modo Offline', 'Você está offline. Exibindo dados em cache. Conecte-se à internet para atualizar.');
+        }
         return;
       }
 
@@ -91,33 +96,64 @@ const CalendarScreen = () => {
       });
       setEvents(formattedEvents);
       await AsyncStorage.setItem(CALENDAR_EVENTS_CACHE_KEY, JSON.stringify(formattedEvents));
+      console.log('Dados atualizados da API e salvos no cache.');
 
     } catch (error) {
       console.error('Erro ao buscar eventos da API:', error);
       Alert.alert('Erro', 'Não foi possível carregar os eventos. Verifique a conexão ou tente novamente.');
       setIsOffline(true);
     } finally {
-      setLoading(false);
       setRefreshing(false);
     }
   }, []);
 
   useEffect(() => {
-    setLoading(true);
-    loadFromCache().then(() => {
-      fetchEvents();
-    });
+    const initializeData = async () => {
+      setLoading(true);
+
+      await loadFromCache();
+      setLoading(false); // Desativa o loading após carregar do cache
+
+      await fetchEvents(false); 
+    };
+
+    initializeData();
   }, [loadFromCache, fetchEvents]);
 
   const onRefresh = useCallback(() => {
-    setRefreshing(true);
-    fetchEvents();
+    fetchEvents(true);
   }, [fetchEvents]);
 
   // Função para abrir o modal do evento
   const handleEventPress = (event) => {
     setSelectedEvent(event);
     setShowEventModal(true);
+  };
+
+  // Renderização dos eventos no calendário
+  const renderCalendarEvents = (day) => {
+    const dayEvents = events[day.dateString];
+    if (!dayEvents) return null;
+
+    return (
+      <View style={styles.eventsContainer}>
+        {dayEvents.slice(0, 2).map((event, index) => (
+          <TouchableOpacity 
+            key={event.id || index}
+            style={styles.eventItem}
+            onPress={() => handleEventPress(event)}
+          >
+            <Text style={styles.eventTitle} numberOfLines={1}>{event.title}</Text>
+            <Text style={styles.eventHorario}>{event.horario}</Text>
+          </TouchableOpacity>
+        ))}
+        {dayEvents.length > 2 && (
+          <TouchableOpacity onPress={() => handleEventPress({ isDaySummary: true, date: day.dateString, events: dayEvents })}>
+            <Text style={styles.moreEventsText}>+{dayEvents.length - 2} eventos</Text>
+          </TouchableOpacity>
+        )}
+      </View>
+    );
   };
 
   if (loading) {
@@ -130,104 +166,83 @@ const CalendarScreen = () => {
   }
 
   return (
-    <View style={styles.container}>
-      <ScrollView 
-        contentContainerStyle={styles.contentContainer}
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-        }
-      >
-        {isOffline && (
-          <View style={styles.offlineBanner}>
-            <Text style={styles.offlineText}>Você está offline. Dados podem estar desatualizados.</Text>
-          </View>
-        )}
+    <View style={styles.container}> {/* Container principal da tela */}
+      {/* O RefreshControl agora envolve apenas o Calendar, não o View completo */}
+      <RefreshControl refreshing={refreshing} onRefresh={onRefresh} /> 
 
-        {/* Calendário */}
-        <View style={styles.calendarContainer}>
-          <Calendar
-            markedDates={
-              Object.keys(events).reduce((acc, date) => {
-                acc[date] = { marked: true, dotColor: '#2196F3' }; 
-                return acc;
-              }, {})
-            }
-            onDayPress={(day) => {
-              const dayEvents = events[day.dateString];
-              if (dayEvents && dayEvents.length > 0) {
-                setSelectedEvent({ isDaySummary: true, date: day.dateString, events: dayEvents });
-                setShowEventModal(true);
-              } else {
-                console.log('Dia selecionado (sem eventos):', day);
-              }
-            }}
-            renderArrow={(direction) => (
-              <Text style={styles.arrowButton}>{direction === 'left' ? '<' : '>'}</Text>
-            )}
-            dayComponent={({ date, state, marking }) => {
-              const dayEvents = events[date.dateString];
-              return (
-                <View style={styles.dayContainer}>
-                  <Text style={[styles.dayText, state === 'disabled' ? styles.disabledText : {}]}>
-                    {date.day}
-                  </Text>
-                  {marking && marking.marked && <View style={styles.dot} />}
-                  
-                  {dayEvents && dayEvents.length > 0 && (
-                    <View style={styles.eventsContainer}>
-                      {dayEvents.slice(0, 2).map((event, index) => (
-                        <TouchableOpacity 
-                          key={event.id || index}
-                          style={styles.eventItem}
-                          onPress={() => handleEventPress(event)}
-                        >
-                          <Text style={styles.eventTitle} numberOfLines={1}>{event.title}</Text>
-                          <Text style={styles.eventHorario}>{event.horario}</Text>
-                        </TouchableOpacity>
-                      ))}
-                      {dayEvents.length > 2 && (
-                        <Text style={styles.moreEventsText}>+{dayEvents.length - 2} eventos</Text>
-                      )}
-                    </View>
-                  )}
-                </View>
-              );
-            }}
-            theme={{
-              calendarBackground: '#ffffff',
-              textSectionTitleColor: '#b6c1cd',
-              selectedDayBackgroundColor: '#00adf5',
-              selectedDayTextColor: '#ffffff',
-              todayTextColor: '#00adf5',
-              dayTextColor: '#2d4150',
-              textDisabledColor: '#d9e1e8',
-              dotColor: '#00adf5',
-              selectedDotColor: '#ffffff',
-              arrowColor: '#00adf5',
-              monthTextColor: '#00adf5',
-              textMonthFontWeight: 'bold',
-              textDayHeaderFontWeight: 'bold',
-              textDayFontSize: 16,
-              textMonthFontSize: 18,
-              textDayHeaderFontSize: 14,
-              'stylesheet.calendar.main': {
-                container: {
-                  padding: 0,
-                }
-              },
-              'stylesheet.day.basic': {
-                base: {
-                  width: 32,
-                  height: 32,
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }
-              }
-            }}
-            fixedWeekCount={false}
-          />
+      {isOffline && (
+        <View style={styles.offlineBanner}>
+          <Text style={styles.offlineText}>Você está offline. Dados podem estar desatualizados.</Text>
         </View>
-      </ScrollView>
+      )}
+
+      {/* Calendário */}
+      <View style={styles.calendarContainer}>
+        <Calendar
+          markedDates={
+            Object.keys(events).reduce((acc, date) => {
+              acc[date] = { marked: true, dotColor: '#2196F3' }; 
+              return acc;
+            }, {})
+          }
+          onDayPress={(day) => {
+            const dayEvents = events[day.dateString];
+            if (dayEvents && dayEvents.length > 0) {
+              setSelectedEvent({ isDaySummary: true, date: day.dateString, events: dayEvents });
+              setShowEventModal(true);
+            } else {
+              console.log('Dia selecionado (sem eventos):', day);
+            }
+          }}
+          renderArrow={(direction) => (
+            <Text style={styles.arrowButton}>{direction === 'left' ? '<' : '>'}</Text>
+          )}
+          dayComponent={({ date, state, marking }) => {
+            const dayEvents = events[date.dateString];
+            return (
+              <View style={styles.dayContainer}>
+                <Text style={[styles.dayText, state === 'disabled' ? styles.disabledText : {}]}>
+                  {date.day}
+                </Text>
+                {marking && marking.marked && <View style={styles.dot} />}
+                {renderCalendarEvents(date)}
+              </View>
+            );
+          }}
+          theme={{
+            calendarBackground: '#ffffff',
+            textSectionTitleColor: '#b6c1cd',
+            selectedDayBackgroundColor: '#00adf5',
+            selectedDayTextColor: '#ffffff',
+            todayTextColor: '#00adf5',
+            dayTextColor: '#2d4150',
+            textDisabledColor: '#d9e1e8',
+            dotColor: '#00adf5',
+            selectedDotColor: '#ffffff',
+            arrowColor: '#00adf5',
+            monthTextColor: '#00adf5',
+            textMonthFontWeight: 'bold',
+            textDayHeaderFontWeight: 'bold',
+            textDayFontSize: 16,
+            textMonthFontSize: 18,
+            textDayHeaderFontSize: 14,
+            'stylesheet.calendar.main': {
+              container: {
+                padding: 0,
+              }
+            },
+            'stylesheet.day.basic': {
+              base: {
+                width: 32,
+                height: 32,
+                alignItems: 'center',
+                justifyContent: 'center',
+              }
+            }
+          }}
+          fixedWeekCount={false} 
+        />
+      </View>
 
       {/* Modal de Detalhes do Evento */}
       <Modal
@@ -299,10 +314,11 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#f5f5f5',
+    padding: 10, // Mantém o padding aqui para o container principal
   },
-  contentContainer: {
-    padding: 10,
-    paddingBottom: 30,
+  contentContainer: { // Este estilo agora se aplica ao ScrollView que envolve o Calendar
+    flexGrow: 1, // Permite que o conteúdo cresça e o ScrollView funcione
+    paddingBottom: 30, // Adiciona um padding extra na parte inferior para garantir rolagem
   },
   loadingContainer: {
     flex: 1,
@@ -344,7 +360,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
   },
   dayContainer: {
-    minHeight: 100, // Altura mínima para cada dia
+    minHeight: 100,
     padding: 4,
   },
   dayText: {
@@ -362,6 +378,7 @@ const styles = StyleSheet.create({
     borderRadius: 3,
     backgroundColor: '#00adf5',
     alignSelf: 'center',
+    marginTop: 2,
   },
   eventsContainer: {
     marginTop: 4,
