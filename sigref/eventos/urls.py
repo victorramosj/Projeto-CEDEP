@@ -8,6 +8,7 @@ router.register(r'agendamentos', views.AgendamentoViewSet, basename='agendamento
 urlpatterns = [
     path('api/', include(router.urls)),
     path('api/fullcalendar/', views.FullCalendarEventsView.as_view(), name='fullcalendar-events'),
+    path('api/dashboard-summary/', views.DashboardSummaryAPIView.as_view(), name='dashboard-summary-api'), # NOVA ROTA
     
     path('dashboard_eventos/', views.dashboard, name='dashboard_eventos'),
    # Salas

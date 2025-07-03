@@ -1,36 +1,105 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
+import { ActivityIndicator, View, StyleSheet, Text } from 'react-native'; // Importe ActivityIndicator, View, Text
+import AsyncStorage from '@react-native-async-storage/async-storage'; // Importe AsyncStorage
+import NetInfo from '@react-native-community/netinfo'; // Importe NetInfo
+
 import LoginScreen from './telas/LoginScreen.js';
-import { StyleSheet, Text, View } from 'react-native'; // Adicione esta linha
+import HomeScreen from './telas/HomeScreen.js'; 
+import CalendarScreen from './telas/CalendarScreen.js';
+import SelecaoEscolaScreen from './telas/SelecaoEscola.js';
+import ResponderQuestionarioScreen from './telas/ResponderQuestionario.js';
+import RelatarProblemasScreen from './telas/RelatarProblemas.js';
+import VisualizarQuestionarioScreen from './telas/VisualizarQuestionarios.js';
+import DashboardEscolaScreen from './telas/DashboardEscola.js';
 
 const Stack = createStackNavigator();
 
-const HomeScreen = ({ route }) => {
-  const { userData } = route.params;
-  
-  return (
-    <View style={styles.container}>
-      <Text style={styles.welcome}>Bem-vindo, {userData.fullName}!</Text>
-      <Text>Tipo de usuário: {userData.userType}</Text>
-      <Text>Nível de acesso: {userData.accessLevel}</Text>
-    </View>
-  );
-};
-
 export default function App() {
+  const [loading, setLoading] = useState(true);
+  const [userData, setUserData] = useState(null);
+  const [isConnected, setIsConnected] = useState(true); // Estado para a conexão de internet
+
+  useEffect(() => {
+    // Listener para o status da conexão de internet
+    const unsubscribeNetInfo = NetInfo.addEventListener(state => {
+      setIsConnected(state.isConnected);
+      console.log("Status da conexão:", state.isConnected ? "Online" : "Offline");
+    });
+
+    const checkLoginStatus = async () => {
+      try {
+        const cachedUserData = await AsyncStorage.getItem('userData');
+        if (cachedUserData) {
+          setUserData(JSON.parse(cachedUserData));
+        }
+      } catch (e) {
+        console.error('Erro ao carregar dados do usuário do cache:', e);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    checkLoginStatus();
+
+    // Limpa o listener ao desmontar o componente
+    return () => unsubscribeNetInfo();
+  }, []);
+
+  if (loading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#0000ff" />
+        <Text style={styles.loadingText}>Verificando login...</Text>
+      </View>
+    );
+  }
+
   return (
     <NavigationContainer>
-      <Stack.Navigator initialRouteName="Login">
+      <Stack.Navigator initialRouteName={userData ? "Home" : "Login"}>
         <Stack.Screen 
           name="Login" 
           component={LoginScreen} 
           options={{ headerShown: false }} 
+          initialParams={{ setIsConnected }} // Passa o estado da conexão para a tela de login
         />
         <Stack.Screen 
           name="Home" 
           component={HomeScreen} 
-          options={{ title: 'Dashboard' }}
+          options={{ headerShown: false }}
+          initialParams={{ userData }} // Passa os dados do usuário para a HomeScreen
+        />
+        <Stack.Screen
+          name="Calendar"
+          component={CalendarScreen}
+          options={{ title: 'Calendário de Eventos' }}
+        />
+        <Stack.Screen
+          name="SelecaoEscolas"
+          component={SelecaoEscolaScreen}
+          options={{ title: 'Seleção de Escolas' }}
+        />
+        <Stack.Screen
+          name="ResponderQuestionario"
+          component={ResponderQuestionarioScreen}
+          options={{ title: 'Responder Questionário' }}
+        />
+        <Stack.Screen
+          name="RelatarProblemas"
+          component={RelatarProblemasScreen}
+          options={{ title: 'Relatar Problemas' }}
+        />
+        <Stack.Screen
+          name="VisualizarQuestionario"
+          component={VisualizarQuestionarioScreen}
+          options={{ title: 'Visualizar Questionário' }}
+        />
+        <Stack.Screen
+          name="DashboardEscola"
+          component={DashboardEscolaScreen}
+          options={{ title: 'Dashboard da Escola' }}
         />
       </Stack.Navigator>
     </NavigationContainer>
@@ -38,15 +107,15 @@ export default function App() {
 }
 
 const styles = StyleSheet.create({
-  container: {
+  loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 20
+    backgroundColor: '#f5f5f5',
   },
-  welcome: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    marginBottom: 15
-  }
+  loadingText: {
+    marginTop: 10,
+    fontSize: 16,
+    color: '#333',
+  },
 });

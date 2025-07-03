@@ -438,3 +438,36 @@ def eventos_report_pdf(request):
         'anos': anos,
     })
 
+# --- NOVA API para Dados de Resumo e Próximos Agendamentos ---
+class DashboardSummaryAPIView(APIView):
+    permission_classes = [permissions.AllowAny] # Considere usar IsAuthenticated para apps autenticados
+
+    def get(self, request, format=None):
+        total_eventos = Evento.objects.count()
+        total_agendamentos = Agendamento.objects.count()
+        total_salas = Sala.objects.count()
+        
+        # Agendamentos próximos (apenas os 5 mais próximos que ainda não terminaram)
+        upcoming_agendamentos_qs = Agendamento.objects.filter(fim__gte=timezone.now()).order_by('inicio')[:5]
+        
+        # Serializa os agendamentos próximos para incluir os dados necessários no JSON
+        # Assumindo que você tem um AgendamentoSerializer que inclui evento e salas
+        upcoming_agendamentos_data = []
+        for agendamento in upcoming_agendamentos_qs:
+            salas_nomes = [sala.nome for sala in agendamento.salas.all()]
+            upcoming_agendamentos_data.append({
+                'id': agendamento.id,
+                'evento_titulo': agendamento.evento.titulo,
+                'salas_nomes': salas_nomes,
+                'inicio': timezone.localtime(agendamento.inicio).isoformat(),
+                'fim': timezone.localtime(agendamento.fim).isoformat(),
+                'horario_formatado': f"{timezone.localtime(agendamento.inicio).strftime('%d/%m %H:%M')} - {timezone.localtime(agendamento.fim).strftime('%H:%M')}"
+            })
+
+        data = {
+            'total_eventos': total_eventos,
+            'total_agendamentos': total_agendamentos,
+            'total_salas': total_salas,
+            'upcoming_agendamentos': upcoming_agendamentos_data,
+        }
+        return Response(data)

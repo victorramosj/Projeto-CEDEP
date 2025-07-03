@@ -108,7 +108,7 @@ const LoginScreen = ({ navigation }) => {
           <Image 
             source={sigref}  
             style={styles.sigrefLogo}
-            resizeMode="stretch"
+            resizeMode="contain"
           />
          
         </View>
@@ -176,7 +176,7 @@ const LoginScreen = ({ navigation }) => {
            <Image 
             source={gre} 
             style={styles.greLogo}
-            resizeMode="stretch"
+            resizeMode="contain"
           />
           <Text style={styles.footerText}>© 2025 SIGREF - GRE Floresta</Text>
           <Text style={styles.footerText}>Versão 1.0.0</Text>
@@ -229,13 +229,13 @@ const styles = StyleSheet.create({
     marginBottom: 30,
   },
   sigrefLogo: {
-    width: width * 0.35,
-    height: height * 0.15,
-    marginBottom: -25,
+    width: width * 0.7,
+    height: 80,
+    marginBottom: 20,
   },
   greLogo: {
-    width: width * 0.4,
-    height: 80,
+    width: width * 0.5,
+    height: 60,
   },
   title: {
     fontSize: 18,
