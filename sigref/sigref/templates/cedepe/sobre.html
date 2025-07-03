@@ -326,13 +326,17 @@
     <!-- ================================================================== -->
     <!--                   Manual de Uso do site                            -->
     <!-- ================================================================== -->
+     {% if user.is_authenticated %}
     <div class="my-5">
         <h2 class="titulo-secao">Manual de Uso</h2>
             <p class="text-muted mb-4">
             Encontre aqui respostas para as dúvidas mais comuns e guias passo a passo para utilizar o sistema.
         </p>
+        <!-- O link/botão só aparece se o usuário estiver logado -->
         <a href="{% url 'manual_usuario' %}" class="btn btn-primary">Manual de uso do Usuário</a>
     </div>
+    {% endif %}
+
 
     <!-- ================================================================== -->
     <!--                   Secção Funcionalidades Principais                -->
