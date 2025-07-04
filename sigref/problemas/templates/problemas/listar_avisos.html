@@ -4,57 +4,75 @@
 {% block title %}Painel de Avisos{% endblock %}
 
 {% block content %}
-<div class="container mt-4 mb-5" >
+<div class="container-fluid bg-light-blue py-4">
+    <div class="container">
 
-    <div class="card shadow-sm border-0">
-        <div class="card-header bg-light py-3 border-bottom d-flex flex-column flex-md-row justify-content-between align-items-center">
-            <h4 class="h5 mb-3 mb-md-0 fw-normal text-body-secondary">
+        <!-- CABEÇALHO E BOTÃO DE CRIAR -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 class="mb-3 mb-md-0 ">
                 <i class="bi bi-collection me-2 text-primary"></i>
                 Painel de Avisos
-            </h4>
+            </h2>
             <a href="{% url 'criar_aviso' %}" class="btn btn-primary d-inline-flex align-items-center">
                 <i class="bi bi-plus-circle-fill me-2"></i>Criar Novo Aviso
             </a>
         </div>
 
-        <div class="card-body p-4">
-            {% if messages %}
-                {% for message in messages %}
-                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
-                    {{ message }}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                </div>
-                {% endfor %}
-            {% endif %}
+        <!-- MENSAGENS DE ALERTA -->
+        {% if messages %}
+            {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+            {% endfor %}
+        {% endif %}
 
-            <form method="GET" action="{% url 'listar_avisos' %}" class="mb-4 p-3 bg-light border rounded-3">
-                <div class="row g-3 align-items-end">
-                    <div class="col-12 col-lg-4 col-md-12">
-                        <label for="search-input" class="form-label small fw-bold">Pesquisar por Escola</label>
-                        <div class="input-group">
-                            <input type="text" id="search-input" name="q_escola" class="form-control" placeholder="Digite o nome da escola..." value="{{ search_query|default:'' }}">
-                            <button class="btn btn-outline-secondary" type="submit" aria-label="Pesquisar"><i class="bi bi-search"></i></button>
+        <!-- PAINEL DE FILTROS -->
+        <div class="card shadow-sm mb-4">
+            <div class="card-body p-4">
+
+                <form method="GET" action="{% url 'listar_avisos' %}">
+                    <div class="row g-3 align-items-end">
+                        <!-- Pesquisa por Escola -->
+                        <div class="col-12 col-lg-4 col-md-12">
+                            <label for="search-input" class="form-label small fw-bold">Pesquisar por Escola</label>
+                            <div class="input-group">
+                                <input type="text" id="search-input" name="q_escola" class="form-control" placeholder="Digite o nome da escola..." value="{{ search_query|default:'' }}">
+                                <button class="btn btn-outline-secondary" type="submit" aria-label="Pesquisar"><i class="bi bi-search"></i></button>
+                            </div>
                         </div>
-                    </div>
-                    <div class="col-md">
-                        <label class="form-label small fw-bold">Prioridade</label>
-                        <div class="btn-group w-100" role="group">
-                            <a href="?status={{ status_atual }}&q_escola={{ search_query }}" class="btn btn-sm {% if not prioridade_atual %}btn-primary{% else %}btn-outline-primary{% endif %}">Todas</a>
-                            <a href="?prioridade=alta&status={{ status_atual }}&q_escola={{ search_query }}" class="btn btn-sm {% if prioridade_atual == 'alta' %}btn-danger{% else %}btn-outline-danger{% endif %}">Alta</a>
-                            <a href="?prioridade=normal&status={{ status_atual }}&q_escola={{ search_query }}" class="btn btn-sm {% if prioridade_atual == 'normal' %}btn-warning text-dark{% else %}btn-outline-warning text-dark{% endif %}">Normal</a>
-                            <a href="?prioridade=baixa&status={{ status_atual }}&q_escola={{ search_query }}" class="btn btn-sm {% if prioridade_atual == 'baixa' %}btn-success{% else %}btn-outline-success{% endif %}">Baixa</a>
+
+                        <!-- Filtro de Prioridade -->
+                        <div class="col-md">
+                            <label class="form-label fw-bold small text-muted">Prioridade</label>
+                            <div class="btn-group w-100">
+                                <a href="?status={{ status_atual }}&q_escola={{ search_query }}" class="btn {% if not prioridade_atual %}btn-primary{% else %}btn-outline-primary{% endif %}">Todas</a>
+                                <a href="?prioridade=alta&status={{ status_atual }}&q_escola={{ search_query }}" class="btn {% if prioridade_atual == 'alta' %}btn-danger {% else %}btn-outline-danger text-dark{% endif %}">Alta</a>
+                                <a href="?prioridade=normal&status={{ status_atual }}&q_escola={{ search_query }}" class="btn {% if prioridade_atual == 'normal' %}btn-warning text-dark{% else %}btn-outline-warning text-dark{% endif %}">Normal</a>
+                                <a href="?prioridade=baixa&status={{ status_atual }}&q_escola={{ search_query }}" class="btn {% if prioridade_atual == 'baixa' %}btn-success {% else %}btn-outline-success text-dark{% endif %}">Baixa</a>
+                            </div>
                         </div>
-                    </div>
-                    <div class="col-md">
-                        <label class="form-label small fw-bold">Status</label>
-                        <div class="btn-group w-100" role="group">
-                             <a href="?prioridade={{ prioridade_atual }}&q_escola={{ search_query }}" class="btn btn-sm {% if not status_atual %}btn-primary{% else %}btn-outline-primary{% endif %}">Todos</a>
-                             <a href="?status=visualizado&prioridade={{ prioridade_atual }}&q_escola={{ search_query }}" class="btn btn-sm {% if status_atual == 'visualizado' %}btn-success{% else %}btn-outline-success{% endif %}">Visualizados</a>
-                             <a href="?status=pendente&prioridade={{ prioridade_atual }}&q_escola={{ search_query }}" class="btn btn-sm {% if status_atual == 'pendente' %}btn-secondary{% else %}btn-outline-secondary{% endif %}">Pendentes</a>
+
+                        <!-- Filtro de Status -->
+                        <div class="col-md">
+                            <label class="form-label fw-bold small text-muted">Status</label>
+                            <div class="btn-group w-100">
+                                <a href="?prioridade={{ prioridade_atual }}&q_escola={{ search_query }}" class="btn {% if not status_atual %}btn-primary{% else %}btn-outline-primary{% endif %}">Todos</a>
+                                <a href="?status=visualizado&prioridade={{ prioridade_atual }}&q_escola={{ search_query }}" class="btn {% if status_atual == 'visualizado' %}btn-success{% else %}btn-outline-success text-dark{% endif %}">Visualizados</a>
+                                <a href="?status=pendente&prioridade={{ prioridade_atual }}&q_escola={{ search_query }}" class="btn {% if status_atual == 'pendente' %}btn-secondary-custom active{% else %}btn-outline-secondary{% endif %}">Pendentes</a>
+                            </div>
                         </div>
+                        
                     </div>
-                </div>
-            </form>
+                </form>
+
+            </div>
+        </div>
+
+        <div class="card shadow-sm mb-4">
+            <div class="card-body p-4">
+            
 
             {% if avisos %}
             <form method="POST" action="{% url 'apagar_varios_avisos' %}" id="deleteMultipleForm">
@@ -133,13 +151,14 @@
                 </ul>
             </nav>
             {% else %}
-            <div class="text-center p-5 border rounded-3">
-                <i class="bi bi-bell-slash fs-1 text-body-secondary"></i>
-                <h4 class="mt-3 fw-light">Nenhum aviso encontrado</h4>
-                <p class="text-muted">Verifique os filtros aplicados ou crie um novo aviso.</p>
-                <a href="{% url 'criar_aviso' %}" class="btn btn-primary mt-2"><i class="bi bi-plus-circle me-2"></i>Criar Primeiro Aviso</a>
-            </div>
+                <div class="text-center p-5 border rounded-3">
+                    <i class="bi bi-bell-slash fs-1 text-body-secondary"></i>
+                    <h4 class="mt-3 fw-light">Nenhum aviso encontrado</h4>
+                    <p class="text-muted">Verifique os filtros aplicados ou crie um novo aviso.</p>
+                    <a href="{% url 'criar_aviso' %}" class="btn btn-primary mt-2"><i class="bi bi-plus-circle me-2"></i>Criar Primeiro Aviso</a>
+                </div>
             {% endif %}
+            </div>
         </div>
     </div>
 </div>
