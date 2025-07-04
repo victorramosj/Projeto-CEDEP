@@ -11,9 +11,11 @@ import HomeScreen from './telas/HomeScreen.js';
 import CalendarScreen from './telas/CalendarScreen.js';
 import SelecaoEscolaScreen from './telas/SelecaoEscola.js';
 import ResponderQuestionarioScreen from './telas/ResponderQuestionario.js';
-import RelatarProblemasScreen from './telas/RelatarProblemas.js';
+import RelatarProblemaScreen from './telas/RelatarProblemaScreen.js';
 import VisualizarQuestionarioScreen from './telas/VisualizarQuestionarios.js';
 import DashboardEscolaScreen from './telas/DashboardEscola.js';
+
+import RelatarLacunaScreen from './telas/RelatarLacunaScreen.js';
 
 const Stack = createStackNavigator();
 
@@ -86,12 +88,7 @@ export default function App() {
           name="ResponderQuestionario"
           component={ResponderQuestionarioScreen}
           options={{ title: 'Responder Questionário' }}
-        />
-        <Stack.Screen
-          name="RelatarProblemas"
-          component={RelatarProblemasScreen}
-          options={{ title: 'Relatar Problemas' }}
-        />
+        />        
         <Stack.Screen
           name="VisualizarQuestionario"
           component={VisualizarQuestionarioScreen}
@@ -101,7 +98,16 @@ export default function App() {
           name="DashboardEscola"
           component={DashboardEscolaScreen}
           options={{ title: 'Dashboard da Escola' }}
-        />
+        />         
+        <Stack.Screen
+          name="RelatarProblemaScreen"
+          component={RelatarProblemaScreen }
+          options={{ title: 'Relatar Problema' }} /
+          >
+        <Stack.Screen name="RelatarLacunaScreen"
+          component={RelatarLacunaScreen}
+          options={{ title: 'Relatar Lacuna' }} 
+          />
       </Stack.Navigator>
     </NavigationContainer>
   );

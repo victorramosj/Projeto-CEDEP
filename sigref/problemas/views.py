@@ -19,10 +19,17 @@ from django.utils import timezone
 from django.views.decorators.http import require_POST
 from django.views.generic import TemplateView
 
-from rest_framework import permissions, status, viewsets
+from rest_framework import serializers, status, viewsets
+from rest_framework.parsers import FormParser, MultiPartParser
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from .serializers import (
+    AvisoImportanteSerializer,  # Inclua se precisar de operações de escrita para avisos
+    LacunaSerializer,
+    ProblemaUsuarioSerializer,
+)
 # -----------------------------------------------------------------------------
 # Imports da aplicação local
 # -----------------------------------------------------------------------------
@@ -231,29 +238,90 @@ def deletar_problemas_api(request):
         return JsonResponse({'error': str(e)}, status=500)
 
 # =============================================================================
-#  VIEWSETS PARA A API REST
+#  VIEWSETS PARA A API REST
 # =============================================================================
+
 class LacunaViewSet(viewsets.ModelViewSet):
     queryset = Lacuna.objects.all()
     serializer_class = LacunaSerializer
+    permission_classes = [IsAuthenticated] # Exige autenticação
 
-# =============================================================================
-#  VIEW DO PROBLEMA USUÁRIO
-# =============================================================================
+    def perform_create(self, serializer):
+        # A escola já virá no serializer_class se você enviar o ID
+        # Se você quiser que a escola seja associada a algo do usuário logado,
+        # como a escola do usuário, você pode modificar aqui.
+        # Ex: lacuna.escola = self.request.user.greuser.escola
+        serializer.save()
+
+    def get_queryset(self):
+        """
+        Opcional: Filtra lacunas para a escola do usuário logado ou todas para admin/superuser.
+        Adapte conforme sua necessidade de listagem.
+        """
+        user = self.request.user
+        if user.is_authenticated:
+            # Se o usuário for um superusuário, ele pode ver todas as lacunas
+            if user.is_superuser:
+                return Lacuna.objects.all()
+            # Se o usuário for um GREUser e tiver uma escola associada
+            if hasattr(user, 'greuser') and user.greuser.escola:
+                return Lacuna.objects.filter(escola=user.greuser.escola)
+        return Lacuna.objects.none() # Não retorna nada se não autenticado ou sem escola
+
 class ProblemaUsuarioViewSet(viewsets.ModelViewSet):
     queryset = ProblemaUsuario.objects.all()
     serializer_class = ProblemaUsuarioSerializer
-    
-    def get_serializer_context(self):
-        return {'request': self.request}
+    permission_classes = [IsAuthenticated] # Exige autenticação
+    parser_classes = [MultiPartParser, FormParser] # Permite receber dados de formulário e arquivos
 
-# =============================================================================
-#  VIEW DE AVISO IMPORTANTE
-# =============================================================================
+    def perform_create(self, serializer):
+        # Atribui automaticamente o usuário logado ao campo 'usuario'
+        # Assume que seu GREUser é acessível via request.user.greuser
+        if not hasattr(self.request.user, 'greuser'):
+            raise serializers.ValidationError("Usuário não tem perfil GRE associado.")
+        
+        # A escola e o setor virão no serializer se enviados pelo cliente
+        # Se a escola e/ou setor devem ser baseados no usuário logado e não enviados pelo cliente,
+        # você pode sobrescrever aqui, ex: escola=self.request.user.greuser.escola
+        serializer.save(usuario=self.request.user.greuser)
+
+    def get_queryset(self):
+        """
+        Opcional: Filtra problemas para o usuário logado ou para a escola do usuário.
+        Adapte conforme sua necessidade de listagem.
+        """
+        user = self.request.user
+        if user.is_authenticated:
+            if user.is_superuser:
+                return ProblemaUsuario.objects.all()
+            if hasattr(user, 'greuser'):
+                # Monitores podem ver problemas da sua escola
+                if user.greuser.escola:
+                    return ProblemaUsuario.objects.filter(escola=user.greuser.escola)
+                # Outros GREUsers podem ver apenas seus próprios problemas
+                return ProblemaUsuario.objects.filter(usuario=user.greuser)
+        return ProblemaUsuario.objects.none()
 
 class AvisoImportanteViewSet(viewsets.ModelViewSet):
     queryset = AvisoImportante.objects.all()
     serializer_class = AvisoImportanteSerializer
+    permission_classes = [IsAuthenticated]
+
+    # Você pode adicionar perform_create aqui se quiser atribuir 'criado_por' automaticamente
+    # def perform_create(self, serializer):
+    #     serializer.save(criado_por=self.request.user.greuser)
+
+    def get_queryset(self):
+        """
+        Filtra avisos para a escola do usuário logado ou avisos gerais.
+        """
+        user = self.request.user
+        if user.is_authenticated and hasattr(user, 'greuser') and user.greuser.escola:
+            escola = user.greuser.escola
+            return AvisoImportante.objects.filter(escola=escola) | \
+                   AvisoImportante.objects.filter(setor_destino__isnull=True) # Avisos gerais
+        return AvisoImportante.objects.none() # Apenas avisos relevantes para a escola
+
 
 
 # =============================================================================
@@ -750,3 +818,20 @@ def confirmar_visualizacao_aviso(request, aviso_id):
     
     # Se a requisição não for POST, retorne um erro de método não permitido
     return JsonResponse({'status': 'error', 'message': 'Método não permitido.'}, status=405)
+
+
+from rest_framework import viewsets, status
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from rest_framework.parsers import MultiPartParser, FormParser # Para upload de arquivos
+
+from django.shortcuts import get_object_or_404
+# Importe os modelos e serializadores atualizados
+from .models import Lacuna, ProblemaUsuario, AvisoImportante, Escola, Setor, GREUser
+from .serializers import (
+    LacunaSerializer,
+    ProblemaUsuarioSerializer,
+    AvisoImportanteSerializer # Inclua se precisar de operações de escrita para avisos
+)
+
+# ... (seus outros imports e views existentes)

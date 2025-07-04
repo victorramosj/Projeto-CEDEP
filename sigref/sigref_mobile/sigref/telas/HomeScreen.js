@@ -128,11 +128,10 @@ const HomeScreen = ({ route, navigation }) => {
       </TouchableOpacity>
 
       {/* Adicione mais botões conforme necessário, por exemplo: */}
-      {/* <TouchableOpacity style={styles.primaryButton} onPress={() => navigation.navigate('VisualizarQuestionario')}>
+      <TouchableOpacity style={styles.primaryButton} onPress={() => navigation.navigate('VisualizarQuestionario')}>
         <Ionicons name="eye" size={20} color="#fff" />
-        <Text style={styles.buttonText}>Visualizar Questionários</Text>
-      </TouchableOpacity> */}
-
+        <Text style={styles.buttonText}>Relatórios</Text>
+      </TouchableOpacity> 
       <TouchableOpacity 
         style={styles.logoutButton} 
         onPress={handleLogout}

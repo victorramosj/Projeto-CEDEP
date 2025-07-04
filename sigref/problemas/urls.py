@@ -1,4 +1,4 @@
-from django.urls import path
+from django.urls import path, include
 from . import views
 from rest_framework import routers
 from .views import (
@@ -67,6 +67,8 @@ urlpatterns = [
 
     # Confirmação de visualização do aviso
     path('confirmar-visualizacao/<int:aviso_id>/', confirmar_visualizacao_aviso, name='confirmar_visualizacao_aviso'),
+    
+    path('api/', include(router.urls)),
 ]
 
 urlpatterns += router.urls

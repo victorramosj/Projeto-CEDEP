@@ -1,12 +1,13 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { 
-  View, 
-  Text, 
-  StyleSheet, 
-  ActivityIndicator, 
-  ScrollView, 
+import {
+  View,
+  Text,
+  StyleSheet,
+  ActivityIndicator,
+  ScrollView,
   RefreshControl,
-  Image
+  Image,
+  TouchableOpacity // Importe TouchableOpacity
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import NetInfo from '@react-native-community/netinfo';
@@ -14,7 +15,7 @@ import axios from 'axios';
 import { useRoute, useNavigation } from '@react-navigation/native';
 
 const API_BASE_URL = 'http://10.0.2.2:8000';
-const SCHOOL_DASHBOARD_CACHE_KEY = '@school_dashboard_cache_'; 
+const SCHOOL_DASHBOARD_CACHE_KEY = '@school_dashboard_cache_';
 
 const SchoolDashboardScreen = () => {
   const route = useRoute();
@@ -54,7 +55,7 @@ const SchoolDashboardScreen = () => {
       const response = await axios.get(url, {
         headers: { 'Authorization': `Token ${token}` }
       });
-      
+
       setDashboardData(response.data);
       await AsyncStorage.setItem(`${SCHOOL_DASHBOARD_CACHE_KEY}${escolaId}`, JSON.stringify(response.data));
     } catch (error) {
@@ -79,6 +80,17 @@ const SchoolDashboardScreen = () => {
     fetchDashboardData();
   }, [fetchDashboardData]);
 
+  // --- Funções de navegação para os novos botões ---
+  const handleRelatarProblema = () => {
+    navigation.navigate('RelatarProblemaScreen', { escolaId: escolaId, userData: userData });
+  };
+
+  const handleRelatarLacuna = () => {
+    navigation.navigate('RelatarLacunaScreen', { escolaId: escolaId, userData: userData });
+  };
+  // --- Fim das funções de navegação ---
+
+
   if (loading || !dashboardData) {
     return (
       <View style={styles.loadingContainer}>
@@ -94,7 +106,7 @@ const SchoolDashboardScreen = () => {
   const avisos = dashboardData.avisos;
 
   return (
-    <ScrollView 
+    <ScrollView
       style={styles.container}
       contentContainerStyle={styles.contentContainer}
       refreshControl={
@@ -111,17 +123,17 @@ const SchoolDashboardScreen = () => {
       <View style={styles.headerEscola}>
         <View style={styles.infoEscola}>
           <Text style={styles.escolaTitle}>{escola.nome} - {escola.inep}</Text>
-          
+
           <View style={styles.infoEscolaDetalhes}>
             <Text style={styles.detailText}>📍 {escola.endereco || "Endereço não cadastrado"}</Text>
             <Text style={styles.detailText}>📞 {escola.telefone || "Telefone não cadastrado"}</Text>
             <Text style={styles.detailText}>✉️ Email: {escola.email_escola}</Text>
             <Text style={styles.detailText}>👤 Gestor: {escola.nome_gestor}</Text>
             <Text style={styles.detailText}>📞 Telefone Gestor: {escola.telefone_gestor || "Não cadastrado"}</Text>
-            
+
           </View>
         </View>
-        
+
         <View style={styles.imagemEscola}>
           {escola.foto_fachada_url ? (
             <Image source={{ uri: escola.foto_fachada_url }} style={styles.schoolMainImage} />
@@ -137,17 +149,35 @@ const SchoolDashboardScreen = () => {
           <Text style={styles.cardIndicadorText}>LACUNAS EXISTENTES</Text>
           <Text style={styles.cardIndicadorValue}>{lacunasStats.total}</Text>
         </View>
-        
+
         <View style={styles.cardIndicador}>
           <Text style={styles.cardIndicadorText}>PROBLEMAS EXISTENTES</Text>
           <Text style={styles.cardIndicadorValue}>{problemasStats.total}</Text>
         </View>
       </View>
 
+      {/* Nova Seção: Botões de Relatar */}
+      <View style={styles.reportButtonsSection}>
+        <TouchableOpacity
+          style={[styles.reportButton, styles.reportProblemaButton]}
+          onPress={handleRelatarProblema}
+        >
+          <Text style={styles.reportButtonText}>Relatar Problema</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[styles.reportButton, styles.reportLacunaButton]}
+          onPress={handleRelatarLacuna}
+        >
+          <Text style={styles.reportButtonText}>Relatar Lacuna</Text>
+        </TouchableOpacity>
+      </View>
+      {/* Fim da Nova Seção */}
+
       {/* Avisos Importantes */}
       <View style={styles.avisosImportantes}>
         <Text style={styles.avisosTitle}>AVISOS IMPORTANTES</Text>
-        
+
         {avisos && avisos.length > 0 ? (
           avisos.slice(0, 3).map(aviso => (
             <View key={aviso.id} style={styles.avisoItem}>
@@ -379,6 +409,38 @@ const styles = StyleSheet.create({
     color: '#546E7A',
     textAlign: 'center',
   },
+  // --- Novos estilos para os botões de relatar ---
+  reportButtonsSection: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    marginBottom: 24,
+    gap: 15, // Espaçamento entre os botões
+  },
+  reportButton: {
+    flex: 1, // Faz com que os botões ocupem o espaço disponível igualmente
+    paddingVertical: 15,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 3,
+  },
+  reportProblemaButton: {
+    backgroundColor: '#FF6F00', // Um laranja vibrante para problemas
+  },
+  reportLacunaButton: {
+    backgroundColor: '#00B0FF', // Um azul claro para lacunas
+  },
+  reportButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
+    textAlign: 'center',
+  },
+  // --- Fim dos novos estilos ---
 });
 
 export default SchoolDashboardScreen;
