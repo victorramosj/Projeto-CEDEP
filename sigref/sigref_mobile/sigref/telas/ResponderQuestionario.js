@@ -9,7 +9,7 @@ import {
   TouchableOpacity,
   TextInput,
   Alert,
-  Button // Importe Button
+  Button 
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import NetInfo from '@react-native-community/netinfo';
@@ -21,18 +21,20 @@ import { ptBR } from 'date-fns/locale';
 // URL base da sua API Django
 const API_BASE_URL = 'http://10.0.2.2:8000'; // para emulador android
 
+// Chave para armazenar submissões pendentes
+const PENDING_SUBMISSIONS_KEY = '@pending_questionnaire_submissions';
+
 const ResponderQuestionarioScreen = () => {
   const route = useRoute();
   const navigation = useNavigation();
-  const { escolaId, questionarioId, userData } = route.params; // Recebe IDs e userData
+  const { escolaId, questionarioId, userData } = route.params;
 
   const [questionarioData, setQuestionarioData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [isOffline, setIsOffline] = useState(false);
-  const [respostas, setRespostas] = useState({}); // Armazena as respostas do usuário {pergunta_id: valor}
+  const [respostas, setRespostas] = useState({});
 
-  // Função para buscar dados do questionário da API
   const fetchQuestionarioData = useCallback(async (showAlert = true) => {
     setRefreshing(true);
     try {
@@ -43,6 +45,7 @@ const ResponderQuestionarioScreen = () => {
         if (showAlert) {
           Alert.alert('Modo Offline', 'Você está offline. Não é possível carregar o questionário. Conecte-se à internet.');
         }
+        setLoading(false); // Desativa o loading para não travar a tela
         return;
       }
 
@@ -50,6 +53,7 @@ const ResponderQuestionarioScreen = () => {
       if (!token) {
         Alert.alert('Erro de Autenticação', 'Token de autenticação não encontrado. Por favor, faça login novamente.');
         navigation.replace('Login');
+        setLoading(false); // Desativa o loading antes de redirecionar
         return;
       }
 
@@ -59,8 +63,6 @@ const ResponderQuestionarioScreen = () => {
       });
       
       setQuestionarioData(response.data);
-      // Não cacheamos o questionário aqui, pois ele pode mudar e não queremos respostas antigas.
-      // O cache seria para a lista de questionários, não para o formulário em si.
       console.log('Questionário carregado da API.');
 
     } catch (error) {
@@ -74,7 +76,7 @@ const ResponderQuestionarioScreen = () => {
       setIsOffline(true);
     } finally {
       setRefreshing(false);
-      setLoading(false); // Desativa o loading mesmo em caso de erro
+      setLoading(false);
     }
   }, [escolaId, questionarioId, userData, navigation]);
 
@@ -95,16 +97,14 @@ const ResponderQuestionarioScreen = () => {
   };
 
   const handleSubmit = async () => {
-    // Validação básica: verificar se todas as perguntas foram respondidas
     const todasRespondidas = questionarioData.perguntas.every(pergunta => {
       const resposta = respostas[pergunta.id];
-      if (!resposta) return false; // Não respondida
+      if (!resposta) return false;
       
-      // Lógica de validação mais específica para cada tipo de resposta
       if (pergunta.tipo_resposta === 'SN' && (resposta.valor !== 'S' && resposta.valor !== 'N')) return false;
       if (pergunta.tipo_resposta === 'NU' && (isNaN(parseFloat(resposta.valor)))) return false;
       if (pergunta.tipo_resposta === 'TX' && !resposta.valor.trim()) return false;
-
+      
       return true;
     });
 
@@ -113,8 +113,39 @@ const ResponderQuestionarioScreen = () => {
       return;
     }
 
-    setLoading(true); // Ativa loading para envio
+    setLoading(true); 
+    const formattedRespostas = questionarioData.perguntas.map(pergunta => {
+      const resposta = respostas[pergunta.id];
+      const data = {
+        pergunta_id: pergunta.id,
+      };
+      if (pergunta.tipo_resposta === 'SN') {
+        data.resposta_sn = resposta.valor;
+      } else if (pergunta.tipo_resposta === 'NU') {
+        data.resposta_num = parseFloat(resposta.valor);
+      } else if (pergunta.tipo_resposta === 'TX') {
+        data.resposta_texto = resposta.valor;
+      }
+      return data;
+    });
+
+    const payload = {
+      escola_id: escolaId, // Adiciona escolaId ao payload
+      questionario_id: questionarioId, // Adiciona questionarioId ao payload
+      respostas: formattedRespostas,
+      // foto_comprovante: null, 
+    };
+
     try {
+      const netInfoState = await NetInfo.fetch();
+      if (!netInfoState.isConnected) {
+        // Se offline, salva no AsyncStorage
+        await saveSubmissionOffline(payload);
+        Alert.alert('Modo Offline', 'Resposta salva localmente. Será enviada quando você estiver online.');
+        navigation.goBack(); // Volta para a tela anterior
+        return; 
+      }
+
       const token = userData?.token;
       if (!token) {
         Alert.alert('Erro de Autenticação', 'Token de autenticação não encontrado. Por favor, faça login novamente.');
@@ -122,46 +153,58 @@ const ResponderQuestionarioScreen = () => {
         return;
       }
 
-      const formattedRespostas = questionarioData.perguntas.map(pergunta => {
-        const resposta = respostas[pergunta.id];
-        const data = {
-          pergunta_id: pergunta.id,
-        };
-        if (pergunta.tipo_resposta === 'SN') {
-          data.resposta_sn = resposta.valor;
-        } else if (pergunta.tipo_resposta === 'NU') {
-          data.resposta_num = parseFloat(resposta.valor);
-        } else if (pergunta.tipo_resposta === 'TX') {
-          data.resposta_texto = resposta.valor;
-        }
-        return data;
-      });
-
-      const payload = {
-        respostas: formattedRespostas,
-        // foto_comprovante: null, // Se for implementar upload de imagem, adicione aqui
-      };
-
       const url = `${API_BASE_URL}/monitoramento/api/escola/${escolaId}/questionario/${questionarioId}/responder/`;
       const response = await axios.post(url, payload, {
         headers: {
           'Authorization': `Token ${token}`,
-          'Content-Type': 'application/json', // Importante para JSON
+          'Content-Type': 'application/json',
         }
       });
 
       if (response.data.status === 'success') {
         Alert.alert('Sucesso', 'Questionário respondido com sucesso!');
-        navigation.goBack(); // Volta para a tela anterior (Dashboard da Escola)
+        navigation.goBack(); 
       } else {
         Alert.alert('Erro', response.data.message || 'Falha ao enviar questionário.');
       }
 
     } catch (error) {
       console.error('Erro ao enviar questionário:', error.response?.data || error.message);
-      Alert.alert('Erro', error.response?.data?.message || 'Não foi possível enviar o questionário. Verifique a conexão.');
+      // Se for um erro de rede (offline) ou outro erro que impeça o envio, salva offline
+      if (error.request) { // Erro de rede/offline
+        await saveSubmissionOffline(payload);
+        Alert.alert('Modo Offline', 'Falha na conexão. Resposta salva localmente. Será enviada quando você estiver online.');
+      } else if (error.response && (error.response.status === 401 || error.response.status === 403)) {
+         Alert.alert('Erro de Autenticação/Permissão', 'Sua sessão expirou ou você não tem permissão. Faça login novamente.');
+         navigation.replace('Login');
+      }
+      else {
+        Alert.alert('Erro', error.response?.data?.message || 'Não foi possível enviar o questionário. Tente novamente.');
+      }
     } finally {
-      setLoading(false); // Desativa loading após envio
+      setLoading(false);
+    }
+  };
+
+  // Função para salvar uma submissão no AsyncStorage
+  const saveSubmissionOffline = async (submissionPayload) => {
+    try {
+      const existingSubmissionsString = await AsyncStorage.getItem(PENDING_SUBMISSIONS_KEY);
+      const existingSubmissions = existingSubmissionsString ? JSON.parse(existingSubmissionsString) : [];
+      
+      const newSubmission = {
+        id: Date.now().toString(), // ID único baseado no timestamp
+        timestamp: new Date().toISOString(),
+        payload: submissionPayload,
+        token: userData?.token // Salva o token que estava ativo no momento da submissão
+      };
+
+      const updatedSubmissions = [...existingSubmissions, newSubmission];
+      await AsyncStorage.setItem(PENDING_SUBMISSIONS_KEY, JSON.stringify(updatedSubmissions));
+      console.log('Submissão salva offline:', newSubmission.id);
+    } catch (e) {
+      console.error('Erro ao salvar submissão offline:', e);
+      Alert.alert('Erro', 'Não foi possível salvar a resposta offline.');
     }
   };
 
@@ -178,7 +221,6 @@ const ResponderQuestionarioScreen = () => {
   const questionario = questionarioData.questionario;
   const perguntas = questionarioData.perguntas;
 
-  // Calcula o progresso
   const answeredQuestionsCount = perguntas.filter(pergunta => {
     const resposta = respostas[pergunta.id];
     if (!resposta) return false;

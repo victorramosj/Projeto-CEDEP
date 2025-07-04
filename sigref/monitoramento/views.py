@@ -1195,6 +1195,7 @@ class QuestionariosEscolaAPIView(APIView):
         }
         return Response(response_data)
 
+
 # --- NOVA API para Responder Questionário ---
 class ResponderQuestionarioAPIView(APIView):
     permission_classes = [permissions.IsAuthenticated]
@@ -1259,7 +1260,6 @@ class ResponderQuestionarioAPIView(APIView):
             return Response({"detail": "Este questionário não está atribuído a esta escola."}, status=status.HTTP_403_FORBIDDEN)
 
         # Processar as respostas
-        # request.data já contém o corpo da requisição parseado (JSON, Form Data, etc.)
         respostas_data = request.data.get('respostas', [])
         # foto_comprovante_data = request.FILES.get('foto_comprovante') # Se for lidar com upload de arquivo
 
@@ -1278,39 +1278,33 @@ class ResponderQuestionarioAPIView(APIView):
         for resposta_item in respostas_data:
             pergunta_id = resposta_item.get('pergunta_id')
             
-            # Validação básica para garantir que a pergunta pertence a este questionário
             try:
                 pergunta = Pergunta.objects.get(id=pergunta_id, questionario=questionario)
             except Pergunta.DoesNotExist:
-                # Se a pergunta não for encontrada ou não pertencer ao questionário,
-                # você pode logar, ignorar ou retornar um erro.
-                # Para este exemplo, vamos retornar um erro.
-                monitoramento.delete() # Remove o monitoramento criado se houver erro nas perguntas
+                monitoramento.delete()
                 return Response({"detail": f"Pergunta com ID {pergunta_id} não encontrada ou não pertence a este questionário."}, status=status.HTTP_400_BAD_REQUEST)
             
-            # Adaptação para os tipos de resposta
             resposta_sn = None
             resposta_num = None
-            resposta_texto = None
+            resposta_texto = "" # <<< ALTERADO: Inicializa como string vazia
 
             if pergunta.tipo_resposta == 'SN':
                 resposta_sn = resposta_item.get('resposta_sn')
             elif pergunta.tipo_resposta == 'NU':
-                # Tenta converter para float, validação mais robusta pode ser feita no serializer
                 try:
                     resposta_num = float(resposta_item.get('resposta_num'))
                 except (ValueError, TypeError):
                     monitoramento.delete()
                     return Response({"detail": f"Resposta numérica inválida para pergunta {pergunta.id}."}, status=status.HTTP_400_BAD_REQUEST)
             elif pergunta.tipo_resposta == 'TX':
-                resposta_texto = resposta_item.get('resposta_texto')
+                resposta_texto = resposta_item.get('resposta_texto') or "" # Garante que seja string vazia se for None
 
             Resposta.objects.create(
                 monitoramento=monitoramento,
                 pergunta=pergunta,
                 resposta_sn=resposta_sn,
                 resposta_num=resposta_num,
-                resposta_texto=resposta_texto
+                resposta_texto=resposta_texto # Agora será "" ou o texto preenchido
             )
         
         return Response({"status": "success", "message": "Questionário respondido com sucesso!", "monitoramento_id": monitoramento.id}, status=status.HTTP_201_CREATED)
