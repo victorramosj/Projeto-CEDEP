@@ -14,7 +14,7 @@ import ResponderQuestionarioScreen from './telas/ResponderQuestionario.js';
 import RelatarProblemaScreen from './telas/RelatarProblemaScreen.js';
 import VisualizarQuestionarioScreen from './telas/VisualizarQuestionarios.js';
 import DashboardEscolaScreen from './telas/DashboardEscola.js';
-
+import GerarRelatorioPdfScreen from './telas/GerarRelatorioPdfScreen.js';
 import RelatarLacunaScreen from './telas/RelatarLacunaScreen.js';
 
 const Stack = createStackNavigator();
@@ -107,6 +107,10 @@ export default function App() {
         <Stack.Screen name="RelatarLacunaScreen"
           component={RelatarLacunaScreen}
           options={{ title: 'Relatar Lacuna' }} 
+          />
+          <Stack.Screen name="GerarRelatorioPdfScreen"
+          component={GerarRelatorioPdfScreen}
+          options={{ title: 'GerarRelatorioPdfScreen' }} 
           />
       </Stack.Navigator>
     </NavigationContainer>

@@ -20,13 +20,10 @@ import useOfflineDataSync from './hooks/useOfflineDataSync'; // Importe o hook
 // URL base da sua API Django
 const API_BASE_URL = 'http://10.0.2.2:8000'; 
 
-// Chave para o cache do AsyncStorage (Não será mais usada diretamente para a lista de escolas se usar o hook)
-// const SCHOOLS_CACHE_KEY = '@schools_cache'; 
-
 const SchoolSelectionScreen = () => {
   const navigation = useNavigation();
   const [schools, setSchools] = useState([]);
-  const [loading, setLoading] = useState(true); // O loading inicial agora será do hook ou da busca
+  const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [isOffline, setIsOffline] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -47,24 +44,21 @@ const SchoolSelectionScreen = () => {
   // A função fetchSchools agora usará os dados do hook (offlineData)
   const fetchSchools = useCallback(async (query = '') => {
     setRefreshing(true);
-    setIsOffline(!isGlobalConnected); // Atualiza o estado de offline com o global
+    setIsOffline(!isGlobalConnected);
 
     if (!isGlobalConnected) {
       Alert.alert('Modo Offline', 'Você está offline. Exibindo dados locais. Conecte-se à internet para buscar mais escolas.');
-      // Filtra as escolas dos dados offline
       const filteredOfflineSchools = offlineData.escolas.filter(school =>
         school.nome.toLowerCase().includes(query.toLowerCase()) ||
         school.inep.toLowerCase().includes(query.toLowerCase()) ||
-        school.nome_gestor.toLowerCase().includes(query.toLowerCase())
+        (school.nome_gestor && school.nome_gestor.toLowerCase().includes(query.toLowerCase())) // Adiciona verificação para nome_gestor
       );
       setSchools(filteredOfflineSchools);
-      setLoading(false); // Desativa o loading pois os dados offline foram carregados
+      setLoading(false);
       setRefreshing(false);
       return;
     }
 
-    // Se online, tenta sincronizar dados mestres (se necessário) e depois busca as escolas
-    // O triggerMasterSync já foi chamado no hook, então aqui só fazemos a busca filtrada
     console.log('Online: Buscando escolas filtradas da API...');
     try {
       const token = storedUserData?.token;
@@ -82,7 +76,6 @@ const SchoolSelectionScreen = () => {
       });
       
       setSchools(response.data);
-      // Não precisamos mais salvar aqui, pois o useOfflineDataSync já salva todos os dados mestres
       console.log('Escolas atualizadas da API.');
 
     } catch (error) {
@@ -96,22 +89,19 @@ const SchoolSelectionScreen = () => {
       setIsOffline(true);
     } finally {
       setRefreshing(false);
-      setLoading(false); // Desativa o loading após a busca/erro
+      setLoading(false);
     }
-  }, [searchQuery, isGlobalConnected, offlineData.escolas, storedUserData, navigation]); // Adicionado offlineData.escolas e isGlobalConnected como dependências
+  }, [searchQuery, isGlobalConnected, offlineData.escolas, storedUserData, navigation]);
 
-  // Efeito para o carregamento inicial da tela e quando o status da conexão muda
   useEffect(() => {
-    // Isso garante que a tela exiba algo rapidamente do cache,
-    // e depois, se online, dispare a sincronização e a busca.
-    if (storedUserData) { // Só tenta buscar se houver userData
-        setLoading(true); // Ativa loading para garantir que o indicador aparece
-        fetchSchools(searchQuery); // Usa o termo de busca atual
+    if (storedUserData) {
+        setLoading(true);
+        fetchSchools(searchQuery);
     }
-  }, [storedUserData, fetchSchools]); // Dispara quando userData ou fetchSchools mudam
+  }, [storedUserData, fetchSchools]);
 
   const onRefresh = useCallback(() => {
-    fetchSchools(searchQuery); // Força refresh com o termo de busca atual
+    fetchSchools(searchQuery);
   }, [searchQuery, fetchSchools]);
 
   const renderSchoolItem = ({ item }) => (
@@ -153,12 +143,30 @@ const SchoolSelectionScreen = () => {
           >
             <Text style={styles.buttonText}>Realizar Monitoramento</Text>
           </TouchableOpacity>
+
+          {/* NOVO BOTÃO: Gerar Relatório PDF */}
+          <TouchableOpacity 
+            style={styles.actionButtonReport} // Novo estilo
+            onPress={async () => {
+              const userDataString = await AsyncStorage.getItem('userData');
+              const currentUserData = userDataString ? JSON.parse(userDataString) : null;
+              if (currentUserData) {
+                navigation.navigate('GerarRelatorioPdfScreen', { escolaId: item.id, userData: currentUserData });
+              } else {
+                Alert.alert('Erro', 'Dados do usuário não encontrados. Por favor, faça login novamente.');
+                navigation.replace('Login');
+              }
+            }}
+          >
+            <Text style={styles.buttonText}>Gerar Relatório PDF</Text>
+          </TouchableOpacity>
+          {/* FIM NOVO BOTÃO */}
+
         </View>
       </View>
     </TouchableOpacity>
   );
 
-  // Exibe o loading se ainda estiver sincronizando no início OU se não houver dados
   if (loading || isSyncing && !offlineData.escolas.length) { 
     return (
       <View style={styles.loadingContainer}>
@@ -178,7 +186,7 @@ const SchoolSelectionScreen = () => {
           <Text style={styles.offlineText}>Você está offline. Dados podem estar desatualizados.</Text>
         </View>
       )}
-      {syncError && !isOffline && ( // Exibe erro de sync se estiver online mas sync falhou
+      {syncError && !isOffline && (
         <View style={[styles.offlineBanner, styles.syncErrorBanner]}>
           <Text style={styles.offlineText}>Erro na sincronização: {syncError}</Text>
         </View>
@@ -243,7 +251,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   syncErrorBanner: {
-    backgroundColor: '#ffaaaa', // Um vermelho mais claro para erros de sync
+    backgroundColor: '#ffaaaa',
     borderColor: 'red',
     borderWidth: 1,
   },
@@ -313,23 +321,40 @@ const styles = StyleSheet.create({
   buttonContainer: {
     flexDirection: 'row',
     marginTop: 10,
-    gap: 10,
+    // gap: 10, // Removendo gap para usar marginHorizontal nos botões individuais para compatibilidade mais ampla
+    justifyContent: 'space-between', // Para distribuir os botões
+    flexWrap: 'wrap', // Permite quebrar linha se não houver espaço
   },
   actionButtonPrimary: {
-    flex: 1,
+    // flex: 1, // Removendo flex:1 para controlar melhor a largura se tiver muitos botões
+    width: '48%', // Ajusta a largura para ter 2 por linha
     backgroundColor: '#007bff',
     paddingVertical: 8,
     borderRadius: 5,
     alignItems: 'center',
     justifyContent: 'center',
+    marginBottom: 10, // Espaçamento entre as linhas de botões
   },
   actionButtonSecondary: {
-    flex: 1,
+    // flex: 1,
+    width: '48%',
     backgroundColor: '#6c757d',
     paddingVertical: 8,
     borderRadius: 5,
     alignItems: 'center',
     justifyContent: 'center',
+    marginBottom: 10,
+  },
+  // NOVO ESTILO para o botão de relatório
+  actionButtonReport: {
+    // flex: 1,
+    width: '48%', // Ajusta a largura para ter 2 por linha
+    backgroundColor: '#28a745', // Uma cor diferente, como verde para relatórios
+    paddingVertical: 8,
+    borderRadius: 5,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 10, // Espaçamento entre as linhas de botões
   },
   buttonText: {
     color: '#fff',
