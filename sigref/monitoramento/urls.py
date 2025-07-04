@@ -10,7 +10,8 @@ from .views import (
     EscolaSelectionAPIView, 
     EscolaDashboardAPIView, 
     ConfirmarVisualizacaoAvisoAPIView,
-    ResponderQuestionarioAPIView # <--- ADICIONADO: Importação da ResponderQuestionarioAPIView
+    ResponderQuestionarioAPIView,
+    AllOfflineDataAPIView
 )
 
 # -----------------------------------------
@@ -81,7 +82,7 @@ urlpatterns = [
 
     # ROTA PARA LISTAR QUESTIONÁRIOS POR ESCOLA (API)
     path('api/escola/<int:escola_id>/questionarios/', QuestionariosEscolaAPIView.as_view(), name='api-questionarios-escola'),
-    
+    path('api/all-offline-data/', AllOfflineDataAPIView.as_view(), name='all-offline-data-api'), # <--- NOVA ROTA
     # -----------------------------------------
     # DRF: Inclusão de ViewSets e Nested Routers
     # -----------------------------------------

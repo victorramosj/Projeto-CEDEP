@@ -117,14 +117,7 @@ const HomeScreen = ({ route, navigation }) => {
         <Ionicons name="school" size={20} color="#fff" />
         <Text style={styles.buttonText}>Selecionar Escolas</Text>
       </TouchableOpacity>
-
-      <TouchableOpacity
-        style={styles.primaryButton}
-        onPress={() => navigation.navigate('ResponderQuestionario')}
-      >
-        <Ionicons name="clipboard" size={20} color="#fff" />
-        <Text style={styles.buttonText}>Responder Questionário</Text>
-      </TouchableOpacity>
+      
 
       <TouchableOpacity
         style={styles.primaryButton}

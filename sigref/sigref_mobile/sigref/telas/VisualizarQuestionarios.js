@@ -14,16 +14,20 @@ import {
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import NetInfo from '@react-native-community/netinfo';
 import axios from 'axios';
-import { useRoute, useNavigation, useFocusEffect } from '@react-navigation/native'; // Adicionado useFocusEffect
+import { useRoute, useNavigation, useFocusEffect } from '@react-navigation/native';
 import { format, parseISO, formatDistanceToNowStrict } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { utcToZonedTime } from 'date-fns-tz'; // Importe utcToZonedTime
 
 // URL base da sua API Django
 const API_BASE_URL = 'http://10.0.2.2:8000'; // para emulador android
 
 // Chave para o cache do AsyncStorage
 const QUESTIONARIOS_ESCOLA_CACHE_KEY = '@questionarios_escola_cache_'; 
-const PENDING_SUBMISSIONS_KEY = '@pending_questionnaire_submissions'; // Chave para submissões pendentes
+const PENDING_SUBMISSIONS_KEY = '@pending_questionnaire_submissions'; 
+
+// Fuso horário de Brasília
+const TIMEZONE_BRASILIA = 'America/Sao_Paulo';
 
 const QuestionariosEscolaScreen = () => {
   const route = useRoute();
@@ -73,16 +77,15 @@ const QuestionariosEscolaScreen = () => {
       for (const submission of existingSubmissions) {
         try {
           const { escola_id, questionario_id, respostas } = submission.payload;
-          const token = submission.token; // Usa o token salvo com a submissão
+          const token = submission.token; 
 
           if (!token) {
-            console.error(`Submissão ${submission.id}: Token de autenticação ausente.`);
-            // Talvez mover para uma lista de falhas permanentes ou exigir re-login
+            console.error(`Submissão ${submission.id}: Token de autenticação ausente. Pulando.`);
             continue; 
           }
 
           const url = `${API_BASE_URL}/monitoramento/api/escola/${escola_id}/questionario/${questionario_id}/responder/`;
-          const response = await axios.post(url, { respostas }, { // Envia apenas 'respostas'
+          const response = await axios.post(url, { respostas }, { 
             headers: {
               'Authorization': `Token ${token}`,
               'Content-Type': 'application/json',
@@ -97,47 +100,46 @@ const QuestionariosEscolaScreen = () => {
           }
         } catch (innerError) {
           console.error(`Submissão ${submission.id}: Erro ao enviar:`, innerError.response?.data || innerError.message);
-          // Permissão/autenticação 401/403 pode exigir re-login
           if (innerError.response && (innerError.response.status === 401 || innerError.response.status === 403)) {
               Alert.alert('Sessão Expirada', 'Sua sessão expirou durante a sincronização. Por favor, faça login novamente.');
               navigation.replace('Login');
-              return true; // Sincronização com falha crítica
+              return true; 
           }
         }
       }
 
-      // Remove submissões sincronizadas com sucesso
       const remainingSubmissions = existingSubmissions.filter(sub => !successfullySyncedIds.includes(sub.id));
       await AsyncStorage.setItem(PENDING_SUBMISSIONS_KEY, JSON.stringify(remainingSubmissions));
       
       if (successfullySyncedIds.length > 0) {
         Alert.alert('Sincronização Concluída', `${successfullySyncedIds.length} relatório(s) enviado(s) com sucesso.`);
-        return true; // Houve sincronização bem-sucedida
+        return true; 
       }
-      return false; // Não houve sincronização bem-sucedida
+      return false; 
       
     } catch (e) {
       console.error('Erro geral ao sincronizar submissões pendentes:', e);
       Alert.alert('Erro de Sincronização', 'Não foi possível sincronizar todos os relatórios pendentes.');
-      return false; // Não houve sincronização
+      return false;
     }
-  }, [navigation]); // navigation adicionado como dependência
+  }, [navigation]);
 
   // Função para buscar dados da API
   const fetchData = useCallback(async (showAlert = true) => {
     setRefreshing(true);
+    console.log("Iniciando fetchData...");
     try {
       const netInfoState = await NetInfo.fetch();
       setIsOffline(!netInfoState.isConnected);
 
-      // Tenta sincronizar antes de buscar novos dados
-      const synced = await syncPendingSubmissions(); 
+      const syncedAnything = await syncPendingSubmissions(); 
       
       if (!netInfoState.isConnected) {
         if (showAlert) {
           Alert.alert('Modo Offline', 'Você está offline. Exibindo dados em cache. Conecte-se à internet para atualizar.');
         }
-        return; // Não busca da API se estiver offline
+        console.log('Offline: Não buscando dados da API.');
+        return; 
       }
 
       const token = userData?.token;
@@ -147,6 +149,7 @@ const QuestionariosEscolaScreen = () => {
         return;
       }
 
+      console.log('Online: Buscando dados frescos da API...');
       const url = `${API_BASE_URL}/monitoramento/api/escola/${escolaId}/questionarios/`;
       const response = await axios.get(url, {
         headers: { 'Authorization': `Token ${token}` }
@@ -167,43 +170,45 @@ const QuestionariosEscolaScreen = () => {
       setIsOffline(true);
     } finally {
       setRefreshing(false);
-      setLoading(false); // Desativa o loading mesmo em caso de erro
+      setLoading(false); 
+      console.log("fetchData finalizado.");
     }
-  }, [escolaId, userData, navigation, syncPendingSubmissions]); // syncPendingSubmissions como dependência
+  }, [escolaId, userData, navigation, syncPendingSubmissions]);
 
   useEffect(() => {
+    console.log("useEffect de inicialização acionado.");
     setLoading(true);
     loadDataFromCache().then(() => {
-      fetchData(false); // No primeiro carregamento, não mostra alerta de offline imediatamente
+      fetchData(false); 
     });
   }, [loadDataFromCache, fetchData]);
 
-  // Use useFocusEffect para recarregar dados quando a tela entra em foco (ex: ao voltar de ResponderQuestionarioScreen)
   useFocusEffect(
     useCallback(() => {
       console.log("QuestionariosEscolaScreen focada. Verificando conexão e atualizando dados.");
-      const checkConnectionAndFetch = async () => {
+      const checkConnectionAndFetchOnFocus = async () => {
         const netInfoState = await NetInfo.fetch();
         if (netInfoState.isConnected) {
-          fetchData(false); // Força um refresh da API, sem alerta inicial de offline
+          console.log("Online no foco: Forçando atualização da API.");
+          fetchData(false); 
         } else {
-          setIsOffline(true); // Atualiza estado para mostrar banner offline
-          loadDataFromCache(); // Recarrega do cache para o caso de ter voltado de um envio offline
+          console.log("Offline no foco: Recarregando do cache.");
+          setIsOffline(true); 
+          loadDataFromCache(); 
           Alert.alert('Modo Offline', 'Você está offline. Exibindo dados em cache. Conecte-se à internet para atualizar.');
         }
       };
-      checkConnectionAndFetch();
+      checkConnectionAndFetchOnFocus();
       
-      // Retorna uma função de limpeza que é executada quando a tela perde o foco
-      // ou quando o componente é desmontado
       return () => {
         console.log("QuestionariosEscolaScreen perdeu o foco.");
       };
-    }, [fetchData, loadDataFromCache]) // Inclui fetchData e loadDataFromCache como dependências
+    }, [fetchData, loadDataFromCache])
   );
 
   const onRefresh = useCallback(() => {
-    fetchData(true); // Puxar para atualizar sempre tenta buscar e alerta se offline
+    console.log("Puxar para atualizar acionado.");
+    fetchData(true); 
   }, [fetchData]);
 
   const handleResponderQuestionario = (questionarioId) => {
@@ -216,7 +221,6 @@ const QuestionariosEscolaScreen = () => {
 
   const handleGerarRelatorioDiario = () => {
     Alert.alert('Gerar Relatório Diário', 'Funcionalidade de geração de relatório diário será implementada.');
-    // navigation.navigate('RelatorioDiario', { escolaId: escolaId, userData: userData });
   };
 
   if (loading || !screenData) {
@@ -267,9 +271,16 @@ const QuestionariosEscolaScreen = () => {
       </View>
       <View style={styles.cardFooter}>
         <Text style={styles.lastResponseText}>
-          {questionario.ultima_resposta_criado_em 
-            ? `${formatDistanceToNowStrict(parseISO(questionario.ultima_resposta_criado_em), { addSuffix: true, locale: ptBR })}` 
-            : 'Nunca respondido'}
+          {ultimaRespostaGeral ? (
+            <>
+              {/* Formatação para Brasília Time */}
+              <Text>{format(utcToZonedTime(parseISO(ultimaRespostaGeral), TIMEZONE_BRASILIA), 'dd/MM/yyyy', { locale: ptBR })}</Text>
+              {'\n'}
+              <Text>{format(utcToZonedTime(parseISO(ultimaRespostaGeral), TIMEZONE_BRASILIA), 'HH:mm', { locale: ptBR })}</Text>
+            </>
+          ) : (
+            'Nunca respondido'
+          )}
         </Text>
         <TouchableOpacity 
           style={styles.responderButton}
@@ -379,9 +390,10 @@ const QuestionariosEscolaScreen = () => {
             <Text style={styles.generalSummaryStatValue}>
               {ultimaRespostaGeral ? (
                 <>
-                  <Text>{format(parseISO(ultimaRespostaGeral), 'dd/MM/yyyy', { locale: ptBR })}</Text>
+                  {/* Formatação para Brasília Time */}
+                  <Text>{format(utcToZonedTime(parseISO(ultimaRespostaGeral), TIMEZONE_BRASILIA), 'dd/MM/yyyy', { locale: ptBR })}</Text>
                   {'\n'}
-                  <Text>{format(parseISO(ultimaRespostaGeral), 'HH:mm', { locale: ptBR })}</Text>
+                  <Text>{format(utcToZonedTime(parseISO(ultimaRespostaGeral), TIMEZONE_BRASILIA), 'HH:mm', { locale: ptBR })}</Text>
                 </>
               ) : (
                 '--'

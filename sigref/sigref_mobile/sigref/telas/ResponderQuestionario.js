@@ -14,7 +14,7 @@ import {
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import NetInfo from '@react-native-community/netinfo';
 import axios from 'axios';
-import { useRoute, useNavigation } from '@react-navigation/native';
+import { useRoute, useNavigation, useFocusEffect } from '@react-navigation/native';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
@@ -23,6 +23,8 @@ const API_BASE_URL = 'http://10.0.2.2:8000'; // para emulador android
 
 // Chave para armazenar submissões pendentes
 const PENDING_SUBMISSIONS_KEY = '@pending_questionnaire_submissions';
+// Nova chave para armazenar os dados do questionário em cache (perguntas)
+const QUESTIONARIO_DATA_CACHE_KEY = '@questionario_data_cache_';
 
 const ResponderQuestionarioScreen = () => {
   const route = useRoute();
@@ -35,25 +37,57 @@ const ResponderQuestionarioScreen = () => {
   const [isOffline, setIsOffline] = useState(false);
   const [respostas, setRespostas] = useState({});
 
+  // Nova função para carregar dados do questionário do cache
+  const loadQuestionarioDataFromCache = useCallback(async () => {
+    try {
+      const cachedData = await AsyncStorage.getItem(`${QUESTIONARIO_DATA_CACHE_KEY}${questionarioId}`);
+      if (cachedData) {
+        setQuestionarioData(JSON.parse(cachedData));
+        console.log('Dados do questionário carregados do cache.');
+      } else {
+        // Se não houver dados em cache, inicializa com uma estrutura vazia para permitir a renderização
+        setQuestionarioData({
+          escola: {}, // Objeto vazio para escola
+          questionario: {}, // Objeto vazio para questionário
+          perguntas: [], // Array vazio para perguntas
+          hoje: new Date().toISOString(), // Data atual como fallback
+        });
+        console.log('Nenhum dado do questionário encontrado no cache. Inicializando com estrutura vazia.');
+      }
+    } catch (e) {
+      console.error('Erro ao carregar questionário do cache:', e);
+      // Em caso de erro no cache, ainda inicializa com uma estrutura vazia
+      setQuestionarioData({
+        escola: {},
+        questionario: {},
+        perguntas: [],
+        hoje: new Date().toISOString(),
+      });
+      Alert.alert('Erro no Cache', 'Não foi possível carregar dados do cache. Tente atualizar online.');
+    }
+  }, [questionarioId]);
+
+  // Função para buscar dados do questionário da API
   const fetchQuestionarioData = useCallback(async (showAlert = true) => {
-    setRefreshing(true);
+    setRefreshing(true); // Ativa o refreshing para o RefreshControl
     try {
       const netInfoState = await NetInfo.fetch();
       setIsOffline(!netInfoState.isConnected);
 
       if (!netInfoState.isConnected) {
+        // Se offline, já carregamos do cache. Apenas avisamos se solicitado.
         if (showAlert) {
-          Alert.alert('Modo Offline', 'Você está offline. Não é possível carregar o questionário. Conecte-se à internet.');
+          Alert.alert('Modo Offline', 'Você está offline. Exibindo dados do questionário do cache. Conecte-se à internet para atualizar.');
         }
-        setLoading(false); // Desativa o loading para não travar a tela
-        return;
+        // Não desativa o loading aqui, pois o loading inicial é desativado após o cache.
+        // O refreshing será desativado no finally.
+        return; // Não tenta buscar da API se estiver offline
       }
 
       const token = userData?.token;
       if (!token) {
         Alert.alert('Erro de Autenticação', 'Token de autenticação não encontrado. Por favor, faça login novamente.');
         navigation.replace('Login');
-        setLoading(false); // Desativa o loading antes de redirecionar
         return;
       }
 
@@ -63,7 +97,9 @@ const ResponderQuestionarioScreen = () => {
       });
       
       setQuestionarioData(response.data);
-      console.log('Questionário carregado da API.');
+      // Salva os dados do questionário no cache após buscar da API
+      await AsyncStorage.setItem(`${QUESTIONARIO_DATA_CACHE_KEY}${questionarioId}`, JSON.stringify(response.data));
+      console.log('Questionário carregado da API e salvo no cache.');
 
     } catch (error) {
       console.error('Erro ao buscar questionário:', error);
@@ -75,18 +111,51 @@ const ResponderQuestionarioScreen = () => {
       }
       setIsOffline(true);
     } finally {
-      setRefreshing(false);
-      setLoading(false);
+      setRefreshing(false); // Desativa o refreshing no final
+      setLoading(false); // Garante que o loading inicial seja desativado
     }
   }, [escolaId, questionarioId, userData, navigation]);
 
+  // Efeito para o carregamento inicial da tela
   useEffect(() => {
+    console.log("ResponderQuestionarioScreen: useEffect de inicialização acionado.");
     setLoading(true);
-    fetchQuestionarioData();
-  }, [fetchQuestionarioData]);
+    // PASSO 1: Tenta carregar do cache primeiro (para exibição imediata offline)
+    loadQuestionarioDataFromCache().then(() => {
+      // PASSO 2: Depois, tenta buscar da rede (para garantir dados atualizados)
+      fetchQuestionarioData(false); // Não alerta se offline no início, pois já carregou cache
+    });
+  }, [loadQuestionarioDataFromCache, fetchQuestionarioData]);
+
+  // useFocusEffect para recarregar dados quando a tela entra em foco (ex: ao voltar de ResponderQuestionarioScreen)
+  // Isso garante que, se o usuário voltar para esta tela (por exemplo, após enviar uma resposta),
+  // os dados sejam re-buscados para garantir que estejam atualizados.
+  useFocusEffect(
+    useCallback(() => {
+      console.log("ResponderQuestionarioScreen focada. Verificando conexão e atualizando dados.");
+      const checkConnectionAndFetchOnFocus = async () => {
+        const netInfoState = await NetInfo.fetch();
+        if (netInfoState.isConnected) {
+          console.log("Online no foco: Forçando atualização da API.");
+          fetchQuestionarioData(false); // Força um refresh da API, sem alerta inicial de offline
+        } else {
+          console.log("Offline no foco: Recarregando do cache.");
+          setIsOffline(true); 
+          loadQuestionarioDataFromCache(); // Recarrega do cache para o caso de ter voltado de um envio offline
+          Alert.alert('Modo Offline', 'Você está offline. Exibindo dados do questionário do cache. Conecte-se à internet para atualizar.');
+        }
+      };
+      checkConnectionAndFetchOnFocus();
+      
+      return () => {
+        console.log("ResponderQuestionarioScreen perdeu o foco.");
+      };
+    }, [fetchQuestionarioData, loadQuestionarioDataFromCache]) // Inclui fetchData e loadQuestionarioDataFromCache como dependências
+  );
 
   const onRefresh = useCallback(() => {
-    fetchQuestionarioData(true);
+    console.log("Puxar para atualizar acionado.");
+    fetchQuestionarioData(true); // Puxar para atualizar sempre tenta buscar e alerta se offline
   }, [fetchQuestionarioData]);
 
   const handleRespostaChange = (perguntaId, tipoResposta, value) => {
@@ -101,7 +170,7 @@ const ResponderQuestionarioScreen = () => {
       const resposta = respostas[pergunta.id];
       if (!resposta) return false;
       
-      if (pergunta.tipo_resposta === 'SN' && (resposta.valor !== 'S' && resposta.valor !== 'N')) return false;
+      if (pergunta.tipo_resposta === 'SN' && (resposta.valor === 'S' || resposta.valor === 'N')) return true;
       if (pergunta.tipo_resposta === 'NU' && (isNaN(parseFloat(resposta.valor)))) return false;
       if (pergunta.tipo_resposta === 'TX' && !resposta.valor.trim()) return false;
       
@@ -130,19 +199,17 @@ const ResponderQuestionarioScreen = () => {
     });
 
     const payload = {
-      escola_id: escolaId, // Adiciona escolaId ao payload
-      questionario_id: questionarioId, // Adiciona questionarioId ao payload
+      escola_id: escolaId, 
+      questionario_id: questionarioId, 
       respostas: formattedRespostas,
-      // foto_comprovante: null, 
     };
 
     try {
       const netInfoState = await NetInfo.fetch();
       if (!netInfoState.isConnected) {
-        // Se offline, salva no AsyncStorage
         await saveSubmissionOffline(payload);
         Alert.alert('Modo Offline', 'Resposta salva localmente. Será enviada quando você estiver online.');
-        navigation.goBack(); // Volta para a tela anterior
+        navigation.goBack(); 
         return; 
       }
 
@@ -170,7 +237,6 @@ const ResponderQuestionarioScreen = () => {
 
     } catch (error) {
       console.error('Erro ao enviar questionário:', error.response?.data || error.message);
-      // Se for um erro de rede (offline) ou outro erro que impeça o envio, salva offline
       if (error.request) { // Erro de rede/offline
         await saveSubmissionOffline(payload);
         Alert.alert('Modo Offline', 'Falha na conexão. Resposta salva localmente. Será enviada quando você estiver online.');
@@ -186,17 +252,16 @@ const ResponderQuestionarioScreen = () => {
     }
   };
 
-  // Função para salvar uma submissão no AsyncStorage
   const saveSubmissionOffline = async (submissionPayload) => {
     try {
       const existingSubmissionsString = await AsyncStorage.getItem(PENDING_SUBMISSIONS_KEY);
       const existingSubmissions = existingSubmissionsString ? JSON.parse(existingSubmissionsString) : [];
       
       const newSubmission = {
-        id: Date.now().toString(), // ID único baseado no timestamp
+        id: Date.now().toString(), 
         timestamp: new Date().toISOString(),
         payload: submissionPayload,
-        token: userData?.token // Salva o token que estava ativo no momento da submissão
+        token: userData?.token 
       };
 
       const updatedSubmissions = [...existingSubmissions, newSubmission];
@@ -208,7 +273,7 @@ const ResponderQuestionarioScreen = () => {
     }
   };
 
-  if (loading || !questionarioData) {
+  if (loading || !questionarioData || !questionarioData.perguntas) { // Adicionado !questionarioData.perguntas
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color="#0000ff" />
@@ -274,55 +339,62 @@ const ResponderQuestionarioScreen = () => {
 
         {/* Perguntas */}
         <View style={styles.questionsAccordion}>
-          {perguntas.map((pergunta, index) => (
-            <View key={pergunta.id} style={styles.perguntaCard}>
-              <View style={styles.cardHeader}>
-                <Text style={styles.perguntaNumber}>Pergunta #{index + 1}</Text>
-                <Text style={styles.badge}>{pergunta.tipo_resposta_display || pergunta.tipo_resposta}</Text>
-              </View>
-              <View style={styles.cardBody}>
-                <Text style={styles.perguntaText}>{pergunta.texto}</Text>
-                
-                {pergunta.tipo_resposta === 'SN' && (
-                  <View style={styles.respostaButtonGroup}>
-                    <TouchableOpacity
-                      style={[styles.respostaButton, respostas[pergunta.id]?.valor === 'S' && styles.respostaButtonActiveSuccess]}
-                      onPress={() => handleRespostaChange(pergunta.id, 'SN', 'S')}
-                    >
-                      <Text style={styles.respostaButtonText}>Sim</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      style={[styles.respostaButton, respostas[pergunta.id]?.valor === 'N' && styles.respostaButtonActiveDanger]}
-                      onPress={() => handleRespostaChange(pergunta.id, 'SN', 'N')}
-                    >
-                      <Text style={styles.respostaButtonText}>Não</Text>
-                    </TouchableOpacity>
-                  </View>
-                )}
+          {perguntas.length > 0 ? ( // Verifica se há perguntas antes de mapear
+            perguntas.map((pergunta, index) => (
+              <View key={pergunta.id} style={styles.perguntaCard}>
+                <View style={styles.cardHeader}>
+                  <Text style={styles.perguntaNumber}>Pergunta #{index + 1}</Text>
+                  <Text style={styles.badge}>{pergunta.tipo_resposta_display || pergunta.tipo_resposta}</Text>
+                </View>
+                <View style={styles.cardBody}>
+                  <Text style={styles.perguntaText}>{pergunta.texto}</Text>
+                  
+                  {pergunta.tipo_resposta === 'SN' && (
+                    <View style={styles.respostaButtonGroup}>
+                      <TouchableOpacity
+                        style={[styles.respostaButton, respostas[pergunta.id]?.valor === 'S' && styles.respostaButtonActiveSuccess]}
+                        onPress={() => handleRespostaChange(pergunta.id, 'SN', 'S')}
+                      >
+                        <Text style={styles.respostaButtonText}>Sim</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        style={[styles.respostaButton, respostas[pergunta.id]?.valor === 'N' && styles.respostaButtonActiveDanger]}
+                        onPress={() => handleRespostaChange(pergunta.id, 'SN', 'N')}
+                      >
+                        <Text style={styles.respostaButtonText}>Não</Text>
+                      </TouchableOpacity>
+                    </View>
+                  )}
 
-                {pergunta.tipo_resposta === 'NU' && (
-                  <TextInput
-                    style={styles.textInput}
-                    keyboardType="numeric"
-                    placeholder="Digite um número"
-                    value={respostas[pergunta.id]?.valor || ''}
-                    onChangeText={(text) => handleRespostaChange(pergunta.id, 'NU', text)}
-                  />
-                )}
+                  {pergunta.tipo_resposta === 'NU' && (
+                    <TextInput
+                      style={styles.textInput}
+                      keyboardType="numeric"
+                      placeholder="Digite um número"
+                      value={respostas[pergunta.id]?.valor || ''}
+                      onChangeText={(text) => handleRespostaChange(pergunta.id, 'NU', text)}
+                    />
+                  )}
 
-                {pergunta.tipo_resposta === 'TX' && (
-                  <TextInput
-                    style={styles.textInputMultiline}
-                    multiline
-                    numberOfLines={4}
-                    placeholder="Digite sua resposta"
-                    value={respostas[pergunta.id]?.valor || ''}
-                    onChangeText={(text) => handleRespostaChange(pergunta.id, 'TX', text)}
-                  />
-                )}
+                  {pergunta.tipo_resposta === 'TX' && (
+                    <TextInput
+                      style={styles.textInputMultiline}
+                      multiline
+                      numberOfLines={4}
+                      placeholder="Digite sua resposta"
+                      value={respostas[pergunta.id]?.valor || ''}
+                      onChangeText={(text) => handleRespostaChange(pergunta.id, 'TX', text)}
+                    />
+                  )}
+                </View>
               </View>
+            ))
+          ) : (
+            <View style={styles.emptyQuestionsContainer}>
+              <Text style={styles.emptyQuestionsText}>Nenhuma pergunta encontrada para este questionário.</Text>
+              <Text style={styles.emptyQuestionsSmallText}>Verifique sua conexão ou contate o administrador.</Text>
             </View>
-          ))}
+          )}
         </View>
 
         {/* Botões de Ação */}
@@ -563,6 +635,22 @@ const styles = StyleSheet.create({
     color: 'white',
     fontWeight: 'bold',
     fontSize: 16,
+  },
+  emptyQuestionsContainer: { // Novo estilo para quando não há perguntas
+    alignItems: 'center',
+    paddingVertical: 50,
+  },
+  emptyQuestionsText: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#6c757d',
+    marginBottom: 5,
+    textAlign: 'center',
+  },
+  emptyQuestionsSmallText: {
+    fontSize: 14,
+    color: '#6c757d',
+    textAlign: 'center',
   },
 });
 

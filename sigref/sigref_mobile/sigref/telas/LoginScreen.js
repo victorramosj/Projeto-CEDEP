@@ -18,7 +18,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import NetInfo from '@react-native-community/netinfo';
 import gre from '../assets/CARD DA GRE.png';
 import sigref from '../assets/SIGREF.png';
-// const API_BASE_URL = 'http://127.0.0.1:8000'; //para pc
+//const API_BASE_URL = 'http://127.0.0.1:8000'; //para pc
 const API_BASE_URL = 'http://10.0.2.2:8000'; //para emulador android
 //const API_BASE_URL = 'https://grefloresta.com.br';  URL do servidor remoto
 const { width, height } = Dimensions.get('window');

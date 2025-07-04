@@ -1308,3 +1308,75 @@ class ResponderQuestionarioAPIView(APIView):
             )
         
         return Response({"status": "success", "message": "Questionário respondido com sucesso!", "monitoramento_id": monitoramento.id}, status=status.HTTP_201_CREATED)
+
+# --- NOVA API para Extrair Todos os Dados Offline ---
+class AllOfflineDataAPIView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request, format=None):
+        user = request.user
+        gre_user = None
+        
+        try:
+            gre_user = user.greuser
+        except GREUser.DoesNotExist:
+            return Response({"detail": "Perfil de usuário GRE não encontrado."}, status=status.HTTP_403_FORBIDDEN)
+
+        # Filtrar dados com base nas permissões do usuário logado (se necessário)
+        # Por exemplo, um monitor só deveria baixar dados de suas escolas.
+        # Um admin/coordenador pode baixar tudo.
+        
+        escolas_queryset = Escola.objects.all()
+        questionarios_queryset = Questionario.objects.all()
+        perguntas_queryset = Pergunta.objects.all()
+        setores_queryset = Setor.objects.all()
+
+        # Se o usuário não for Admin/Coordenador/CEDEPE, limite os dados
+        if not (gre_user.is_admin() or gre_user.is_coordenador() or gre_user.is_cedepes()):
+            # Limitar escolas para monitores/escolas
+            if gre_user.is_escola() or gre_user.is_monitor():
+                escolas_queryset = gre_user.escolas.all()
+            else:
+                escolas_queryset = Escola.objects.none() # Outros tipos sem permissão para ver todas
+            
+            # Limitar questionários aos atribuídos às escolas permitidas
+            questionarios_queryset = questionarios_queryset.filter(escolas_destino__in=escolas_queryset).distinct()
+            # Limitar perguntas aos questionários permitidos
+            perguntas_queryset = perguntas_queryset.filter(questionario__in=questionarios_queryset)
+            
+            # Limitar setores aos que o usuário tem acesso se for chefe de setor ou monitor/escola
+            if gre_user.is_chefe_setor() and gre_user.setor:
+                setores_queryset = gre_user.setores_permitidos() # Supondo que setores_permitidos() retorne o queryset hierárquico
+            elif gre_user.is_escola() or gre_user.is_monitor():
+                 # Escolas/Monitores só veem setores relacionados aos seus questionários, ou apenas os seus próprios setores se aplicável
+                 setores_queryset = setores_queryset.filter(questionario__in=questionarios_queryset).distinct()
+            else:
+                setores_queryset = Setor.objects.none()
+
+        # Serializa todos os dados
+        escolas_data = EscolaSerializer(escolas_queryset, many=True, context={'request': request}).data
+        
+        # Prefetch as perguntas para evitar N+1 queries ao serializar questionários
+        questionarios_queryset = questionarios_queryset.prefetch_related(
+            Prefetch('pergunta_set', queryset=Pergunta.objects.order_by('ordem'), to_attr='perguntas_list')
+        )
+        
+        questionarios_data = []
+        for q in questionarios_queryset:
+            # Serializa o questionário e suas perguntas aninhadas
+            q_data = QuestionarioSerializer(q, context={'request': request}).data
+            # Adiciona as perguntas que foram prefeched, se o serializer já não fizer isso automaticamente
+            # O QuestionarioSerializer já deveria pegar 'perguntas' aninhado agora
+            # q_data['perguntas'] = PerguntaSerializer(q.perguntas_list, many=True).data # Pode ser necessário se QuestionarioSerializer não for direto
+
+            questionarios_data.append(q_data)
+
+        setores_data = SetorSerializer(setores_queryset, many=True).data
+
+        response_data = {
+            'escolas': escolas_data,
+            'questionarios': questionarios_data,
+            'perguntas': PerguntaSerializer(perguntas_queryset, many=True, context={'request': request}).data, # Inclui todas as perguntas relevantes separadamente também
+            'setores': setores_data,
+        }
+        return Response(response_data)
