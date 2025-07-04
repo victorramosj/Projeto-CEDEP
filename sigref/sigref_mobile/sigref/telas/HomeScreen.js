@@ -116,16 +116,9 @@ const HomeScreen = ({ route, navigation }) => {
       >
         <Ionicons name="school" size={20} color="#fff" />
         <Text style={styles.buttonText}>Selecionar Escolas</Text>
-      </TouchableOpacity>
-      
+      </TouchableOpacity>      
 
-      <TouchableOpacity
-        style={styles.primaryButton}
-        onPress={() => navigation.navigate('RelatarProblemas')}
-      >
-        <Ionicons name="alert-circle" size={20} color="#fff" />
-        <Text style={styles.buttonText}>Relatar Problemas</Text>
-      </TouchableOpacity>
+     
 
       {/* Adicione mais botões conforme necessário, por exemplo: */}
       <TouchableOpacity style={styles.primaryButton} onPress={() => navigation.navigate('VisualizarQuestionario')}>
