@@ -1,33 +1,33 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { 
-  View, 
-  Text, 
-  StyleSheet, 
-  ActivityIndicator, 
-  ScrollView, 
+import {
+  View,
+  Text,
+  StyleSheet,
+  ActivityIndicator,
+  ScrollView,
   RefreshControl,
   TouchableOpacity,
   Alert,
   FlatList,
-  Button 
+  Button
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import NetInfo from '@react-native-community/netinfo';
 import axios from 'axios';
 import { useRoute, useNavigation, useFocusEffect } from '@react-navigation/native';
-import { format, parseISO, formatDistanceToNowStrict } from 'date-fns';
+import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { utcToZonedTime } from 'date-fns-tz'; // Importe utcToZonedTime
+import { utcToZonedTime } from 'date-fns-tz';
 
 // URL base da sua API Django
 const API_BASE_URL = 'http://10.0.2.2:8000'; // para emulador android
 
 // Chave para o cache do AsyncStorage
-const QUESTIONARIOS_ESCOLA_CACHE_KEY = '@questionarios_escola_cache_'; 
-const PENDING_SUBMISSIONS_KEY = '@pending_questionnaire_submissions'; 
+const QUESTIONARIOS_ESCOLA_CACHE_KEY = '@questionarios_escola_cache_';
+const PENDING_SUBMISSIONS_KEY = '@pending_questionnaire_submissions';
 
 // Fuso horário de Brasília
-const TIMEZONE_BRASILIA = 'America/Sao_Paulo';
+const TIMEZONE_BRASILIA = 'America/Sao_Paulo'; // Fuso horário correto para Brasília
 
 const QuestionariosEscolaScreen = () => {
   const route = useRoute();
@@ -77,15 +77,15 @@ const QuestionariosEscolaScreen = () => {
       for (const submission of existingSubmissions) {
         try {
           const { escola_id, questionario_id, respostas } = submission.payload;
-          const token = submission.token; 
+          const token = submission.token;
 
           if (!token) {
             console.error(`Submissão ${submission.id}: Token de autenticação ausente. Pulando.`);
-            continue; 
+            continue;
           }
 
           const url = `${API_BASE_URL}/monitoramento/api/escola/${escola_id}/questionario/${questionario_id}/responder/`;
-          const response = await axios.post(url, { respostas }, { 
+          const response = await axios.post(url, { respostas }, {
             headers: {
               'Authorization': `Token ${token}`,
               'Content-Type': 'application/json',
@@ -103,20 +103,20 @@ const QuestionariosEscolaScreen = () => {
           if (innerError.response && (innerError.response.status === 401 || innerError.response.status === 403)) {
               Alert.alert('Sessão Expirada', 'Sua sessão expirou durante a sincronização. Por favor, faça login novamente.');
               navigation.replace('Login');
-              return true; 
+              return true;
           }
         }
       }
 
       const remainingSubmissions = existingSubmissions.filter(sub => !successfullySyncedIds.includes(sub.id));
       await AsyncStorage.setItem(PENDING_SUBMISSIONS_KEY, JSON.stringify(remainingSubmissions));
-      
+
       if (successfullySyncedIds.length > 0) {
         Alert.alert('Sincronização Concluída', `${successfullySyncedIds.length} relatório(s) enviado(s) com sucesso.`);
-        return true; 
+        return true;
       }
-      return false; 
-      
+      return false;
+
     } catch (e) {
       console.error('Erro geral ao sincronizar submissões pendentes:', e);
       Alert.alert('Erro de Sincronização', 'Não foi possível sincronizar todos os relatórios pendentes.');
@@ -132,14 +132,14 @@ const QuestionariosEscolaScreen = () => {
       const netInfoState = await NetInfo.fetch();
       setIsOffline(!netInfoState.isConnected);
 
-      const syncedAnything = await syncPendingSubmissions(); 
-      
+      const syncedAnything = await syncPendingSubmissions();
+
       if (!netInfoState.isConnected) {
         if (showAlert) {
           Alert.alert('Modo Offline', 'Você está offline. Exibindo dados em cache. Conecte-se à internet para atualizar.');
         }
         console.log('Offline: Não buscando dados da API.');
-        return; 
+        return;
       }
 
       const token = userData?.token;
@@ -154,7 +154,7 @@ const QuestionariosEscolaScreen = () => {
       const response = await axios.get(url, {
         headers: { 'Authorization': `Token ${token}` }
       });
-      
+
       setScreenData(response.data);
       await AsyncStorage.setItem(`${QUESTIONARIOS_ESCOLA_CACHE_KEY}${escolaId}`, JSON.stringify(response.data));
       console.log('Dados de questionários da escola atualizados da API e salvos no cache.');
@@ -170,7 +170,7 @@ const QuestionariosEscolaScreen = () => {
       setIsOffline(true);
     } finally {
       setRefreshing(false);
-      setLoading(false); 
+      setLoading(false);
       console.log("fetchData finalizado.");
     }
   }, [escolaId, userData, navigation, syncPendingSubmissions]);
@@ -179,7 +179,7 @@ const QuestionariosEscolaScreen = () => {
     console.log("useEffect de inicialização acionado.");
     setLoading(true);
     loadDataFromCache().then(() => {
-      fetchData(false); 
+      fetchData(false);
     });
   }, [loadDataFromCache, fetchData]);
 
@@ -190,16 +190,16 @@ const QuestionariosEscolaScreen = () => {
         const netInfoState = await NetInfo.fetch();
         if (netInfoState.isConnected) {
           console.log("Online no foco: Forçando atualização da API.");
-          fetchData(false); 
+          fetchData(false);
         } else {
           console.log("Offline no foco: Recarregando do cache.");
-          setIsOffline(true); 
-          loadDataFromCache(); 
+          setIsOffline(true);
+          loadDataFromCache();
           Alert.alert('Modo Offline', 'Você está offline. Exibindo dados em cache. Conecte-se à internet para atualizar.');
         }
       };
       checkConnectionAndFetchOnFocus();
-      
+
       return () => {
         console.log("QuestionariosEscolaScreen perdeu o foco.");
       };
@@ -208,14 +208,14 @@ const QuestionariosEscolaScreen = () => {
 
   const onRefresh = useCallback(() => {
     console.log("Puxar para atualizar acionado.");
-    fetchData(true); 
+    fetchData(true);
   }, [fetchData]);
 
   const handleResponderQuestionario = (questionarioId) => {
-    navigation.navigate('ResponderQuestionario', { 
-      escolaId: escolaId, 
-      questionarioId: questionarioId, 
-      userData: userData 
+    navigation.navigate('ResponderQuestionario', {
+      escolaId: escolaId,
+      questionarioId: questionarioId,
+      userData: userData
     });
   };
 
@@ -272,17 +272,23 @@ const QuestionariosEscolaScreen = () => {
       <View style={styles.cardFooter}>
         <Text style={styles.lastResponseText}>
           {ultimaRespostaGeral ? (
-            <>
-              {/* Formatação para Brasília Time */}
-              <Text>{format(utcToZonedTime(parseISO(ultimaRespostaGeral), TIMEZONE_BRASILIA), 'dd/MM/yyyy', { locale: ptBR })}</Text>
-              {'\n'}
-              <Text>{format(utcToZonedTime(parseISO(ultimaRespostaGeral), TIMEZONE_BRASILIA), 'HH:mm', { locale: ptBR })}</Text>
-            </>
+            <Text style={styles.dateTimeTextSmall}>
+              {/* Ajuste aqui: parseISO interpreta como UTC se a string tiver 'Z' ou um offset.
+                  Caso contrário, interpreta como local.
+                  Se a API sempre envia UTC sem 'Z', pode ser preciso um parse manual ou biblioteca como moment-timezone.
+                  Por enquanto, vamos assumir que a string da API já tem um indicador de fuso horário,
+                  ou que é UTC e utcToZonedTime vai corrigir.
+                  Se a string for "2025-07-04T18:00:00" e representar UTC, ela precisa ser convertida para "2025-07-04T18:00:00Z"
+                  para que parseISO a interprete corretamente como UTC antes de utcToZonedTime.
+                  Para simplificar, vamos tentar adicionar 'Z' se não houver um indicador de fuso horário.
+              */}
+              {format(utcToZonedTime(parseISO(ultimaRespostaGeral.endsWith('Z') ? ultimaRespostaGeral : `${ultimaRespostaGeral}Z`), TIMEZONE_BRASILIA), "dd/MM HH:mm", { locale: ptBR })}
+            </Text>
           ) : (
             'Nunca respondido'
           )}
-        </Text>
-        <TouchableOpacity 
+        </Text> 
+        <TouchableOpacity
           style={styles.responderButton}
           onPress={() => handleResponderQuestionario(questionario.id)}
         >
@@ -293,7 +299,7 @@ const QuestionariosEscolaScreen = () => {
   );
 
   return (
-    <ScrollView 
+    <ScrollView
       style={styles.container}
       contentContainerStyle={styles.contentContainer}
       refreshControl={
@@ -389,12 +395,12 @@ const QuestionariosEscolaScreen = () => {
           <View style={styles.generalSummaryStatItem}>
             <Text style={styles.generalSummaryStatValue}>
               {ultimaRespostaGeral ? (
-                <>
-                  {/* Formatação para Brasília Time */}
-                  <Text>{format(utcToZonedTime(parseISO(ultimaRespostaGeral), TIMEZONE_BRASILIA), 'dd/MM/yyyy', { locale: ptBR })}</Text>
+                <Text style={styles.dateTimeTextBig}> {/* Usando um estilo para a fonte maior aqui */}
+                  {/* Ajuste aqui para o resumo geral */}
+                  {format(utcToZonedTime(parseISO(ultimaRespostaGeral.endsWith('Z') ? ultimaRespostaGeral : `${ultimaRespostaGeral}Z`), TIMEZONE_BRASILIA), "dd/MM/yyyy", { locale: ptBR })}
                   {'\n'}
-                  <Text>{format(utcToZonedTime(parseISO(ultimaRespostaGeral), TIMEZONE_BRASILIA), 'HH:mm', { locale: ptBR })}</Text>
-                </>
+                  {format(utcToZonedTime(parseISO(ultimaRespostaGeral.endsWith('Z') ? ultimaRespostaGeral : `${ultimaRespostaGeral}Z`), TIMEZONE_BRASILIA), "HH:mm", { locale: ptBR })}
+                </Text>
               ) : (
                 '--'
               )}
@@ -576,8 +582,7 @@ const styles = StyleSheet.create({
     padding: 15,
     borderRadius: 8,
     marginTop: 10,
-    flexDirection: 'row',
-    alignItems: 'center',
+    // Removido flexDirection: 'row', alignItems: 'center' para permitir que o texto quebre
   },
   alertWarning: {
     backgroundColor: '#fff3cd', // alert-warning
@@ -740,8 +745,22 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   lastResponseText: {
-    fontSize: 12,
+    // Este estilo será sobrescrito pelos estilos dentro do Text aninhado
+    fontSize: 6, // Mantendo aqui para referência, mas o dateTimeTextSmall terá precedência
     color: '#6c757d',
+  },
+  // Novo estilo para o texto da data/hora nos cards
+  dateTimeTextSmall: {
+    fontSize: 12, // Fonte menor para os cards
+    color: '#6c757d',
+    textAlign: 'left',
+  },
+  // Estilo para o texto da data/hora no resumo geral (se precisar ser diferente e grande)
+  dateTimeTextBig: {
+    fontSize: 5, // Tamanho de fonte ajustado para o "Último registro" no resumo geral
+    fontWeight: 'bold',
+    color: '#0d6efd', // Cor principal
+    textAlign: 'center', // Centralizar o texto dentro do seu item
   },
   responderButton: {
     backgroundColor: '#28a745', // bg-success
