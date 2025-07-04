@@ -8,217 +8,238 @@ Lacunas
 {% block extra_style %}
 <link rel="stylesheet" href="{% static 'css/tabelas.css' %}" />
 <style>
-/* ====================================================================== */
-/* ==== ESTILOS GERAIS, VARIÁVEIS DE COR E ESTADOS DE FEEDBACK ======== */
-/* ====================================================================== */
-:root {
-    --cor-fundo-atualizado: #d1e7fd; /* Azul claro suave para feedback de atualização */
-    --cor-status-pendente: #ffcccc;   /* Vermelho claro para status "Pendente" */
-    --cor-status-resolvido: #ccffcc;   /* Verde claro para status "Resolvido" */
-    --cor-status-andamento: #ffffcc;   /* Amarelo claro para status "Em Andamento" */
-}
+    /* ====================================================================== */
+    /* ==== ESTILOS GERAIS, VARIÁVEIS DE COR E ESTADOS DE FEEDBACK ======== */
+    /* ====================================================================== */
+    :root {
+        --cor-fundo-atualizado: #d1e7fd;
+        /* Azul claro suave para feedback de atualização */
+        --cor-status-pendente: #ffcccc;
+        /* Vermelho claro para status "Pendente" */
+        --cor-status-resolvido: #ccffcc;
+        /* Verde claro para status "Resolvido" */
+        --cor-status-andamento: #ffffcc;
+        /* Amarelo claro para status "Em Andamento" */
+    }
 
-/* Efeito de feedback visual para uma linha recém-atualizada na tabela */
-.status-atualizado td {
-    background-color: var(--cor-fundo-atualizado) !important;
-    transition: background-color 0.5s ease-out;
-}
+    /* Efeito de feedback visual para uma linha recém-atualizada na tabela */
+    .status-atualizado td {
+        background-color: var(--cor-fundo-atualizado) !important;
+        transition: background-color 0.5s ease-out;
+    }
 
-/* ====================================================================== */
-/* ==== ESTILOS PARA COMPONENTES (FORMULÁRIOS, BOTÕES, TABELAS) ========= */
-/* ====================================================================== */
+    /* ====================================================================== */
+    /* ==== ESTILOS PARA COMPONENTES (FORMULÁRIOS, BOTÕES, TABELAS) ========= */
+    /* ====================================================================== */
 
-/* --- Controles de Formulário (Inputs e Selects) --- */
-.form-control {
-    height: 45px;
-    font-size: 14px;
-}
+    /* --- Controles de Formulário (Inputs e Selects) --- */
+    .form-control {
+        height: 45px;
+        font-size: 14px;
+    }
 
-.form-select {
-    width: 100%;
-    height: 45px;
-    font-size: 15px;
-    min-width: 150px;
-    border-radius: 5px;
-}
-
-.form-pesquisa.input-group {
-    border-radius: 5px;
-    overflow: hidden; /* Garante que os cantos dos filhos sejam cortados */
-}
-
-/* --- Select de Status (Tabela) --- */
-/* Estilo específico para o select de status dentro da tabela */
-table .form-select {
-    color: #333;
-    padding: 5px 10px;
-    border-radius: 5px;
-    border: none;
-    transition: background-color 0.3s ease;
-}
-
-.status-updater {
-    border-radius: 5px !important;
-    height: 38px;
-}
-
-/* --- Botão de Ação --- */
-.btnAcao {
-    width: 180px; /* Largura padrão para o botão de apagar */
-    font-size: 15px;
-    padding: 10px 15px;
-    font-weight: bold;
-}
-
-/* --- Tabela --- */
-.table-responsive {
-    border-radius: 8px; /* Arredonda o container da tabela */
-    overflow: hidden;   /* Esconde as bordas retas da tabela que "vazam" */
-}
-
-.table th,
-.table td {
-    text-align: left;
-    vertical-align: middle;
-    font-size: 14px;
-    padding: 11px;
-}
-
-.table th {
-    background-color: #003366; /* Azul escuro para o cabeçalho */
-    color: white;
-    font-size: 17px;
-    padding: 12px;
-}
-
-.table th:nth-child(6), .table td:nth-child(6) {
-    width: 160px;
-}
-
-/* ====================================================================== */
-/* ==== LAYOUT DOS FILTROS (ESTRUTURA PADRÃO PARA TELAS PEQUENAS) ===== */
-/* ====================================================================== */
-
-/* --- Container Principal dos Filtros --- */
-.container-filtros {
-    display: flex;
-    flex-direction: column; /* Empilha os elementos verticalmente */
-    gap: 1rem;
-    width: 100%;
-}
-
-/* --- Grupo de Controles (Selects e Botão) --- */
-.grupo-controles {
-    display: flex;
-    flex-direction: column; /* Empilha os selects e o botão */
-    gap: 1rem;
-    width: 100%;
-}
-
-/* --- Grupo de Selects --- */
-.grupo-selects {
-    display: flex;
-    flex-direction: column; /* Empilha os selects */
-    gap: 0.75rem;
-    width: 100%;
-}
-
-/* Garante que os selects ocupem 100% da largura em telas pequenas */
-.grupo-selects > .form-select {
-    width: 100%;
-}
-
-/* --- Botão de Ação --- */
-.btnAcao {
-    display: flex;
-    width: 100%; /* Ocupa a largura total */
-    justify-content: center;
-}
-
-
-/* ====================================================================== */
-/* ==== AJUSTES RESPONSIVOS DE LAYOUT PARA DIFERENTES TELAS =========== */
-/* ====================================================================== */
-
-/* --- Telas de Celular na Vertical (>= 370px) --- */
-@media (min-width: 370px) {
-    .grupo-selects {
-        flex-direction: row; /* Coloca os selects lado a lado */
+    .form-select {
         width: 100%;
+        height: 45px;
+        font-size: 15px;
+        min-width: 150px;
+        border-radius: 5px;
     }
-}
 
-/* --- Telas de Celular na Horizontal (>= 576px) --- */
-@media (min-width: 576px) {
-    .grupo-selects {
-        flex-direction: row;
-        flex-wrap: wrap;
+    .form-pesquisa.input-group {
+        border-radius: 5px;
+        overflow: hidden;
+        /* Garante que os cantos dos filhos sejam cortados */
     }
-    .grupo-selects > .form-select {
-        flex: 1; /* Permite que os selects cresçam igualmente */
+
+    /* --- Select de Status (Tabela) --- */
+    /* Estilo específico para o select de status dentro da tabela */
+    table .form-select {
+        color: #333;
+        padding: 5px 10px;
+        border-radius: 5px;
+        border: none;
+        transition: background-color 0.3s ease;
     }
-    .grupo-controles {
-        flex-direction: column;
-        align-items: center;
-        width: 100%;
+
+    .status-updater {
+        border-radius: 5px !important;
+        height: 38px;
     }
+
+    /* --- Botão de Ação --- */
     .btnAcao {
+        width: 180px;
+        /* Largura padrão para o botão de apagar */
+        font-size: 15px;
+        padding: 10px 15px;
+        font-weight: bold;
+    }
+
+    /* --- Tabela --- */
+    .table-responsive {
+        border-radius: 8px;
+        /* Arredonda o container da tabela */
+        overflow: hidden;
+        /* Esconde as bordas retas da tabela que "vazam" */
+    }
+
+    .table th,
+    .table td {
+        text-align: left;
+        vertical-align: middle;
+        font-size: 14px;
+        padding: 11px;
+    }
+
+    .table th {
+        background-color: #003366;
+        /* Azul escuro para o cabeçalho */
+        color: white;
+        font-size: 17px;
+        padding: 12px;
+    }
+
+    .table th:nth-child(6),
+    .table td:nth-child(6) {
+        width: 160px;
+    }
+
+    /* ====================================================================== */
+    /* ==== LAYOUT DOS FILTROS (ESTRUTURA PADRÃO PARA TELAS PEQUENAS) ===== */
+    /* ====================================================================== */
+
+    /* --- Container Principal dos Filtros --- */
+    .container-filtros {
+        display: flex;
+        flex-direction: column;
+        /* Empilha os elementos verticalmente */
+        gap: 1rem;
         width: 100%;
+    }
+
+    /* --- Grupo de Controles (Selects e Botão) --- */
+    .grupo-controles {
+        display: flex;
+        flex-direction: column;
+        /* Empilha os selects e o botão */
+        gap: 1rem;
+        width: 100%;
+    }
+
+    /* --- Grupo de Selects --- */
+    .grupo-selects {
+        display: flex;
+        flex-direction: column;
+        /* Empilha os selects */
+        gap: 0.75rem;
+        width: 100%;
+    }
+
+    /* Garante que os selects ocupem 100% da largura em telas pequenas */
+    .grupo-selects>.form-select {
+        width: 100%;
+    }
+
+    /* --- Botão de Ação --- */
+    .btnAcao {
+        display: flex;
+        width: 100%;
+        /* Ocupa a largura total */
         justify-content: center;
     }
-}
 
-/* --- Telas Médias / Tablets (>= 1008px) --- */
-/* Layout de 2 linhas: Pesquisa em uma, controles em outra */
-@media (min-width: 1008px) {
-    .grupo-controles {
-        flex-direction: row; /* Controles lado a lado */
-        align-items: center;
-        width: auto;
-        justify-content: space-between;
-        gap: 10px;
+
+    /* ====================================================================== */
+    /* ==== AJUSTES RESPONSIVOS DE LAYOUT PARA DIFERENTES TELAS =========== */
+    /* ====================================================================== */
+
+    /* --- Telas de Celular na Vertical (>= 370px) --- */
+    @media (min-width: 370px) {
+        .grupo-selects {
+            flex-direction: row;
+            /* Coloca os selects lado a lado */
+            width: 100%;
+        }
     }
 
-    .grupo-selects {
-        gap: 10px;
-        width: auto;
+    /* --- Telas de Celular na Horizontal (>= 576px) --- */
+    @media (min-width: 576px) {
+        .grupo-selects {
+            flex-direction: row;
+            flex-wrap: wrap;
+        }
+
+        .grupo-selects>.form-select {
+            flex: 1;
+            /* Permite que os selects cresçam igualmente */
+        }
+
+        .grupo-controles {
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+        }
+
+        .btnAcao {
+            width: 100%;
+            justify-content: center;
+        }
     }
 
-    .grupo-selects select {
-        min-width: 140px; /* Largura mínima para cada select */
+    /* --- Telas Médias / Tablets (>= 1008px) --- */
+    /* Layout de 2 linhas: Pesquisa em uma, controles em outra */
+    @media (min-width: 1008px) {
+        .grupo-controles {
+            flex-direction: row;
+            /* Controles lado a lado */
+            align-items: center;
+            width: auto;
+            justify-content: space-between;
+            gap: 10px;
+        }
+
+        .grupo-selects {
+            gap: 10px;
+            width: auto;
+        }
+
+        .grupo-selects select {
+            min-width: 140px;
+            /* Largura mínima para cada select */
+        }
+
+        /* O botão de ação deixa de ocupar 100% da largura */
+        .btnAcao {
+            width: auto;
+            display: flex;
+            align-items: right;
+        }
     }
 
-    /* O botão de ação deixa de ocupar 100% da largura */
-    .btnAcao {
-        width: auto;
-        display: flex;
-        align-items: right;
-    }
-}
+    /* --- Telas Grandes / Desktops (>= 1500px) --- */
+    /* Layout final de 1 linha: Tudo alinhado horizontalmente */
+    @media (min-width: 1500px) {
+        .container-filtros {
+            flex-direction: row;
+            align-items: center;
+        }
 
-/* --- Telas Grandes / Desktops (>= 1500px) --- */
-/* Layout final de 1 linha: Tudo alinhado horizontalmente */
-@media (min-width: 1500px) {
-    .container-filtros {
-        flex-direction: row;
-        align-items: center;
-    }
+        /* Faz a barra de pesquisa crescer para ocupar o espaço disponível */
+        .form-pesquisa {
+            flex-grow: 1;
+        }
 
-    /* Faz a barra de pesquisa crescer para ocupar o espaço disponível */
-    .form-pesquisa {
-        flex-grow: 1;
-    }
+        /* Impede que os controles encolham */
+        .grupo-controles {
+            flex-shrink: 0;
+        }
 
-     /* Impede que os controles encolham */
-    .grupo-controles {
-        flex-shrink: 0;
+        /* Mantém os selects lado a lado */
+        .grupo-selects select {
+            min-width: 140px;
+        }
     }
-
-    /* Mantém os selects lado a lado */
-    .grupo-selects select {
-        min-width: 140px;
-    }
-}
 </style>
 {% endblock %}
 
@@ -237,35 +258,36 @@ table .form-select {
     <div class="col-12 mt-3">
 
         <div class="container-filtros mb-3">
-            
-                <!-- Barra de pesquisa -->
-                <form method="GET" action="{% url 'tela_lacunas' %}" class="input-group form-pesquisa">
-                    {% csrf_token %}
-                    <span class="input-group-text"><i class="fas fa-search"></i></span>
-                    <input type="text" class="form-control" name="q" value="{{ search_query }}" placeholder="Pesquise por Escola...">
-                </form>
-                
-                <div class="grupo-controles">
-                    <!-- Filtros -->
-                    <div class="grupo-selects">
-                        <select class="form-select" name="data" aria-label="Filtro Data">
-                            <option value="" {% if not request.GET.data %} selected {% endif %}>Data (Todas)</option>
-                            <option value="1" {% if request.GET.data == '1' %} selected {% endif %}>Última semana</option>
-                            <option value="2" {% if request.GET.data == '2' %} selected {% endif %}>Último mês</option>
-                            <option value="3" {% if request.GET.data == '3' %} selected {% endif %}>Último ano</option>
-                        </select>
-                        <select class="form-select" name="status" aria-label="Filtro Status">
-                            <option value="" {% if not request.GET.status %}selected{% endif %}>Status (Todos)</option>
-                            <option value="P" {% if request.GET.status == 'P' %} selected {% endif %}>Pendente</option>
-                            <option value="R" {% if request.GET.status == 'R' %} selected {% endif %}>Resolvido</option>
-                            <option value="E" {% if request.GET.status == 'E' %} selected {% endif %}>Em Andamento</option>
-                        </select>
-                    </div>
 
-                    <!-- Botão de apagar -->
-                    <button class="btnAcao btn btn-danger">Apagar Lacuna(s)</button>
-                    
+            <!-- Barra de pesquisa -->
+            <form method="GET" action="{% url 'tela_lacunas' %}" class="input-group form-pesquisa">
+                {% csrf_token %}
+                <span class="input-group-text"><i class="fas fa-search"></i></span>
+                <input type="text" class="form-control" name="q" value="{{ search_query }}"
+                    placeholder="Pesquise por Escola...">
+            </form>
+
+            <div class="grupo-controles">
+                <!-- Filtros -->
+                <div class="grupo-selects">
+                    <select class="form-select" name="data" aria-label="Filtro Data">
+                        <option value="" {% if not request.GET.data %} selected {% endif %}>Data (Todas)</option>
+                        <option value="1" {% if request.GET.data=='1' %} selected {% endif %}>Última semana</option>
+                        <option value="2" {% if request.GET.data=='2' %} selected {% endif %}>Último mês</option>
+                        <option value="3" {% if request.GET.data=='3' %} selected {% endif %}>Último ano</option>
+                    </select>
+                    <select class="form-select" name="status" aria-label="Filtro Status">
+                        <option value="" {% if not request.GET.status %}selected{% endif %}>Status (Todos)</option>
+                        <option value="P" {% if request.GET.status=='P' %} selected {% endif %}>Pendente</option>
+                        <option value="R" {% if request.GET.status=='R' %} selected {% endif %}>Resolvido</option>
+                        <option value="E" {% if request.GET.status=='E' %} selected {% endif %}>Em Andamento</option>
+                    </select>
                 </div>
+
+                <!-- Botão de apagar -->
+                <button class="btnAcao btn btn-danger">Apagar Lacuna(s)</button>
+
+            </div>
 
         </div>
 
@@ -285,286 +307,293 @@ table .form-select {
                 </thead>
                 <tbody>
                     {% for lacuna in lacunas_page %}
-                        <tr id="lacuna-row-{{ lacuna.id }}">
-                            <td><input type="checkbox" name="selected_lacunas" value="{{ lacuna.id }}"></td>
-                            <td class="text-start">{{ lacuna.escola.nome }}</td>
-                            <td class="text-start">{{ lacuna.disciplina }}</td>
-                            <td class="text-start">{{ lacuna.carga_horaria }}</td>
-                            <td class="text-start">{{ lacuna.criado_em|date:"d/m/Y" }}</td>
-                            <td>
-                                <select class="form-select status-updater" data-lacuna-id="{{ lacuna.id }}" aria-label="Alterar Status">
-                                    {% for value, display in status_choices %}
-                                        <option value="{{ value }}" {% if lacuna.status == value %}selected{% endif %}>
-                                            {{ display }}
-                                        </option>
-                                    {% endfor %}
-                                </select>
-                            </td>
-                        </tr>
+                    <tr id="lacuna-row-{{ lacuna.id }}">
+                        <td><input type="checkbox" name="selected_lacunas" value="{{ lacuna.id }}"></td>
+                        <td class="text-start">{{ lacuna.escola.nome }}</td>
+                        <td class="text-start">{{ lacuna.disciplina }}</td>
+                        <td class="text-start">{{ lacuna.carga_horaria }}</td>
+                        <td class="text-start">{{ lacuna.criado_em|date:"d/m/Y" }}</td>
+                        <td>
+                            <select class="form-select status-updater" data-lacuna-id="{{ lacuna.id }}"
+                                aria-label="Alterar Status">
+                                {% for value, display in status_choices %}
+                                <option value="{{ value }}" {% if lacuna.status==value %}selected{% endif %}>
+                                    {{ display }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </td>
+                    </tr>
                     {% empty %}
-                        <tr>
-                            <td colspan="6" class="text-center p-4">Nenhuma lacuna encontrada.</td>
-                        </tr>
+                    <tr>
+                        <td colspan="6" class="text-center p-4">Nenhuma lacuna encontrada.</td>
+                    </tr>
                     {% endfor %}
                 </tbody>
             </table>
         </div>
 
         <!-- Paginação -->
-            {% if lacunas_page.paginator.num_pages > 1 %}
-            <nav aria-label="Page navigation ">
-                <ul class="pagination justify-content-center">
-                    {% if lacunas_page.has_previous %}
-                        <li class="page-item"><a class="page-link" href="?page={{ lacunas_page.previous_page_number }}&q={{ search_query }}&date_filter={{ date_filter }}&status_filter={{ status_filter }}">Anterior</a></li>
-                    {% endif %}
-                    <li class="page-item disabled"><span class="page-link">Página {{ lacunas_page.number }} de {{ lacunas_page.paginator.num_pages }}</span></li>
-                    {% if lacunas_page.has_next %}
-                        <li class="page-item"><a class="page-link" href="?page={{ lacunas_page.next_page_number }}&q={{ search_query }}&date_filter={{ date_filter }}&status_filter={{ status_filter }}">Próximo</a></li>
-                    {% endif %}
-                </ul>
-            </nav>
-            {% endif %}
+        {% if lacunas_page.paginator.num_pages > 1 %}
+        <nav aria-label="Page navigation ">
+            <ul class="pagination justify-content-center">
+                {% if lacunas_page.has_previous %}
+                <li class="page-item"><a class="page-link"
+                        href="?page={{ lacunas_page.previous_page_number }}&q={{ search_query }}&date_filter={{ date_filter }}&status_filter={{ status_filter }}">Anterior</a>
+                </li>
+                {% endif %}
+                <li class="page-item disabled"><span class="page-link">Página {{ lacunas_page.number }} de {{
+                        lacunas_page.paginator.num_pages }}</span></li>
+                {% if lacunas_page.has_next %}
+                <li class="page-item"><a class="page-link"
+                        href="?page={{ lacunas_page.next_page_number }}&q={{ search_query }}&date_filter={{ date_filter }}&status_filter={{ status_filter }}">Próximo</a>
+                </li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
 
     </div>
 </div>
 <div class="modal fade" id="modalCriarAviso" tabindex="-1" aria-labelledby="modalAvisoLabel" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="modalAvisoLabel">Enviar Aviso sobre Atualização</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
-      </div>
-      <div class="modal-body">
-        <form id="form-criar-aviso">
-            <div class="mb-3">
-                <label for="aviso-escola" class="form-label"><b>Escola:</b></label>
-                <input type="text" id="aviso-escola-nome" class="form-control" disabled>
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalAvisoLabel">Enviar Aviso sobre Atualização</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
             </div>
-            <div class="mb-3">
-                <label for="aviso-titulo" class="form-label">Título do Aviso</label>
-                <input type="text" id="aviso-titulo" class="form-control" required>
+            <div class="modal-body">
+                <form id="form-criar-aviso">
+                    <div class="mb-3">
+                        <label for="aviso-escola" class="form-label"><b>Escola:</b></label>
+                        <input type="text" id="aviso-escola-nome" class="form-control" disabled>
+                    </div>
+                    <div class="mb-3">
+                        <label for="aviso-titulo" class="form-label">Título do Aviso</label>
+                        <input type="text" id="aviso-titulo" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="aviso-mensagem" class="form-label">Mensagem do Aviso</label>
+                        <textarea id="aviso-mensagem" class="form-control" rows="5" required></textarea>
+                    </div>
+                </form>
             </div>
-            <div class="mb-3">
-                <label for="aviso-mensagem" class="form-label">Mensagem do Aviso</label>
-                <textarea id="aviso-mensagem" class="form-control" rows="5" required></textarea>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" id="btn-enviar-aviso" class="btn btn-primary">Atualizar Status e Enviar
+                    Aviso</button>
             </div>
-        </form>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-        <button type="button" id="btn-enviar-aviso" class="btn btn-primary">Atualizar Status e Enviar Aviso</button>
-      </div>
+        </div>
     </div>
-  </div>
 </div>
 
 <script>
-document.addEventListener('DOMContentLoaded', () => {
+    document.addEventListener('DOMContentLoaded', () => {
 
-    // ==================================================================
-    // PARTE 1: LÓGICA PARA OS FILTROS
-    // ==================================================================
-    const searchInput = document.querySelector("input[name='q']");
-    const selectData = document.querySelector("select[name='data']");
-    const selectStatus = document.querySelector("select[name='status']");
-    
-    function aplicarFiltros() {
-        const baseUrl = window.location.origin + window.location.pathname;
-        const params = new URLSearchParams();
-        params.set('q', searchInput.value);
-        params.set('data', selectData.value);
-        params.set('status', selectStatus.value);
-        window.location.href = `${baseUrl}?${params.toString()}`;
-    }
+        // ==================================================================
+        // PARTE 1: LÓGICA PARA OS FILTROS
+        // ==================================================================
+        const searchInput = document.querySelector("input[name='q']");
+        const selectData = document.querySelector("select[name='data']");
+        const selectStatus = document.querySelector("select[name='status']");
 
-    selectData.addEventListener('change', aplicarFiltros);
-    selectStatus.addEventListener('change', aplicarFiltros);
-
-    // ==================================================================
-    // PARTE 2: LÓGICA ATUALIZADA PARA ATUALIZAÇÃO DE STATUS COM MODAL
-    // ==================================================================
-    const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
-    const tabelaContainer = document.querySelector('.table-responsive');
-    const modalElement = document.getElementById('modalCriarAviso');
-    const modal = new bootstrap.Modal(modalElement);
-
-    const modalTituloInput = document.getElementById('aviso-titulo');
-    const modalMensagemInput = document.getElementById('aviso-mensagem');
-    const modalEscolaNomeInput = document.getElementById('aviso-escola-nome');
-    const btnEnviarAviso = document.getElementById('btn-enviar-aviso');
-
-    let selectAtual = null;
-    let statusOriginal = null;
-    let lacunaId = null; // Adaptado para lacunaId
-    let novoStatus = null;
-    let foiEnviado = false;
-
-    const statusColors = {'P': '#ffcccc', 'R': '#ccffcc', 'E': '#ffffcc'};
-    document.querySelectorAll('.status-updater').forEach(select => {
-        select.style.backgroundColor = statusColors[select.value] || '#ffffff';
-    });
-    
-    tabelaContainer.addEventListener('focusin', function(event) {
-        if (event.target.matches('.status-updater')) {
-            statusOriginal = event.target.value;
-        }
-    });
-
-    tabelaContainer.addEventListener('change', function(event) {
-        if (event.target.matches('.status-updater')) {
-            selectAtual = event.target;
-            lacunaId = selectAtual.dataset.lacunaId; // Adaptado para lacunaId
-            novoStatus = selectAtual.value;
-            const novoStatusTexto = selectAtual.options[selectAtual.selectedIndex].text;
-            
-            const linhaTabela = selectAtual.closest('tr');
-            const nomeEscola = linhaTabela.cells[1].textContent.trim(); // Célula 1 para Escola
-            const nomeDisciplina = linhaTabela.cells[2].textContent.trim(); // Célula 2 para Disciplina
-
-            modalEscolaNomeInput.value = nomeEscola;
-            modalTituloInput.value = `Atualização sobre a lacuna: "${nomeDisciplina}"`;
-            modalMensagemInput.value = `Olá! O status da lacuna de "${nomeDisciplina}" foi atualizado para: "${novoStatusTexto}".`;
-            
-            foiEnviado = false; 
-            modal.show();
-        }
-    });
-
-    btnEnviarAviso.addEventListener('click', () => {
-        const tituloAviso = modalTituloInput.value;
-        const mensagemAviso = modalMensagemInput.value;
-
-        if (!tituloAviso || !mensagemAviso) {
-            alert('Por favor, preencha o título e a mensagem do aviso.');
-            return;
+        function aplicarFiltros() {
+            const baseUrl = window.location.origin + window.location.pathname;
+            const params = new URLSearchParams();
+            params.set('q', searchInput.value);
+            params.set('data', selectData.value);
+            params.set('status', selectStatus.value);
+            window.location.href = `${baseUrl}?${params.toString()}`;
         }
 
-        const url = `{% url 'api_atualizar_status_lacuna' 0 %}`.replace('0', lacunaId);
+        selectData.addEventListener('change', aplicarFiltros);
+        selectStatus.addEventListener('change', aplicarFiltros);
 
-        fetch(url, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': csrftoken
-            },
-            body: JSON.stringify({ 
-                status: novoStatus,
-                titulo: tituloAviso,
-                mensagem: mensagemAviso
+        // ==================================================================
+        // PARTE 2: LÓGICA ATUALIZADA PARA ATUALIZAÇÃO DE STATUS COM MODAL
+        // ==================================================================
+        const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+        const tabelaContainer = document.querySelector('.table-responsive');
+        const modalElement = document.getElementById('modalCriarAviso');
+        const modal = new bootstrap.Modal(modalElement);
+
+        const modalTituloInput = document.getElementById('aviso-titulo');
+        const modalMensagemInput = document.getElementById('aviso-mensagem');
+        const modalEscolaNomeInput = document.getElementById('aviso-escola-nome');
+        const btnEnviarAviso = document.getElementById('btn-enviar-aviso');
+
+        let selectAtual = null;
+        let statusOriginal = null;
+        let lacunaId = null; // Adaptado para lacunaId
+        let novoStatus = null;
+        let foiEnviado = false;
+
+        const statusColors = { 'P': '#ffcccc', 'R': '#ccffcc', 'E': '#ffffcc' };
+        document.querySelectorAll('.status-updater').forEach(select => {
+            select.style.backgroundColor = statusColors[select.value] || '#ffffff';
+        });
+
+        tabelaContainer.addEventListener('focusin', function (event) {
+            if (event.target.matches('.status-updater')) {
+                statusOriginal = event.target.value;
+            }
+        });
+
+        tabelaContainer.addEventListener('change', function (event) {
+            if (event.target.matches('.status-updater')) {
+                selectAtual = event.target;
+                lacunaId = selectAtual.dataset.lacunaId; // Adaptado para lacunaId
+                novoStatus = selectAtual.value;
+                const novoStatusTexto = selectAtual.options[selectAtual.selectedIndex].text;
+
+                const linhaTabela = selectAtual.closest('tr');
+                const nomeEscola = linhaTabela.cells[1].textContent.trim(); // Célula 1 para Escola
+                const nomeDisciplina = linhaTabela.cells[2].textContent.trim(); // Célula 2 para Disciplina
+
+                modalEscolaNomeInput.value = nomeEscola;
+                modalTituloInput.value = `Atualização sobre a lacuna: "${nomeDisciplina}"`;
+                modalMensagemInput.value = `Olá! O status da lacuna de "${nomeDisciplina}" foi atualizado para: "${novoStatusTexto}".`;
+
+                foiEnviado = false;
+                modal.show();
+            }
+        });
+
+        btnEnviarAviso.addEventListener('click', () => {
+            const tituloAviso = modalTituloInput.value;
+            const mensagemAviso = modalMensagemInput.value;
+
+            if (!tituloAviso || !mensagemAviso) {
+                alert('Por favor, preencha o título e a mensagem do aviso.');
+                return;
+            }
+
+            const url = `{% url 'api_atualizar_status_lacuna' 0 %}`.replace('0', lacunaId);
+
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrftoken
+                },
+                body: JSON.stringify({
+                    status: novoStatus,
+                    titulo: tituloAviso,
+                    mensagem: mensagemAviso
+                })
             })
-        })
-        .then(response => {
-            const contentType = response.headers.get("content-type");
-            if (contentType && contentType.indexOf("application/json") !== -1) {
-                if (!response.ok) {
-                    return response.json().then(err => { throw new Error(err.detail || 'Falha na API') });
-                }
-                return response.json();
-            } else {
-                throw new Error("Sua sessão pode ter expirado. Por favor, recarregue a página e tente novamente.");
-            }
-        })
-        .then(data => {
-            console.log('Resposta da API:', data);
-            foiEnviado = true;
-            const linhaTabela = document.getElementById(`lacuna-row-${lacunaId}`); // Adaptado para lacuna-row
-            if (linhaTabela) {
-                selectAtual.style.backgroundColor = statusColors[novoStatus] || '#ffffff';
-                linhaTabela.classList.add('status-atualizado');
-                setTimeout(() => {
-                    linhaTabela.classList.remove('status-atualizado');
-                }, 2000);
-            }
-            modal.hide();
-        })
-        .catch(error => {
-            console.error('Erro ao atualizar status:', error);
-            alert(`Ocorreu um erro: ${error.message}`);
-            if (selectAtual) {
-                selectAtual.value = statusOriginal;
-                selectAtual.style.backgroundColor = statusColors[statusOriginal] || '#ffffff';
-            }
-            modal.hide();
+                .then(response => {
+                    const contentType = response.headers.get("content-type");
+                    if (contentType && contentType.indexOf("application/json") !== -1) {
+                        if (!response.ok) {
+                            return response.json().then(err => { throw new Error(err.detail || 'Falha na API') });
+                        }
+                        return response.json();
+                    } else {
+                        throw new Error("Sua sessão pode ter expirado. Por favor, recarregue a página e tente novamente.");
+                    }
+                })
+                .then(data => {
+                    console.log('Resposta da API:', data);
+                    foiEnviado = true;
+                    const linhaTabela = document.getElementById(`lacuna-row-${lacunaId}`); // Adaptado para lacuna-row
+                    if (linhaTabela) {
+                        selectAtual.style.backgroundColor = statusColors[novoStatus] || '#ffffff';
+                        linhaTabela.classList.add('status-atualizado');
+                        setTimeout(() => {
+                            linhaTabela.classList.remove('status-atualizado');
+                        }, 2000);
+                    }
+                    modal.hide();
+                })
+                .catch(error => {
+                    console.error('Erro ao atualizar status:', error);
+                    alert(`Ocorreu um erro: ${error.message}`);
+                    if (selectAtual) {
+                        selectAtual.value = statusOriginal;
+                        selectAtual.style.backgroundColor = statusColors[statusOriginal] || '#ffffff';
+                    }
+                    modal.hide();
+                });
         });
-    });
 
-    modalElement.addEventListener('hidden.bs.modal', () => {
-        if (!foiEnviado && selectAtual) {
-            selectAtual.value = statusOriginal;
+        modalElement.addEventListener('hidden.bs.modal', () => {
+            if (!foiEnviado && selectAtual) {
+                selectAtual.value = statusOriginal;
+            }
+        });
+
+        // ==================================================================
+        // PARTE 3: LÓGICA PARA APAGAR LACUNAS
+        // ==================================================================
+        const selectAllCheckbox = document.getElementById('selectAllCheckboxes');
+        let lacunaCheckboxes = document.querySelectorAll('input[name="selected_lacunas"]'); // Adaptado
+        const botaoApagar = document.querySelector('.btnAcao.btn-danger');
+        const lacunasCount = document.getElementById('lacunas-count'); // Adaptado
+
+        function atualizarBotaoApagar() {
+            if (!botaoApagar) return;
+            const anyCheckboxSelected = Array.from(document.querySelectorAll('input[name="selected_lacunas"]')).some(c => c.checked);
+            botaoApagar.disabled = !anyCheckboxSelected;
+        }
+
+        atualizarBotaoApagar();
+
+        if (selectAllCheckbox) {
+            selectAllCheckbox.addEventListener('change', () => {
+                document.querySelectorAll('input[name="selected_lacunas"]').forEach(c => { c.checked = selectAllCheckbox.checked; });
+                atualizarBotaoApagar();
+            });
+        }
+
+        document.querySelectorAll('input[name="selected_lacunas"]').forEach(c => { c.addEventListener('change', atualizarBotaoApagar); });
+
+        if (botaoApagar) {
+            botaoApagar.addEventListener('click', async () => {
+                const selectedLacunas = Array.from(document.querySelectorAll('input[name="selected_lacunas"]'))
+                    .filter(c => c.checked).map(c => c.value);
+
+                if (selectedLacunas.length === 0) {
+                    alert('Selecione pelo menos uma lacuna para apagar.');
+                    return;
+                }
+                if (!confirm(`Você tem certeza que deseja apagar ${selectedLacunas.length} lacuna(s)?`)) {
+                    return;
+                }
+
+                try {
+                    // Adapte para a sua URL de apagar lacunas
+                    const response = await fetch("{% url 'api_deletar_lacunas' %}", {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrftoken },
+                        body: JSON.stringify({ ids: selectedLacunas })
+                    });
+
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        throw new Error(errorData.error || 'Erro ao apagar lacunas.');
+                    }
+
+                    const data = await response.json();
+                    alert(data.message);
+
+                    selectedLacunas.forEach(id => {
+                        const row = document.getElementById(`lacuna-row-${id}`); // Adaptado
+                        if (row) row.remove();
+                    });
+
+                    const currentCount = parseInt(lacunasCount.textContent);
+                    lacunasCount.textContent = currentCount - selectedLacunas.length;
+
+                    if (selectAllCheckbox) selectAllCheckbox.checked = false;
+                    atualizarBotaoApagar();
+
+                } catch (error) {
+                    console.error('Erro ao apagar lacunas:', error);
+                    alert(`Erro: ${error.message}`);
+                }
+            });
         }
     });
-
-    // ==================================================================
-    // PARTE 3: LÓGICA PARA APAGAR LACUNAS
-    // ==================================================================
-    const selectAllCheckbox = document.getElementById('selectAllCheckboxes');
-    let lacunaCheckboxes = document.querySelectorAll('input[name="selected_lacunas"]'); // Adaptado
-    const botaoApagar = document.querySelector('.btnAcao.btn-danger');
-    const lacunasCount = document.getElementById('lacunas-count'); // Adaptado
-
-    function atualizarBotaoApagar() {
-        if (!botaoApagar) return;
-        const anyCheckboxSelected = Array.from(document.querySelectorAll('input[name="selected_lacunas"]')).some(c => c.checked);
-        botaoApagar.disabled = !anyCheckboxSelected;
-    }
-
-    atualizarBotaoApagar();
-
-    if (selectAllCheckbox){
-        selectAllCheckbox.addEventListener('change', () => {
-            document.querySelectorAll('input[name="selected_lacunas"]').forEach(c => { c.checked = selectAllCheckbox.checked; });
-            atualizarBotaoApagar();
-        });     
-    }
-
-    document.querySelectorAll('input[name="selected_lacunas"]').forEach(c => { c.addEventListener('change', atualizarBotaoApagar); });
-
-    if( botaoApagar ) {
-        botaoApagar.addEventListener('click', async () => {
-            const selectedLacunas = Array.from(document.querySelectorAll('input[name="selected_lacunas"]'))
-                .filter(c => c.checked).map(c => c.value);
-
-            if (selectedLacunas.length === 0) {
-                alert('Selecione pelo menos uma lacuna para apagar.');
-                return;
-            }
-            if (!confirm(`Você tem certeza que deseja apagar ${selectedLacunas.length} lacuna(s)?`)) {
-                return;
-            }
-
-            try {
-                // Adapte para a sua URL de apagar lacunas
-                const response = await fetch("{% url 'api_deletar_lacunas' %}", {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json', 'X-CSRFToken': csrftoken },
-                    body: JSON.stringify({ ids: selectedLacunas })
-                });
-
-                if (!response.ok) {
-                    const errorData = await response.json();
-                    throw new Error(errorData.error || 'Erro ao apagar lacunas.');
-                }
-
-                const data = await response.json();
-                alert(data.message);
-
-                selectedLacunas.forEach(id => {
-                    const row = document.getElementById(`lacuna-row-${id}`); // Adaptado
-                    if (row) row.remove();
-                });
-
-                const currentCount = parseInt(lacunasCount.textContent);
-                lacunasCount.textContent = currentCount - selectedLacunas.length;
-                
-                if (selectAllCheckbox) selectAllCheckbox.checked = false;
-                atualizarBotaoApagar();
-
-            } catch (error) {
-                console.error('Erro ao apagar lacunas:', error);
-                alert(`Erro: ${error.message}`);
-            }
-        });
-    }
-});
 </script>
 {% endblock %}
