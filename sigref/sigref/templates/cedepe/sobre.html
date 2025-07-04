@@ -386,14 +386,14 @@
         <div class="card-body p-4 p-md-5">
             <h1 class="card-title">Sobre o Sistema SIGREF</h1>
             <p class="card-text">
-                O SIGREF é uma plataforma desenhada para otimizar a gestão de problemas e lacunas nas instituições de
+                O SIGREF (Sistema Integrado de Gerência Regional de Educação de Floresta) é uma plataforma desenhada para otimizar a gestão de problemas e lacunas nas instituições de
                 ensino, centralizando a comunicação e agilizando a tomada de decisões entre os demais responsáveis.
             </p>
         </div>
     </div>
 
     <!-- ================================================================== -->
-    <!--                   Manual de Uso do site                            -->
+    <!--                       Manual de Uso do site                        -->
     <!-- ================================================================== -->
     {% if user.is_authenticated %}
     <div class="my-5">
@@ -401,8 +401,10 @@
         <p class="text-muted mb-4">
             Encontre aqui respostas para as dúvidas mais comuns e guias passo a passo para utilizar o sistema.
         </p>
-        <!-- O link/botão só aparece se o usuário estiver logado -->
-        <a href="{% url 'manual_usuario' %}" class="btn btn-primary">Manual de uso do Usuário</a>
+        <!-- Botão com novo estilo e ícone do Bootstrap -->
+        <a href="{% url 'manual_usuario' %}" class="btn btn-outline-primary">
+            <i class="bi bi-book-half me-2"></i>Manual de Uso do Usuário
+        </a>
     </div>
     {% endif %}
 
