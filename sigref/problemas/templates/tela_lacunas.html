@@ -259,32 +259,28 @@ Lacunas
 
         <div class="container-filtros mb-3">
 
-            <!-- Barra de pesquisa -->
             <form method="GET" action="{% url 'tela_lacunas' %}" class="input-group form-pesquisa">
-                {% csrf_token %}
                 <span class="input-group-text"><i class="fas fa-search"></i></span>
                 <input type="text" class="form-control" name="q" value="{{ search_query }}"
                     placeholder="Pesquise por Escola...">
             </form>
 
             <div class="grupo-controles">
-                <!-- Filtros -->
                 <div class="grupo-selects">
                     <select class="form-select" name="data" aria-label="Filtro Data">
                         <option value="" {% if not request.GET.data %} selected {% endif %}>Data (Todas)</option>
-                        <option value="1" {% if request.GET.data=='1' %} selected {% endif %}>Última semana</option>
-                        <option value="2" {% if request.GET.data=='2' %} selected {% endif %}>Último mês</option>
-                        <option value="3" {% if request.GET.data=='3' %} selected {% endif %}>Último ano</option>
+                        <option value="1" {% if request.GET.data == '1' %} selected {% endif %}>Última semana</option>
+                        <option value="2" {% if request.GET.data == '2' %} selected {% endif %}>Último mês</option>
+                        <option value="3" {% if request.GET.data == '3' %} selected {% endif %}>Último ano</option>
                     </select>
                     <select class="form-select" name="status" aria-label="Filtro Status">
                         <option value="" {% if not request.GET.status %}selected{% endif %}>Status (Todos)</option>
-                        <option value="P" {% if request.GET.status=='P' %} selected {% endif %}>Pendente</option>
-                        <option value="R" {% if request.GET.status=='R' %} selected {% endif %}>Resolvido</option>
-                        <option value="E" {% if request.GET.status=='E' %} selected {% endif %}>Em Andamento</option>
+                        <option value="P" {% if request.GET.status == 'P' %} selected {% endif %}>Pendente</option>
+                        <option value="R" {% if request.GET.status == 'R' %} selected {% endif %}>Resolvido</option>
+                        <option value="E" {% if request.GET.status == 'E' %} selected {% endif %}>Em Andamento</option>
                     </select>
                 </div>
 
-                <!-- Botão de apagar -->
                 <button class="btnAcao btn btn-danger">Apagar Lacuna(s)</button>
 
             </div>
@@ -292,7 +288,6 @@ Lacunas
         </div>
 
 
-        <!--Tabela de Lacunas-->
         <div class="table-responsive mb-3 mt-2">
             <table class="table table-striped mb-0">
                 <thead>
@@ -317,7 +312,7 @@ Lacunas
                             <select class="form-select status-updater" data-lacuna-id="{{ lacuna.id }}"
                                 aria-label="Alterar Status">
                                 {% for value, display in status_choices %}
-                                <option value="{{ value }}" {% if lacuna.status==value %}selected{% endif %}>
+                                <option value="{{ value }}" {% if lacuna.status == value %}selected{% endif %}>
                                     {{ display }}
                                 </option>
                                 {% endfor %}
@@ -333,20 +328,19 @@ Lacunas
             </table>
         </div>
 
-        <!-- Paginação -->
         {% if lacunas_page.paginator.num_pages > 1 %}
         <nav aria-label="Page navigation ">
             <ul class="pagination justify-content-center">
                 {% if lacunas_page.has_previous %}
                 <li class="page-item"><a class="page-link"
-                        href="?page={{ lacunas_page.previous_page_number }}&q={{ search_query }}&date_filter={{ date_filter }}&status_filter={{ status_filter }}">Anterior</a>
+                        href="?page={{ lacunas_page.previous_page_number }}&q={{ search_query }}&data={{ data_filter }}&status={{ status_filter }}">Anterior</a>
                 </li>
                 {% endif %}
                 <li class="page-item disabled"><span class="page-link">Página {{ lacunas_page.number }} de {{
                         lacunas_page.paginator.num_pages }}</span></li>
                 {% if lacunas_page.has_next %}
                 <li class="page-item"><a class="page-link"
-                        href="?page={{ lacunas_page.next_page_number }}&q={{ search_query }}&date_filter={{ date_filter }}&status_filter={{ status_filter }}">Próximo</a>
+                        href="?page={{ lacunas_page.next_page_number }}&q={{ search_query }}&data={{ data_filter }}&status={{ status_filter }}">Próximo</a>
                 </li>
                 {% endif %}
             </ul>
@@ -412,7 +406,7 @@ Lacunas
         // ==================================================================
         // PARTE 2: LÓGICA ATUALIZADA PARA ATUALIZAÇÃO DE STATUS COM MODAL
         // ==================================================================
-        const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+        const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]') ? document.querySelector('[name=csrfmiddlewaretoken]').value : '{{ csrf_token }}';
         const tabelaContainer = document.querySelector('.table-responsive');
         const modalElement = document.getElementById('modalCriarAviso');
         const modal = new bootstrap.Modal(modalElement);
