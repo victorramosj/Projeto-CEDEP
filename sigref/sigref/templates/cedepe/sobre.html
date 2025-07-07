@@ -32,23 +32,25 @@
         box-shadow: 0 6px 20px rgba(38, 50, 109, 0.1);
         border: none;
     }
+
     .card-sobre .card-title {
         color: var(--primary-color);
         font-weight: 700;
     }
+
     .card-sobre .card-text {
         color: var(--text-muted);
         line-height: 1.7;
     }
 
-   /* Cards de Funcionalidades */
+    /* Cards de Funcionalidades */
     .card-funcionalidade {
         background-color: #fff;
         border-radius: var(--border-radius-md);
         padding: 2rem;
         text-align: center;
         transition: all 0.3s ease;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.06);
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.06);
         border: 1px solid #eef2f7;
         height: 100%;
         /* Adicionado para alinhar o conteúdo interno verticalmente */
@@ -58,7 +60,7 @@
 
     .card-funcionalidade:hover {
         transform: translateY(-5px);
-        box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
     }
 
     .card-funcionalidade .icon {
@@ -80,9 +82,12 @@
     /* Container para a rolagem horizontal */
     .container-horizontal {
         display: flex;
-        flex-wrap: nowrap; /* Impede que os cards quebrem para a linha de baixo */
-        overflow-x: auto;  /* Adiciona a barra de rolagem horizontal quando necessário */
-        padding-bottom: 1rem; /* Espaço para a barra de rolagem não sobrepor o conteúdo */
+        flex-wrap: nowrap;
+        /* Impede que os cards quebrem para a linha de baixo */
+        overflow-x: auto;
+        /* Adiciona a barra de rolagem horizontal quando necessário */
+        padding-bottom: 1rem;
+        /* Espaço para a barra de rolagem não sobrepor o conteúdo */
         /* Remove a margem negativa padrão da .row para evitar overflow visual */
         margin-left: 0;
         margin-right: 0;
@@ -92,14 +97,17 @@
     .container-horizontal::-webkit-scrollbar {
         height: 8px;
     }
+
     .container-horizontal::-webkit-scrollbar-track {
         background: #f1f1f1;
         border-radius: 4px;
     }
+
     .container-horizontal::-webkit-scrollbar-thumb {
         background: #ccc;
         border-radius: 4px;
     }
+
     .container-horizontal::-webkit-scrollbar-thumb:hover {
         background: #a8a8a8;
     }
@@ -111,9 +119,11 @@
         background: transparent;
         transition: transform 0.3s ease;
     }
+
     .card-equipe:hover {
         transform: translateY(-5px);
     }
+
     .card-equipe img {
         width: 140px;
         height: 140px;
@@ -121,14 +131,16 @@
         object-fit: cover;
         margin: 0 auto 1rem auto;
         border: 4px solid #fff;
-        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
     }
+
     .card-equipe .card-title {
         font-weight: 600;
         font-size: 1.1rem;
         color: var(--text-dark);
         margin-bottom: 0.25rem;
     }
+
     .card-equipe .card-text {
         font-size: 0.9rem;
         color: var(--primary-color);
@@ -142,9 +154,11 @@
         background: transparent;
         transition: transform 0.3s ease;
     }
+
     .card-equipe:hover {
         transform: translateY(-5px);
     }
+
     .card-equipe img {
         width: 140px;
         height: 140px;
@@ -152,30 +166,34 @@
         object-fit: cover;
         margin: 0 auto 1rem auto;
         border: 4px solid #fff;
-        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
     }
+
     .card-equipe .card-title {
         font-weight: 600;
         font-size: 1.1rem;
         color: var(--text-dark);
         margin-bottom: 0.25rem;
     }
+
     .card-equipe .card-text {
         font-size: 0.9rem;
         color: var(--primary-color);
         font-weight: 500;
     }
-    
+
     /* NOVO: Estilos para os links de contacto da equipe */
     .card-equipe .team-social-links {
         margin-top: 0.75rem;
     }
+
     .card-equipe .team-social-link {
         color: var(--text-muted);
         font-size: 1.2rem;
         transition: color 0.3s ease;
         text-decoration: none;
     }
+
     .card-equipe .team-social-link:hover {
         color: var(--primary-color);
     }
@@ -186,9 +204,11 @@
         background: transparent;
         transition: transform 0.3s ease;
     }
+
     .card-equipe:hover {
         transform: translateY(-5px);
     }
+
     .card-equipe img {
         width: 140px;
         height: 140px;
@@ -196,28 +216,33 @@
         object-fit: cover;
         margin: 0 auto 1rem auto;
         border: 4px solid #fff;
-        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
     }
+
     .card-equipe .card-title {
         font-weight: 600;
         font-size: 1.1rem;
         color: var(--text-dark);
         margin-bottom: 0.25rem;
     }
+
     .card-equipe .card-text {
         font-size: 0.9rem;
         color: var(--primary-color);
         font-weight: 500;
     }
+
     .card-equipe .team-social-links {
         margin-top: 0.75rem;
     }
+
     .card-equipe .team-social-link {
         color: var(--text-muted);
         font-size: 1.2rem;
         transition: color 0.3s ease;
         text-decoration: none;
     }
+
     .card-equipe .team-social-link:hover {
         color: var(--primary-color);
     }
@@ -230,7 +255,7 @@
         padding: 1.5rem;
         text-align: center;
         transition: all 0.3s ease-in-out;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
         height: 100%;
         border: 2px solid #eef2f7;
     }
@@ -260,50 +285,93 @@
 
     /* Cores únicas */
     .card-django:hover h5,
-    .card-django:hover .tech-icon { color: #092E20; }
-    .card-django:hover { border-color: #092E20; }
+    .card-django:hover .tech-icon {
+        color: #092E20;
+    }
+
+    .card-django:hover {
+        border-color: #092E20;
+    }
 
     .card-html5:hover h5,
-    .card-html5:hover .tech-icon { color: #E34F26; }
-    .card-html5:hover { border-color: #E34F26; }
+    .card-html5:hover .tech-icon {
+        color: #E34F26;
+    }
+
+    .card-html5:hover {
+        border-color: #E34F26;
+    }
 
     .card-css3:hover h5,
-    .card-css3:hover .tech-icon { color: #1572B6; }
-    .card-css3:hover { border-color: #1572B6; }
+    .card-css3:hover .tech-icon {
+        color: #1572B6;
+    }
+
+    .card-css3:hover {
+        border-color: #1572B6;
+    }
 
     .card-javascript:hover h5,
-    .card-javascript:hover .tech-icon { color: #F7DF1E; }
-    .card-javascript:hover { border-color: #F7DF1E; }
+    .card-javascript:hover .tech-icon {
+        color: #F7DF1E;
+    }
+
+    .card-javascript:hover {
+        border-color: #F7DF1E;
+    }
 
     .card-postgresql:hover h5,
-    .card-postgresql:hover .tech-icon { color: #4169E1; }
-    .card-postgresql:hover { border-color: #4169E1; }
+    .card-postgresql:hover .tech-icon {
+        color: #4169E1;
+    }
+
+    .card-postgresql:hover {
+        border-color: #4169E1;
+    }
 
     .card-github:hover h5,
-    .card-github:hover .tech-icon { color: #181717; }
-    .card-github:hover { border-color: #181717; }
+    .card-github:hover .tech-icon {
+        color: #181717;
+    }
+
+    .card-github:hover {
+        border-color: #181717;
+    }
 
     .card-vscode:hover h5,
-    .card-vscode:hover .tech-icon { color: #007ACC; }
-    .card-vscode:hover { border-color: #007ACC; }
+    .card-vscode:hover .tech-icon {
+        color: #007ACC;
+    }
+
+    .card-vscode:hover {
+        border-color: #007ACC;
+    }
 
     .card-railway:hover h5,
-    .card-railway:hover .tech-icon { color: #0B0D0E; }
-    .card-railway:hover { border-color: #0B0D0E; }
+    .card-railway:hover .tech-icon {
+        color: #0B0D0E;
+    }
+
+    .card-railway:hover {
+        border-color: #0B0D0E;
+    }
 
     /* Efeito Gradiente para Python */
     /* Efeito ESPECIAL DE DUAS CORES para Python (Versão Corrigida) */
     .card-python:hover {
-        border-color: #3776AB; /* Borda com a cor azul */
+        border-color: #3776AB;
+        /* Borda com a cor azul */
     }
-    .card-python:hover .tech-icon {
-        color: #3776AB; /* Ícone fica azul */
-    }
-    .card-python:hover h5 {
-        color: #FFD43B; /* Título fica amarelo */
-    }
-        
 
+    .card-python:hover .tech-icon {
+        color: #3776AB;
+        /* Ícone fica azul */
+    }
+
+    .card-python:hover h5 {
+        color: #FFD43B;
+        /* Título fica amarelo */
+    }
 </style>
 {% endblock %}
 
@@ -318,84 +386,101 @@
         <div class="card-body p-4 p-md-5">
             <h1 class="card-title">Sobre o Sistema SIGREF</h1>
             <p class="card-text">
-                O SIGREF é uma plataforma desenhada para otimizar a gestão de problemas e lacunas nas instituições de ensino, centralizando a comunicação e agilizando a tomada de decisões entre os demais responsáveis.
+                O SIGREF (Sistema Integrado de Gerência Regional de Educação de Floresta) é uma plataforma desenhada para otimizar a gestão de problemas e lacunas nas instituições de
+                ensino, centralizando a comunicação e agilizando a tomada de decisões entre os demais responsáveis.
             </p>
         </div>
     </div>
 
     <!-- ================================================================== -->
-    <!--                   Manual de Uso do site                            -->
+    <!--                       Manual de Uso do site                        -->
     <!-- ================================================================== -->
+    {% if user.is_authenticated %}
     <div class="my-5">
         <h2 class="titulo-secao">Manual de Uso</h2>
-            <p class="text-muted mb-4">
+        <p class="text-muted mb-4">
             Encontre aqui respostas para as dúvidas mais comuns e guias passo a passo para utilizar o sistema.
         </p>
-        <a href="{% url 'manual_usuario' %}" class="btn btn-primary">Manual de uso do Usuário</a>
+        <!-- Botão com novo estilo e ícone do Bootstrap -->
+        <a href="{% url 'manual_usuario' %}" class="btn btn-outline-primary">
+            <i class="bi bi-book-half me-2"></i>Manual de Uso do Usuário
+        </a>
     </div>
+    {% endif %}
+
 
     <!-- ================================================================== -->
     <!--                   Secção Funcionalidades Principais                -->
     <!-- ================================================================== -->
     <div class="my-5">
-    <h2 class="titulo-secao">Funcionalidades do Sistema</h2>
-    <div class="container-horizontal">
-        <div class="col-11 col-sm-6 col-md-5 col-lg-4 me-3">
-            <div class="card-funcionalidade">
-                <div class="icon"><i class="fas fa-tasks"></i></div>
-                <h5>Gestão de Problemas</h5>
-                <p class="text-muted small">Registra e acompanha o estado de problemas de administração, infraestrutura ou pedagógicos de maneira organizada e intuitiva.</p>
+        <h2 class="titulo-secao">Funcionalidades do Sistema</h2>
+        <div class="container-horizontal">
+            <div class="col-11 col-sm-6 col-md-5 col-lg-4 me-3">
+                <div class="card-funcionalidade">
+                    <div class="icon"><i class="fas fa-tasks"></i></div>
+                    <h5>Gestão de Problemas</h5>
+                    <p class="text-muted small">Registra e acompanha o estado de problemas de administração,
+                        infraestrutura ou pedagógicos de maneira organizada e intuitiva.</p>
+                </div>
             </div>
-        </div>
 
-        <div class="col-11 col-sm-6 col-md-5 col-lg-4 me-3">
-            <div class="card-funcionalidade">
-                <div class="icon"><i class="fas fa-puzzle-piece"></i></div>
-                <h5>Relatório de Lacunas</h5>
-                <p class="text-muted small">Identifica disciplinas específicas, otimizando a alocação do pessoal.</p>
+            <div class="col-11 col-sm-6 col-md-5 col-lg-4 me-3">
+                <div class="card-funcionalidade">
+                    <div class="icon"><i class="fas fa-puzzle-piece"></i></div>
+                    <h5>Relatório de Lacunas</h5>
+                    <p class="text-muted small">Identifica disciplinas específicas, otimizando a alocação do pessoal.
+                    </p>
+                </div>
             </div>
-        </div>
 
-        <div class="col-11 col-sm-6 col-md-5 col-lg-4 me-3">
-            <div class="card-funcionalidade">
-                <div class="icon"><i class="fas fa-bullhorn"></i></div>
-                <h5>Dashboard e Avisos</h5>
-                <p class="text-muted small">Torna visível o estado geral da sua instituição e envia avisos importantes para escolas específicas.</p>
+            <div class="col-11 col-sm-6 col-md-5 col-lg-4 me-3">
+                <div class="card-funcionalidade">
+                    <div class="icon"><i class="fas fa-bullhorn"></i></div>
+                    <h5>Dashboard e Avisos</h5>
+                    <p class="text-muted small">Torna visível o estado geral da sua instituição e envia avisos
+                        importantes para escolas específicas.</p>
+                </div>
             </div>
-        </div>
 
-        <div class="col-11 col-sm-6 col-md-5 col-lg-4 me-3">
-            <div class="card-funcionalidade">
-                <div class="icon"><i class="fas fa-chart-line"></i></div>
-                <h5>Monitoramento</h5>
-                <p class="text-muted small">Acessa os dados e estatísticas para uma visão geral da gestão e performance da sua instituição.</p>
+            <div class="col-11 col-sm-6 col-md-5 col-lg-4 me-3">
+                <div class="card-funcionalidade">
+                    <div class="icon"><i class="fas fa-chart-line"></i></div>
+                    <h5>Monitoramento</h5>
+                    <p class="text-muted small">Acessa os dados e estatísticas para uma visão geral da gestão e
+                        performance da sua instituição.</p>
+                </div>
             </div>
-        </div>
         </div>
     </div>
-    
+
     <!-- ================================================================== -->
     <!--                  Secção Equipe de Desenvolvimento                  -->
     <!-- ================================================================== -->
     <div class="my-5">
         <h2 class="titulo-secao">Equipe de Desenvolvimento</h2>
         <div class="row g-4 justify-content-center">
-        <!-- Seção dedicada para programador(a): Giselle Souza Novas de Sá -->  
+            <!-- Seção dedicada para programador(a): Giselle Souza Novas de Sá -->
             <div class="col-6 col-md-4 col-lg-3">
                 <div class="card-equipe">
-                    <img src="https://placehold.co/150x150/26326D/FFFFFF?text=GS" alt="Foto de Giselle Souza Novas de Sá">
+                    <img src="https://placehold.co/150x150/26326D/FFFFFF?text=GS"
+                        alt="Foto de Giselle Souza Novas de Sá">
                     <div class="card-body p-0 pt-2">
                         <h5 class="card-title">Giselle Souza Novas de Sá</h5>
                         <p class="card-text">Desenvolvedor Full-Stack</p>
                         <div class="team-social-links d-flex justify-content-center gap-3">
-                            <a href="https://www.linkedin.com/in/giselle-novaes-0b295a325?utm_source=share&utm_campaign=share_via&utm_content=profile&utm_medium=android_app"  target="_blank" class="team-social-link" title="LinkedIn"><i class="bi bi-linkedin"></i></a>
-                            <a href="https://mail.google.com/mail/?view=cm&fs=1&to=giselle.ns.dev@gmail.com"  target="_blank" class="team-social-link" title="Email"><i class="bi bi-envelope-fill"></i></a>
-                            <a href="#" target="_blank" class="team-social-link" title="GitHub"><i class="bi bi-github"></i></a>
+                            <a href="https://www.linkedin.com/in/giselle-novaes-0b295a325?utm_source=share&utm_campaign=share_via&utm_content=profile&utm_medium=android_app"
+                                target="_blank" class="team-social-link" title="LinkedIn"><i
+                                    class="bi bi-linkedin"></i></a>
+                            <a href="https://mail.google.com/mail/?view=cm&fs=1&to=giselle.ns.dev@gmail.com"
+                                target="_blank" class="team-social-link" title="Email"><i
+                                    class="bi bi-envelope-fill"></i></a>
+                            <a href="https://github.com/XL2N" target="_blank" class="team-social-link" title="GitHub"><i
+                                    class="bi bi-github"></i></a>
                         </div>
                     </div>
                 </div>
             </div>
-          <!-- Seção dedicada para programador(a): João Victor de Souza Ramos -->  
+            <!-- Seção dedicada para programador(a): João Victor de Souza Ramos -->
             <div class="col-6 col-md-4 col-lg-3">
                 <div class="card-equipe">
                     <img src="https://placehold.co/150x150/26326D/FFFFFF?text=JV" alt="Foto de João Victor">
@@ -403,108 +488,121 @@
                         <h5 class="card-title">João Victor de Souza Ramos</h5>
                         <p class="card-text">Desenvolvedor Full-Stack</p>
                         <div class="team-social-links d-flex justify-content-center gap-3">
-                            <a href="#"  target="_blank" class="team-social-link" title="LinkedIn"><i class="bi bi-linkedin"></i></a>
-                            <a href="https://mail.google.com/mail/?view=cm&fs=1&to=exemplo@email.com"  target="_blank" class="team-social-link" title="Email"><i class="bi bi-envelope-fill"></i></a>
-                            <a href="#" target="_blank" class="team-social-link" title="GitHub"><i class="bi bi-github"></i></a>
+                            <a href="#" target="_blank" class="team-social-link" title="LinkedIn"><i
+                                    class="bi bi-linkedin"></i></a>
+                            <a href="https://mail.google.com/mail/?view=cm&fs=1&to=exemplo@email.com" target="_blank"
+                                class="team-social-link" title="Email"><i class="bi bi-envelope-fill"></i></a>
+                            <a href="#" target="_blank" class="team-social-link" title="GitHub"><i
+                                    class="bi bi-github"></i></a>
                         </div>
                     </div>
                 </div>
             </div>
-        <!-- Seção dedicada para programador(a): Lucas Vinicius de Souza Bastos -->
+            <!-- Seção dedicada para programador(a): Lucas Vinicius de Souza Bastos -->
             <div class="col-6 col-md-4 col-lg-3">
                 <div class="card-equipe">
-                    <img src="https://placehold.co/150x150/26326D/FFFFFF?text=LV" alt="Foto de Lucas Vinicius de Souza Bastos">
+                    <img src="https://placehold.co/150x150/26326D/FFFFFF?text=LV"
+                        alt="Foto de Lucas Vinicius de Souza Bastos">
                     <div class="card-body p-0 pt-2">
                         <h5 class="card-title">Lucas Vinicius Souza Bastos</h5>
                         <p class="card-text">Desenvolvedor Full-Stack</p>
                         <div class="team-social-links d-flex justify-content-center gap-3">
-                            <a href="#"  target="_blank" class="team-social-link" title="LinkedIn"><i class="bi bi-linkedin"></i></a>
-                           <a href="https://mail.google.com/mail/?view=cm&fs=1&to=exemplo@email.com"  target="_blank" class="team-social-link" title="Email"><i class="bi bi-envelope-fill"></i></a>
-                           <a href="#" target="_blank" class="team-social-link" title="GitHub"><i class="bi bi-github"></i></a>
+                            <a href="#" target="_blank" class="team-social-link" title="LinkedIn"><i
+                                    class="bi bi-linkedin"></i></a>
+                            <a href="https://mail.google.com/mail/?view=cm&fs=1&to=exemplo@email.com" target="_blank"
+                                class="team-social-link" title="Email"><i class="bi bi-envelope-fill"></i></a>
+                            <a href="#" target="_blank" class="team-social-link" title="GitHub"><i
+                                    class="bi bi-github"></i></a>
                         </div>
                     </div>
                 </div>
             </div>
-        <!-- Seção dedicada para programador(a): Victor Kauê da Silva Alves -->
+            <!-- Seção dedicada para programador(a): Victor Kauê da Silva Alves -->
             <div class="col-6 col-md-4 col-lg-3">
                 <div class="card-equipe">
 
-                    <img src="https://placehold.co/150x150/26326D/FFFFFF?text=VK" alt="Foto de Victor Kauê da Silva Alves">
+                    <img src="https://placehold.co/150x150/26326D/FFFFFF?text=VK"
+                        alt="Foto de Victor Kauê da Silva Alves">
                     <div class="card-body p-0 pt-2">
                         <h5 class="card-title">Victor Kauê da Silva Alves</h5>
                         <p class="card-text">Desenvolvedor Full-Stack</p>
                         <div class="team-social-links d-flex justify-content-center gap-3">
-                            <a href="https://www.linkedin.com/in/victor-kau%C3%AA-419926364?utm_source=share&utm_campaign=share_via&utm_content=profile&utm_medium=android_app"  target="_blank" class="team-social-link" title="LinkedIn"><i class="bi bi-linkedin"></i></a>
-                             <a href="https://mail.google.com/mail/?view=cm&fs=1&to=kaue.alves.pg@gmail.com" target="_blank" class="team-social-link" title="Enviar e-mail via Gmail"><i class="bi bi-envelope-fill"></i></a>
-                            <a href="https://github.com/Victorkaue333" target="_blank" class="team-social-link" title="GitHub"><i class="bi bi-github"></i></a>
+                            <a href="https://www.linkedin.com/in/victor-kau%C3%AA-419926364?utm_source=share&utm_campaign=share_via&utm_content=profile&utm_medium=android_app"
+                                target="_blank" class="team-social-link" title="LinkedIn"><i
+                                    class="bi bi-linkedin"></i></a>
+                            <a href="https://mail.google.com/mail/?view=cm&fs=1&to=kaue.alves.pg@gmail.com"
+                                target="_blank" class="team-social-link" title="Enviar e-mail via Gmail"><i
+                                    class="bi bi-envelope-fill"></i></a>
+                            <a href="https://github.com/Victorkaue333" target="_blank" class="team-social-link"
+                                title="GitHub"><i class="bi bi-github"></i></a>
                         </div>
                     </div>
                 </div>
             </div>
-    
-    <!-- ================================================================== -->
-    <!--                   Seção Tecnologias Utilizadas                    -->
-    <!-- ================================================================== -->
-    <div class="my-5">
-        <h2 class="titulo-secao">Tecnologias e Ferramentas</h2>
+
+            <!-- ================================================================== -->
+            <!--                   Seção Tecnologias Utilizadas                    -->
+            <!-- ================================================================== -->
+            <div class="my-5">
+                <h2 class="titulo-secao">Tecnologias e Ferramentas</h2>
                 <div class="row g-4 row-cols-2 row-cols-sm-3 row-cols-md-4 row-cols-lg-5 justify-content-center">
-                <!-- Python    -->
-                   <div class="col d-flex">
-                    <div class="card-tecnologia w-100 card-python">
-                        <i class="bi bi-filetype-py tech-icon"></i>
-                        <h5>Python</h5>
-                     </div>
+                    <!-- Python    -->
+                    <div class="col d-flex">
+                        <div class="card-tecnologia w-100 card-python">
+                            <i class="bi bi-filetype-py tech-icon"></i>
+                            <h5>Python</h5>
+                        </div>
                     </div>
-                <!--  Django   -->    
+                    <!--  Django   -->
                     <div class="col d-flex">
                         <div class="card-tecnologia w-100 card-django">
                             <i class="bi bi-box-seam tech-icon"></i>
                             <h5>Django</h5>
                         </div>
                     </div>
-                <!--  HTML5   -->     
+                    <!--  HTML5   -->
                     <div class="col d-flex">
                         <div class="card-tecnologia w-100 card-html5">
                             <i class="bi bi-filetype-html tech-icon"></i>
                             <h5>HTML5</h5>
                         </div>
                     </div>
-                <!--  CSS3    -->
+                    <!--  CSS3    -->
                     <div class="col d-flex">
                         <div class="card-tecnologia w-100 card-css3">
                             <i class="bi bi-filetype-css tech-icon"></i>
                             <h5>CSS3</h5>
                         </div>
                     </div>
-                <!--  JavaScript  -->
+                    <!--  JavaScript  -->
                     <div class="col d-flex">
                         <div class="card-tecnologia w-100 card-javascript">
                             <i class="bi bi-filetype-js tech-icon"></i>
                             <h5>JavaScript</h5>
                         </div>
                     </div>
-                <!--  PostgreSQL  -->
+                    <!--  PostgreSQL  -->
                     <div class="col d-flex">
                         <div class="card-tecnologia w-100 card-postgresql">
                             <i class="bi bi-database-fill tech-icon"></i>
                             <h5>PostgreSQL</h5>
                         </div>
                     </div>
-                <!--  GitHub   -->
+                    <!--  GitHub   -->
                     <div class="col d-flex">
                         <div class="card-tecnologia w-100 card-github">
                             <i class="bi bi-github tech-icon"></i>
                             <h5>GitHub</h5>
                         </div>
                     </div>
-                <!--  VS Code  -->
+                    <!--  VS Code  -->
                     <div class="col d-flex">
                         <div class="card-tecnologia w-100 card-vscode">
                             <i class="bi bi-code-slash tech-icon"></i>
                             <h5>VS Code</h5>
                         </div>
                     </div>
-                <!--  Railway  -->
+                    <!--  Railway  -->
                     <div class="col d-flex">
                         <div class="card-tecnologia w-100 card-railway">
                             <i class="bi bi-cloud-arrow-up-fill tech-icon"></i>

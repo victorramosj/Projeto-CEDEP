@@ -166,5 +166,8 @@ def sobre(request):
 # =============================================================================
 #  VIEW PARA DA PÁGINA 'MANUAL'
 # =============================================================================
-def manual_view(request):
+from django.contrib.auth.decorators import login_required
+@login_required
+def manual_usuario(request):
+    # Sua lógica para a página do manual aqui
     return render(request, 'cedepe/manual.html')

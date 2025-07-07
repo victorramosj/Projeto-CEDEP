@@ -169,23 +169,28 @@
 <div class="container manual-container">
     <div class="row">
         <!-- ================================================================== -->
-        <!--                 Coluna do Menu de Navegação Lateral                -->
+        <!--           Coluna do Menu de Navegação Lateral                      -->
         <!-- ================================================================== -->
         <div class="col-lg-3 d-none d-lg-block">
             <nav id="manual-nav-menu" class="manual-nav">
-                
                 <div class="list-group">
-                    <div class="nav-title">Menu Rápido</div>
+                    <div class="nav-title">Menu</div>
                     <a class="list-group-item list-group-item-action active" href="#introducao">Introdução</a>
-                    <a class="list-group-item list-group-item-action" href="#guia-rapido">Guia Rápido</a>
-                    
-                    <div class="nav-title mt-3">Guia por Perfil</div>
-                    <a class="list-group-item list-group-item-action" href="#guia-escola">Para Escolas</a>
-                    <a class="list-group-item list-group-item-action" href="#guia-admin">Para Administradores</a>
 
-                    <div class="nav-title mt-3">Funcionalidades</div>
+                    <!-- Itens para perfil ESCOLA -->
+                    {% if user.greuser.is_escola %}
+                        <a class="list-group-item list-group-item-action" href="#guia-rapido">Guia Rápido</a>
+                        <a class="list-group-item list-group-item-action" href="#guia-escola">Para Escolas</a>
+                    {% endif %}
+
+                    <!-- Itens para perfil ADMIN -->
+                    {% if user.greuser.is_admin %}
+                        <a class="list-group-item list-group-item-action" href="#guia-admin">Para Administradores</a>
+                        <a class="list-group-item list-group-item-action" href="#monitoramento">Monitoramento</a>
+                    {% endif %}
+
+                    <!-- Itens comuns -->
                     <a class="list-group-item list-group-item-action" href="#pesquisa-filtros">Pesquisa e Filtros</a>
-                    <a class="list-group-item list-group-item-action" href="#monitoramento">Monitoramento</a>
                     <a class="list-group-item list-group-item-action" href="#faq">Resolução de Problemas</a>
                 </div>
             </nav>
@@ -195,7 +200,7 @@
         <div class="col-lg-9">
             
             <!-- ================================================================== -->
-            <!--                Menu de Navegação Mobile                            -->
+            <!--             Menu de Navegação Mobile                               -->
             <!-- ================================================================== -->
             <div class="d-lg-none mb-4">
                 <div class="dropdown">
@@ -203,57 +208,59 @@
                         <i class="fas fa-bars me-2"></i>Navegar no Manual
                     </button>
                     <ul class="dropdown-menu w-100" aria-labelledby="manualMenuMobile">
-                        <li><h6 class="dropdown-header">Menu Rápido</h6></li>
                         <li><a class="dropdown-item" href="#introducao">Introdução</a></li>
-                        <li><a class="dropdown-item" href="#guia-rapido">Guia Rápido</a></li>
+                        
+                        <!-- Itens para perfil ESCOLA -->
+                        {% if user.greuser.is_escola %}
+                            <li><a class="dropdown-item" href="#guia-rapido">Guia Rápido</a></li>
+                            <li><a class="dropdown-item" href="#guia-escola">Para Escolas</a></li>
+                        {% endif %}
+
+                        <!-- Itens para perfil ADMIN -->
+                        {% if user.greuser.is_admin %}
+                            <li><a class="dropdown-item" href="#guia-admin">Para Administradores</a></li>
+                            <li><a class="dropdown-item" href="#monitoramento">Monitoramento</a></li>
+                        {% endif %}
+
                         <li><hr class="dropdown-divider"></li>
-                        <li><h6 class="dropdown-header">Guia por Perfil</h6></li>
-                        <li><a class="dropdown-item" href="#guia-escola">Para Escolas</a></li>
-                        <li><a class="dropdown-item" href="#guia-admin">Para Administradores</a></li>
-                        <li><hr class="dropdown-divider"></li>
-                        <li><h6 class="dropdown-header">Funcionalidades</h6></li>
+                        <!-- Itens comuns -->
                         <li><a class="dropdown-item" href="#pesquisa-filtros">Pesquisa e Filtros</a></li>
-                        <li><a class="dropdown-item" href="#monitoramento">Monitoramento</a></li>
                         <li><a class="dropdown-item" href="#faq">Resolução de Problemas</a></li>
                     </ul>
                 </div>
             </div>
 
-            <!-- ================================================================== -->
-            <!--                Container do Botão Voltar                           -->
-            <!-- ================================================================== -->
-            <div class="back-button-container">
             <!-- Botão Voltar -->
+            <div class="back-button-container">
                 <a href="{% url 'sobre' %}" class="btn-back">
                     <i class="fas fa-arrow-left me-2"></i>Voltar para a página Sobre
                 </a>
             </div>
 
             <!-- ================================================================== -->
-            <!--                      Seção Introdução                                         -->
+            <!--             Seção Introdução (Visível para todos)               -->
             <!-- ================================================================== -->
             <section id="introducao" class="manual-section mb-5">
                 <div class="card manual-card">
                     <div class="card-body p-4 p-md-5">
                         <h2><i class="fas fa-book-open me-2"></i>Introdução ao SIGREF</h2>
                         <p>
-                            Bem-vindo ao Manual do Utilizador do SIGREF. Este guia foi criado para o ajudar a navegar e a utilizar todas as funcionalidades que a nossa plataforma oferece, desde o registo de problemas até à visualização de relatórios.
-                        </p>
-                        <p>
-                            O objetivo do SIGREF é centralizar e otimizar a comunicação sobre problemas e lacunas nas instituições de ensino, permitindo uma gestão mais eficiente e uma resolução mais rápida das questões que surgem no dia a dia.
+                            Bem-vindo ao Manual do Utilizador do SIGREF. Aqui disponibilizamos um guia para o ajudar a navegar e a utilizar todas as funcionalidades que a nossa plataforma oferece, desde o registo de problemas até à visualização de relatórios.
                         </p>
                     </div>
                 </div>
             </section>
 
-            <!-- ================================================================== -->
-            <!--                      Seção guia rápido                             -->
-            <!-- ================================================================== -->
+            <!-- ============================================================================== -->
+            <!--             Conteúdo visível apenas para ESCOLA - Guia Rápido                  -->
+            <!-- ============================================================================== -->
+            {% if user.greuser.is_escola %}
             <section id="guia-rapido" class="manual-section mb-5">
-                 <div class="card manual-card">
+                <div class="card manual-card">
                     <div class="card-body p-4 p-md-5">
                         <h2><i class="fas fa-rocket me-2"></i>Guia Rápido</h2>
                         <p>Precisa de realizar uma tarefa rapidamente? Siga os guias abaixo.</p>
+                        <img src="{% static 'images/escoladashboard.png' %}" class="img-fluid screenshot" alt="Screenshot do Dashboard do SIGREF">
                         <div class="row g-4">
                             <div class="col-md-4">
                                 <div class="card card-guia h-100">
@@ -275,7 +282,7 @@
                                 <div class="card card-guia h-100">
                                     <div class="card-header"><i class="fas fa-history me-2"></i>Acompanhar um Registo</div>
                                     <div class="card-body">
-                                        <p class="small text-muted">No <strong>Dashboard</strong>, na secção de Históricos, clique em <strong>"Ver Detalhes"</strong> para ver a lista completa e pesquisar.</p>
+                                        <p class="small text-muted">No <strong>Dashboard</strong>, na seção de Históricos, clique em <strong>"Ver Detalhes"</strong> para ver a lista completa e pesquisar.</p>
                                     </div>
                                 </div>
                             </div>
@@ -283,55 +290,69 @@
                     </div>
                 </div>
             </section>
-            
+
             <!-- ================================================================== -->
-            <!--           Seções por Perfil de Utilizador                          -->    
+            <!--           Conteúdo visível apenas para ESCOLA - Guia Escola        --> 
             <!-- ================================================================== -->
             <section id="guia-escola" class="manual-section mb-5">
                 <div class="card manual-card">
                     <div class="card-body p-4 p-md-5">
                         <h2><i class="fas fa-school me-2"></i>Guia para Utilizadores de Escola</h2>
-                        <p>Esta secção detalha as funcionalidades disponíveis para os perfis associados a uma escola.</p>
-                        
+                        <p>Esta seção detalha as funcionalidades disponíveis para os perfis associados a uma escola.</p>
                         <h4>O Dashboard da Escola</h4>
                         <p>É o seu ponto de partida. Aqui, pode ver um resumo das atividades, como o número de problemas pendentes <span class="badge bg-danger">Pendente</span>, em andamento <span class="badge bg-warning text-dark">Em Andamento</span> e resolvidos <span class="badge bg-success">Resolvido</span>, para além dos avisos importantes.</p>
-                        <img src="https://i.imgur.com/8a6YJ5c.jpeg" class="img-fluid screenshot" alt="Screenshot do Dashboard do SIGREF">
-
+                        <img src="{% static 'images/históricos.png' %}" class="img-fluid screenshot" alt="Screenshot do Histórico de Dashboard Escola do SIGREF">
                         <h4>Relatar Problemas e Lacunas</h4>
                         <p>Utilize os botões no dashboard para abrir os formulários e registar novas ocorrências. Preencha a informação solicitada de forma clara para agilizar o processo.</p>
-                        
+                        <img src="{% static 'images/relatarlacunaseproblemas.png' %}" class="img-fluid screenshot" alt="Screenshot do formulário de relato">
                         <h4>Acompanhar Históricos</h4>
                         <p>Ao clicar em "Ver Detalhes", acede à lista completa de problemas ou lacunas. Nesta tela, pode usar a barra de pesquisa para encontrar registos específicos e clicar em cada um para ver mais detalhes ou alterar o seu estado, se tiver permissão.</p>
+                        <img src="{% static 'images/detalhes.png' %}" class="img-fluid screenshot" alt="Screenshot da página de detalhes">
                     </div>
                 </div>
             </section>
-            
-            <!-- ================================================================== -->
-            <!--           Seção guia para Administradores (GRE)                   -->
-            <!-- ================================================================== -->
+            {% endif %}
+             
+            <!-- =======================================================================================-->
+            <!--             Conteúdo visível apenas para ADMIN -  GUIA MONITORAMENTO                   -->
+            <!-- ====================================================================================== -->
+            {% if user.greuser.is_admin %}
             <section id="guia-admin" class="manual-section mb-5">
                 <div class="card manual-card">
                     <div class="card-body p-4 p-md-5">
                         <h2><i class="fas fa-user-shield me-2"></i>Guia para Administradores (GRE)</h2>
-                        <p>Esta secção é dedicada às funcionalidades exclusivas do perfil de administrador.</p>
-                        
+                        <p>Esta seção é dedicada às funcionalidades exclusivas do perfil de administrador.</p>
                         <h4>Dashboards Globais</h4>
                         <p>Para além do dashboard de cada escola, os administradores têm acesso a dashboards globais (em "Monitoramentos") que agregam dados de todas as instituições, permitindo uma visão macro do sistema.</p>
-
                         <h4>Gestão de Avisos</h4>
                         <p>Os administradores são os únicos que podem criar, editar e apagar avisos para as escolas. Utilize esta funcionalidade para comunicações importantes, definindo prioridades e datas de expiração.</p>
-                        
                         <h4>Gestão de Utilizadores e Entidades</h4>
                         <p>A criação e gestão de novas escolas, setores e contas de utilizador é feita através da área administrativa do Django, acessível em <code>/admin</code>. Esta área oferece controlo total sobre os dados do sistema.</p>
                     </div>
                 </div>
             </section>
+            
+            <!-- ===========================================-->
+            <!--            MONITORAMENTO                   -->
+            <!-- ===========================================-->
+            <section id="monitoramento" class="manual-section mb-5">
+                <div class="card manual-card">
+                    <div class="card-body p-4 p-md-5">
+                        <h2><i class="fas fa-chart-line me-2"></i>Monitoramento</h2>
+                        <p>
+                            Acessa os dados e estatísticas para uma visão geral da gestão e performance da sua instituição.
+                        </p>
+                        <img src="{% static '....' %}" class="img-fluid screenshot" alt="Screenshot do Dashboard do SIGREF">
+                    </div>
+                </div>
+            </section>
+            {% endif %}
 
             <!-- ================================================================== -->
-            <!--           Seção Pesquisa e Filtros                               -->
+            <!--             Conteúdo comum visível para todos                    -->
             <!-- ================================================================== -->
             <section id="pesquisa-filtros" class="manual-section mb-5">
-                 <div class="card manual-card">
+                <div class="card manual-card">
                     <div class="card-body p-4 p-md-5">
                         <h2><i class="fas fa-filter me-2"></i>Pesquisa e Filtros</h2>
                         <p>Nas páginas de histórico, pode utilizar a barra de pesquisa para encontrar rapidamente o que procura. A pesquisa é sensível ao contexto:</p>
@@ -344,50 +365,24 @@
                 </div>
             </section>
 
-            <!-- ================================================================== -->
-            <!--           Seção Monitoramento                                      -->
-            <!-- ================================================================== -->
-            <section id="monitoramento" class="manual-section mb-5">
-                <div class="card manual-card">
-                    <div class="card-body p-4 p-md-5">
-                        <h2><i class="fas fa-chart-line me-2"></i>Monitoramento</h2>
-                        <p>
-                            Acessa os dados e estatísticas para uma visão geral da gestão e performance da sua instituição.
-                        </p>
-                        <!-- IMPORTANTE: Atualize o caminho 'src' para a sua imagem -->
-                        <img src="{% static 'images/monitoramento_screenshot.png' %}" class="img-fluid screenshot" alt="Screenshot da funcionalidade de Monitoramento" 
-                        onerror="this.onerror=null;this.src='https://placehold.co/800x400/26326D/FFFFFF?text=Monitoramento';">
-                    </div>
-                </div>
-            </section>
-
-            <!-- ================================================================== -->
-            <!--           Seção Resolução de Problemas Comuns                      -->
-            <!-- ================================================================== -->
             <section id="faq" class="manual-section mb-5">
                 <div class="card manual-card">
                     <div class="card-body p-4 p-md-5">
                         <h2><i class="fas fa-question-circle me-2"></i>Resolução de Problemas Comuns</h2>
-                        
                         <h4>O que acontece depois de eu relatar um problema?</h4>
                         <p>Após o registo, o problema é encaminhado para o setor responsável selecionado. Poderá acompanhar a mudança de estado na página de histórico.</p>
-
                         <h4>Posso editar um problema ou lacuna depois de o ter criado?</h4>
                         <p>Atualmente, a edição não está disponível para utilizadores de escola. Se precisar de corrigir alguma informação, por favor, entre em contacto com um administrador do sistema.</p>
-                        
                         <h4>Esqueci-me da minha palavra-passe. O que faço?</h4>
                         <p>Na página de login, clique em "Esqueceu-se da palavra-passe?". Siga as instruções para receber um e-mail com um link para redefinir a sua palavra-passe.</p>
                     </div>
                 </div>
             </section>
-            
         </div>
     </div>
 </div>
 
-<!-- ================================================================== -->
-<!--           Botão Voltar ao Topo                                      -->
-<!-- ================================================================== -->
+<!-- Botão Voltar ao Topo -->
 <button id="back-to-top-btn" class="btn back-to-top" title="Voltar ao topo">
     <i class="fas fa-arrow-up"></i>
 </button>
@@ -396,13 +391,13 @@
 {% block extra_script %}
 <script>
 // Script para o manual de uso do SIGREF
-// Este script adiciona funcionalidades de navegação suave, destaque de links ativos e um botão "
+// Este script adiciona funcionalidades de navegação suave, destaque de links ativos e um botão "voltar ao topo".
 document.addEventListener('DOMContentLoaded', function() {
     const navMenu = document.getElementById('manual-nav-menu');
     const mobileNavLinks = document.querySelectorAll('#manualMenuMobile a');
     const backToTopBtn = document.getElementById('back-to-top-btn');
 
-    // Função para scroll suave
+    // Função para scroll suave ao clicar nos links de navegação
     function handleScrollLink(e) {
         e.preventDefault();
         const targetId = this.getAttribute('href');
@@ -412,7 +407,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    // Ativa o link de navegação ativo ao rolar a página (Desktop)
+    // Ativa o link de navegação correspondente à seção visível na tela (Desktop)
     if (navMenu) {
         const navLinks = navMenu.querySelectorAll('.list-group-item');
         const sections = document.querySelectorAll('.manual-section');
@@ -435,7 +430,6 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // Adiciona scroll suave para links no menu mobile
-
     mobileNavLinks.forEach(link => link.addEventListener('click', handleScrollLink));
 
     // Lógica para o botão "Voltar ao Topo"
