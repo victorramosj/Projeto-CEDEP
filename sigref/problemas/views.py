@@ -415,16 +415,31 @@ def problema_dashboard_view(request):
 # =============================================================================
 @login_required
 def tela_lacuna_view(request):
-    gre_user = request.user.greuser
-    setor_nome = gre_user.setor.nome if gre_user.setor else ''
+    # --- Bloco 1: Lógica de Permissão para Acesso à Página e ao Menu ---
+    
+    # Esta variável controlará se o link para "Lacunas" aparece no menu
+    pode_ver_menu_lacunas = False
+    
+    # Primeiro, verificamos se o usuário é um superusuário.
+    if request.user.is_superuser:
+        pode_ver_menu_lacunas = True
+    else:
+        # Se não for, verificamos o setor de forma segura para evitar erros.
+        # O hasattr previne falhas caso o usuário não tenha o perfil 'greuser' ou o setor.
+        if hasattr(request.user, 'greuser') and request.user.greuser.setor:
+            setor_nome = request.user.greuser.setor.nome.upper()
+            # Lista de setores que podem ver o menu e acessar a página
+            setores_permitidos = ['CGAF', 'UDP', 'ADM', 'ADMINISTRADOR'] 
+            if setor_nome in setores_permitidos:
+                pode_ver_menu_lacunas = True
 
-    # Lista de setores permitidos
-    setores_permitidos = ['CGAF', 'UDP']
-
-    # Verificação de acesso
-    if setor_nome.upper() not in setores_permitidos:
+    # Se o usuário não tem permissão, ele é redirecionado para a home.
+    # Isso protege o acesso direto à URL /problemas/lacunas/
+    if not pode_ver_menu_lacunas:
         return redirect('home')
 
+    # --- Bloco 2: Lógica de Filtros e Paginação da Página ---
+    
     lacunas_list = Lacuna.objects.select_related('escola').all()
     
     search_query = request.GET.get('q', '')
@@ -450,14 +465,18 @@ def tela_lacuna_view(request):
     page_number = request.GET.get('page')
     lacunas_page = paginator.get_page(page_number)
 
+    # --- Bloco 3: Contexto para o Template ---
+
     context = {
         'lacunas_page': lacunas_page,
         'todas_lacunas': paginator.count,
         'search_query': search_query,
         'data_filter': data_filter,
         'status_filter': status_filter,
-        'request': request,
         'status_choices': STATUS_CHOICES,
+        # A variável de permissão é enviada para o template.
+        # Você usará {% if pode_ver_menu_lacunas %} no seu menu.
+        'pode_ver_menu_lacunas': pode_ver_menu_lacunas,
     }
 
     return render(request, 'tela_lacunas.html', context)

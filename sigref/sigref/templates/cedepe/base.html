@@ -214,14 +214,15 @@
             <i class="fas fa-tasks me-2"></i>Fluxo por Setores
           </a>
         </li>
-        {% if request.user.greuser.setor.nome|upper == 'CGAF' or request.user.greuser.setor.nome|upper == 'UDP' %}
-        <li>
-          <a href="{% url 'tela_lacunas' %}"
-            class="nav-link text-white sidebar-link {% if current == 'tela_lacunas' %}active{% endif %}">
-            <i class="fas fa-book me-2"></i>Lacunas
-          </a>
-        </li>
+        {% if request.user.is_superuser or request.user.greuser.setor.nome|upper == 'CGAF' or request.user.greuser.setor.nome|upper == 'UDP' or request.user.greuser.setor.nome|upper == 'ADMINISTRADOR' %}
+            <li>
+              <a href="{% url 'tela_lacunas' %}"
+                class="nav-link text-white sidebar-link {% if current == 'tela_lacunas' %}active{% endif %}">
+                <i class="fas fa-book me-2"></i>Lacunas
+              </a>
+            </li>
         {% endif %}
+        
         <li>
           <a href="{% url 'tela_problemas' %}"
             class="nav-link text-white sidebar-link {% if current == 'tela_problemas' %}active{% endif %}">
