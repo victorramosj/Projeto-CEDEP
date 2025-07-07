@@ -695,7 +695,7 @@ def editar_aviso_view(request, aviso_id):
             #    Esta é a única linha necessária para a nova lógica.
             aviso_editado.confirmacoes.all().update(status='pendente')
 
-            messages.success(request, "Aviso editado com sucesso! O status foi redefinido para 'Pendente' para todas as escolas.")
+            messages.success(request, "Aviso editado com sucesso! O status das escolas que já tinham visualizado este aviso foi atualizado para 'Pendente'.")
             return redirect('listar_avisos')
         else:
             messages.error(request, "Houve um erro ao editar o aviso. Verifique os dados inseridos.")
