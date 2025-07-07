@@ -255,12 +255,12 @@
           id="questionariosSubmenu">
         <li>
           <a href="{% url 'gerenciar_questionarios' %}"
-             class="nav-link text-white sidebar-link {% if current == 'gerenciar_questionarios' %}active{% endif %}">
+              class="nav-link text-white sidebar-link {% if current == 'gerenciar_questionarios' %}active{% endif %}">
             <i class="fas fa-list me-2"></i>Gerenciar Questionários
           </a>
         </li>
         <li>
-         
+          
         </li>
       </ul>
     </li>
@@ -400,7 +400,7 @@
     </li>
     {% endif %}
 </ul>
-   
+    
 
     {% if user.is_authenticated %}
     <div class="text-center mb-3">
@@ -428,7 +428,7 @@
       {# Execute no terminal: #}
       {# python manage.py collectstatic #}
     </main>
-     <footer class="compact-footer">
+      <footer class="compact-footer">
   <div class="container">
     <div class="footer-content">
       <div class="row w-100 g-3 g-md-4 align-items-center justify-content-center">
