@@ -1,15 +1,41 @@
-from django.shortcuts import render, get_object_or_404, redirect
-from rest_framework import viewsets, filters
+# -----------------------------------------------------------------------------
+# Imports do Python
+# -----------------------------------------------------------------------------
+from datetime import datetime
+
+# -----------------------------------------------------------------------------
+# Imports de libs de terceiros (Django, DRF, ReportLab, etc.)
+# -----------------------------------------------------------------------------
+from django.contrib import messages
+from django.core.paginator import EmptyPage, PageNotAnInteger, Paginator
+from django.db.models import Count, Q
+from django.db.models.functions import ExtractYear
+from django.http import HttpResponse, JsonResponse
+from django.shortcuts import get_object_or_404, redirect, render
+from django.utils import timezone
 from django_filters.rest_framework import DjangoFilterBackend
-from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
-from django.http import JsonResponse
-from .models import Sala, Evento, Agendamento
-from .forms import SalaForm, EventoForm, AgendamentoForm
-from django.db.models import Q
+from reportlab.lib.colors import HexColor
+from reportlab.lib.pagesizes import A4
+from reportlab.lib.styles import ParagraphStyle
+from reportlab.lib.units import cm
+from reportlab.pdfgen import canvas
+from reportlab.platypus import Paragraph
+from rest_framework import filters, permissions, status, viewsets
+from rest_framework.response import Response
+from rest_framework.views import APIView
+
+# -----------------------------------------------------------------------------
+# Imports da aplicação local
+# -----------------------------------------------------------------------------
+from .forms import AgendamentoForm, EventoForm, SalaForm
+from .models import Agendamento, Evento, Sala
+from .serializers import AgendamentoSerializer, EventoSerializer, SalaSerializer
 
 ITENS_POR_PAGINA = 10
 
+# -----------------------------------------------------------------------------
 # Views para Salas
+# -----------------------------------------------------------------------------
 def gerenciar_salas(request):
     query = request.GET.get('q', '')
     filter_by = request.GET.get('filter_by', 'all')
@@ -53,7 +79,10 @@ def sala_form(request, pk=None):
     context = {'form': form, 'sala': sala}
     return render(request, 'eventos/sala_form.html', context)
 
+
+# -----------------------------------------------------------------------------
 # Views para Eventos
+# -----------------------------------------------------------------------------
 def gerenciar_eventos(request):
     query = request.GET.get('q', '')
     filter_by = request.GET.get('filter_by', 'all')
@@ -104,10 +133,9 @@ def evento_form(request, pk=None):
         'evento': evento
     })
     
-
-from django.db.models import Q
-
+# -----------------------------------------------------------------------------
 # Views para Agendamentos
+# -----------------------------------------------------------------------------
 def gerenciar_agendamentos(request):
     query = request.GET.get('q', '')
     filter_by = request.GET.get('filter_by', 'all')
@@ -141,10 +169,7 @@ def gerenciar_agendamentos(request):
     return render(request, 'eventos/gerenciar_agendamentos.html', context)
 
 
-from django.shortcuts import get_object_or_404, redirect, render
-from django.contrib import messages
-from .models import Agendamento
-from .forms import AgendamentoForm
+
 
 def agendamento_form(request, pk=None):
     agendamento = get_object_or_404(Agendamento, pk=pk) if pk else None
@@ -165,11 +190,11 @@ def agendamento_form(request, pk=None):
     context = {'form': form, 'agendamento': agendamento}
     return render(request, 'eventos/agendamento_form.html', context)
 
+
+# -----------------------------------------------------------------------------
+# API Views
+# -----------------------------------------------------------------------------
 # views.py (parte da API)
-from rest_framework import viewsets, status
-from rest_framework.response import Response
-from .models import Sala, Evento, Agendamento
-from .serializers import SalaSerializer, EventoSerializer, AgendamentoSerializer
 
 class SalaViewSet(viewsets.ModelViewSet):
     queryset = Sala.objects.all()
@@ -225,10 +250,10 @@ class AgendamentoViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
 
-from django.utils import timezone
-from django.shortcuts import render
-from django.db.models import Count
-from .models import Evento, Agendamento, Sala
+
+# -----------------------------------------------------------------------------
+# Dashboard de Eventos
+# -----------------------------------------------------------------------------
 
 def dashboard(request):
     total_eventos = Evento.objects.count()
@@ -256,14 +281,9 @@ def dashboard(request):
     
     return render(request, 'eventos/dashboard.html', context)
 
-
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework import permissions
-from django.utils import timezone
-from .models import Agendamento
-from django.utils import timezone
-
+# -----------------------------------------------------------------------------
+# FullCalendar Events API
+# -----------------------------------------------------------------------------
 class FullCalendarEventsView(APIView):
     permission_classes = [permissions.AllowAny]
 
@@ -282,20 +302,9 @@ class FullCalendarEventsView(APIView):
         } for agendamento in agendamentos]
         return Response(events)
 
-    
-from django.db.models.functions import ExtractYear    
-from django.shortcuts import render
-from django.http import HttpResponse
-from datetime import datetime
-from .models import Evento, Agendamento
-from reportlab.pdfgen import canvas
-from reportlab.lib.pagesizes import A4
-from reportlab.lib.units import cm
-from reportlab.lib.colors import HexColor
-from reportlab.lib.styles import ParagraphStyle
-from reportlab.platypus import Paragraph  # Import corrigido aqui
-
-
+# -----------------------------------------------------------------------------
+# Relatórios de Eventos
+# -----------------------------------------------------------------------------    
 
 def eventos_report_pdf(request):
     if request.method == 'POST':

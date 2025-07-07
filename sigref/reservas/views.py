@@ -1,9 +1,36 @@
-# reservas/views.py (apenas as ViewSets relevantes)
-from rest_framework import viewsets, filters
-from django_filters.rest_framework import DjangoFilterBackend
-from .models import Quarto, Cama, Hospede, Reserva, Ocupacao
-from .serializers import QuartoSerializer, CamaSerializer, HospedeSerializer, ReservaSerializer, OcupacaoSerializer
+# -----------------------------------------------------------------------------
+# Imports do Python
+# -----------------------------------------------------------------------------
+from datetime import date, datetime
 
+# -----------------------------------------------------------------------------
+# Imports de libs de terceiros (Django, DRF, ReportLab)
+# -----------------------------------------------------------------------------
+from django.core import serializers
+from django.core.paginator import EmptyPage, PageNotAnInteger, Paginator
+from django.db.models import Count, Q
+from django.db.models.functions import ExtractMonth, ExtractYear
+from django.http import HttpResponse, JsonResponse
+from django.shortcuts import get_object_or_404, redirect, render
+from django.template.loader import render_to_string
+from django_filters.rest_framework import DjangoFilterBackend
+from reportlab.lib.pagesizes import A4
+from reportlab.lib.units import cm
+from reportlab.pdfgen import canvas
+from rest_framework import filters, viewsets
+
+# -----------------------------------------------------------------------------
+# Imports da aplicação local
+# -----------------------------------------------------------------------------
+from .forms import (CamaForm, HospedeForm, OcupacaoForm, QuartoForm,ReservaForm)
+from .models import Cama, Hospede, Ocupacao, Quarto, Reserva
+from .serializers import (CamaSerializer, HospedeSerializer, OcupacaoSerializer, QuartoSerializer,ReservaSerializer)
+
+
+
+# -----------------------------------------------------------------------------
+# ViewSets para a Quarto e Cama
+# -----------------------------------------------------------------------------
 class QuartoViewSet(viewsets.ModelViewSet):
     queryset = Quarto.objects.all().order_by('numero')
     serializer_class = QuartoSerializer
@@ -22,7 +49,10 @@ class CamaViewSet(viewsets.ModelViewSet):
         context = super().get_serializer_context()
         context.update({'request': self.request})
         return context
-
+    
+# -----------------------------------------------------------------------------
+# ViewSets para a Hospede, Reserva e Ocupação
+# -----------------------------------------------------------------------------
 class HospedeViewSet(viewsets.ModelViewSet):
     queryset = Hospede.objects.all()
     serializer_class = HospedeSerializer
@@ -36,9 +66,13 @@ class ReservaViewSet(viewsets.ModelViewSet):
     filterset_fields = ['hospede', 'status']
     search_fields = ['hospede__nome', 'status']
 
+    # Override do método de criação para garantir que a reserva seja criada com status 'PENDENTE'
     def perform_destroy(self, instance):
         instance.delete()
 
+# -----------------------------------------------------------------------------
+# ViewSet para Ocupação
+# -----------------------------------------------------------------------------
 class OcupacaoViewSet(viewsets.ModelViewSet):
     # Prefetch 'hospede' e 'cama' para evitar N+1 queries ao serializar
     queryset = Ocupacao.objects.select_related('hospede', 'cama').all().order_by('-data_checkin')
@@ -70,15 +104,15 @@ class OcupacaoViewSet(viewsets.ModelViewSet):
             if not Ocupacao.objects.filter(cama=ocupacao.cama, status='ATIVA').exists():
                 ocupacao.cama.status = 'DISPONIVEL'
                 ocupacao.cama.save()
-# reservas/views.py
-from django.shortcuts import render, redirect, get_object_or_404
-from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
-from .models import Quarto, Cama, Hospede, Reserva
-from .forms import QuartoForm, CamaForm, HospedeForm, ReservaForm
+
+# -----------------------------------------------------------------------------
+# Views para o gerenciamento de reservas, quartos, camas e hóspedes
+# -----------------------------------------------------------------------------
 
 # Configuração comum de paginação
 ITENS_POR_PAGINA = 10
 
+# Função para gerenciar reservas
 def gerenciar_quartos(request):
     query = request.GET.get('q', '')
     filter_by = request.GET.get('filter_by', 'all')
@@ -107,6 +141,7 @@ def gerenciar_quartos(request):
     }
     return render(request, 'reservas/gerenciar_quartos.html', context)
 
+# Função para gerenciar camas
 def gerenciar_camas(request):
     query = request.GET.get('q', '')
     filter_by = request.GET.get('filter_by', 'all')
@@ -137,6 +172,7 @@ def gerenciar_camas(request):
         'filter_by': filter_by
     })
 
+# Função para gerenciar hóspedes
 def gerenciar_hospedes(request):
     query = request.GET.get('q', '')
     filter_by = request.GET.get('filter_by', 'all')
@@ -173,15 +209,14 @@ def gerenciar_hospedes(request):
     }
     return render(request, 'reservas/gerenciar_hospedes.html', context)
 
-from django.shortcuts import render, get_object_or_404
-from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
-from django.db.models import Q
-from .models import Quarto, Cama, Hospede, Reserva, Ocupacao
-from .forms import QuartoForm, CamaForm, HospedeForm, ReservaForm, OcupacaoForm
+
+# -----------------------------------------------------------------------------
+# Views para criação e edição (Formulários)
+# -----------------------------------------------------------------------------
 
 ITENS_POR_PAGINA = 20
 
-
+# Função para gerenciar reservas
 def gerenciar_reservas(request):
     # Parâmetros de consulta
     search = request.GET.get('search', '').strip()
@@ -223,6 +258,7 @@ def gerenciar_reservas(request):
     }
     return render(request, 'reservas/gerenciar_reservas.html', context)
 
+# Função para criar ou editar uma reserva
 def reserva_form(request, pk=None):
     reserva = get_object_or_404(Reserva, pk=pk) if pk else None
 
@@ -242,6 +278,7 @@ def reserva_form(request, pk=None):
 
 # Views para criação e edição (Formulários)
 
+# Função para criar ou editar um Quarto e Cama
 def quarto_form(request, pk=None):
     """ Cria ou edita um Quarto. """
     if pk:
@@ -260,7 +297,7 @@ def quarto_form(request, pk=None):
     context = {'form': form, 'quarto': quarto}
     return render(request, 'reservas/quarto_form.html', context)
 
-
+# Função para criar ou editar uma Cama
 def cama_form(request, pk=None):
     """ Cria ou edita uma Cama. """
     if pk:
@@ -279,7 +316,9 @@ def cama_form(request, pk=None):
     context = {'form': form, 'cama': cama}
     return render(request, 'reservas/cama_form.html', context)
 
-from django.template.loader import render_to_string
+# -----------------------------------------------------------------------------
+# Views para criação e edição de Hóspedes
+# -----------------------------------------------------------------------------
 def hospede_form(request, pk=None):
     hospede = get_object_or_404(Hospede, pk=pk) if pk else None
     next_url = request.GET.get('next', '')
@@ -324,11 +363,12 @@ def hospede_form(request, pk=None):
         'hospede': hospede
     })
 
-
+# Função para listar hóspedes em JSON
 def listar_hospedes_json(request):
     hospedes = Hospede.objects.all().values('id', 'nome')
     return JsonResponse(list(hospedes), safe=False)
 
+# Função para gerenciar ocupações
 def gerenciar_ocupacoes(request):
     query = request.GET.get('q', '')
     filter_by = request.GET.get('filter_by', 'all')
@@ -361,6 +401,7 @@ def gerenciar_ocupacoes(request):
     }
     return render(request, 'reservas/gerenciar_ocupacoes.html', context)
 
+# Função para criar ou editar uma Ocupação
 def ocupacao_form(request, pk=None):
     ocupacao = get_object_or_404(Ocupacao, pk=pk) if pk else None
     quartos = Quarto.objects.all()
@@ -403,11 +444,10 @@ def ocupacao_form(request, pk=None):
     return render(request, 'reservas/ocupacoes_form.html', context)
 
 
-
-# views.py
-from django.http import JsonResponse
-from .models import Cama
-
+# -----------------------------------------------------------------------------
+# Views para obter camas disponíveis por quarto
+# -----------------------------------------------------------------------------
+# Função para obter camas disponíveis de um quarto específico
 def camas_disponiveis(request):
     quarto_id = request.GET.get('quarto')
     try:
@@ -427,11 +467,11 @@ def camas_disponiveis(request):
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=400)
 
-from django.shortcuts import render
-from django.db.models import Count, Q
-from .models import Quarto, Cama, Hospede, Reserva
-from datetime import date
 
+# -----------------------------------------------------------------------------
+# Views para o dashboard e mapa interativo
+# -----------------------------------------------------------------------------
+# Função para o dashboard
 def dashboard(request):
     # Estatísticas básicas
     total_quartos = Quarto.objects.count()
@@ -472,8 +512,7 @@ def dashboard(request):
     
     return render(request, 'reservas/dashboard.html', context)
 
-from django.core import serializers
-
+# Função para o mapa interativo
 def mapa_interativo(request):
     hospedes = Hospede.objects.all()
     hospedes_json = serializers.serialize('json', hospedes)
@@ -482,16 +521,9 @@ def mapa_interativo(request):
     }
     return render(request, 'reservas/mapa_interativo.html', context)
 
-
-from django.db.models.functions import ExtractYear, ExtractMonth
-from django.shortcuts import render
-from django.http import HttpResponse
-from datetime import datetime
-from reportlab.pdfgen import canvas
-from reportlab.lib.pagesizes import A4
-from reportlab.lib.units import cm
-from .models import Reserva, Ocupacao
-
+# -----------------------------------------------------------------------------
+# Views para geração de relatórios em PDF
+# -----------------------------------------------------------------------------
 def gerar_contexto_comum():
     meses = [
         'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
@@ -504,6 +536,7 @@ def gerar_contexto_comum():
         'now': datetime.now()
     }
 
+# Função para gerar relatório de reservas em PDF
 def reservas_report_pdf(request):
     if request.method == 'POST':
         tipo_filtro = request.POST.get('tipo_filtro')
@@ -541,7 +574,7 @@ def reservas_report_pdf(request):
     context = gerar_contexto_comum()
     return render(request, 'relatorios/filtro_reservas.html', context)
 
-
+# Função para gerar relatório de ocupações em PDF
 def ocupacoes_report_pdf(request):
     if request.method == 'POST':
         tipo_filtro = request.POST.get('tipo_filtro')
@@ -579,7 +612,7 @@ def ocupacoes_report_pdf(request):
     context = gerar_contexto_comum()
     return render(request, 'relatorios/filtro_ocupacoes.html', context)
 
-
+# Função para criar o cabeçalho do PDF
 def criar_cabecalho(p, height, data_inicio, data_fim):
     p.setFont("Helvetica-Bold", 12)
     p.drawString(2 * cm, height - 2.7 * cm, f"Período: {data_inicio.strftime('%d/%m/%Y')} a {data_fim.strftime('%d/%m/%Y')}")
@@ -587,6 +620,7 @@ def criar_cabecalho(p, height, data_inicio, data_fim):
     p.setLineWidth(0.5)
     p.line(2 * cm, height - 2.9 * cm, 19 * cm, height - 2.9 * cm)
 
+# Função para criar o corpo do relatório de reservas
 def criar_corpo_reservas(p, reservas, height):
     y = height - 4 * cm
     page_num = 1
@@ -621,7 +655,7 @@ def criar_corpo_reservas(p, reservas, height):
     p.setFont("Helvetica", 9)
     p.drawString(2 * cm, 2 * cm, f"Página {page_num}")
 
-
+# Função para criar o corpo do relatório de ocupações
 def criar_corpo_ocupacoes(p, ocupacoes, height):
     y = height - 4 * cm
     page_num = 1

@@ -1,16 +1,19 @@
+#----------------------------------------------
+# IMPORTS DO DJANGO
+#----------------------------------------------
 from django.shortcuts import render, redirect
-from django.contrib.auth import authenticate, login, logout
-from django.contrib.auth.forms import UserCreationForm
 from django.contrib import messages
+from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.forms import UserCreationForm 
+
+#----------------------------------------------
+# IMPORTS DO PROJETO
+#----------------------------------------------
 from .forms import LoginForm
-
-from django.shortcuts import render, redirect
-from monitoramento.models import GREUser
-
-
-from django.shortcuts import redirect, render
 from monitoramento.models import GREUser
 from problemas.models import Lacuna, ProblemaUsuario
+
 
 # =============================================================================
 #  VIEW PARA DA PÁGINA PRINCIPAL (DASHBOARD)
@@ -66,15 +69,6 @@ def dashboard(request):
     except GREUser.DoesNotExist:
         return render(request, "cedepe/home.html")
 
-
-
-
-
-from django.shortcuts import render, redirect
-from django.contrib.auth import authenticate, login
-from django.contrib import messages
-from .forms import LoginForm  # Certifique-se de importar corretamente
-from monitoramento.models import GREUser  # Importa o modelo de usuário extendido
 
 # =============================================================================
 #  VIEW PARA O LOGIN DO USUÁRIO
@@ -166,7 +160,6 @@ def sobre(request):
 # =============================================================================
 #  VIEW PARA DA PÁGINA 'MANUAL'
 # =============================================================================
-from django.contrib.auth.decorators import login_required
 @login_required
 def manual_usuario(request):
     # Sua lógica para a página do manual aqui
