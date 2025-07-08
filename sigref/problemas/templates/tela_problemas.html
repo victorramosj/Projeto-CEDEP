@@ -42,13 +42,38 @@ Problemas
     border-radius: 5px;
 }
 
+/*=== ESTILO DE BARRA DE BUSCA ===*/
 .form-pesquisa.input-group {
     border-radius: 5px;
     overflow: hidden; /* Garante que os cantos dos filhos sejam cortados */
+    border-color: #003366;
 }
 
-/* --- Select de Status (Tabela) --- */
-/* Estilo específico para o select de status dentro da tabela */
+.btn-pesquisa-custom {
+    padding: 0 !important;
+    width: 42px;
+    background-color: white;
+}
+
+.btn-pesquisa-custom .bi-search {
+    color: #003366;
+    transition: color 0.15s ease-in-out;
+    margin-bottom: 5.1px;
+}
+
+/* Quando o usuário interage com o botão (hover, active, focus) */
+.btn-pesquisa-custom:hover, .btn-pesquisa-custom:active, .btn-pesquisa-custom:focus {
+    background-color: #0d6efd;
+    color: #ffffff;
+    border-color: #0d6efd;
+}
+
+/* Garante que a cor do ícone mude durante a interação */
+.btn-pesquisa-custom:hover .bi-search, .btn-pesquisa-custom:active .bi-search, .btn-pesquisa-custom:focus .bi-search {
+    color: #ffffff;
+}
+
+/* --- SELECT DE STATUS (TABELA) --- */
 table .form-select {
     color: #333;
     padding: 5px 10px;
@@ -62,7 +87,7 @@ table .form-select {
     height: 38px;
 }
 
-/* --- Botão de Ação --- */
+/* --- BOTÃO DE AÇÃO --- */
 .btnAcao {
     width: 180px; /* Largura padrão para o botão de apagar */
     font-size: 15px;
@@ -71,9 +96,10 @@ table .form-select {
 }
 
 /* --- Tabela --- */
-.table-responsive {
-    border-radius: 8px; /* Arredonda o container da tabela */
-    overflow: hidden;   /* Esconde as bordas retas da tabela que "vazam" */
+
+.tabela{
+    border-radius: 8px;
+    overflow: hidden;
 }
 
 .table th,
@@ -91,6 +117,9 @@ table .form-select {
     padding: 12px;
 }
 
+.table th:nth-child(2), .table td:nth-child(2) {
+    width: 300px;
+}
 .table th:nth-child(6), .table td:nth-child(6) {
     width: 160px;
 }
@@ -135,18 +164,10 @@ table .form-select {
     justify-content: center;
 }
 
-
 /* ====================================================================== */
 /* ==== AJUSTES RESPONSIVOS DE LAYOUT PARA DIFERENTES TELAS =========== */
 /* ====================================================================== */
 
-/* --- Telas de Celular na Vertical (>= 370px) --- */
-@media (min-width: 370px) {
-    .grupo-selects {
-        flex-direction: row; /* Coloca os selects lado a lado */
-        width: 100%;
-    }
-}
 
 /* --- Telas de Celular na Horizontal (>= 576px) --- */
 @media (min-width: 576px) {
@@ -240,8 +261,10 @@ table .form-select {
 
                 <form method="GET" action="{% url 'tela_problemas' %}" class="input-group form-pesquisa">
                     {% csrf_token %}
-                    <span class="input-group-text"><i class="fas fa-search"></i></span>
-                    <input type="text" class="form-control" name="escola" value="{{ search_query }}" placeholder="Pesquise por Escola...">
+                    <input type="text" id="search-input" name="q_escola" class="form-control" placeholder="Pesquise por escola..." value="{{ search_query|default:'' }}">
+                                <button class="btn btn-outline-secondary btn-pesquisa-custom d-flex align-items-center justify-content-center" type="submit" aria-label="Pesquisar">
+                                    <i class="bi bi-search"></i>
+                                </button>  
                 </form>
 
                 
@@ -274,7 +297,7 @@ table .form-select {
                 </div>
         </div>
 
-        <div class="table-responsive mb-3 mt-2">
+        <div class="table-responsive mb-3 mt-2 tabela">
             <table class="table table-striped mb-0">
                 <thead>
                     <tr>
@@ -343,34 +366,34 @@ table .form-select {
 </div>
 
 <div class="modal fade" id="modalCriarAviso" tabindex="-1" aria-labelledby="modalAvisoLabel" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="modalAvisoLabel">Enviar Aviso sobre Atualização</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
-      </div>
-      <div class="modal-body">
-        <form id="form-criar-aviso">
-            <div class="mb-3">
-                <label for="aviso-escola" class="form-label"><b>Escola:</b></label>
-                <input type="text" id="aviso-escola-nome" class="form-control" disabled>
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalAvisoLabel">Enviar Aviso sobre Atualização</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
             </div>
-            <div class="mb-3">
-                <label for="aviso-titulo" class="form-label">Título do Aviso</label>
-                <input type="text" id="aviso-titulo" class="form-control" required>
+            <div class="modal-body">
+                <form id="form-criar-aviso">
+                    <div class="mb-3">
+                        <label for="aviso-escola" class="form-label"><b>Escola:</b></label>
+                        <input type="text" id="aviso-escola-nome" class="form-control" disabled>
+                    </div>
+                    <div class="mb-3">
+                        <label for="aviso-titulo" class="form-label">Título do Aviso</label>
+                        <input type="text" id="aviso-titulo" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="aviso-mensagem" class="form-label">Mensagem do Aviso</label>
+                        <textarea id="aviso-mensagem" class="form-control" rows="5" required></textarea>
+                    </div>
+                </form>
             </div>
-            <div class="mb-3">
-                <label for="aviso-mensagem" class="form-label">Mensagem do Aviso</label>
-                <textarea id="aviso-mensagem" class="form-control" rows="5" required></textarea>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" id="btn-enviar-aviso" class="btn btn-primary">Atualizar Status e Enviar Aviso</button>
             </div>
-        </form>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-        <button type="button" id="btn-enviar-aviso" class="btn btn-primary">Atualizar Status e Enviar Aviso</button>
-      </div>
+        </div>
     </div>
-  </div>
 </div>
 
 
