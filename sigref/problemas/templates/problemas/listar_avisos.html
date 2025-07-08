@@ -178,51 +178,132 @@
 
 <!-- Modal de Visualização -->
 <div class="modal fade" id="viewAvisoModal" tabindex="-1" aria-labelledby="viewAvisoModalTitle" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered modal-lg">
-        <div class="modal-content">
-            <div class="modal-header border-0">
-                <h5 class="modal-title" id="viewAvisoModalTitle"></h5>
+    <div class="modal-dialog modal-dialog-centered modal-lg modal-fullscreen-md-down">
+        <div class="modal-content" style="background: #f8fafc; border-radius: 1.2rem; border: none; box-shadow: 0 0.5rem 2rem rgba(0,0,0,0.08);">
+            <div class="modal-header border-0" style="background: #e3eaf5;">
+                <h5 class="modal-title fw-semibold" id="viewAvisoModalTitle">
+                    <i class="bi bi-eye-fill me-2 text-primary"></i>Visualizar Aviso
+                </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
             </div>
-            <div class="modal-body pt-0">
+            <div class="modal-body py-4 px-4">
                 <div id="viewAvisoModalImageContainer" class="text-center mb-3" style="display: none;">
-                    <img id="viewAvisoModalImage" src="" class="img-fluid rounded" alt="Imagem do Aviso" style="max-height: 300px;">
+                    <img id="viewAvisoModalImage" src="" class="img-fluid rounded shadow-sm border" alt="Imagem do Aviso" style="max-height: 300px; object-fit: cover;">
                 </div>
-                <p><strong>Prioridade: </strong><span id="viewAvisoModalPriorityBadge" class="badge"></span></p>
-                <p class="mb-1"><strong>Mensagem:</strong></p>
-                <div class="p-3 bg-light rounded" style="white-space: pre-wrap;">
-                    <p id="viewAvisoModalBodyContent" class="mb-0"></p>
+                <div class="d-flex align-items-center mb-3">
+                    <span class="fw-bold text-primary me-2">Prioridade:</span>
+                    <span id="viewAvisoModalPriorityBadge" class="badge fs-6 px-3 py-2"></span>
                 </div>
-                <hr>
-                <small class="text-muted d-block"><strong>Escola:</strong> <span id="viewAvisoModalEscola"></span></small>
-                <small class="text-muted d-block"><strong>Criado por:</strong> <span id="viewAvisoModalCriadoPor"></span></small>
-                <small class="text-muted d-block"><strong>Publicado em:</strong> <span id="viewAvisoModalDataCriacao"></span></small>
+                <div class="mb-3">
+                    <span class="fw-bold text-primary">Mensagem:</span>
+                    <div class="p-3 bg-light rounded-3 border mt-1" style="white-space: pre-wrap; font-size: 1.08rem;">
+                        <span id="viewAvisoModalBodyContent" class="mb-0"></span>
+                    </div>
+                </div>
+                <hr class="my-4">
+                <div class="row text-muted small">
+                    <div class="col-md-4 mb-2 mb-md-0">
+                        <i class="bi bi-building me-1"></i>
+                        <strong>Escola:</strong> <span id="viewAvisoModalEscola"></span>
+                    </div>
+                    <div class="col-md-4 mb-2 mb-md-0">
+                        <i class="bi bi-person-circle me-1"></i>
+                        <strong>Criado por:</strong> <span id="viewAvisoModalCriadoPor"></span>
+                    </div>
+                    <div class="col-md-4">
+                        <i class="bi bi-calendar-event me-1"></i>
+                        <strong>Publicado em:</strong> <span id="viewAvisoModalDataCriacao"></span>
+                    </div>
+                </div>
             </div>
             <div class="modal-footer border-0">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+                <button type="button" class="btn btn-outline-secondary rounded-3 px-4" data-bs-dismiss="modal">
+                    <i class="bi bi-x-circle me-2"></i>Fechar
+                </button>
             </div>
         </div>
     </div>
 </div>
 
 <!-- Modal de Edição -->
-<div class="modal fade" id="editAvisoModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header"><h5 class="modal-title">Editar Aviso</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
-            <div class="modal-body">
-                <form method="POST" action="" id="editAvisoForm">
+<div class="modal fade" id="editAvisoModal" tabindex="-1" aria-labelledby="editAvisoModalTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg modal-fullscreen-md-down">
+        <div class="modal-content" style="background: #f8fafc;">
+            <div class="modal-header border-0" style="background: #e3eaf5;">
+                <h5 class="modal-title fw-semibold" id="editAvisoModalTitle">
+                    <i class="bi bi-pencil-square me-2 text-primary"></i>Editar Aviso
+                </h5>
+                <div class="d-flex gap-2 align-items-center">
+                    <button type="button" class="btn btn-outline-secondary btn-sm d-md-none" data-bs-toggle="modal" data-bs-target="#editAvisoModal" data-bs-dismiss="modal" title="Tela Cheia" onclick="toggleEditModalFullscreen()">
+                        <i class="bi bi-arrows-fullscreen"></i>
+                    </button>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                </div>
+            </div>
+            <div class="modal-body py-4 px-4">
+                <form method="POST" action="" id="editAvisoForm" autocomplete="off">
                     {% csrf_token %}
-                    <input type="hidden" id="escola_modal_edit" name="escola"><input type="hidden" id="criado_por_modal_edit" name="criado_por"><input type="hidden" id="ativo_modal_edit" name="ativo" value="true">
-                    <div class="mb-3"><label for="titulo_modal_edit" class="form-label">Título</label><input type="text" class="form-control" id="titulo_modal_edit" name="titulo" required></div>
-                    <div class="mb-3"><label for="mensagem_modal_edit" class="form-label">Mensagem</label><textarea class="form-control" id="mensagem_modal_edit" name="mensagem" rows="4" required></textarea></div>
-                    <div class="mb-3"><label for="prioridade_modal_edit" class="form-label">Prioridade</label><select class="form-select" id="prioridade_modal_edit" name="prioridade" required><option value="baixa">Baixa</option><option value="normal">Normal</option><option value="alta">Alta</option></select></div>
-                    <div class="d-grid"><button type="submit" id="saveChangesBtn" class="btn btn-primary">Salvar Alterações</button></div>
+                    <input type="hidden" id="escola_modal_edit" name="escola">
+                    <input type="hidden" id="criado_por_modal_edit" name="criado_por">
+                    <input type="hidden" id="ativo_modal_edit" name="ativo" value="true">
+                    <div class="mb-3">
+                        <label for="titulo_modal_edit" class="form-label fw-bold text-primary">Título</label>
+                        <input type="text" class="form-control rounded-3 border-0 shadow-sm" id="titulo_modal_edit" name="titulo" required maxlength="120" style="background:#f4f8fb;">
+                    </div>
+                    <div class="mb-3">
+                        <label for="mensagem_modal_edit" class="form-label fw-bold text-primary">Mensagem</label>
+                        <textarea class="form-control rounded-3 border-0 shadow-sm" id="mensagem_modal_edit" name="mensagem" rows="5" required style="background:#f4f8fb;"></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label for="prioridade_modal_edit" class="form-label fw-bold text-primary">Prioridade</label>
+                        <select class="form-select rounded-3 border-0 shadow-sm" id="prioridade_modal_edit" name="prioridade" required style="background:#f4f8fb;">
+                            <option value="baixa">Baixa</option>
+                            <option value="normal">Normal</option>
+                            <option value="alta">Alta</option>
+                        </select>
+                    </div>
+                    <div class="d-grid gap-2 mt-4">
+                        <button type="submit" id="saveChangesBtn" class="btn btn-primary btn-lg rounded-3 shadow-sm">
+                            <i class="bi bi-save me-2"></i>Salvar Alterações
+                        </button>
+                    </div>
                 </form>
             </div>
         </div>
     </div>
 </div>
+<script>
+function toggleEditModalFullscreen() {
+    const modal = document.getElementById('editAvisoModal').querySelector('.modal-dialog');
+    modal.classList.toggle('modal-fullscreen');
+}
+</script>
+<style>
+#editAvisoModal .modal-content {
+    border-radius: 1.2rem;
+    border: none;
+    box-shadow: 0 0.5rem 2rem rgba(0,0,0,0.08);
+}
+#editAvisoModal .modal-header {
+    border-bottom: 1px solid #e3eaf5;
+}
+#editAvisoModal .form-label {
+    font-size: 1.05rem;
+}
+#editAvisoModal .form-control, 
+#editAvisoModal .form-select {
+    font-size: 1rem;
+    color: #1a2947;
+}
+#editAvisoModal .btn-primary {
+    background: linear-gradient(90deg, #3b82f6 0%, #2563eb 100%);
+    border: none;
+}
+#editAvisoModal .btn-primary:hover, 
+#editAvisoModal .btn-primary:focus {
+    background: linear-gradient(90deg, #2563eb 0%, #1d4ed8 100%);
+}
+</style>
 {% endblock %}
 
 

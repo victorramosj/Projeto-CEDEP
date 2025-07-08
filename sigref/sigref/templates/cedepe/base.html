@@ -429,70 +429,46 @@
       {# Execute no terminal: #}
       {# python manage.py collectstatic #}
     </main>
-      <footer class="compact-footer">
+      <footer class="bg-body-tertiary text-dark py-4 border-top border-primary">
   <div class="container">
-    <div class="footer-content">
-      <div class="row w-100 g-3 g-md-4 align-items-center justify-content-center">
+    <div class="row w-100 g-4 align-items-center">
+      
+      <div class="col-12 col-md-3 d-flex justify-content-center justify-content-md-start">
+        <div class="gre-logo-footer-container">
+          <img src="{% static 'images/CARD DA GRE.png' %}" alt="GRE Floresta" class="img-fluid" style="max-width:110px; height:auto;">
+        </div>
+      </div>
+
+      <div class="col-12 col-md-6 text-center">
+        <p class="mb-1">
+          Sistema Integrado Gerência Regional de Educação de Floresta.
+        </p>
+        <small class="text-muted">
+          &copy; {% now "Y" %} <span class="fw-bold">SIGREF</span> - Todos os direitos reservados.
+        </small>
+      </div>
+
+      <div class="col-12 col-md-3 d-flex flex-column align-items-center align-items-md-end">
         
-        {# Coluna 1: Logo da GRE #}
-        <div class="col-12 col-md-3 d-flex justify-content-center justify-content-md-start">
-          <div class="gre-logo-footer-container">
-            <img src="{% static 'images/CARD DA GRE.png' %}" alt="GRE Floresta" class="img-fluid" style="max-width:120px; height:auto;">
-          </div>
-        </div>
-
-        {# Coluna 2: Textos do SIGREF #}
-        <div class="col-12 col-md-6 text-center"> {# Centralizado em todas as telas, ou justificado se preferir #}
-          <p class="footer-text mb-1">
-            <span class="sigref">Sistema Integrado Gerência Regional de Educação de Floresta.</span>
-          </p>
-          <p class="footer-text mb-0">
-            &copy; {% now "Y" %} <span class="sigref">SIGREF</span> - Todos os direitos reservados.
-          </p>
-        </div>
-
-        {# Coluna 3: Links Sociais #}
-        <div class="col-12 col-md-3 d-flex flex-column align-items-center align-items-md-end">
+        <h5 class="fw-semibold mb-2">Conecte-se</h5>
+        
+        <div class="d-flex gap-3"> 
+          <a href="https://www.instagram.com/grefloresta.oficial/" target="_blank" class="link-dark" aria-label="Visite nosso Instagram" title="Instagram"> 
+            <i class="bi bi-instagram fs-4"></i>
+          </a>
     
-          {# Título da Coluna #}
-          <p class="footer-text mb-2">
-              <span class="gradiente-texto">Conheça nossas Redes Sociais e Sobre</span>
-          </p>
+          <a href="https://wa.me/558791019828?text=..." target="_blank" class="link-dark" aria-label="Fale conosco via WhatsApp" title="WhatsApp">  
+            <i class="bi bi-whatsapp fs-4"></i>
+          </a>
     
-          {# Container dos links #}
-          <div class="social-links d-flex gap-3"> 
-              
-              {# Instagram #}
-              <a href="https://www.instagram.com/grefloresta.oficial/" target="_blank" 
-                  class="social-link" 
-                  aria-label="Visite nosso Instagram"
-                  title="Instagram"> 
-                  <i class="bi bi-instagram"></i>
-              </a>
-        
-              {# WhatsApp #}
-              <a href="https://wa.me/558791019828?text=Ol%C3%A1%2C%20gostaria%20de%20saber%20mais%20sobre%20o%20Sistema%20Integrado%20GRE%20FLORESTA." 
-                  target="_blank" 
-                  class="social-link" 
-                  aria-label="Fale conosco via WhatsApp"
-                  title="WhatsApp">  
-                  <i class="bi bi-whatsapp"></i>
-              </a>
-        
-              {# Sobre #}
-              <a href="{% url 'sobre' %}"
-                  target="_blank" 
-                  class="social-link" 
-                  aria-label="Conheça mais sobre nós"
-                  title="Sobre o sistema"> 
-                  <i class="bi bi-info-circle"></i>
-              </a>
-          </div>
+          <a href="{% url 'sobre' %}" target="_blank" class="link-dark" aria-label="Conheça mais sobre nós" title="Sobre o sistema"> 
+            <i class="bi bi-info-circle fs-4"></i>
+          </a>
         </div>
+      </div>
 
-      </div> {# Fim da row principal #}
-    </div> {# Fim do footer-content #}
-  </div> {# Fim do container #}
+    </div>
+  </div>
 </footer>
 
 <script src="{% static 'bootstrap/js/bootstrap.bundle.min.js' %}"></script>
