@@ -257,16 +257,16 @@ table .form-select {
         </a>
     </div>
 
-    <div class="col-12 mt-3">
+    <div class="col-12 mt-3 mb-3">
 
         <div class="container-filtros mb-3">
 
                 <form method="GET" action="{% url 'tela_problemas' %}" class="input-group form-pesquisa">
                     {% csrf_token %}
                     <input type="text" id="search-input" name="escola" class="form-control" placeholder="Pesquise por escola..." value="{{ search_query|default:'' }}">
-                                <button class="btn btn-outline-secondary btn-pesquisa-custom d-flex align-items-center justify-content-center" type="submit" aria-label="Pesquisar">
-                                    <i class="bi bi-search"></i>
-                                </button>  
+                    <button class="btn btn-outline-secondary btn-pesquisa-custom d-flex align-items-center justify-content-center" type="submit" aria-label="Pesquisar">
+                        <i class="bi bi-search"></i>
+                    </button>  
                 </form>
 
                 
