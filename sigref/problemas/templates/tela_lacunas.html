@@ -6,8 +6,8 @@ Lacunas
 {% endblock %}
 
 {% block extra_style %}
-<link rel="stylesheet" href="{% static 'css/tabelas.css' %}" />
 <style>
+
     /* ====================================================================== */
     /* ==== ESTILOS GERAIS, VARIÁVEIS DE COR E ESTADOS DE FEEDBACK ======== */
     /* ====================================================================== */
@@ -77,12 +77,6 @@ Lacunas
     }
 
     /* --- Tabela --- */
-    .table-responsive {
-        border-radius: 8px;
-        /* Arredonda o container da tabela */
-        overflow: hidden;
-        /* Esconde as bordas retas da tabela que "vazam" */
-    }
 
     .table th,
     .table td {
@@ -149,19 +143,9 @@ Lacunas
         justify-content: center;
     }
 
-
     /* ====================================================================== */
     /* ==== AJUSTES RESPONSIVOS DE LAYOUT PARA DIFERENTES TELAS =========== */
     /* ====================================================================== */
-
-    /* --- Telas de Celular na Vertical (>= 370px) --- */
-    @media (min-width: 370px) {
-        .grupo-selects {
-            flex-direction: row;
-            /* Coloca os selects lado a lado */
-            width: 100%;
-        }
-    }
 
     /* --- Telas de Celular na Horizontal (>= 576px) --- */
     @media (min-width: 576px) {
@@ -240,6 +224,7 @@ Lacunas
             min-width: 140px;
         }
     }
+    
 </style>
 {% endblock %}
 
@@ -336,8 +321,7 @@ Lacunas
                         href="?page={{ lacunas_page.previous_page_number }}&q={{ search_query }}&data={{ data_filter }}&status={{ status_filter }}">Anterior</a>
                 </li>
                 {% endif %}
-                <li class="page-item disabled"><span class="page-link">Página {{ lacunas_page.number }} de {{
-                        lacunas_page.paginator.num_pages }}</span></li>
+                <li class="page-item disabled"><span class="page-link">Página {{ lacunas_page.number }} de {{ lacunas_page.paginator.num_pages }}</span></li>
                 {% if lacunas_page.has_next %}
                 <li class="page-item"><a class="page-link"
                         href="?page={{ lacunas_page.next_page_number }}&q={{ search_query }}&data={{ data_filter }}&status={{ status_filter }}">Próximo</a>

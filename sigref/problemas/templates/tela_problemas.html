@@ -47,7 +47,6 @@ Problemas
     border-radius: 5px;
     overflow: hidden; /* Garante que os cantos dos filhos sejam cortados */
     border-color: #003366;
-    border: ;
 }
 
 .btn-pesquisa-custom {
@@ -74,8 +73,7 @@ Problemas
     color: #ffffff;
 }
 
-/* --- Select de Status (Tabela) --- */
-/* Estilo específico para o select de status dentro da tabela */
+/* --- SELECT DE STATUS (TABELA) --- */
 table .form-select {
     color: #333;
     padding: 5px 10px;
@@ -89,7 +87,7 @@ table .form-select {
     height: 38px;
 }
 
-/* --- Botão de Ação --- */
+/* --- BOTÃO DE AÇÃO --- */
 .btnAcao {
     width: 180px; /* Largura padrão para o botão de apagar */
     font-size: 15px;
@@ -98,9 +96,10 @@ table .form-select {
 }
 
 /* --- Tabela --- */
-.table-responsive {
-    border-radius: 8px; /* Arredonda o container da tabela */
-    overflow: hidden;   /* Esconde as bordas retas da tabela que "vazam" */
+
+.tabela{
+    border-radius: 8px;
+    overflow: hidden;
 }
 
 .table th,
@@ -118,6 +117,9 @@ table .form-select {
     padding: 12px;
 }
 
+.table th:nth-child(2), .table td:nth-child(2) {
+    width: 300px;
+}
 .table th:nth-child(6), .table td:nth-child(6) {
     width: 160px;
 }
@@ -162,18 +164,10 @@ table .form-select {
     justify-content: center;
 }
 
-
 /* ====================================================================== */
 /* ==== AJUSTES RESPONSIVOS DE LAYOUT PARA DIFERENTES TELAS =========== */
 /* ====================================================================== */
 
-/* --- Telas de Celular na Vertical (>= 370px) --- */
-@media (min-width: 370px) {
-    .grupo-selects {
-        flex-direction: row; /* Coloca os selects lado a lado */
-        width: 100%;
-    }
-}
 
 /* --- Telas de Celular na Horizontal (>= 576px) --- */
 @media (min-width: 576px) {
@@ -303,7 +297,7 @@ table .form-select {
                 </div>
         </div>
 
-        <div class="table-responsive mb-3 mt-2">
+        <div class="table-responsive mb-3 mt-2 tabela">
             <table class="table table-striped mb-0">
                 <thead>
                     <tr>
