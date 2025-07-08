@@ -6,7 +6,6 @@ Problemas
 {% endblock %}
 
 {% block extra_style %}
-<link rel="stylesheet" href="{% static 'css/tabelas.css' %}" />
 <style>
 /* ====================================================================== */
 /* ==== ESTILOS GERAIS, VARIÁVEIS DE COR E ESTADOS DE FEEDBACK ======== */
@@ -39,14 +38,18 @@ Problemas
     height: 45px;
     font-size: 15px;
     min-width: 150px;
-    border-radius: 5px;
+    border-radius: 8px;
 }
 
 /*=== ESTILO DE BARRA DE BUSCA ===*/
 .form-pesquisa.input-group {
-    border-radius: 5px;
-    overflow: hidden; /* Garante que os cantos dos filhos sejam cortados */
+    border-radius: 8px;
+    overflow: hidden; 
+}
+
+.form-pesquisa.input-group button{
     border-color: #003366;
+    border-radius: 8px;
 }
 
 .btn-pesquisa-custom {
@@ -63,9 +66,9 @@ Problemas
 
 /* Quando o usuário interage com o botão (hover, active, focus) */
 .btn-pesquisa-custom:hover, .btn-pesquisa-custom:active, .btn-pesquisa-custom:focus {
-    background-color: #0d6efd;
+    background-color: #003366;
     color: #ffffff;
-    border-color: #0d6efd;
+    border-color: #003366;
 }
 
 /* Garante que a cor do ícone mude durante a interação */
@@ -77,13 +80,13 @@ Problemas
 table .form-select {
     color: #333;
     padding: 5px 10px;
-    border-radius: 5px;
+    border-radius: 8px;
     border: none;
     transition: background-color 0.3s ease;
 }
 
 .status-updater {
-    border-radius: 5px !important;
+    border-radius: 8px !important;
     height: 38px;
 }
 
@@ -99,7 +102,6 @@ table .form-select {
 
 .tabela{
     border-radius: 8px;
-    overflow: hidden;
 }
 
 .table th,
@@ -118,7 +120,7 @@ table .form-select {
 }
 
 .table th:nth-child(2), .table td:nth-child(2) {
-    width: 300px;
+        width: 300px;
 }
 .table th:nth-child(6), .table td:nth-child(6) {
     width: 160px;
@@ -261,7 +263,7 @@ table .form-select {
 
                 <form method="GET" action="{% url 'tela_problemas' %}" class="input-group form-pesquisa">
                     {% csrf_token %}
-                    <input type="text" id="search-input" name="q_escola" class="form-control" placeholder="Pesquise por escola..." value="{{ search_query|default:'' }}">
+                    <input type="text" id="search-input" name="escola" class="form-control" placeholder="Pesquise por escola..." value="{{ search_query|default:'' }}">
                                 <button class="btn btn-outline-secondary btn-pesquisa-custom d-flex align-items-center justify-content-center" type="submit" aria-label="Pesquisar">
                                     <i class="bi bi-search"></i>
                                 </button>  

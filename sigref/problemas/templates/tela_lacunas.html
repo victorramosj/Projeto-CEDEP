@@ -7,224 +7,237 @@ Lacunas
 
 {% block extra_style %}
 <style>
+/* ====================================================================== */
+/* ==== ESTILOS GERAIS, VARIÁVEIS DE COR E ESTADOS DE FEEDBACK ======== */
+/* ====================================================================== */
+:root {
+    --cor-fundo-atualizado: #d1e7fd; /* Azul claro suave para feedback de atualização */
+    --cor-status-pendente: #ffcccc;   /* Vermelho claro para status "Pendente" */
+    --cor-status-resolvido: #ccffcc;   /* Verde claro para status "Resolvido" */
+    --cor-status-andamento: #ffffcc;   /* Amarelo claro para status "Em Andamento" */
+}
 
-    /* ====================================================================== */
-    /* ==== ESTILOS GERAIS, VARIÁVEIS DE COR E ESTADOS DE FEEDBACK ======== */
-    /* ====================================================================== */
-    :root {
-        --cor-fundo-atualizado: #d1e7fd;
-        /* Azul claro suave para feedback de atualização */
-        --cor-status-pendente: #ffcccc;
-        /* Vermelho claro para status "Pendente" */
-        --cor-status-resolvido: #ccffcc;
-        /* Verde claro para status "Resolvido" */
-        --cor-status-andamento: #ffffcc;
-        /* Amarelo claro para status "Em Andamento" */
-    }
+/* Efeito de feedback visual para uma linha recém-atualizada na tabela */
+.status-atualizado td {
+    background-color: var(--cor-fundo-atualizado) !important;
+    transition: background-color 0.5s ease-out;
+}
 
-    /* Efeito de feedback visual para uma linha recém-atualizada na tabela */
-    .status-atualizado td {
-        background-color: var(--cor-fundo-atualizado) !important;
-        transition: background-color 0.5s ease-out;
-    }
+/* ====================================================================== */
+/* ==== ESTILOS PARA COMPONENTES (FORMULÁRIOS, BOTÕES, TABELAS) ========= */
+/* ====================================================================== */
 
-    /* ====================================================================== */
-    /* ==== ESTILOS PARA COMPONENTES (FORMULÁRIOS, BOTÕES, TABELAS) ========= */
-    /* ====================================================================== */
+/* --- Controles de Formulário (Inputs e Selects) --- */
+.form-control {
+    height: 45px;
+    font-size: 14px;
+}
 
-    /* --- Controles de Formulário (Inputs e Selects) --- */
-    .form-control {
-        height: 45px;
-        font-size: 14px;
-    }
+.form-select {
+    width: 100%;
+    height: 45px;
+    font-size: 15px;
+    min-width: 150px;
+    border-radius: 8px;
+}
 
-    .form-select {
-        width: 100%;
-        height: 45px;
-        font-size: 15px;
-        min-width: 150px;
-        border-radius: 5px;
-    }
+/*=== ESTILO DE BARRA DE BUSCA ===*/
+.form-pesquisa.input-group {
+    border-radius: 8px;
+    overflow: hidden; /* Garante que os cantos dos filhos sejam cortados */
+    border-color: #003366;
+}
 
-    .form-pesquisa.input-group {
-        border-radius: 5px;
-        overflow: hidden;
-        /* Garante que os cantos dos filhos sejam cortados */
-    }
+.btn-pesquisa-custom {
+    padding: 0 !important;
+    width: 42px;
+    background-color: white;
+}
 
-    /* --- Select de Status (Tabela) --- */
-    /* Estilo específico para o select de status dentro da tabela */
-    table .form-select {
-        color: #333;
-        padding: 5px 10px;
-        border-radius: 5px;
-        border: none;
-        transition: background-color 0.3s ease;
-    }
+.btn-pesquisa-custom .bi-search {
+    color: #003366;
+    transition: color 0.15s ease-in-out;
+    margin-bottom: 5.1px;
+}
 
-    .status-updater {
-        border-radius: 5px !important;
-        height: 38px;
-    }
+/* Quando o usuário interage com o botão (hover, active, focus) */
+.btn-pesquisa-custom:hover, .btn-pesquisa-custom:active, .btn-pesquisa-custom:focus {
+    background-color: #0d6efd;
+    color: #ffffff;
+    border-color: #0d6efd;
+}
 
-    /* --- Botão de Ação --- */
-    .btnAcao {
-        width: 180px;
-        /* Largura padrão para o botão de apagar */
-        font-size: 15px;
-        padding: 10px 15px;
-        font-weight: bold;
-    }
+/* Garante que a cor do ícone mude durante a interação */
+.btn-pesquisa-custom:hover .bi-search, .btn-pesquisa-custom:active .bi-search, .btn-pesquisa-custom:focus .bi-search {
+    color: #ffffff;
+}
 
-    /* --- Tabela --- */
+/* --- SELECT DE STATUS (TABELA) --- */
+table .form-select {
+    color: #333;
+    padding: 5px 10px;
+    border-radius: 8px;
+    border: none;
+    transition: background-color 0.3s ease;
+}
 
-    .table th,
-    .table td {
-        text-align: left;
-        vertical-align: middle;
-        font-size: 14px;
-        padding: 11px;
-    }
+.status-updater {
+    border-radius: 8px !important;
+    height: 38px;
+}
 
-    .table th {
-        background-color: #003366;
-        /* Azul escuro para o cabeçalho */
-        color: white;
-        font-size: 17px;
-        padding: 12px;
-    }
+/* --- BOTÃO DE AÇÃO --- */
+.btnAcao {
+    width: 180px; /* Largura padrão para o botão de apagar */
+    font-size: 15px;
+    padding: 10px 15px;
+    font-weight: bold;
+}
 
-    .table th:nth-child(6),
-    .table td:nth-child(6) {
-        width: 160px;
-    }
+/* --- Tabela --- */
 
-    /* ====================================================================== */
-    /* ==== LAYOUT DOS FILTROS (ESTRUTURA PADRÃO PARA TELAS PEQUENAS) ===== */
-    /* ====================================================================== */
+.tabela{
+    border-radius: 8px;
+}
 
-    /* --- Container Principal dos Filtros --- */
-    .container-filtros {
-        display: flex;
-        flex-direction: column;
-        /* Empilha os elementos verticalmente */
-        gap: 1rem;
-        width: 100%;
-    }
+.table th,
+.table td {
+    text-align: left;
+    vertical-align: middle;
+    font-size: 14px;
+    padding: 11px;
+}
 
-    /* --- Grupo de Controles (Selects e Botão) --- */
-    .grupo-controles {
-        display: flex;
-        flex-direction: column;
-        /* Empilha os selects e o botão */
-        gap: 1rem;
-        width: 100%;
-    }
+.table th {
+    background-color: #003366; /* Azul escuro para o cabeçalho */
+    color: white;
+    font-size: 17px;
+    padding: 12px;
+}
 
-    /* --- Grupo de Selects --- */
+.table th:nth-child(2), .table td:nth-child(2) {
+        width: 300px;
+}
+.table th:nth-child(6), .table td:nth-child(6) {
+    width: 160px;
+}
+
+/* ====================================================================== */
+/* ==== LAYOUT DOS FILTROS (ESTRUTURA PADRÃO PARA TELAS PEQUENAS) ===== */
+/* ====================================================================== */
+
+/* --- Container Principal dos Filtros --- */
+.container-filtros {
+    display: flex;
+    flex-direction: column; /* Empilha os elementos verticalmente */
+    gap: 1rem;
+    width: 100%;
+}
+
+/* --- Grupo de Controles (Selects e Botão) --- */
+.grupo-controles {
+    display: flex;
+    flex-direction: column; /* Empilha os selects e o botão */
+    gap: 1rem;
+    width: 100%;
+}
+
+/* --- Grupo de Selects --- */
+.grupo-selects {
+    display: flex;
+    flex-direction: column; /* Empilha os selects */
+    gap: 0.75rem;
+    width: 100%;
+}
+
+/* Garante que os selects ocupem 100% da largura em telas pequenas */
+.grupo-selects > .form-select {
+    width: 100%;
+}
+
+/* --- Botão de Ação --- */
+.btnAcao {
+    display: flex;
+    width: 100%; /* Ocupa a largura total */
+    justify-content: center;
+}
+
+/* ====================================================================== */
+/* ==== AJUSTES RESPONSIVOS DE LAYOUT PARA DIFERENTES TELAS =========== */
+/* ====================================================================== */
+
+
+/* --- Telas de Celular na Horizontal (>= 576px) --- */
+@media (min-width: 576px) {
     .grupo-selects {
-        display: flex;
+        flex-direction: row;
+        flex-wrap: wrap;
+    }
+    .grupo-selects > .form-select {
+        flex: 1; /* Permite que os selects cresçam igualmente */
+    }
+    .grupo-controles {
         flex-direction: column;
-        /* Empilha os selects */
-        gap: 0.75rem;
+        align-items: center;
         width: 100%;
     }
-
-    /* Garante que os selects ocupem 100% da largura em telas pequenas */
-    .grupo-selects>.form-select {
-        width: 100%;
-    }
-
-    /* --- Botão de Ação --- */
     .btnAcao {
-        display: flex;
         width: 100%;
-        /* Ocupa a largura total */
         justify-content: center;
     }
+}
 
-    /* ====================================================================== */
-    /* ==== AJUSTES RESPONSIVOS DE LAYOUT PARA DIFERENTES TELAS =========== */
-    /* ====================================================================== */
-
-    /* --- Telas de Celular na Horizontal (>= 576px) --- */
-    @media (min-width: 576px) {
-        .grupo-selects {
-            flex-direction: row;
-            flex-wrap: wrap;
-        }
-
-        .grupo-selects>.form-select {
-            flex: 1;
-            /* Permite que os selects cresçam igualmente */
-        }
-
-        .grupo-controles {
-            flex-direction: column;
-            align-items: center;
-            width: 100%;
-        }
-
-        .btnAcao {
-            width: 100%;
-            justify-content: center;
-        }
+/* --- Telas Médias / Tablets (>= 1008px) --- */
+/* Layout de 2 linhas: Pesquisa em uma, controles em outra */
+@media (min-width: 1008px) {
+    .grupo-controles {
+        flex-direction: row; /* Controles lado a lado */
+        align-items: center;
+        width: auto;
+        justify-content: space-between;
+        gap: 10px;
     }
 
-    /* --- Telas Médias / Tablets (>= 1008px) --- */
-    /* Layout de 2 linhas: Pesquisa em uma, controles em outra */
-    @media (min-width: 1008px) {
-        .grupo-controles {
-            flex-direction: row;
-            /* Controles lado a lado */
-            align-items: center;
-            width: auto;
-            justify-content: space-between;
-            gap: 10px;
-        }
-
-        .grupo-selects {
-            gap: 10px;
-            width: auto;
-        }
-
-        .grupo-selects select {
-            min-width: 140px;
-            /* Largura mínima para cada select */
-        }
-
-        /* O botão de ação deixa de ocupar 100% da largura */
-        .btnAcao {
-            width: auto;
-            display: flex;
-            align-items: right;
-        }
+    .grupo-selects {
+        gap: 10px;
+        width: auto;
     }
 
-    /* --- Telas Grandes / Desktops (>= 1500px) --- */
-    /* Layout final de 1 linha: Tudo alinhado horizontalmente */
-    @media (min-width: 1500px) {
-        .container-filtros {
-            flex-direction: row;
-            align-items: center;
-        }
-
-        /* Faz a barra de pesquisa crescer para ocupar o espaço disponível */
-        .form-pesquisa {
-            flex-grow: 1;
-        }
-
-        /* Impede que os controles encolham */
-        .grupo-controles {
-            flex-shrink: 0;
-        }
-
-        /* Mantém os selects lado a lado */
-        .grupo-selects select {
-            min-width: 140px;
-        }
+    .grupo-selects select {
+        min-width: 140px; /* Largura mínima para cada select */
     }
-    
+
+    /* O botão de ação deixa de ocupar 100% da largura */
+    .btnAcao {
+        width: auto;
+        display: flex;
+        align-items: right;
+    }
+}
+
+/* --- Telas Grandes / Desktops (>= 1500px) --- */
+/* Layout final de 1 linha: Tudo alinhado horizontalmente */
+@media (min-width: 1500px) {
+    .container-filtros {
+        flex-direction: row;
+        align-items: center;
+    }
+
+    /* Faz a barra de pesquisa crescer para ocupar o espaço disponível */
+    .form-pesquisa {
+        flex-grow: 1;
+    }
+
+     /* Impede que os controles encolham */
+    .grupo-controles {
+        flex-shrink: 0;
+    }
+
+    /* Mantém os selects lado a lado */
+    .grupo-selects select {
+        min-width: 140px;
+    }
+}
 </style>
 {% endblock %}
 
@@ -245,9 +258,10 @@ Lacunas
         <div class="container-filtros mb-3">
 
             <form method="GET" action="{% url 'tela_lacunas' %}" class="input-group form-pesquisa">
-                <span class="input-group-text"><i class="fas fa-search"></i></span>
-                <input type="text" class="form-control" name="q" value="{{ search_query }}"
-                    placeholder="Pesquise por Escola...">
+                <input type="text" id="search-input" name="escola" class="form-control" placeholder="Pesquise por escola..." value="{{ search_query|default:'' }}">
+                    <button class="btn btn-outline-secondary btn-pesquisa-custom d-flex align-items-center justify-content-center" type="submit" aria-label="Pesquisar">
+                        <i class="bi bi-search"></i>
+                    </button>  
             </form>
 
             <div class="grupo-controles">
@@ -273,7 +287,7 @@ Lacunas
         </div>
 
 
-        <div class="table-responsive mb-3 mt-2">
+        <div class="table-responsive mb-3 mt-2 tabela">
             <table class="table table-striped mb-0">
                 <thead>
                     <tr>

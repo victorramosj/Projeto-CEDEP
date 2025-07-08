@@ -442,7 +442,7 @@ def tela_lacuna_view(request):
     
     lacunas_list = Lacuna.objects.select_related('escola').all()
     
-    search_query = request.GET.get('q', '')
+    search_query = request.GET.get('escola', '')
     data_filter = request.GET.get('data', '')
     status_filter = request.GET.get('status', '')
 
