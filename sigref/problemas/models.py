@@ -148,7 +148,7 @@ class ConfirmacaoAviso(models.Model):
     def confirmar_visualizado(self):
         """Método para confirmar que a escola visualizou o aviso"""
         self.status = 'visualizado'
-        self.save()  
+        self.save()  # <--- ADICIONE ESTA LINHA!
 
 
 
