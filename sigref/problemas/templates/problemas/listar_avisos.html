@@ -3,6 +3,126 @@
 
 {% block title %}Painel de Avisos{% endblock %}
 
+{% block extra_style %}
+<style>
+.shadow-hover {
+    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+.shadow-hover:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 .5rem 1rem rgba(0,0,0,.15)!important;
+}
+
+/* Garante que os botões dentro dos grupos preencham o espaço em telas menores */
+.btn-group.w-100 .btn {
+    flex-grow: 1;
+}
+
+.btn-group .btn {
+    font-weight: 500;
+    font-size: 0.9rem;
+}
+
+/* ====================================================================== */
+/* ==== PADRONIZAÇÃO DE CORES AZUIS PARA #003366 ====================== */
+/* ====================================================================== */
+:root {
+    --app-blue: #003366;
+    --app-blue-darker: #002244;
+    --app-blue-light: rgba(0, 51, 102, 0.1);
+    --app-grey: #777777;
+}
+
+/* Botões de criar (cor sólida) */
+.btn-primary {
+    background-color: var(--app-blue);
+    border-color: var(--app-blue);
+}
+
+.btn-primary:hover, .btn-primary:focus, .btn-primary:active {
+    background-color: var(--app-blue-light);
+    border-color: var(--app-blue);
+    color: var(--app-blue);
+}
+
+/* Botões de Filtro*/
+.btn-outline-primary {
+    color: var(--app-blue);
+    border-color: var(--app-blue);
+}
+.btn-outline-primary:hover, 
+.btn-outline-primary:focus, 
+.btn-outline-primary:active,
+.btn-group > a.btn-outline-primary.active,
+.btn-group > a.btn-outline-primary:active {
+    background-color: var(--app-blue);
+    border-color: var(--app-blue);
+    color: #ffffff;
+}
+
+/* Força o estado ativo nos filtros */
+.btn-group > .btn.btn-primary {
+    background-color: var(--app-blue);
+    border-color: var(--app-blue);
+    color: #ffffff;
+}
+
+/* Cor do texto e ícones */
+.text-primary {
+    color: var(--app-blue) !important;
+}
+
+/* Paginação */
+.pagination-custom .page-link {
+    color: var(--app-blue);
+}
+.pagination-custom .page-link:hover {
+    background-color: var(--app-blue-light);
+    border-color: #dee2e6;
+}
+.pagination-custom .page-item.active .page-link {
+    background-color: var(--app-blue);
+    border-color: var(--app-blue);
+    color: #ffffff;
+}
+
+/* Botão de filtro 'Pendentes' quando ativo */
+.btn-secondary-custom.active {
+    background-color: var(--app-grey);
+    border-color: var(--app-grey);
+    color: #ffffff;
+}
+
+/*=== ESTILO DE ICONE DE BUSCA ===*/
+.btn-pesquisa-custom {
+    padding: 0 !important;
+    width: 42px;
+}
+
+.btn-pesquisa-custom .bi-search {
+    color: var(--app-blue);
+    transition: color 0.15s ease-in-out;
+    margin-bottom: 5.1px;
+}
+
+/* Interação do botão de pesquisa */
+.btn-pesquisa-custom:hover, .btn-pesquisa-custom:active, .btn-pesquisa-custom:focus {
+    background-color: var(--app-blue);
+    color: #ffffff;
+    border-color: var(--app-blue);
+}
+
+.btn-pesquisa-custom:hover .bi-search, .btn-pesquisa-custom:active .bi-search, .btn-pesquisa-custom:focus .bi-search {
+    color: #ffffff;
+}
+
+.form-label-custom {
+    font-size: 1rem; /* Tamanho de fonte aumentado para os labels dos filtros */
+    color: var(--app-blue);
+}
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="container-fluid bg-light-blue py-2 py-md-3">
     <div class="container">
@@ -39,7 +159,7 @@
 
                 <form method="GET" action="{% url 'listar_avisos' %}">
                     <div class="row g-3 align-items-end">
-                        
+
                         <!-- Pesquisa por Escola -->
                         <div class="col-12 col-lg-4 col-md-12">
                             <label for="search-input" class="form-label fw-bold form-label-custom">Pesquisa por Escola</label>
@@ -321,56 +441,4 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 </script>
-
-<style>
-.shadow-hover {
-    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
-}
-.shadow-hover:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 .5rem 1rem rgba(0,0,0,.15)!important;
-}
-
-/* Garante que os botões dentro dos grupos preencham o espaço em telas menores */
-.btn-group.w-100 .btn {
-    flex-grow: 1;
-}
-
-.form-label-custom {
-    font-size: 1rem; /* Tamanho de fonte aumentado para os labels dos filtros */
-    color: #003366;
-}
-
-.btn-group .btn {
-    font-weight: 500;
-    font-size: 0.9rem;
-}
-
-
-/*=== ESTILO DE ICONE DE BUSCA ===*/
-.btn-pesquisa-custom {
-    padding: 0 !important;
-    width: 42px;
-}
-
-.btn-pesquisa-custom .bi-search {
-    color: #003366;
-    transition: color 0.15s ease-in-out;
-    margin-bottom: 5.1px;
-}
-
-/* Quando o usuário interage com o botão (hover, active, focus) */
-.btn-pesquisa-custom:hover, .btn-pesquisa-custom:active, .btn-pesquisa-custom:focus {
-    background-color: #003366;
-    color: #ffffff;
-    border-color: #003366;
-}
-
-/* Garante que a cor do ícone mude durante a interação */
-.btn-pesquisa-custom:hover .bi-search, .btn-pesquisa-custom:active .bi-search, .btn-pesquisa-custom:focus .bi-search {
-    color: #ffffff;
-}
-
-</style>
-
 {% endblock %}
