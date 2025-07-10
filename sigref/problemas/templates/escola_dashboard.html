@@ -8,7 +8,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" xintegrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
 
     <style>
         /* --------------------------------------------- */
@@ -174,10 +174,10 @@
         }
 
         .btn-relatar:hover {
-            background-color: #fcfcfc;
-            border-color: #039BE5;
+            background-color: #1e285a;
+            border-color: #1e285a;
             transform: translateY(-2px);
-            box-shadow: 0 4px 10px rgba(250, 250, 250, 0.3);
+            box-shadow: 0 4px 10px rgba(38, 50, 109, 0.3);
         }
 
         /* --------------------------------------------- */
@@ -256,71 +256,54 @@
         /* --------------------------------------------- */
         /* ---------------- RESPONSIVIDADE -------------- */
         /* --------------------------------------------- */
-
-        /* Extra large devices (large desktops, 1200px e acima) */
         @media (min-width: 1200px) {
             .info-escola-detalhes { grid-template-columns: repeat(2, 1fr); }
         }
-
-        /* Large devices (desktops, 992px to 1199px) */
         @media (max-width: 1199.98px) {
             .imagem-escola { width: 380px; }
         }
-
-        /* Medium devices (tablets, 768px to 991px) */
         @media (max-width: 991.98px) {
             .header-escola { flex-direction: column; }
             .info-escola { border-radius: var(--border-radius-lg) var(--border-radius-lg) 0 0; }
             .imagem-escola { width: 100%; height: 250px; border-radius: 0 0 var(--border-radius-lg) var(--border-radius-lg); }
-            
-            .row.g-4 {
-                --bs-gutter-y: 1.5rem;
-            }
+            .row.g-4 { --bs-gutter-y: 1.5rem; }
         }
-        
-        /* Small devices (landscape phones, 576px to 767px) */
         @media (max-width: 767.98px) {
-            .info-escola { padding: 1.1rem; }
+            .info-escola { padding: 1.5rem; }
             .info-escola h4 { font-size: 1.1rem; justify-content: center;}
-            .info-escola-detalhes { grid-template-columns: 1fr; text-align: center; gap: 0.7rem; }
-            .info-escola-detalhes p { justify-content: left; font-size: 0.7rem;}
-            .info-escola-detalhes i { font-size: 0.8rem; }
-
+            .info-escola-detalhes { grid-template-columns: 1fr; text-align: left; gap: 0.8rem; }
+            .info-escola-detalhes p { justify-content: flex-start; font-size: 0.8rem;}
+            .info-escola-detalhes i { font-size: 0.9rem; }
             .card-indicador h1 { font-size: 3rem; }
             .card-indicador { padding: 1.5rem; }
             .avisos-importantes { padding: 1.5rem; margin-top: 1.5rem; }
-
-            .titulo-secao { font-size: 1.1rem;  }
+            .titulo-secao { font-size: 1.1rem; }
             .card-status .numero { font-size: 2.25rem; }
             .card-status .descricao { font-size: 0.9rem; }
-
-            .btnDetalhe{ font-size: 0.7rem;}
         }
-        
     </style>
 {% endblock %}
 
 {% block content %}
-<div class="container mt-4 ">
+<div class="container mt-4 mb-5">
     {% with gre=user.greuser %}
     {% if not gre.is_escola %}
     <div class="d-flex flex-column flex-md-row justify-content-between align-items-center mb-4">
-        <h2 class="mb-3 mb-md-0 "> Perfil da escola </h2>
+        <h2 class="mb-3 mb-md-0"> Perfil da escola </h2>
         <a href="{% url 'selecionar_escola' %}" class="btn btn-outline-secondary">
             <i class="fas fa-arrow-left me-2"></i> Voltar
         </a>
     </div>
     {% endif %}
 
-    {#-- Mensagem de boas-vindas --#}
-    {#-- Bloco de Header com informações da escola --#}
+    {# Bloco de Header com informações da escola #}
     <div class="header-escola">
         <div class="info-escola">
             <h4><i class="fas fa-school fa-fw"></i> {{ escola.nome }} - {{ escola.inep }}</h4>
             <div class="info-escola-detalhes">
                 <p><i class="fas fa-map-marker-alt fa-fw"></i> <span>{{ escola.endereco|default:"Não cadastrado" }}</span></p>
                 <p><i class="fas fa-phone-alt fa-fw"></i> <span>{{ escola.telefone|default:"Não cadastrado" }}</span></p>
-                <p><i class="fas fa-user-shield fa-fw"></i> <span><strong>Gestor:</strong> {{ escola.nome_gestor }}</span></p>
+                <p><i class="fas fa-user-shield fa-fw"></i> <span><strong>Gestor:</strong> {{ escola.nome_gestor|default:"Não cadastrado" }}</span></p>
                 <p><i class="fas fa-phone-alt fa-fw"></i> <span><strong>Tel. Gestor:</strong> {{ escola.telefone_gestor|default:"Não cadastrado" }}</span></p>
                 <p><i class="fas fa-envelope fa-fw"></i> <span>{{ escola.email_escola|default:"Não cadastrado" }}</span></p>
                 <p><i class="fas fa-envelope fa-fw"></i> <span>{{ escola.email_gestor|default:"Não cadastrado" }}</span></p>
@@ -335,7 +318,36 @@
         </a>
     </div>
 
-    {#-- Bloco principal com cartões de ação e avisos --#}
+    {# NOVO BLOCO DE AVISO E BOTÃO DE ATUALIZAÇÃO #}
+    {% if gre.is_escola %}
+    <div class="card shadow-sm border-0 mb-4">
+        <div class="card-body d-flex flex-column flex-md-row justify-content-between align-items-center p-3">
+            {% if atualizacao_pendente %}
+                <div class="text-center text-md-start">
+                    <h5 class="mb-1" style="color: var(--orange);"><i class="fas fa-hourglass-half me-2"></i>Alteração em Análise</h5>
+                    <p class="mb-0 text-muted small">
+                        Sua solicitação de atualização enviada em {{ atualizacao_pendente.data_solicitacao|date:"d/m/Y" }} está aguardando validação.
+                    </p>
+                </div>
+                <button class="btn btn-primary mt-2 mt-md-0" disabled>
+                    <i class="fas fa-edit me-2"></i> Atualizar Dados (Aguardando)
+                </button>
+            {% else %}
+                <div class="text-center text-md-start">
+                     <h5 class="mb-1 text-primary"><i class="fas fa-info-circle me-2"></i>Mantenha seus dados atualizados</h5>
+                    <p class="mb-0 text-muted small">
+                        Clique no botão ao lado para corrigir ou atualizar as informações da escola e a foto da fachada.
+                    </p>
+                </div>
+                <button class="btn btn-primary mt-2 mt-md-0" data-bs-toggle="modal" data-bs-target="#modalAtualizarDados">
+                    <i class="fas fa-edit me-2"></i> Atualizar Dados
+                </button>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+
+    {# Bloco principal com cartões de ação e avisos #}
     <div class="row g-4">
     
         {% if gre.is_escola %}
@@ -381,13 +393,12 @@
         </div>
         {% endif %}
     </div>
-    {% endwith %}
 
-    {#-- Seção Histórico de Problemas --#}
+    {# Seção Histórico de Problemas #}
     <div class="mt-5">
         <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
             <h5 class="titulo-secao">Histórico de Problemas</h5>
-            <a href="{% url 'detalhes_problemas' escola_id=escola.id %}" class="btnDetalhe btn btn-sm btn-outline-primary">Ver Detalhes</a>
+            <a href="{% url 'detalhes_problemas' escola_id=escola.id %}" class="btn btn-sm btn-outline-primary">Ver Detalhes</a>
         </div>
         <div class="row g-3 g-lg-4">
             <div class="col-sm-6 col-xl-3"><div class="card-status resolvidos"><div class="numero">{{ problemas_resolvidos }}</div><div class="descricao"><i class="fas fa-check-circle"></i> Resolvidos</div></div></div>
@@ -397,11 +408,11 @@
         </div>
     </div>
 
-    {#-- Seção Histórico de Lacunas --#}
-    <div class="mt-5 mb-5">
+    {# Seção Histórico de Lacunas #}
+    <div class="mt-5">
         <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
             <h5 class="titulo-secao">Histórico de Lacunas</h5>
-            <a href="{% url 'tela_lacunas' escola_id=escola.id %}" class="btnDetalhe btn btn-sm btn-outline-primary">Ver Detalhes</a>
+            <a href="{% url 'tela_lacunas' escola_id=escola.id %}" class="btn btn-sm btn-outline-primary">Ver Detalhes</a>
         </div>
         <div class="row g-3 g-lg-4">
             <div class="col-sm-6 col-xl-3"><div class="card-status resolvidos"><div class="numero">{{ lacunas_resolvidas }}</div><div class="descricao"><i class="fas fa-check-circle"></i> Resolvidas</div></div></div>
@@ -410,13 +421,69 @@
             <div class="col-sm-6 col-xl-3"><div class="card-status este-mes"><div class="numero">{{ lacunas_este_mes }}</div><div class="descricao"><i class="fas fa-calendar-alt"></i> Este Mês</div></div></div>
         </div>
     </div>
+    
+    {% endwith %}
 </div>
 
-<!-- ================================================================== -->
-<!-- ======================= MODAIS =================================== -->
-<!-- ================================================================== -->
+{# NOVO MODAL PARA ATUALIZAR DADOS DA ESCOLA #}
+<div class="modal fade" id="modalAtualizarDados" tabindex="-1" aria-labelledby="modalAtualizarDadosLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <form method="post" enctype="multipart/form-data" action="{% url 'solicitar_atualizacao' escola_id=escola.id %}">
+                {% csrf_token %}
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title" id="modalAtualizarDadosLabel"><i class="fas fa-edit me-2"></i> Solicitar Atualização de Dados</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="text-muted small mb-4">
+                        Preencha apenas os campos que você deseja alterar. As informações serão enviadas para validação e aplicadas no sistema após a aprovação.
+                    </p>
+                    
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <label for="id_endereco" class="form-label">Endereço</label>
+                            <input type="text" name="endereco" id="id_endereco" class="form-control" value="{{ escola.endereco }}">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="id_telefone" class="form-label">Telefone da Escola</label>
+                            <input type="text" name="telefone" id="id_telefone" class="form-control" value="{{ escola.telefone }}">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="id_email_escola" class="form-label">E-mail da Escola</label>
+                            <input type="email" name="email_escola" id="id_email_escola" class="form-control" value="{{ escola.email_escola }}">
+                        </div>
+                        <hr class="my-3">
+                        <div class="col-md-6">
+                            <label for="id_nome_gestor" class="form-label">Nome do Gestor</label>
+                            <input type="text" name="nome_gestor" id="id_nome_gestor" class="form-control" value="{{ escola.nome_gestor }}">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="id_telefone_gestor" class="form-label">Telefone do Gestor</label>
+                            <input type="text" name="telefone_gestor" id="id_telefone_gestor" class="form-control" value="{{ escola.telefone_gestor }}">
+                        </div>
+                        <div class="col-12">
+                            <label for="id_email_gestor" class="form-label">E-mail do Gestor</label>
+                            <input type="email" name="email_gestor" id="id_email_gestor" class="form-control" value="{{ escola.email_gestor }}">
+                        </div>
+                         <hr class="my-3">
+                        <div class="col-12">
+                            <label for="id_foto_fachada" class="form-label">Nova Foto da Fachada</label>
+                            <input type="file" name="foto_fachada" class="form-control" id="id_foto_fachada" accept="image/*">
+                            <small class="form-text text-muted">Envie uma nova imagem para substituir a atual. A imagem antiga será mantida até a aprovação.</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary"><i class="fas fa-paper-plane me-2"></i>Enviar para Validação</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
 
-{#-- Modal para exibir a imagem da escola --#}
+{# Modal para exibir a imagem da escola #}
 <div class="modal fade" id="schoolImageModal" tabindex="-1" aria-labelledby="schoolImageModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content">
@@ -431,28 +498,28 @@
     </div>
 </div>
 
-{#-- Modal para relatar lacuna --#}
+{# Modal para relatar lacuna #}
 <div class="modal fade" id="modalRelatarLacuna" tabindex="-1" aria-labelledby="modalRelatarLacunaLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <form method="post" action="{% url 'relatar_lacuna' escola_id=escola.id %}">
                 {% csrf_token %}
                 <div class="modal-header bg-primary text-white">
-                    <h5 class="modal-title" id="modalRelatarLa</div>cunaLabel"><i class="fas fa-plus-circle me-2"></i> Nova Lacuna</h5>
+                    <h5 class="modal-title" id="modalRelatarLacunaLabel"><i class="fas fa-plus-circle me-2"></i> Nova Lacuna</h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
                 </div>
                 <div class="modal-body">
                     <p class="text-end text-danger small">Campos com <span class="fw-bold">*</span> são obrigatórios.</p>
                     <div class="mb-3">
                         <label class="form-label" for="disciplina_manual"><i class="fas fa-book-open me-2 text-primary"></i>Disciplina <span class="text-danger">*</span></label>
-                        <input id="disciplina_manual" type="te</div>xt" name="disciplina" class="form-control" placeholder="Ex: Matemática" required>
+                        <input id="disciplina_manual" type="text" name="disciplina" class="form-control" placeholder="Ex: Matemática" required>
                     </div>
                     <div class="mb-3">
                         <label class="form-label" for="carga_horaria_manual"><i class="fas fa-clock me-2 text-primary"></i>Carga Horária <span class="text-danger">*</span></label>
                         <select id="carga_horaria_manual" name="carga_horaria" class="form-select" required>
-                            <option value="" disabled selected>Selecione a carga horári</div>a</option>
+                            <option value="" disabled selected>Selecione a carga horária</option>
                             <option value="150">150 horas</option>
-           </label>                 <option value="200">200 horas</option>
+                            <option value="200">200 horas</option>
                         </select>
                     </div>
                 </div>
@@ -465,7 +532,7 @@
     </div>
 </div>
 
-{#-- Modal para relatar problema --#}
+{# Modal para relatar problema #}
 <div class="modal fade" id="modalRelatarProblema" tabindex="-1" aria-labelledby="modalRelatarProblemaLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
@@ -482,8 +549,14 @@
                         <textarea id="descricao_manual" name="descricao" class="form-control" rows="4" placeholder="Descreva o problema em detalhes..." required style="resize: vertical;"></textarea>
                     </div>
                     <div class="row g-3">
-                        <div class="col-md-6"><label class="form-label"><i class="fas fa-sitemap me-2 text-primary"></i>Setor <span class="text-danger">*</span></label>{{ form_problema.setor }}</div>
-                        <div class="col-md-6"><label class="form-label"><i class="fas fa-paperclip me-2 text-primary"></i>Anexo</label><input type="file" name="anexo" class="form-control" multiple></div>
+                        <div class="col-md-6">
+                            <label class="form-label"><i class="fas fa-sitemap me-2 text-primary"></i>Setor <span class="text-danger">*</span></label>
+                            {{ form_problema.setor }}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label"><i class="fas fa-paperclip me-2 text-primary"></i>Anexo</label>
+                            <input type="file" name="anexo" class="form-control" multiple>
+                        </div>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -495,7 +568,7 @@
     </div>
 </div>
 
-{#-- Modal para exibir todos os avisos --#}
+{# Modal para exibir todos os avisos #}
 <div class="modal fade" id="modalAvisos" tabindex="-1" aria-labelledby="modalAvisosLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
         <div class="modal-content shadow-lg border-0 rounded-4">
@@ -507,19 +580,13 @@
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
             </div>
             
-            <div class="p-3 border-bottom bg-light sticky-top rounded-top-0 rounded-4">
+            <div class="p-3 border-bottom bg-light sticky-top">
                 <div id="modal-alert-placeholder"></div>
                 <div class="btn-toolbar justify-content-center filter-btn-group" role="toolbar" aria-label="Filtros de avisos">
                     <div class="btn-group btn-group-sm" role="group">
-                        <button type="button" class="btn btn-outline-primary active" data-filter-status="todos">
-                            <i class="fas fa-list"></i> Todos
-                        </button>
-                        <button type="button" class="btn btn-outline-warning" data-filter-status="pendente">
-                            <i class="fas fa-clock"></i> Pendentes
-                        </button>
-                        <button type="button" class="btn btn-outline-success" data-filter-status="visualizado">
-                            <i class="fas fa-check"></i> Lidos
-                        </button>
+                        <button type="button" class="btn btn-outline-primary active" data-filter-status="todos"><i class="fas fa-list"></i> Todos</button>
+                        <button type="button" class="btn btn-outline-warning" data-filter-status="pendente"><i class="fas fa-clock"></i> Pendentes</button>
+                        <button type="button" class="btn btn-outline-success" data-filter-status="visualizado"><i class="fas fa-check"></i> Lidos</button>
                     </div>
                 </div>
             </div>
@@ -545,22 +612,15 @@
                                         <span class="badge bg-success px-2 py-1">Baixa</span>
                                     {% endif %}
                                     {% if aviso.ja_visualizado %}
-                                        <span class="badge bg-success ms-1" id="status-aviso-{{ aviso.id }}">
-                                            <i class="fas fa-check-circle me-1"></i> Visto
-                                        </span>
+                                        <span class="badge bg-success ms-1" id="status-aviso-{{ aviso.id }}"><i class="fas fa-check-circle me-1"></i> Visto</span>
                                     {% else %}
-                                        <span class="badge bg-secondary ms-1" id="status-aviso-{{ aviso.id }}">
-                                            <i class="fas fa-clock me-1"></i> Pendente
-                                        </span>
+                                        <span class="badge bg-secondary ms-1" id="status-aviso-{{ aviso.id }}"><i class="fas fa-clock me-1"></i> Pendente</span>
                                     {% endif %}
                                 </div>
                             </div>
                             <div class="card-body py-3 px-3">
                                 <div class="d-flex flex-wrap gap-2 mb-2">
-                                    <button class="btn btn-sm btn-outline-primary visualizar-aviso-btn rounded-pill px-3" type="button"
-                                            data-bs-toggle="collapse" data-bs-target="#collapseAviso{{ aviso.id }}"
-                                            aria-expanded="false" aria-controls="collapseAviso{{ aviso.id }}"
-                                            data-aviso-id="{{ aviso.id }}">
+                                    <button class="btn btn-sm btn-outline-primary visualizar-aviso-btn rounded-pill px-3" type="button" data-bs-toggle="collapse" data-bs-target="#collapseAviso{{ aviso.id }}" aria-expanded="false" aria-controls="collapseAviso{{ aviso.id }}" data-aviso-id="{{ aviso.id }}">
                                         <i class="fas fa-eye me-1"></i> Visualizar
                                     </button>
                                     {% if not aviso.ja_visualizado %}
@@ -606,14 +666,8 @@
 {% block extra_script %}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-
     'use strict';
 
-    /**
-     * Helper para obter o CSRF token do Django.
-     * @param {string} name - O nome do cookie (geralmente 'csrftoken').
-     * @returns {string|null} - O valor do cookie.
-     */
     function getCookie(name) {
         let cookieValue = null;
         if (document.cookie && document.cookie !== '') {
@@ -629,12 +683,6 @@ document.addEventListener('DOMContentLoaded', function() {
         return cookieValue;
     }
 
-    /**
-     * Exibe um alerta não-bloqueante dentro de um modal.
-     * @param {string} placeholderSelector - Seletor do elemento onde o alerta será inserido.
-     * @param {string} message - A mensagem de erro.
-     * @param {string} type - O tipo do alerta (e.g., 'danger', 'success').
-     */
     function showModalAlert(placeholderSelector, message, type = 'danger') {
         const placeholder = document.querySelector(placeholderSelector);
         if (!placeholder) return;
@@ -649,15 +697,12 @@ document.addEventListener('DOMContentLoaded', function() {
 
         placeholder.append(wrapper);
 
-        // Remove o alerta após 5 segundos
         setTimeout(() => {
             const bsAlert = new bootstrap.Alert(wrapper.firstChild);
             if (bsAlert) bsAlert.close();
         }, 5000);
     }
 
-
-    // ---- SCRIPT PARA O MODAL DA IMAGEM DA ESCOLA ----
     const schoolImageModal = document.getElementById('schoolImageModal');
     if (schoolImageModal) {
         schoolImageModal.addEventListener('show.bs.modal', function (event) {
@@ -669,7 +714,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // ---- SCRIPT PARA O MODAL DE AVISOS ----
     const modalAvisos = document.getElementById('modalAvisos');
     if (modalAvisos) {
         const avisosContainer = modalAvisos.querySelector('#avisos-container');
@@ -691,7 +735,7 @@ document.addEventListener('DOMContentLoaded', function() {
             });
             
             if (emptyState) {
-                emptyState.style.display = hasVisibleItems ? 'none' : '';
+                emptyState.style.display = hasVisibleItems ? 'none' : 'block';
             }
         };
 
@@ -705,7 +749,6 @@ document.addEventListener('DOMContentLoaded', function() {
         
         modalAvisos.addEventListener('shown.bs.modal', applyFiltersAndSort);
 
-        // Delegação de eventos para os botões dentro dos cards de aviso
         avisosContainer.addEventListener('click', function(event) {
             const visualizarBtn = event.target.closest('.visualizar-aviso-btn');
             const marcarBtn = event.target.closest('.marcar-como-visualizado-btn');
@@ -713,7 +756,6 @@ document.addEventListener('DOMContentLoaded', function() {
             if (visualizarBtn) {
                 const avisoId = visualizarBtn.dataset.avisoId;
                 const collapseElement = document.getElementById(`collapseAviso${avisoId}`);
-                // Marcar como lido ao expandir, se não estiver já expandido
                 if (collapseElement && !collapseElement.classList.contains('show')) {
                     marcarAvisoComoVisualizado(avisoId, marcarBtn);
                 }
@@ -724,19 +766,14 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    /**
-     * Função para marcar um aviso como visualizado via AJAX.
-     * @param {string} avisoId - O ID do aviso.
-     * @param {HTMLElement} buttonElement - O botão que acionou a ação.
-     */
     async function marcarAvisoComoVisualizado(avisoId, buttonElement) {
         const avisoCard = document.querySelector(`.aviso-item[data-aviso-id="${avisoId}"]`);
-        // Não faz nada se já foi visualizado
         if (!avisoId || !avisoCard || avisoCard.dataset.status === 'visualizado') {
             return;
         }
 
-        if (buttonElement) buttonElement.classList.add('loading');
+        const btnToLoad = buttonElement || avisoCard.querySelector('.marcar-como-visualizado-btn');
+        if (btnToLoad) btnToLoad.classList.add('loading');
 
         try {
             const response = await fetch(`{% url 'confirmar_visualizacao_aviso' 0 %}`.replace('0', avisoId), {
@@ -756,15 +793,13 @@ document.addEventListener('DOMContentLoaded', function() {
             const data = await response.json();
 
             if (data.status === 'success' || data.status === 'already_viewed') {
-                // Atualiza o card
                 avisoCard.dataset.status = 'visualizado';
                 const statusBadge = document.getElementById(`status-aviso-${avisoId}`);
                 if (statusBadge) {
-                    statusBadge.textContent = 'Visto';
-                    statusBadge.className = 'badge bg-success ms-2';
-                    statusBadge.innerHTML += ' <i class="fas fa-check"></i>';
+                    statusBadge.className = 'badge bg-success ms-1';
+                    statusBadge.innerHTML = `<i class="fas fa-check-circle me-1"></i> Visto`;
                 }
-                if(buttonElement) buttonElement.remove();
+                if(btnToLoad) btnToLoad.remove();
             } else {
                 throw new Error(data.message || 'Falha ao atualizar o status do aviso.');
             }
@@ -773,7 +808,7 @@ document.addEventListener('DOMContentLoaded', function() {
             console.error(`Erro ao marcar aviso ${avisoId} como lido:`, error);
             showModalAlert('#modal-alert-placeholder', `Ocorreu um erro: ${error.message}`);
         } finally {
-            if (buttonElement) buttonElement.classList.remove('loading');
+            if (btnToLoad) btnToLoad.classList.remove('loading');
         }
     }
 });
