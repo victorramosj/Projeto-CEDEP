@@ -163,3 +163,13 @@ def sobre(request):
 def manual_usuario(request):
     # Sua lógica para a página do manual aqui
     return render(request, 'cedepe/manual.html')
+
+# =============================================================================
+#  VIEW PARA DA PÁGINA 'LINKS ÚTEIS'
+# =============================================================================
+@login_required
+def links_uteis_view(request):
+    """
+    Exibe a página de links úteis.
+    """
+    return render(request, 'cedepe/linksuteis.html')
