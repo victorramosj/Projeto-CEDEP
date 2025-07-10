@@ -397,13 +397,16 @@
       {% endwith %}
         
         {# --- Links Úteis --- #}
+       
         <li class="nav-item">
             <a href="{% url 'linksuteis' %}" class="nav-link text-white sidebar-link {% if request.resolver_match.url_name == 'linksuteis' %}active{% endif %}">
                 <i class="fas fa-globe me-2"></i>Links Úteis
             </a>
         </li>
+       
 
-        {% if user.is_authenticated and user.is_staff or user.is_superuser %}
+
+        {% if user.is_authenticated and user.is_staff or user.is_superuser  %}
         {# --- Central de controle --- #}
         <li class="nav-item">
           <a href="/admin" class="nav-link text-white sidebar-link {% if request.path == '/admin/' %}active{% endif %}">

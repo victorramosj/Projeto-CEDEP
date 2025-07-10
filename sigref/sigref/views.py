@@ -167,7 +167,6 @@ def manual_usuario(request):
 # =============================================================================
 #  VIEW PARA DA PÁGINA 'LINKS ÚTEIS'
 # =============================================================================
-@login_required
 def links_uteis_view(request):
     """
     Exibe a página de links úteis.
