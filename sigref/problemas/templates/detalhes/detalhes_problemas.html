@@ -102,8 +102,8 @@
         <h1 class="titulo-secao mb-0" style="border-color: var(--accent-color);">
             <i class="fas fa-tasks text-primary me-2"></i>Histórico de Problemas
         </h1>
-        <a href="{% if escola %}{% url 'dashboard_escola' escola_id=escola.id %}{% else %}{% url 'dashboard_escola' escola_id=problemas.0.escola.id %}{% endif %}" class="btn btn-outline-secondary btn-sm">
-            <i class="fas fa-arrow-left me-2"></i>Voltar ao Dashboard
+        <a type="button" class="btn btn-outline-secondary" onclick="history.back()" >
+            <i class="fas fa-arrow-left me-2"></i> Voltar
         </a>
     </div>
 
@@ -121,17 +121,17 @@
     <div class="vstack gap-3" id="problemas-list">
         {% for problema in problemas %}
             <div class="problema-card p-3" 
-                 data-status="{{ problema.status }}" 
-                 data-search-text="{{ problema.usuario.user.get_full_name|default:problema.usuario.user.username|lower }} {{ problema.setor.nome|default:''|lower }} {{ problema.descricao|lower }}"
-                 data-bs-toggle="modal" 
-                 data-bs-target="#modalDetalheProblema"
-                 data-problema-id="{{ problema.id }}"
-                 data-problema-descricao="{{ problema.descricao }}"
-                 data-problema-usuario="{{ problema.usuario.user.get_full_name|default:problema.usuario.user.username }}"
-                 data-problema-setor="{{ problema.setor.nome|default:'N/A' }}"
-                 data-problema-data="{{ problema.criado_em|date:'d/m/Y H:i' }}"
-                 data-problema-status="{{ problema.status }}"
-                 data-problema-anexo-url="{% if problema.anexo %}{{ problema.anexo.url }}{% endif %}">
+                data-status="{{ problema.status }}" 
+                data-search-text="{{ problema.usuario.user.get_full_name|default:problema.usuario.user.username|lower }} {{ problema.setor.nome|default:''|lower }} {{ problema.descricao|lower }}"
+                data-bs-toggle="modal" 
+                data-bs-target="#modalDetalheProblema"
+                data-problema-id="{{ problema.id }}"
+                data-problema-descricao="{{ problema.descricao }}"
+                data-problema-usuario="{{ problema.usuario.user.get_full_name|default:problema.usuario.user.username }}"
+                data-problema-setor="{{ problema.setor.nome|default:'N/A' }}"
+                data-problema-data="{{ problema.criado_em|date:'d/m/Y H:i' }}"
+                data-problema-status="{{ problema.status }}"
+                data-problema-anexo-url="{% if problema.anexo %}{{ problema.anexo.url }}{% endif %}">
 
                 <div class="d-flex flex-wrap align-items-start">
                     <!-- Descrição -->

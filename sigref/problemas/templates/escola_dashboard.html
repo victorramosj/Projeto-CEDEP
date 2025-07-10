@@ -289,8 +289,8 @@
     {% with gre=user.greuser %}
     {% if not gre.is_escola %}
     <div class="d-flex flex-column flex-md-row justify-content-between align-items-center mb-4">
-        <h2 class="mb-3 mb-md-0"> Perfil da escola </h2>
-        <a href="{% url 'selecionar_escola' %}" class="btn btn-outline-secondary">
+        <h2 class="mb-3 mb-md-0 "> Perfil da escola </h2>
+        <a type="button" class="btn btn-outline-secondary" onclick="history.back()" >
             <i class="fas fa-arrow-left me-2"></i> Voltar
         </a>
     </div>
