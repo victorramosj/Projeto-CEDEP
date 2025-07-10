@@ -1,0 +1,29 @@
+{% extends "cedepe/base.html" %}
+
+{% block title %}Validações Pendentes{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2 class="mb-4">Solicitações de Atualização Pendentes</h2>
+
+    {% if solicitacoes %}
+        <div class="list-group">
+            {% for solicitacao in solicitacoes %}
+                <a href="{% url 'detalhe_validacao' pk=solicitacao.pk %}" class="list-group-item list-group-item-action flex-column align-items-start">
+                    <div class="d-flex w-100 justify-content-between">
+                        <h5 class="mb-1">Escola: {{ solicitacao.escola.nome }}</h5>
+                        <small>{{ solicitacao.data_solicitacao|date:"d/m/Y H:i" }}</small>
+                    </div>
+                    <p class="mb-1">Solicitado por: {{ solicitacao.solicitado_por.username|default:"Usuário desconhecido" }}</p>
+                    <small class="text-warning"><i class="fas fa-hourglass-half"></i> Aguardando análise</small>
+                </a>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="alert alert-success text-center">
+            <i class="fas fa-check-circle fa-2x mb-3"></i>
+            <p class="h5">Nenhuma solicitação pendente no momento!</p>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

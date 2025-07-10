@@ -405,7 +405,16 @@
             <i class="fas fa-tools me-2"></i>Central de controle
           </a>
         </li>
+        {% if user.is_superuser %}
+            <li class="nav-item">
+                <a class="nav-link text-warning" href="{% url 'lista_validacoes_pendentes' %}">
+                    <i class="fas fa-check-double"></i> Validações Pendentes
+                </a>
+            </li>
         {% endif %}
+        {% endif %}
+</ul>
+
       </ul>
         
       <div class="mt-auto"> <!-- User info and logout at the bottom -->

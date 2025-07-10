@@ -39,106 +39,99 @@ from .serializers import (AvisoImportanteSerializer, LacunaSerializer, ProblemaU
 # =============================================================================
 #  VIEW DA DASHBOARD
 # =============================================================================
+
 class EscolaDashboardView(LoginRequiredMixin, TemplateView):
-    # O seu pode ser 'escola_dashboard.html' ou 'cedepe/escola_dashboard.html', ajuste se necessário.
+    # O seu pode ser 'escola_dashboard.html' ou 'cedepe/dashboard.html', ajuste se necessário.
     template_name = 'escola_dashboard.html'
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         gre_user = self.request.user.greuser
-
-        # variável escola
         escola = None
 
-        # Se o usuário for do tipo 'escola', usa a sua própria escola
+        # Determina a escola a ser exibida
         if gre_user.is_escola():
             escola = gre_user.escolas.first()
-            context['escola'] = escola
-        # Caso contrário, busca a escola pelo ID passado na URL (para admins, etc.)
         else:
             escola_id = self.kwargs.get('escola_id')
             if escola_id:
                 escola = get_object_or_404(Escola, id=escola_id)
-                context['escola'] = escola
 
-        # Verifique se a variável escola foi atribuída corretamente antes de prosseguir
+        # Se a escola não for encontrada, interrompe e retorna um erro
         if escola is None:
             context['error_message'] = "Escola não encontrada ou não associada ao usuário."
-        else:
-            # =================================================================
-            # LÓGICA DE AVISOS - INÍCIO DA CORREÇÃO
-            # =================================================================
+            return context
 
-            # Pega todos os avisos válidos para a escola (seu código original, que está correto)
-            avisos_queryset = AvisoImportante.objects.filter(
-                escola=escola,
-                ativo=True
-            ).filter(
-                Q(data_expiracao__isnull=True) | Q(data_expiracao__gte=timezone.now())
-            ).order_by('-prioridade', '-data_criacao')
+        # =========================================================================
+        # NOVA LÓGICA: VERIFICAÇÃO DE ATUALIZAÇÃO PENDENTE
+        # =========================================================================
+        # Busca a solicitação de atualização mais recente que ainda está pendente.
+        # O template usará essa variável para mostrar o aviso de "Aguardando Validação".
+        atualizacao_pendente = AtualizacaoEscola.objects.filter(
+            escola=escola, 
+            status='pendente'
+        ).order_by('-data_solicitacao').first()
+        # =========================================================================
 
-            # Busca os IDs de todos os avisos que ESTA escola já marcou como 'visualizado'
-            # Usamos set() para uma verificação de 'in' muito mais rápida.
-            avisos_visualizados_ids = set(ConfirmacaoAviso.objects.filter(
-                escola=escola,
-                status='visualizado'
-            ).values_list('aviso_id', flat=True))
+        # Lógica de Avisos (seu código original, que está correto)
+        avisos_queryset = AvisoImportante.objects.filter(
+            escola=escola,
+            ativo=True,
+            data_expiracao__gte=timezone.now()
+        ).order_by('-prioridade', '-data_criacao')
+        
+        avisos_visualizados_ids = set(ConfirmacaoAviso.objects.filter(
+            escola=escola,
+            status='visualizado'
+        ).values_list('aviso_id', flat=True))
 
-            # Percorre a lista de avisos e adiciona um novo atributo "ja_visualizado"
-            # Este atributo será True ou False e poderá ser usado diretamente no template
-            for aviso in avisos_queryset:
-                aviso.ja_visualizado = aviso.id in avisos_visualizados_ids
-            
-            # AGORA, a variável 'avisos_queryset' contém a informação de visualização.
-            
-            # =================================================================
-            # LÓGICA DE AVISOS - FIM DA CORREÇÃO
-            # =================================================================
+        # Adiciona o atributo 'ja_visualizado' a cada aviso
+        for aviso in avisos_queryset:
+            aviso.ja_visualizado = aviso.id in avisos_visualizados_ids
 
-            agora = timezone.now()
+        # Coleta de estatísticas
+        agora = timezone.now()
+        
+        # Estatísticas de lacunas para a escola
+        lacunas_escola = Lacuna.objects.filter(escola=escola)
+        total_lacunas = lacunas_escola.count()
+        lacunas_resolvidas = lacunas_escola.filter(status='R').count()
+        lacunas_pendentes = lacunas_escola.filter(status='P').count()
+        lacunas_andamento = lacunas_escola.filter(status='E').count()
+        lacunas_este_mes = lacunas_escola.filter(criado_em__month=agora.month, criado_em__year=agora.year).count()
+        
+        # Estatísticas de problemas para a escola
+        problemas_escola = ProblemaUsuario.objects.filter(escola=escola)
+        total_problemas = problemas_escola.count()
+        problemas_resolvidos = problemas_escola.filter(status='R').count()
+        problemas_pendentes = problemas_escola.filter(status='P').count()
+        problemas_andamento = problemas_escola.filter(status='E').count()
+        problemas_este_mes = problemas_escola.filter(criado_em__month=agora.month, criado_em__year=agora.year).count()
 
-            # Estatísticas de lacunas
-            todas_lacunas = Lacuna.objects.all()
-            lacunas_total = todas_lacunas.count()
-            total_lacunas = Lacuna.objects.filter(escola=escola).count()
-            lacunas_resolvidas = Lacuna.objects.filter(escola=escola, status='R').count()
-            lacunas_pendentes = Lacuna.objects.filter(escola=escola, status='P').count()
-            lacunas_andamento = Lacuna.objects.filter(escola=escola, status='E').count()
-            lacunas_este_mes = Lacuna.objects.filter(escola=escola, criado_em__month=agora.month, criado_em__year=agora.year).count()
-            
-            # Estatísticas de problemas
-            total_problemas = ProblemaUsuario.objects.filter(escola=escola).count()
-            problemas = ProblemaUsuario.objects.filter(escola=escola)
-            problemas_este_mes = problemas.filter(criado_em__month=agora.month, criado_em__year=agora.year).count()
-            problemas_resolvidos = problemas.filter(status='R').count()
-            problemas_pendentes = problemas.filter(status='P').count()
-            problemas_andamento = problemas.filter(status='E').count()
+        # Contexto final enviado ao template
+        context.update({
+            'gre_user': gre_user,
+            'escola': escola,
+            'atualizacao_pendente': atualizacao_pendente,  # <-- NOVO: Passa a solicitação pendente para o template
+            'avisos': avisos_queryset,
+            'setor': Setor.objects.all(),
+            'form_problema': ProblemaUsuarioForm(),
+            'form_lacuna': LacunaForm(),
 
-            # Contexto final enviado ao template
-            context.update({
-                'gre_user': gre_user,
-                'escola': escola,
-                'avisos': avisos_queryset,  # Passa a lista de avisos JÁ MODIFICADA
-                'setor': Setor.objects.all(),
-                'form_problema': ProblemaUsuarioForm(),
-                'form_lacuna': LacunaForm(),
-                'todas_lacunas': todas_lacunas,
-                'lacunas_total': lacunas_total,
+            # Contexto de Lacunas
+            'total_lacunas': total_lacunas,
+            'lacunas_resolvidas': lacunas_resolvidas,
+            'lacunas_pendentes': lacunas_pendentes,
+            'lacunas_andamento': lacunas_andamento,
+            'lacunas_este_mes': lacunas_este_mes,
 
-                # CONTEXTO DE LACUNAS ESPECIFICO POR ESCOLA
-                'total_lacunas': total_lacunas,
-                'lacunas_resolvidas': lacunas_resolvidas,
-                'lacunas_pendentes': lacunas_pendentes,
-                'lacunas_andamento': lacunas_andamento,
-                'lacunas_este_mes': lacunas_este_mes,
-
-                # CONTEXTO DE PROBLEMAS ESPECIFICO POR ESCOLA
-                'total_problemas': total_problemas,
-                'problemas_resolvidos': problemas_resolvidos,
-                'problemas_pendentes': problemas_pendentes,
-                'problemas_andamento': problemas_andamento,
-                'problemas_este_mes': problemas_este_mes,
-            })
+            # Contexto de Problemas
+            'total_problemas': total_problemas,
+            'problemas_resolvidos': problemas_resolvidos,
+            'problemas_pendentes': problemas_pendentes,
+            'problemas_andamento': problemas_andamento,
+            'problemas_este_mes': problemas_este_mes,
+        })
 
         return context
 
@@ -962,3 +955,140 @@ def detalhes_lacunas_view(request, escola_id):
 
     # Renderiza o template de detalhes
     return render(request, 'detalhes/detalhes_lacunas.html', context)
+
+
+
+# cedepe/views.py
+
+from django.shortcuts import render, get_object_or_404, redirect
+from django.contrib import messages
+from django.contrib.auth.decorators import login_required
+
+# Importe os modelos e o formulário necessários para esta view
+from .models import Escola, AtualizacaoEscola
+from .forms import AtualizacaoEscolaForm
+
+# ... (sua outra view, EscolaDashboardView, fica aqui) ...
+
+
+@login_required
+def solicitar_atualizacao(request, escola_id):
+    """
+    Processa o POST do formulário de atualização de dados da escola.
+    Cria uma nova instância de AtualizacaoEscola para validação.
+    """
+    # Garante que a escola referenciada na URL existe.
+    escola = get_object_or_404(Escola, id=escola_id)
+
+    # Esta view só deve processar dados via POST.
+    if request.method == 'POST':
+        # VERIFICAÇÃO: Não permite uma nova solicitação se uma já estiver pendente.
+        if AtualizacaoEscola.objects.filter(escola=escola, status='pendente').exists():
+            messages.error(request, 'Já existe uma solicitação de atualização pendente para esta escola.')
+            return redirect('dashboard_escola', escola_id=escola.id)
+
+        # Cria uma instância do formulário com os dados da requisição (POST) e os arquivos (FILES).
+        form = AtualizacaoEscolaForm(request.POST, request.FILES)
+
+        # Valida o formulário.
+        if form.is_valid():
+            # Cria o objeto de atualização em memória, sem salvar no banco ainda.
+            atualizacao = form.save(commit=False)
+            
+            # Associa a solicitação à escola e ao usuário logado.
+            atualizacao.escola = escola
+            atualizacao.solicitado_por = request.user
+            
+            # Agora, salva o objeto no banco de dados.
+            atualizacao.save()
+            
+            messages.success(request, 'Sua solicitação de atualização foi enviada com sucesso e aguarda validação.')
+            return redirect('dashboard_escola', escola_id=escola.id)
+        else:
+            # Se o formulário for inválido, informa o usuário.
+            messages.error(request, 'Houve um erro no formulário. Por favor, verifique os dados e tente novamente.')
+    
+    # Se o método não for POST (ex: alguém digitou a URL direto no navegador), redireciona.
+    return redirect('dashboard_escola', escola_id=escola.id)
+
+
+
+# Em: problemas/views.py
+from django.views.generic import ListView
+from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
+from .models import AtualizacaoEscola
+
+# ... suas outras views ...
+
+# NOVA VIEW PARA LISTAR SOLICITAÇÕES
+class ListaValidacoesView(LoginRequiredMixin, UserPassesTestMixin, ListView):
+    model = AtualizacaoEscola
+    template_name = 'problemas/lista_validacoes.html'  # Novo template que vamos criar
+    context_object_name = 'solicitacoes'
+
+    def test_func(self):
+        # Apenas superusuários ou membros de um grupo específico podem ver esta página
+        return self.request.user.is_superuser
+
+    def get_queryset(self):
+        # Retorna apenas as solicitações com status 'pendente'
+        return AtualizacaoEscola.objects.filter(status='pendente').order_by('data_solicitacao')
+    
+# Em: problemas/views.py
+from django.views.generic import DetailView
+from django.shortcuts import redirect
+from django.contrib import messages
+from .models import Escola # Certifique-se de que Escola está importado
+
+# ... (outras views) ...
+
+# NOVA VIEW PARA DETALHAR, APROVAR E RECUSAR
+class DetalheValidacaoView(LoginRequiredMixin, UserPassesTestMixin, DetailView):
+    model = AtualizacaoEscola
+    template_name = 'problemas/detalhe_validacao.html'
+    context_object_name = 'solicitacao'
+
+    def test_func(self):
+        return self.request.user.is_superuser
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # Passa a escola associada para o template também, para comparar os dados
+        context['escola'] = self.get_object().escola
+        return context
+
+    def post(self, request, *args, **kwargs):
+        solicitacao = self.get_object()
+        escola = solicitacao.escola
+
+        # Se o botão 'aprovar' foi clicado
+        if 'aprovar' in request.POST:
+            # Itera sobre os campos do formulário e atualiza a escola
+            # Apenas atualiza se um novo valor foi enviado na solicitação
+            if solicitacao.endereco:
+                escola.endereco = solicitacao.endereco
+            if solicitacao.telefone:
+                escola.telefone = solicitacao.telefone
+            if solicitacao.email_escola:
+                escola.email_escola = solicitacao.email_escola
+            if solicitacao.nome_gestor:
+                escola.nome_gestor = solicitacao.nome_gestor
+            if solicitacao.telefone_gestor:
+                escola.telefone_gestor = solicitacao.telefone_gestor
+            if solicitacao.email_gestor:
+                escola.email_gestor = solicitacao.email_gestor
+            if solicitacao.foto_fachada:
+                escola.foto_fachada = solicitacao.foto_fachada
+            
+            escola.save() # Salva o objeto Escola com os novos dados
+            solicitacao.status = 'aprovado'
+            messages.success(request, f"A atualização para a escola {escola.nome} foi APROVADA.")
+
+        # Se o botão 'recusar' foi clicado
+        elif 'recusar' in request.POST:
+            solicitacao.status = 'recusado'
+            solicitacao.observacao_validacao = request.POST.get('observacao', '') # Salva a justificativa
+            messages.warning(request, f"A atualização para a escola {escola.nome} foi RECUSADA.")
+        
+        solicitacao.save() # Salva a mudança de status da solicitação
+        return redirect('lista_validacoes_pendentes')

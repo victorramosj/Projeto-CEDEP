@@ -73,6 +73,12 @@ urlpatterns = [
     
     # URL de detalhes para LACUNAS (espera um escola_id)
     path('lacunas/detalhes/<int:escola_id>/', views.detalhes_lacunas_view, name='tela_lacunas'),
+
+    path('escola/<int:escola_id>/solicitar-atualizacao/', views.solicitar_atualizacao, name='solicitar_atualizacao'),
+    path('validacoes/pendentes/', views.ListaValidacoesView.as_view(), name='lista_validacoes_pendentes'),
+    path('validacoes/detalhe/<int:pk>/', views.DetalheValidacaoView.as_view(), name='detalhe_validacao'),
+
+
 ]
 
 urlpatterns += router.urls
