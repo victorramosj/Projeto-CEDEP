@@ -50,6 +50,58 @@
         border-radius: 0.375rem;
         padding: 1rem;
     }
+
+    /* --- Upload de Imagem Interativo --- */
+    /* Estilo para os 'badges' (etiquetas) das escolas, permitindo quebra de linha */
+    .badge-wrap {
+        white-space: normal;
+        word-break: break-word;
+        text-align: left;
+        line-height: 1.4;
+        max-width: 100%;
+    }
+
+    /* Estilo para a nova área de upload de imagem (arraste e solte) */
+    .file-drop-area {
+        position: relative; /* Necessário para posicionar o input de arquivo invisível por cima */
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        padding: 40px;
+        border: 2px dashed #ccc;
+        border-radius: 0.375rem;
+        background-color: #f8f9fa;
+        color: #6c757d;
+        cursor: pointer;
+        transition: border-color .15s ease-in-out, background-color .15s ease-in-out;
+        text-align: center;
+    }
+
+    /* Efeito visual ao passar o mouse sobre a área de upload */
+    .file-drop-area:hover {
+        border-color: #0d6efd; /* Cor primária do Bootstrap */
+        background-color: #e9f2ff;
+    }
+
+    /* Input de arquivo real, fica invisível mas funcional por cima da área */
+    .file-drop-area input[type="file"] {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        top: 0;
+        left: 0;
+        opacity: 0; /* Totalmente transparente */
+        cursor: pointer;
+    }
+
+    /* Estilo do ícone de nuvem na área de upload */
+    .file-drop-area .upload-icon {
+        font-size: 3rem;
+        color: #0d6efd;
+    }
+    
 </style>
 
 <div class="container-fluid bg-light-blue py-2 py-md-3">
@@ -70,6 +122,7 @@
         <div class="card shadow-sm mb-4">
             <div class="card-body p-4">
 
+                <!-- Seção para exibir mensagens do Django (ex: sucesso, erro) -->
                 {% if messages %}
                     {% for message in messages %}
                         <div class="alert alert-info alert-dismissible fade show" role="alert">
@@ -78,104 +131,111 @@
                         </div>
                     {% endfor %}
                 {% endif %}
-
+                
+                
+                <!-- Formulário principal -->
                 <form method="post" id="avisoForm" enctype="multipart/form-data">
                     {% csrf_token %}
 
-                    <h6 class="text-muted fw-bold text-uppercase small mb-3">Detalhes do Aviso</h6>
-                    <div class="row g-3 mb-4">
-                        <div class="col-md-12">
-                            <label for="titulo" class="form-label fw-semibold">Título</label>
-                            <div class="input-group">
-                                <span class="input-group-text"><i class="bi bi-fonts"></i></span>
-                                <input type="text" name="titulo" id="titulo" class="form-control" required value="{{ request.POST.titulo }}" placeholder="Ex: Reunião de Pais e Mestres">
-                            </div>
-                        </div>
-                        <div class="col-md-12">
-                            <label for="mensagem" class="form-label fw-semibold">Mensagem</label>
-                            <div class="input-group">
-                                <span class="input-group-text"><i class="bi bi-chat-left-text"></i></span>
-                                <textarea name="mensagem" id="mensagem" class="form-control" rows="4" required placeholder="Digite a mensagem completa do aviso aqui...">{{ request.POST.mensagem }}</textarea>
-                            </div>
-                        </div>
+                    <div class="row g-4">
+                        <!-- Coluna da Esquerda: Detalhes do Aviso -->
+                        <div class="col-lg-7">
+                            <h6 class="text-muted fw-bold text-uppercase small mb-3">Detalhes do Aviso</h6>
+                            <div class="vstack gap-4">
 
-                        <div class="col-md-12">
-                            <label for="imagem" class="form-label fw-semibold">Imagem do Aviso <span class="text-muted">(Opcional)</span></label>
-                            <div class="input-group">
-                                <span class="input-group-text"><i class="bi bi-image"></i></span>
-                                <input type="file" name="imagem" id="imagem" class="form-control" accept="image/*">
-                            </div>
-                            <div class="form-text">Selecione uma imagem se desejar ilustrar o aviso.</div>
-                            <img id="imagePreview" src="#" alt="Preview da imagem selecionada" class="img-fluid rounded mt-2" style="max-height: 200px; display: none;"/>
-                        </div>
-
-                        <div class="col-md-6">
-                            <label for="prioridade" class="form-label fw-semibold">Prioridade</label>
-                            <div class="input-group">
-                                <span class="input-group-text"><i class="bi bi-tags"></i></span>
-                                <select name="prioridade" id="prioridade" class="form-select">
-                                    <option value="baixa" {% if request.POST.prioridade == 'baixa' %}selected{% endif %}>Baixa</option>
-                                    <option value="normal" {% if not request.POST.prioridade or request.POST.prioridade == 'normal' %}selected{% endif %}>Normal</option>
-                                    <option value="alta" {% if request.POST.prioridade == 'alta' %}selected{% endif %}>Alta</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <label for="data_expiracao" class="form-label fw-semibold">Data e Hora de Expiração</label>
-                            <div class="input-group">
-                                <span class="input-group-text"><i class="bi bi-calendar-event"></i></span>
-                                <input type="datetime-local" name="data_expiracao" id="data_expiracao" class="form-control" required value="{{ request.POST.data_expiracao }}">
-                            </div>
-                        </div>
-
-                    </div>
-
-                    <hr class="my-4">
-
-                    <h6 class="text-muted fw-bold text-uppercase small mb-3">Destinatários</h6>
-                    <div class="mb-3 p-3 border rounded">
-                        <label class="form-label fw-semibold">Selecione uma ou mais escolas para o aviso:</label>
-                        <input type="text" id="termo_busca_checkbox" class="form-control mb-2" placeholder="🔎 Buscar escola por Nome ou INEP..." onkeyup="filtrarListaEscolas()">
-                        <div id="listaEscolasCheckboxes" class="border rounded p-3 bg-light" style="max-height: 300px; overflow-y: auto;">
-                            {% if escolas %}
-                                {% for escola in escolas %}
-                                <div class="form-check escola-item" data-nome="{{ escola.nome|lower|escapejs }}" data-inep="{{ escola.inep|default_if_none:''|escapejs }}">
-                                    <input class="form-check-input escola-checkbox" type="checkbox" name="escola_id" value="{{ escola.id }}" id="escola_check_{{ escola.id }}">
-                                    <label class="form-check-label" for="escola_check_{{ escola.id }}">
-                                        {{ escola.nome }} <span class="text-muted small">(INEP: {{ escola.inep|default_if_none:'N/A' }})</span>
-                                    </label>
+                                <!-- Campo: Título do Aviso -->
+                                <div>
+                                    <label for="titulo" class="form-label fw-semibold">Título do Aviso</label>
+                                    <input type="text" name="titulo" id="titulo" class="form-control" required value="{{ request.POST.titulo }}" placeholder="Ex: Reunião de Pais e Mestres">
                                 </div>
-                                {% endfor %}
-                            {% else %}
-                                <p class="text-muted m-0 text-center">Nenhuma escola disponível para seleção.</p>
-                            {% endif %}
-                        </div>
-                        <div class="mt-3">
-                            <button type="button" id="btnMarcarTodasEscolasSistema" class="btn btn-outline-primary btn-sm me-2">
-                                <i class="bi bi-check2-square"></i> Marcar Todas
-                            </button>
-                            <button type="button" id="btnLimparSelecaoEscolas" class="btn btn-outline-secondary btn-sm">
-                                <i class="bi bi-x-square"></i> Limpar Seleção
-                            </button>
-                        </div>
-                    </div>
 
-                    <div class="mb-4">
-                        <label class="form-label fw-semibold">Escolas Selecionadas (<span id="contadorEscolas">0</span>):</label>
-                        <div id="carouselEscolasContainer">
+                                <!-- Campo: Mensagem -->
+                                <div class="col-md-12">
+                                    <label for="mensagem" class="form-label fw-semibold">Mensagem</label>
+                                    <textarea name="mensagem" id="mensagem" class="form-control" rows="4" required placeholder="Digite a mensagem completa do aviso aqui...">{{ request.POST.mensagem }}</textarea>
+                                </div>
+
+                                <div class="row g-3">
+                                    <!-- Campo: Prioridade -->
+                                    <div class="col-md-6">
+                                        <label for="prioridade" class="form-label fw-semibold">Prioridade</label>
+                                        <select name="prioridade" id="prioridade" class="form-select">
+                                            <option value="baixa" {% if request.POST.prioridade == 'baixa' %}selected{% endif %}>Baixa</option>
+                                            <option value="normal" {% if not request.POST.prioridade or request.POST.prioridade == 'normal' %}selected{% endif %}>Normal</option>
+                                            <option value="alta" {% if request.POST.prioridade == 'alta' %}selected{% endif %}>Alta</option>
+                                        </select>
+                                    </div >
+                                    <!-- Campo: Data e Hora de Expiração -->
+                                    <div class="col-md-6">
+                                        <label for="data_expiracao" class="form-label fw-semibold">Data e Hora de Expiração</label>
+                                        <input type="datetime-local" name="data_expiracao" id="data_expiracao" class="form-control" required value="{{ request.POST.data_expiracao }}">
+                                    </div>
+                                </div>
+
+                                <!-- Campo: Upload de Imagem -->
+                                <div>
+                                    <label for="imagem" class="form-label">Imagem do Aviso <span class="text-muted">(Opcional)</span></label>
+                                    <!-- Área de Arraste e Solte -->
+                                    <div class="file-drop-area">
+                                        <span class="upload-icon"><i class="bi bi-cloud-arrow-up"></i></span>
+                                        <p class="m-0"><strong>Clique para carregar</strong> ou arraste e solte</p>
+                                        <small class="text-muted">PNG, JPG, GIF (MAX. 5MB)</small>
+                                        <input type="file" name="imagem" id="imagem" class="form-control" accept="image/png, image/jpeg, image/gif">
+                                    </div>
+                                    <!-- Preview da imagem selecionada (inicialmente oculto) -->
+                                    <img id="imagePreview" src="#" alt="Preview da imagem selecionada" class="img-fluid rounded mt-2" style="max-height: 200px; display: none;"/>
+                                </div>
                             </div>
-                    </div>
-                    
-                    <div class="alert alert-warning d-flex align-items-center" role="alert">
-                        <i class="bi bi-exclamation-triangle-fill me-3" style="font-size: 1.5rem;"></i>
-                        <div>
-                            <h6 class="alert-heading">Atenção!</h6>
-                            <ul class="mb-0 ps-3">
-                                <li>Verifique se todas as informações estão corretas antes de publicar.</li>
-                                <li>Uma vez publicado, o aviso só poderá ser <strong>editado ou apagado</strong>.</li>
-                                <li>Não é possível alterar as escolas de um aviso já enviado.</li>
-                            </ul>
+                        </div> 
+
+                        <!-- Coluna da Direita: Destinatários -->
+                        <div class="col-lg-5">
+                            <h6 class="text-muted fw-bold text-uppercase small mb-3">Destinatários</h6>
+
+                                <label class="form-label fw-semibold">Selecione uma ou mais escolas para o aviso:</label>
+                                <input type="text" id="termo_busca_checkbox" class="form-control mb-2" placeholder="🔎 Buscar escola por Nome ou INEP..." onkeyup="filtrarListaEscolas()">
+                                <div id="listaEscolasCheckboxes" class="border rounded p-3 bg-light" style="max-height: 300px; overflow-y: auto;">
+                                    {% if escolas %}
+                                        {% for escola in escolas %}
+                                        <div class="form-check escola-item" data-nome="{{ escola.nome|lower|escapejs }}" data-inep="{{ escola.inep|default_if_none:''|escapejs }}">
+                                            <input class="form-check-input escola-checkbox" type="checkbox" name="escola_id" value="{{ escola.id }}" id="escola_check_{{ escola.id }}">
+                                            <label class="form-check-label" for="escola_check_{{ escola.id }}">
+                                                {{ escola.nome }} <span class="text-muted small">(INEP: {{ escola.inep|default_if_none:'N/A' }})</span>
+                                            </label>
+                                        </div>
+                                        {% endfor %}
+                                    {% else %}
+                                        <p class="text-muted m-0 text-center">Nenhuma escola disponível para seleção.</p>
+                                    {% endif %}
+                                </div>
+                                <div class="mt-3">
+                                    <button type="button" id="btnMarcarTodasEscolasSistema" class="btn btn-outline-primary btn-sm me-2">
+                                        <i class="bi bi-check2-square"></i> Marcar Todas
+                                    </button>
+                                    <button type="button" id="btnLimparSelecaoEscolas" class="btn btn-outline-secondary btn-sm">
+                                        <i class="bi bi-x-square"></i> Limpar Seleção
+                                    </button>
+                                </div>
+                                
+                            <div class="mb-4">
+                                <label class="form-label fw-semibold">Escolas Selecionadas (<span id="contadorEscolas">0</span>):</label>
+                                <div id="carouselEscolasContainer">
+                                    </div>
+                            </div>
                         </div>
+                            
+                        <div class="alert alert-warning d-flex align-items-center " role="alert">
+                            <i class="bi bi-exclamation-triangle-fill me-3" style="font-size: 1.5rem;"></i>
+                            <div>
+                                <h6 class="alert-heading">Atenção!</h6>
+                                <ul class="mb-0 ps-3">
+                                    <li>Verifique se todas as informações estão corretas antes de publicar.</li>
+                                    <li>Uma vez publicado, o aviso só poderá ser <strong>editado ou apagado</strong>.</li>
+                                    <li>Não é possível alterar as escolas de um aviso já enviado.</li>
+                                </ul>
+                            </div>
+                        </div>
+                        
                     </div>
                 </form>
             </div>
