@@ -11,12 +11,21 @@
         </div>
         <div class="col-12 col-md-6">
             <form method="get" class="d-flex align-items-center gap-2">
-                <input type="text" name="q" value="{{ q }}" class="form-control py-1" placeholder="Buscar por nome, INEP ou gestor...">
+                <input type="text" name="q" value="{{ q }}" class="form-control" placeholder="Buscar por nome, INEP ou gestor...">
                 <button class="btn btn-primary btn-sm" type="submit">
                     <i class="fas fa-search "></i>
                 </button>
-                <button type="button" class="btn btn-secondary btn-sm" onclick="history.back()" style="white-space: nowrap;">
-                    <i class="fas fa-arrow-left me-1"></i> Voltar
+
+                <div >
+                    <input type="text" name="q" value="{{ q }}" class="form-control" placeholder="Buscar por nome, INEP ou gestor...">
+                    <button class="btn btn-outline-secondary btn-pesquisa-custom d-flex align-items-center justify-content-center" type="submit" aria-label="Pesquisar">
+                        <i class="bi bi-search"></i>
+                    </button> 
+                </div>
+
+
+                <button type="button" class="btn btn-outline-secondary" onclick="history.back()">
+                    <i class="fas fa-arrow-left me-2"></i> Voltar
                 </button>
             </form>
         </div>

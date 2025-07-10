@@ -98,8 +98,8 @@
         <h1 class="titulo-secao mb-0" style="border-color: var(--primary-color);">
             <i class="fas fa-puzzle-piece text-primary me-2"></i>Histórico de Lacunas
         </h1>
-        <a href="{% url 'dashboard_escola' escola_id=escola.id %}" class="btn btn-outline-secondary btn-sm">
-            <i class="fas fa-arrow-left me-2"></i>Voltar ao Dashboard
+        <a type="button" class="btn btn-outline-secondary" onclick="history.back()" >
+            <i class="fas fa-arrow-left me-2"></i> Voltar
         </a>
     </div>
 
@@ -117,15 +117,15 @@
     <div class="vstack gap-3" id="lacunas-list">
         {% for lacuna in lacunas %}
             <div class="lacuna-card p-3" 
-                 data-status="{{ lacuna.status }}" 
-                 data-search-text="{{ lacuna.disciplina|lower }}"
-                 data-bs-toggle="modal" 
-                 data-bs-target="#modalDetalheLacuna"
-                 data-lacuna-id="{{ lacuna.id }}"
-                 data-lacuna-disciplina="{{ lacuna.disciplina }}"
-                 data-lacuna-carga="{{ lacuna.carga_horaria }}"
-                 data-lacuna-data="{{ lacuna.criado_em|date:'d/m/Y H:i' }}"
-                 data-lacuna-status="{{ lacuna.status }}">
+                data-status="{{ lacuna.status }}" 
+                data-search-text="{{ lacuna.disciplina|lower }}"
+                data-bs-toggle="modal" 
+                data-bs-target="#modalDetalheLacuna"
+                data-lacuna-id="{{ lacuna.id }}"
+                data-lacuna-disciplina="{{ lacuna.disciplina }}"
+                data-lacuna-carga="{{ lacuna.carga_horaria }}"
+                data-lacuna-data="{{ lacuna.criado_em|date:'d/m/Y H:i' }}"
+                data-lacuna-status="{{ lacuna.status }}">
 
                 <h6 class="mb-1">
                     <strong class="text-dark">Lacuna:</strong>
