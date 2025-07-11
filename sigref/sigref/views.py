@@ -168,7 +168,5 @@ def manual_usuario(request):
 #  VIEW PARA DA PÁGINA 'LINKS ÚTEIS'
 # =============================================================================
 def links_uteis_view(request):
-    """
-    Exibe a página de links úteis.
-    """
+    """Exibe a página de links úteis."""
     return render(request, 'cedepe/linksuteis.html')
