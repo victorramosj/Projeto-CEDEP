@@ -14,6 +14,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.models import User
 from django.core.exceptions import PermissionDenied
+from django.db import models
 from django.db.models import Q, Avg, Count, Max, Min, Prefetch
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render

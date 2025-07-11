@@ -5,43 +5,73 @@
 
 {% block extra_style %}
 <style>
-    /* Variáveis de Cor para fácil customização */
+    /* ==============================================
+    VARIÁVEIS DE ESTILO E CONFIGURAÇÕES GLOBAIS
+    ==============================================*/
     :root {
-        --primary-color: #0d6efd;
-        --light-blue: #f0f6ff; /* Um azul um pouco mais suave */
-        --card-bg: #ffffff;
+        --primary-color: #0056b3; /* Um azul mais sóbrio e profissional */
+        --primary-light: #e6f0ff;
+        --background-color: #f4f7f9; /* Um cinza muito claro para o fundo da página */
+        --panel-bg: #ffffff;
         --text-color: #343a40;
-        --card-shadow: rgba(0, 0, 0, 0.06);
-        --card-hover-shadow: rgba(0, 0, 0, 0.1);
+        --text-color-light: #6c757d;
+        --border-color: #dee2e6;
+        --shadow-sm: rgba(0, 0, 0, 0.05);
+        --shadow-md: rgba(40, 50, 70, 0.1);
+        --shadow-lg: rgba(40, 50, 70, 0.15);
+        --border-radius: 0.75rem; /* Raio de borda padrão */
     }
 
-    /* Estilo do corpo do bloco de conteúdo */
-    .content-body {
-        background-color: var(--light-blue);
-        min-height: 100vh;
+    /* ==============================================
+    ESTILO DO CORPO DA PÁGINA
+    ==============================================*/
+
+    body {
+        background-color: var(--background-color);
+        font-family: 'Inter', sans-serif; /* Usando uma fonte mais moderna, se disponível */
     }
 
-    /* Cabeçalho da página redesenhado */
+    /* ==============================================
+    PAINEL DE CONTEÚDO PRINCIPAL
+    ==============================================*/
+    
+    .main-content-panel {
+        background-color: var(--panel-bg);
+        border-radius: var(--border-radius);
+        box-shadow: 0 10px 40px var(--shadow-md);
+        margin-top: 2rem;
+        margin-bottom: 2rem;
+    }
+
+    /* ==============================================
+    CABEÇALHO DA PÁGINA
+    ==============================================*/
     .page-header {
-        background: linear-gradient(135deg, var(--primary-color) 0%, #0056b3 100%);
-        border: none;
-        border-radius: 0.75rem;
+        border-bottom: 1px solid var(--border-color);
+        padding-bottom: 1rem;
+        margin-bottom: 2rem; /* Aumenta o espaçamento abaixo do cabeçalho */
     }
     
     .page-header h4 {
-        font-weight: 600;
+        color: var(--primary-color);
+        font-weight: 700; /* Fonte mais forte para o título */
+        font-size: 1.5rem;
     }
 
     .page-header .lead {
-        color: rgba(255, 255, 255, 0.9);
+        color: var(--text-color-light);
         font-size: 1rem;
+        margin-bottom: 0;
     }
 
+    /* ==============================================
+    CARDS DE LINK
+    ==============================================*/
     /* Animação de entrada para os cards */
     @keyframes fadeIn {
         from {
             opacity: 0;
-            transform: translateY(20px);
+            transform: translateY(15px);
         }
         to {
             opacity: 1;
@@ -51,45 +81,45 @@
 
     .link-card-col {
         animation: fadeIn 0.5s ease-out forwards;
-        opacity: 0; /* Inicia invisível para a animação */
+        opacity: 0; /* Começa invisível para a animação */
     }
 
-    /* Estilo dos cards de link aprimorado */
+    /* Estilo dos cards de link */
     .link-card {
         display: flex;
         flex-direction: column;
         align-items: center;
         justify-content: center;
         text-align: center;
-        padding: 1.5rem 1rem;
-        border-radius: 0.75rem;
-        background-color: var(--card-bg);
-        box-shadow: 0 4px 15px var(--card-shadow);
-        transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+        padding: 1.75rem 1rem;
+        border-radius: var(--border-radius);
+        background-color: var(--panel-bg);
+        box-shadow: 0 4px 15px var(--shadow-sm);
+        transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
         text-decoration: none;
         color: var(--text-color);
         height: 100%;
-        border: 2px solid transparent; /* Borda inicial transparente */
+        border: 1px solid var(--border-color);
     }
 
     .link-card:hover {
-        transform: translateY(-8px);
-        box-shadow: 0 8px 25px var(--card-hover-shadow);
-        border-color: var(--primary-color); /* Borda aparece no hover */
+        transform: translateY(-10px); /* Efeito de elevação mais pronunciado */
+        box-shadow: 0 12px 30px var(--shadow-md);
+        border-color: var(--primary-color);
     }
 
     .link-card-logo {
-        height: 70px; /* Altura fixa para melhor alinhamento */
+        height: 65px;
         width: auto;
         max-width: 100%;
         object-fit: contain;
-        margin-bottom: 1rem;
+        margin-bottom: 1.25rem;
     }
 
     .link-card-title {
         font-weight: 600;
-        font-size: 0.95rem;
-        line-height: 1.3;
+        font-size: 1rem;
+        line-height: 1.4;
     }
     
     /* Atraso na animação para efeito escalonado */
@@ -110,85 +140,83 @@
 {% endblock %}
 
 {% block content %}
-<!-- CORREÇÃO: A div 'content-body' agora envolve todo o conteúdo para aplicar o fundo azul corretamente -->
-<div class="content-body">
-    <div class="container-fluid p-4">
+
+<div class="container p-4 p-md-5 main-content-panel">
+    
+    <!-- Cabeçalho Simplificado -->
+    <div class="page-header text-center">
+        <h4 class="mb-1"><i class="fas fa-sitemap me-2"></i>Plataformas e Sistemas</h4>
+        <p class="lead">Acesso rápido aos principais sistemas e recursos da rede.</p>
+    </div>
+
+    <!-- Grade de Links -->
+    <div class="row g-4">
         
-        <!-- Cabeçalho -->
-        <div class="card shadow-sm mb-4 page-header">
-            <div class="card-body text-white">
-                <h4 class="mb-1"><i class="fas fa-sitemap me-2"></i>Plataformas e Sistemas</h4>
-                <p class="lead mb-0">Acesso rápido aos principais sistemas e recursos da rede.</p>
-            </div>
+        <!-- Card 1 -->
+        <div class="col-12 col-sm-6 col-md-4 col-lg-3 link-card-col">
+            <a href="#" target="_blank" class="link-card">
+                <img src="{% static 'path/to/your/logo1.png' %}" onerror="this.src='https://placehold.co/150x65/E6F0FF/0056B3?text=Logo'" alt="Logo do Sistema 1" class="link-card-logo">
+                <span class="link-card-title">Nome do Sistema 1</span>
+            </a>
         </div>
 
-        <!-- Grade de Links -->
-        <div class="row g-4">
-            
-            <!-- Card 1 -->
-            <div class="col-12 col-sm-6 col-md-4 col-lg-3 link-card-col">
-                <a href="" target="_blank" class="link-card">
-                    <img src="{% static 'path/to/your/logo1.png' %}" onerror="this.src='https://placehold.co/150x70/E7F1FF/343A40?text=Logo'" alt="Logo Exemplo 1" class="link-card-logo">
-                    <span class="link-card-title">Exemplo 1</span>
-                </a>
-            </div>
-
-            <!-- Card 2 -->
-            <div class="col-12 col-sm-6 col-md-4 col-lg-3 link-card-col">
-                <a href="" target="_blank" class="link-card">
-                    <img src="{% static 'path/to/your/logo2.png' %}" onerror="this.src='https://placehold.co/150x70/E7F1FF/343A40?text=Logo'" alt="Logo Exemplo 2" class="link-card-logo">
-                    <span class="link-card-title">Exemplo 2</span>
-                </a>
-            </div>
-
-            <!-- Card 3 -->
-            <div class="col-12 col-sm-6 col-md-4 col-lg-3 link-card-col">
-                <a href="" target="_blank" class="link-card">
-                    <img src="{% static 'path/to/your/logo3.png' %}" onerror="this.src='https://placehold.co/150x70/E7F1FF/343A40?text=Logo'" alt="Logo Exemplo 3" class="link-card-logo">
-                    <span class="link-card-title">Exemplo 3</span>
-                </a>
-            </div>
-            
-            <!-- Card 4 -->
-            <div class="col-12 col-sm-6 col-md-4 col-lg-3 link-card-col">
-                <a href="#" target="_blank" class="link-card">
-                    <img src="{% static 'path/to/your/logo4.png' %}" onerror="this.src='https://placehold.co/150x70/E7F1FF/343A40?text=Logo'" alt="Logo Exemplo 4" class="link-card-logo">
-                    <span class="link-card-title">Exemplo 4</span>
-                </a>
-            </div>
-            
-            <!-- Card 5 -->
-            <div class="col-12 col-sm-6 col-md-4 col-lg-3 link-card-col">
-                <a href="#" target="_blank" class="link-card">
-                    <img src="{% static 'path/to/your/logo5.png' %}" onerror="this.src='https://placehold.co/150x70/E7F1FF/343A40?text=Logo'" alt="Logo Exemplo 5" class="link-card-logo">
-                    <span class="link-card-title">Exemplo 5</span>
-                </a>
-            </div>
-
-            <!-- Card 6 -->
-            <div class="col-12 col-sm-6 col-md-4 col-lg-3 link-card-col">
-                <a href="#" target="_blank" class="link-card">
-                    <img src="{% static 'path/to/your/logo6.png' %}" onerror="this.src='https://placehold.co/150x70/E7F1FF/343A40?text=Logo'" alt="Logo Exemplo 6" class="link-card-logo">
-                    <span class="link-card-title">Exemplo 6</span>
-                </a>
-            </div>
-
-            <!-- Card 7 -->
-            <div class="col-12 col-sm-6 col-md-4 col-lg-3 link-card-col">
-                <a href="#" target="_blank" class="link-card">
-                    <img src="{% static 'path/to/your/logo7.png' %}" onerror="this.src='https://placehold.co/150x70/E7F1FF/343A40?text=Logo'" alt="Logo Exemplo 7" class="link-card-logo">
-                    <span class="link-card-title">Exemplo 7</span>
-                </a>
-            </div>
-
-            <!-- Card 8 -->
-            <div class="col-12 col-sm-6 col-md-4 col-lg-3 link-card-col">
-                <a href="" target="_blank" class="link-card">
-                    <img src="{% static 'path/to/your/logo8.png' %}" onerror="this.src='https://placehold.co/150x70/E7F1FF/343A40?text=Logo'" alt="Logo Exemplo 8" class="link-card-logo">
-                    <span class="link-card-title">Exemplo 8</span>
-                </a>
-            </div>
+        <!-- Card 2 -->
+        <div class="col-12 col-sm-6 col-md-4 col-lg-3 link-card-col">
+            <a href="#" target="_blank" class="link-card">
+                <img src="{% static 'path/to/your/logo2.png' %}" onerror="this.src='https://placehold.co/150x65/E6F0FF/0056B3?text=Logo'" alt="Logo do Sistema 2" class="link-card-logo">
+                <span class="link-card-title">Nome do Sistema 2</span>
+            </a>
         </div>
+
+        <!-- Card 3 -->
+        <div class="col-12 col-sm-6 col-md-4 col-lg-3 link-card-col">
+            <a href="#" target="_blank" class="link-card">
+                <img src="{% static 'path/to/your/logo3.png' %}" onerror="this.src='https://placehold.co/150x65/E6F0FF/0056B3?text=Logo'" alt="Logo do Sistema 3" class="link-card-logo">
+                <span class="link-card-title">Nome do Sistema 3</span>
+            </a>
+        </div>
+        
+        <!-- Card 4 -->
+        <div class="col-12 col-sm-6 col-md-4 col-lg-3 link-card-col">
+            <a href="#" target="_blank" class="link-card">
+                <img src="{% static 'path/to/your/logo4.png' %}" onerror="this.src='https://placehold.co/150x65/E6F0FF/0056B3?text=Logo'" alt="Logo do Sistema 4" class="link-card-logo">
+                <span class="link-card-title">Nome do Sistema 4</span>
+            </a>
+        </div>
+        
+        <!-- Card 5 -->
+        <div class="col-12 col-sm-6 col-md-4 col-lg-3 link-card-col">
+            <a href="#" target="_blank" class="link-card">
+                <img src="{% static 'path/to/your/logo5.png' %}" onerror="this.src='https://placehold.co/150x65/E6F0FF/0056B3?text=Logo'" alt="Logo do Sistema 5" class="link-card-logo">
+                <span class="link-card-title">Nome do Sistema 5</span>
+            </a>
+        </div>
+
+        <!-- Card 6 -->
+        <div class="col-12 col-sm-6 col-md-4 col-lg-3 link-card-col">
+            <a href="#" target="_blank" class="link-card">
+                <img src="{% static 'path/to/your/logo6.png' %}" onerror="this.src='https://placehold.co/150x65/E6F0FF/0056B3?text=Logo'" alt="Logo do Sistema 6" class="link-card-logo">
+                <span class="link-card-title">Nome do Sistema 6</span>
+            </a>
+        </div>
+
+        <!-- Card 7 -->
+        <div class="col-12 col-sm-6 col-md-4 col-lg-3 link-card-col">
+            <a href="#" target="_blank" class="link-card">
+                <img src="{% static 'path/to/your/logo7.png' %}" onerror="this.src='https://placehold.co/150x65/E6F0FF/0056B3?text=Logo'" alt="Logo do Sistema 7" class="link-card-logo">
+                <span class="link-card-title">Nome do Sistema 7</span>
+            </a>
+        </div>
+
+        <!-- Card 8 -->
+        <div class="col-12 col-sm-6 col-md-4 col-lg-3 link-card-col">
+            <a href="#" target="_blank" class="link-card">
+                <img src="{% static 'path/to/your/logo8.png' %}" onerror="this.src='https://placehold.co/150x65/E6F0FF/0056B3?text=Logo'" alt="Logo do Sistema 8" class="link-card-logo">
+                <span class="link-card-title">Nome do Sistema 8</span>
+            </a>
+        </div>
+        
+
     </div>
 </div>
 {% endblock %}
