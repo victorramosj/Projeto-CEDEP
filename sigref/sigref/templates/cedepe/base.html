@@ -414,10 +414,10 @@
         </li>
         {% if user.is_superuser %}
             <li class="nav-item">
-                <a class="nav-link text-white sidebar-link" href="{% url 'lista_validacoes_pendentes' %}">
-                    <i class="fas fa-check-double"></i> Validações Pendentes
-                </a>
-            </li>
+    <a class="nav-link text-white sidebar-link {% if request.resolver_match.url_name == 'lista_validacoes_pendentes' %}active{% endif %}" href="{% url 'lista_validacoes_pendentes' %}">
+        <i class="fas fa-check-double"></i> Validações Pendentes
+    </a>
+</li>
         {% endif %}
         {% endif %}
 </ul>
