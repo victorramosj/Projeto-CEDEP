@@ -182,9 +182,12 @@
                                         <p class="m-0"><strong>Clique para carregar</strong> ou arraste e solte</p>
                                         <small class="text-muted">PNG, JPG, GIF (MAX. 5MB)</small>
                                         <input type="file" name="imagem" id="imagem" class="form-control" accept="image/png, image/jpeg, image/gif">
+                                        
+                                        <!-- Preview da imagem selecionada (inicialmente oculto) -->
+                                    <img id="imagePreview" src="#" alt="Preview da imagem selecionada" class="img-fluid rounded mt-2" style="max-height: 200px; display: none;"/> ''
+                                    
                                     </div>
-                                    <!-- Preview da imagem selecionada (inicialmente oculto) -->
-                                    <img id="imagePreview" src="#" alt="Preview da imagem selecionada" class="img-fluid rounded mt-2" style="max-height: 200px; display: none;"/>
+                                    
                                 </div>
                             </div>
                         </div> 
@@ -195,7 +198,10 @@
                             <hr>
 
                                 <label class="form-label fw-semibold">Selecione uma ou mais escolas para o aviso:</label>
-                                <input type="text" id="termo_busca_checkbox" class="form-control mb-2" placeholder="🔎 Buscar escola por Nome ou INEP..." onkeyup="filtrarListaEscolas()">
+
+                                <input type="text" id="termo_busca_checkbox" class="form-control mb-2" placeholder="Buscar escola por Nome ou INEP..." onkeyup="filtrarListaEscolas()">
+                                
+                                
                                 <div id="listaEscolasCheckboxes" class="border rounded p-3 bg-light" style="max-height: 300px; overflow-y: auto;">
                                     {% if escolas %}
                                         {% for escola in escolas %}
