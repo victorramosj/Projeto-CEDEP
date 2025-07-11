@@ -56,9 +56,8 @@ from .forms import ProblemaUsuarioForm, LacunaForm # Importe os forms necessári
 
 # ... (outras views) ...
 # =============================================================================
-#  VIEW DA DASHBOARD
+#  VIEW DA DASHBOARD
 # =============================================================================
-
 
 class EscolaDashboardView(LoginRequiredMixin, TemplateView):
     """
@@ -91,12 +90,16 @@ class EscolaDashboardView(LoginRequiredMixin, TemplateView):
             status__in=['pendente', 'recusado']
         ).order_by('-data_solicitacao').first()
 
-        # --- LÓGICA DE AVISOS CORRIGIDA ---
-        # Busca avisos que são da escola OU são globais (escola=None)
+        # --- LÓGICA DE AVISOS ATUALIZADA E CORRIGIDA ---
+        # Busca avisos que:
+        # 1. São para a escola específica OU são globais (escola=None)
+        # 2. Estão marcados como 'ativo=True'
+        # 3. A data de expiração está no futuro OU a data de expiração não foi definida (é nula)
         avisos_queryset = AvisoImportante.objects.filter(
-            Q(escola=escola) | Q(escola__isnull=True),  # <-- A CORREÇÃO ESSENCIAL
-            ativo=True,
-            data_expiracao__gte=timezone.now()
+            Q(escola=escola) | Q(escola__isnull=True),
+            Q(ativo=True),
+            # A nova condição que resolve o problema:
+            Q(data_expiracao__gte=timezone.now()) | Q(data_expiracao__isnull=True)
         ).order_by('-prioridade', '-data_criacao').distinct()
 
         # Verifica quais avisos já foram visualizados pela escola
