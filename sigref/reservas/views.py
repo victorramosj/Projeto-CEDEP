@@ -388,7 +388,7 @@ def ocupacao_form(request, pk=None):
         form = OcupacaoForm(request.POST, instance=ocupacao)
         if form.is_valid():
             form.save()
-            return redirect('gerenciar_ocupacoes')
+            return redirect('mapa_interativo')
     else:
         form = OcupacaoForm(instance=ocupacao, initial=initial)
     

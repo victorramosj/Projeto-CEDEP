@@ -132,73 +132,76 @@ document.addEventListener("DOMContentLoaded", function() {
     });
 
     function mostrarDetalhesCama(cama) {
-        document.getElementById('camaNumero').textContent = cama.identificacao;
-        const infoDiv = document.getElementById('camaInfo');
-        const removeBtn = document.getElementById('removeGuestBtn');
-        const newOccupancyBtn = document.getElementById('newOccupancyBtn');
-        const newOccupancySection = document.getElementById('newOccupancySection');
+    document.getElementById('camaNumero').textContent = cama.identificacao;
+    const infoDiv = document.getElementById('camaInfo');
+    const removeBtn = document.getElementById('removeGuestBtn');
+    const newOccupancyBtn = document.getElementById('newOccupancyBtn');
+    const newOccupancySection = document.getElementById('newOccupancySection');
 
-        // Atualiza o link para criar nova ocupação: utiliza a rota de ocupações
-        newOccupancyBtn.href = `/reservas/ocupacoes/form/?quarto=${cama.quarto}&cama=${cama.id}`;
-        let occupancyInfo = '';
-        if (cama.status === 'OCUPADA' && cama.reserva_atual) {
-            occupancyInfo = `
-                <div class="alert alert-info">
-                    <h5><i class="fas fa-user-check me-2"></i>Ocupação Atual</h5>
-                    <div class="row mt-3">
-                        <div class="col-md-6">
-                            <p class="mb-1"><strong>Nome:</strong> ${cama.reserva_atual.hospede.nome}</p>
-                            <p class="mb-1"><strong>CPF:</strong> ${cama.reserva_atual.hospede.cpf}</p>
-                        </div>
-                        <div class="col-md-6">
-                            <p class="mb-1"><strong>Check-in:</strong> ${new Date(cama.reserva_atual.data_checkin).toLocaleDateString()}</p>
-                            <p class="mb-1"><strong>Check-out:</strong> ${cama.reserva_atual.data_checkout ? new Date(cama.reserva_atual.data_checkout).toLocaleDateString() : 'N/A'}</p>
-                        </div>
+    // Atualiza o link para criar nova ocupação: utiliza a rota de ocupações
+    newOccupancyBtn.href = `/reservas/ocupacoes/form/?quarto=${cama.quarto}&cama=${cama.id}`;
+
+    let occupancyInfo = '';
+    // Corrija aqui: Use cama.ocupacao_ativa em vez de cama.reserva_atual
+    if (cama.status === 'OCUPADA' && cama.ocupacao_ativa) {
+        occupancyInfo = `
+            <div class="alert alert-info">
+                <h5><i class="fas fa-user-check me-2"></i>Ocupação Atual</h5>
+                <div class="row mt-3">
+                    <div class="col-md-6">
+                        <p class="mb-1"><strong>Nome:</strong> ${cama.ocupacao_ativa.hospede.nome}</p>
+                        <p class="mb-1"><strong>CPF:</strong> ${cama.ocupacao_ativa.hospede.cpf}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <p class="mb-1"><strong>Check-in:</strong> ${new Date(cama.ocupacao_ativa.data_checkin).toLocaleDateString()}</p>
+                        <p class="mb-1"><strong>Check-out:</strong> ${cama.ocupacao_ativa.data_checkout ? new Date(cama.ocupacao_ativa.data_checkout).toLocaleDateString() : 'N/A'}</p>
                     </div>
                 </div>
-            `;
-            removeBtn.style.display = 'inline-block';
-            newOccupancySection.style.display = 'none';
-        } else {
-            occupancyInfo = `
-                <div class="alert alert-success">
-                    <i class="fas fa-bed me-2"></i>
-                    Cama Disponível - Nenhuma ocupação ativa
-                </div>
-            `;
-            removeBtn.style.display = 'none';
-            newOccupancySection.style.display = 'block';
-        }
-        
-        infoDiv.innerHTML = occupancyInfo;
-        modal.show();
+            </div>
+        `;
+        removeBtn.style.display = 'inline-block';
+        newOccupancySection.style.display = 'none';
+    } else {
+        occupancyInfo = `
+            <div class="alert alert-success">
+                <i class="fas fa-bed me-2"></i>
+                Cama Disponível - Nenhuma ocupação ativa
+            </div>
+        `;
+        removeBtn.style.display = 'none';
+        newOccupancySection.style.display = 'block';
     }
 
-    // Evento para finalizar (encerrar) a ocupação atual
-    document.getElementById('removeGuestBtn').addEventListener('click', function() {
-        if (currentCama && currentCama.reserva_atual) {
-            if (confirm('Tem certeza que deseja finalizar a ocupação e desocupar a cama?')) {
-                fetch(`/reservas/api/ocupacoes/${currentCama.reserva_atual.id}/`, {
-                    method: 'PATCH',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRFToken': '{{ csrf_token }}'
-                    },
-                    body: JSON.stringify({ status: 'FINALIZADA' })
-                })
-                .then(response => {
-                    if (response.ok) {
-                        showToast('Ocupação finalizada com sucesso!', 'success');
-                        modal.hide();
-                        setTimeout(() => location.reload(), 1000);
-                    } else {
-                        showToast('Erro ao finalizar a ocupação', 'danger');
-                    }
-                });
-            }
-        }
-    });
+    infoDiv.innerHTML = occupancyInfo;
+    modal.show();
+}
 
+// Evento para finalizar (encerrar) a ocupação atual
+document.getElementById('removeGuestBtn').addEventListener('click', function() {
+    // Corrija aqui: Use currentCama.ocupacao_ativa em vez de currentCama.reserva_atual
+    if (currentCama && currentCama.ocupacao_ativa) {
+        if (confirm('Tem certeza que deseja finalizar a ocupação e desocupar a cama?')) {
+            // Corrija aqui: Use currentCama.ocupacao_ativa.id em vez de currentCama.reserva_atual.id
+            fetch(`/reservas/api/ocupacoes/${currentCama.ocupacao_ativa.id}/`, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify({ status: 'FINALIZADA' })
+            })
+            .then(response => {
+                if (response.ok) {
+                    showToast('Ocupação finalizada com sucesso!', 'success');
+                    modal.hide();
+                    setTimeout(() => location.reload(), 1000);
+                } else {
+                    showToast('Erro ao finalizar a ocupação', 'danger');
+                }
+            });
+        }
+    }
+});
     function showToast(message, type) {
         const toast = document.createElement('div');
         toast.className = `toast align-items-center text-white bg-${type} border-0 position-fixed bottom-0 end-0 m-3`;
