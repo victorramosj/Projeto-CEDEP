@@ -128,3 +128,22 @@ class AvisoForm(forms.ModelForm):
             raise forms.ValidationError("O título precisa ter pelo menos 5 caracteres.")
         return titulo
 
+from django import forms
+from .models import AtualizacaoEscola
+
+class AtualizacaoEscolaForm(forms.ModelForm):
+    class Meta:
+        model = AtualizacaoEscola
+        fields = [
+            'endereco', 'telefone', 'nome_gestor', 
+            'telefone_gestor', 'email_escola', 'email_gestor', 'foto_fachada'
+        ]
+        widgets = {
+            'endereco': forms.TextInput(attrs={'class': 'form-control'}),
+            'telefone': forms.TextInput(attrs={'class': 'form-control'}),
+            'nome_gestor': forms.TextInput(attrs={'class': 'form-control'}),
+            'telefone_gestor': forms.TextInput(attrs={'class': 'form-control'}),
+            'email_escola': forms.EmailInput(attrs={'class': 'form-control'}),
+            'email_gestor': forms.EmailInput(attrs={'class': 'form-control'}),
+            'foto_fachada': forms.ClearableFileInput(attrs={'class': 'form-control'}),
+        }

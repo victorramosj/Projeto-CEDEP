@@ -6,70 +6,301 @@ Problemas
 {% endblock %}
 
 {% block extra_style %}
-<link rel="stylesheet" href="{% static 'css/tabelas.css' %}" />
 <style>
-.form-select {
-    width: 160px;
+/* ====================================================================== */
+/* ==== ESTILOS GERAIS, VARIÁVEIS DE COR E ESTADOS DE FEEDBACK ======== */
+/* ====================================================================== */
+:root {
+    --cor-fundo-atualizado: #d1e7fd; /* Azul claro suave para feedback de atualização */
+    --cor-status-pendente: #ffcccc;   /* Vermelho claro para status "Pendente" */
+    --cor-status-resolvido: #ccffcc;   /* Verde claro para status "Resolvido" */
+    --cor-status-andamento: #ffffcc;   /* Amarelo claro para status "Em Andamento" */
 }
+
+/* Efeito de feedback visual para uma linha recém-atualizada na tabela */
+.status-atualizado td {
+    background-color: var(--cor-fundo-atualizado) !important;
+    transition: background-color 0.5s ease-out;
+}
+
+/* ====================================================================== */
+/* ==== ESTILOS PARA COMPONENTES (FORMULÁRIOS, BOTÕES, TABELAS) ========= */
+/* ====================================================================== */
+
+/* --- Controles de Formulário (Inputs e Selects) --- */
+.form-control {
+    height: 45px;
+    font-size: 14px;
+}
+
+.form-select {
+    width: 100%;
+    height: 45px;
+    font-size: 15px;
+    min-width: 150px;
+    border-radius: 8px;
+}
+
+/*=== ESTILO DE BARRA DE BUSCA ===*/
+.form-pesquisa.input-group {
+    border-radius: 8px;
+    overflow: hidden; 
+}
+
+.form-pesquisa.input-group button{
+    border-color: #003366;
+    border-radius: 8px;
+}
+
+.btn-pesquisa-custom {
+    padding: 0 !important;
+    width: 42px;
+    background-color: white;
+}
+
+.btn-pesquisa-custom .bi-search {
+    color: #003366;
+    transition: color 0.15s ease-in-out;
+    margin-bottom: 5.1px;
+}
+
+/* Quando o usuário interage com o botão (hover, active, focus) */
+.btn-pesquisa-custom:hover, .btn-pesquisa-custom:active, .btn-pesquisa-custom:focus {
+    background-color: #003366;
+    color: #ffffff;
+    border-color: #003366;
+}
+
+/* Garante que a cor do ícone mude durante a interação */
+.btn-pesquisa-custom:hover .bi-search, .btn-pesquisa-custom:active .bi-search, .btn-pesquisa-custom:focus .bi-search {
+    color: #ffffff;
+}
+
+/* --- SELECT DE STATUS (TABELA) --- */
 table .form-select {
-    color: #333; 
-    padding: 5px 10px;      
-    border-radius: 5px;       
+    color: #333;
+    padding: 5px 10px;
+    border-radius: 8px;
     border: none;
     transition: background-color 0.3s ease;
+}
+
+.status-updater {
+    border-radius: 8px !important;
+    height: 38px;
+}
+
+/* --- BOTÃO DE AÇÃO --- */
+.btnAcao {
+    width: 180px; /* Largura padrão para o botão de apagar */
+    font-size: 15px;
+    padding: 10px 15px;
+    font-weight: bold;
+}
+
+/* --- Tabela --- */
+
+.tabela{
+    border-radius: 8px;
+}
+
+.table th,
+.table td {
+    text-align: left;
+    vertical-align: middle;
+    font-size: 14px;
+    padding: 11px;
+}
+
+.table th {
+    background-color: #003366; /* Azul escuro para o cabeçalho */
+    color: white;
+    font-size: 17px;
+    padding: 12px;
+}
+
+.table th:nth-child(2), .table td:nth-child(2) {
+        width: 300px;
+}
+.table th:nth-child(6), .table td:nth-child(6) {
+    width: 160px;
+}
+
+/* ====================================================================== */
+/* ==== LAYOUT DOS FILTROS (ESTRUTURA PADRÃO PARA TELAS PEQUENAS) ===== */
+/* ====================================================================== */
+
+/* --- Container Principal dos Filtros --- */
+.container-filtros {
+    display: flex;
+    flex-direction: column; /* Empilha os elementos verticalmente */
+    gap: 1rem;
+    width: 100%;
+}
+
+/* --- Grupo de Controles (Selects e Botão) --- */
+.grupo-controles {
+    display: flex;
+    flex-direction: column; /* Empilha os selects e o botão */
+    gap: 1rem;
+    width: 100%;
+}
+
+/* --- Grupo de Selects --- */
+.grupo-selects {
+    display: flex;
+    flex-direction: column; /* Empilha os selects */
+    gap: 0.75rem;
+    width: 100%;
+}
+
+/* Garante que os selects ocupem 100% da largura em telas pequenas */
+.grupo-selects > .form-select {
+    width: 100%;
+}
+
+/* --- Botão de Ação --- */
+.btnAcao {
+    display: flex;
+    width: 100%; /* Ocupa a largura total */
+    justify-content: center;
+}
+
+/* ====================================================================== */
+/* ==== AJUSTES RESPONSIVOS DE LAYOUT PARA DIFERENTES TELAS =========== */
+/* ====================================================================== */
+
+
+/* --- Telas de Celular na Horizontal (>= 576px) --- */
+@media (min-width: 576px) {
+    .grupo-selects {
+        flex-direction: row;
+        flex-wrap: wrap;
+    }
+    .grupo-selects > .form-select {
+        flex: 1; /* Permite que os selects cresçam igualmente */
+    }
+    .grupo-controles {
+        flex-direction: column;
+        align-items: center;
+        width: 100%;
+    }
+    .btnAcao {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
+/* --- Telas Médias / Tablets (>= 1008px) --- */
+/* Layout de 2 linhas: Pesquisa em uma, controles em outra */
+@media (min-width: 1008px) {
+    .grupo-controles {
+        flex-direction: row; /* Controles lado a lado */
+        align-items: center;
+        width: auto;
+        justify-content: space-between;
+        gap: 10px;
+    }
+
+    .grupo-selects {
+        gap: 10px;
+        width: auto;
+    }
+
+    .grupo-selects select {
+        min-width: 140px; /* Largura mínima para cada select */
+    }
+
+    /* O botão de ação deixa de ocupar 100% da largura */
+    .btnAcao {
+        width: auto;
+        display: flex;
+        align-items: right;
+    }
+}
+
+/* --- Telas Grandes / Desktops (>= 1500px) --- */
+/* Layout final de 1 linha: Tudo alinhado horizontalmente */
+@media (min-width: 1500px) {
+    .container-filtros {
+        flex-direction: row;
+        align-items: center;
+    }
+
+    /* Faz a barra de pesquisa crescer para ocupar o espaço disponível */
+    .form-pesquisa {
+        flex-grow: 1;
+    }
+
+     /* Impede que os controles encolham */
+    .grupo-controles {
+        flex-shrink: 0;
+    }
+
+    /* Mantém os selects lado a lado */
+    .grupo-selects select {
+        min-width: 140px;
+    }
 }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="container mt-4 " >
-    <h3>Problemas (<span id="problemas-count">{{ total_problemas }}</span>)</h3>
+<div class="container mt-4 ">
 
-    <div class="col-12 mt-3">
-        <div class="d-flex justify-content-between gap-2 mb-2">
-            
-            <div class="d-flex align-items-left gap-2">
-            <!-- Barra de pesquisa -->
-                <form method="GET" action="{% url 'tela_problemas' %}" class="input-group" style="width: 460px;">
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-center mb-4">
+        <h2 class="mb-3 mb-md-0 ">
+            Problemas (<span id="problemas-count">{{ total_problemas }}</span>)
+        </h2>
+        <a href="{% url 'dashboard_monitoramentos' %}" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left me-2"></i> Voltar para o Dashboard
+        </a>
+    </div>
+
+    <div class="col-12 mt-3 mb-3">
+
+        <div class="container-filtros mb-3">
+
+                <form method="GET" action="{% url 'tela_problemas' %}" class="input-group form-pesquisa">
                     {% csrf_token %}
-                    <span class="input-group-text"><i class="fas fa-search"></i></span>
-                    <input type="text" class="form-control" name="escola" value="{{ search_query }}" placeholder="Pesquise por Escola...">
+                    <input type="text" id="search-input" name="escola" class="form-control" placeholder="Pesquise por escola..." value="{{ search_query|default:'' }}">
+                    <button class="btn btn-outline-secondary btn-pesquisa-custom d-flex align-items-center justify-content-center" type="submit" aria-label="Pesquisar">
+                        <i class="bi bi-search"></i>
+                    </button>  
                 </form>
-                
-                <div class="d-flex gap-2">
-                    <!-- Filtros -->
-                    <select class="form-select" name="data" aria-label="Filtro Data">
-                        <option value="" {% if not request.GET.data %} selected {% endif %}>Data (Todas)</option>
-                        <option value="1" {% if request.GET.data == '1' %} selected {% endif %}>Última semana</option>
-                        <option value="2" {% if request.GET.data == '2' %} selected {% endif %}>Último mês</option>
-                        <option value="3" {% if request.GET.data == '3' %} selected {% endif %}>Último ano</option>
-                    </select>
-                    <select class="form-select" name="status" aria-label="Filtro Status">
-                        <option value="" {% if not request.GET.status %}selected{% endif %}>Status (Todos)</option>
-                        <option value="P" {% if request.GET.status == 'P' %} selected {% endif %}>Pendente</option>
-                        <option value="R" {% if request.GET.status == 'R' %} selected {% endif %}>Resolvido</option>
-                        <option value="E" {% if request.GET.status == 'E' %} selected {% endif %}>Em Andamento</option>
-                    </select>
-                    <select class="form-select" name="setor" aria-label="Filtro Setor">
-                            <option value="" {% if not request.GET.setor %}selected{% endif %}>Setor (Todos)</option>
-                            {% for setor_obj in todos_os_setores %}
-                                <option value="{{ setor_obj.id }}" {% if request.GET.setor == setor_obj.id|stringformat:"s" %} selected {% endif %}>
-                                    {{ setor_obj.nome }}
-                                </option>
-                            {% endfor %}
-                    </select>
-                </div>
-            </div>
 
-            <div class="d-flex gap-2">
-                <!-- Botões de ação -->
-                <button class="btnAcao btn btn-danger">Apagar Problemas</button> 
-            </div>
+                
+                <div class="grupo-controles">
+                    <div class="grupo-selects">
+                        <select class="form-select" name="data" aria-label="Filtro Data">
+                            <option value="" {% if not request.GET.data %} selected {% endif %}>Data (Todas)</option>
+                            <option value="1" {% if request.GET.data == '1' %} selected {% endif %}>Última semana</option>
+                            <option value="2" {% if request.GET.data == '2' %} selected {% endif %}>Último mês</option>
+                            <option value="3" {% if request.GET.data == '3' %} selected {% endif %}>Último ano</option>
+                        </select>
+                        <select class="form-select" name="status" aria-label="Filtro Status">
+                            <option value="" {% if not request.GET.status %}selected{% endif %}>Status (Todos)</option>
+                            <option value="P" {% if request.GET.status == 'P' %} selected {% endif %}>Pendente</option>
+                            <option value="R" {% if request.GET.status == 'R' %} selected {% endif %}>Resolvido</option>
+                            <option value="E" {% if request.GET.status == 'E' %} selected {% endif %}>Em Andamento</option>
+                        </select>
+                        <select class="form-select" name="setor" aria-label="Filtro Setor">
+                                <option value="" {% if not request.GET.setor %}selected{% endif %}>Setor (Todos)</option>
+                                {% for setor_obj in todos_os_setores %}
+                                    <option value="{{ setor_obj.id }}" {% if request.GET.setor == setor_obj.id|stringformat:"s" %} selected {% endif %}>
+                                        {{ setor_obj.nome }}
+                                    </option>
+                                {% endfor %}
+                        </select>
+                    </div>
+
+                    <button class="btnAcao btn btn-danger">Apagar Problema(s)</button>
+
+                </div>
         </div>
 
-        <!-- Tabela de Problemas -->
-        <div class="table-responsive">
-            <table class="table table-striped mt-2">
+        <div class="table-responsive mb-3 mt-2 tabela">
+            <table class="table table-striped mb-0">
                 <thead>
                     <tr>
                         <th><input type="checkbox" id="selectAllCheckboxes"></th>
@@ -78,6 +309,7 @@ table .form-select {
                         <th class="text-start">Usuário</th>
                         <th class="text-start">Setor Responsável</th>
                         <th class="text-start">Data</th>
+                        <th class="text-center">Anexo</th>
                         <th class="text-start">Status</th>
                     </tr>
                 </thead>
@@ -90,6 +322,15 @@ table .form-select {
                             <td class="text-start">{{ problema.usuario }}</td>
                             <td class="text-start">{{ problema.setor.hierarquia_completa }}</td>
                             <td class="text-start">{{ problema.criado_em|date:"d/m/Y" }}</td>
+                            <td class="align-middle text-center px-4">
+                                {% if problema.anexo %}
+                                    <a href="{{ problema.anexo.url }}" target="_blank" class="btn btn-sm btn-outline-info">
+                                        <i class="fas fa-paperclip"></i>
+                                    </a>
+                                {% else %}
+                                    <i class="fas fa-minus text-muted"></i>
+                                {% endif %}
+                            </td>
                             <td>
                                 <select class="form-select status-updater" data-problema-id="{{ problema.id }}" aria-label="Alterar Status">
                                     {% for value, display in status_choices %}
@@ -102,20 +343,67 @@ table .form-select {
                         </tr>
                     {% empty %}
                         <tr>
-                            <td colspan="7" class="text-center p-4">Nenhum problema encontrado.</td>
+                            <td colspan="8" class="text-center p-4">Nenhum problema encontrado.</td>
                         </tr>
                     {% endfor %}
                 </tbody>
             </table>
-        </div>    
+        </div>
+
+        {% if problemas_page.paginator.num_pages > 1 %}
+            <nav aria-label="Page navigation">
+                <ul class="pagination justify-content-center">
+                    {% if problemas_page.has_previous %}
+                        <li class="page-item"><a class="page-link" href="?page={{ problemas_page.previous_page_number }}&q={{ search_query }}&date_filter={{ date_filter }}&status_filter={{ status_filter }}">Anterior</a></li>
+                    {% endif %}
+                    <li class="page-item disabled"><span class="page-link">Página {{ problemas_page.number }} de {{ problemas_page.paginator.num_pages }}</span></li>
+                    {% if problemas_page.has_next %}
+                        <li class="page-item"><a class="page-link" href="?page={{ problemas_page.next_page_number }}&q={{ search_query }}&date_filter={{ date_filter }}&status_filter={{ status_filter }}">Próximo</a></li>
+                    {% endif %}
+                </ul>
+            </nav>
+            {% endif %}
+
     </div>
 </div>
+
+<div class="modal fade" id="modalCriarAviso" tabindex="-1" aria-labelledby="modalAvisoLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalAvisoLabel">Enviar Aviso sobre Atualização</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+            </div>
+            <div class="modal-body">
+                <form id="form-criar-aviso">
+                    <div class="mb-3">
+                        <label for="aviso-escola" class="form-label"><b>Escola:</b></label>
+                        <input type="text" id="aviso-escola-nome" class="form-control" disabled>
+                    </div>
+                    <div class="mb-3">
+                        <label for="aviso-titulo" class="form-label">Título do Aviso</label>
+                        <input type="text" id="aviso-titulo" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="aviso-mensagem" class="form-label">Mensagem do Aviso</label>
+                        <textarea id="aviso-mensagem" class="form-control" rows="5" required></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" id="btn-enviar-aviso" class="btn btn-primary">Atualizar Status e Enviar Aviso</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 
 <script>
 document.addEventListener('DOMContentLoaded', () => {
 
     // ==================================================================
-    // PARTE 1: LÓGICA PARA OS FILTROS (MÉTODO MAIS SIMPLES E ROBUSTO)
+    // PARTE 1: LÓGICA PARA OS FILTROS
     // ==================================================================
     const searchInput = document.querySelector("input[name='escola']");
     const selectData = document.querySelector("select[name='data']");
@@ -124,137 +412,181 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Função para aplicar os filtros e redirecionar
     function aplicarFiltros() {
-        // Pega a URL base sem parâmetros
         const baseUrl = window.location.origin + window.location.pathname;
-        
-        // Cria os parâmetros de busca
         const params = new URLSearchParams();
         params.set('escola', searchInput.value);
         params.set('data', selectData.value);
         params.set('status', selectStatus.value);
         params.set('setor', selectSetor.value);
-
-        // Redireciona para a página com os filtros corretos.
         window.location.href = `${baseUrl}?${params.toString()}`;
     }
 
-    // Adiciona o evento de 'change' para cada select
+    // Adiciona o evento de 'change' para cada select de filtro
     selectData.addEventListener('change', aplicarFiltros);
     selectStatus.addEventListener('change', aplicarFiltros);
     selectSetor.addEventListener('change', aplicarFiltros);
 
     // ==================================================================
-    // PARTE 2: LÓGICA PARA ATUALIZAÇÃO DE STATUS (COM DELEGAÇÃO DE EVENTOS)
+    // PARTE 2: LÓGICA ATUALIZADA PARA ATUALIZAÇÃO DE STATUS COM MODAL
     // ==================================================================
     const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
     const tabelaContainer = document.querySelector('.table-responsive');
+    const modalElement = document.getElementById('modalCriarAviso');
+    const modal = new bootstrap.Modal(modalElement);
 
-    const statusColors = {
-        'P': '#ffcccc', 'R': '#ccffcc', 'E': '#ffffcc'
-    };
+    // Seletores dos elementos do Modal
+    const modalTituloInput = document.getElementById('aviso-titulo');
+    const modalMensagemInput = document.getElementById('aviso-mensagem');
+    const modalEscolaNomeInput = document.getElementById('aviso-escola-nome');
+    const btnEnviarAviso = document.getElementById('btn-enviar-aviso');
 
-    function setSelectColor(selectElement) {
-        selectElement.style.backgroundColor = statusColors[selectElement.value] || '#ffffff';
-    }
+    // Variáveis para guardar o contexto da ação
+    let selectAtual = null;
+    let statusOriginal = null;
+    let problemaId = null;
+    let novoStatus = null;
+    let foiEnviado = false; // Flag para controlar se o aviso foi enviado ou cancelado
 
-    // Aplica a cor inicial a todos os selects que já estão na página
-    document.querySelectorAll('.status-updater').forEach(setSelectColor);
-
-    // DELEGAÇÃO DE EVENTO: O "ouvinte" fica no container da tabela, que não é destruído.
-    tabelaContainer.addEventListener('change', function(event) {
-        
-        // Verifica se o elemento que disparou o evento é um select de atualização
+    // Colore os selects de status iniciais
+    const statusColors = {'P': '#ffcccc', 'R': '#ccffcc', 'E': '#ffffcc'};
+    document.querySelectorAll('.status-updater').forEach(select => {
+        select.style.backgroundColor = statusColors[select.value] || '#ffffff';
+    });
+    
+    // Guarda o status original quando o select ganha foco
+    tabelaContainer.addEventListener('focusin', function(event) {
         if (event.target.matches('.status-updater')) {
-            const selectElement = event.target;
-            const problemaId = selectElement.dataset.problemaId;
-            const novoStatus = selectElement.value;
+            statusOriginal = event.target.value;
+        }
+    });
 
-            setSelectColor(selectElement);
+    // Delegação de evento para o 'change' do select de status
+    tabelaContainer.addEventListener('change', function(event) {
+        if (event.target.matches('.status-updater')) {
+            selectAtual = event.target;
+            problemaId = selectAtual.dataset.problemaId;
+            novoStatus = selectAtual.value;
+            const novoStatusTexto = selectAtual.options[selectAtual.selectedIndex].text;
+            
+            const linhaTabela = selectAtual.closest('tr');
+            const nomeEscola = linhaTabela.cells[2].textContent.trim();
+            const descricaoProblema = linhaTabela.cells[1].textContent.trim();
 
-            const url = `{% url 'api_atualizar_status_problema' 0 %}`.replace('0', problemaId);
+            modalEscolaNomeInput.value = nomeEscola;
+            modalTituloInput.value = `Atualização sobre o problema: "${descricaoProblema}"`;
+            modalMensagemInput.value = `Olá! O status do problema reportado ("${descricaoProblema}") foi atualizado para: "${novoStatusTexto}".`;
+            
+            foiEnviado = false; 
+            modal.show();
+        }
+    });
 
-            fetch(url, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': csrftoken
-                },
-                body: JSON.stringify({ status: novoStatus })
+    // Ação do botão de enviar no modal
+    btnEnviarAviso.addEventListener('click', () => {
+        const tituloAviso = modalTituloInput.value;
+        const mensagemAviso = modalMensagemInput.value;
+
+        if (!tituloAviso || !mensagemAviso) {
+            alert('Por favor, preencha o título e a mensagem do aviso.');
+            return;
+        }
+
+        const url = `{% url 'api_atualizar_status_problema' 0 %}`.replace('0', problemaId);
+
+        fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrftoken
+            },
+            body: JSON.stringify({ 
+                status: novoStatus,
+                titulo: tituloAviso,
+                mensagem: mensagemAviso
             })
-            .then(response => {
-                if (!response.ok) throw new Error('Falha na API');
-                return response.json();
-            })
-            .then(data => {
-                console.log('Status atualizado com sucesso:', data);
-                const linhaTabela = document.getElementById(`problema-row-${problemaId}`);
-                if (linhaTabela) {
-                    linhaTabela.classList.add('status-atualizado');
-                    setTimeout(() => {
-                        linhaTabela.classList.remove('status-atualizado');
-                    }, 2000);
+        })
+        .then(response => {
+            const contentType = response.headers.get("content-type");
+            if (contentType && contentType.indexOf("application/json") !== -1) {
+                if (!response.ok) {
+                    return response.json().then(err => { throw new Error(err.detail || 'Falha na API') });
                 }
-            })
-            .catch(error => {
-                console.error('Erro ao atualizar status:', error);
-                alert('Ocorreu um erro ao atualizar o status.');
-            });
+                return response.json();
+            } else {
+                throw new Error("Sua sessão pode ter expirado. Por favor, recarregue a página e tente novamente.");
+            }
+        })
+        .then(data => {
+            console.log('Resposta da API:', data);
+            foiEnviado = true;
+
+            const linhaTabela = document.getElementById(`problema-row-${problemaId}`);
+            if (linhaTabela) {
+                selectAtual.style.backgroundColor = statusColors[novoStatus] || '#ffffff';
+                linhaTabela.classList.add('status-atualizado');
+                setTimeout(() => {
+                    linhaTabela.classList.remove('status-atualizado');
+                }, 2000);
+            }
+            modal.hide();
+        })
+        .catch(error => {
+            console.error('Erro ao atualizar status e enviar aviso:', error);
+            alert(`Ocorreu um erro: ${error.message}`);
+
+            if (selectAtual) {
+                selectAtual.value = statusOriginal;
+                selectAtual.style.backgroundColor = statusColors[statusOriginal] || '#ffffff';
+            }
+            modal.hide();
+        });
+    });
+
+    // Evento que dispara quando o modal é fechado (para lidar com cancelamento)
+    modalElement.addEventListener('hidden.bs.modal', () => {
+        if (!foiEnviado && selectAtual) {
+            selectAtual.value = statusOriginal;
         }
     });
 
     // ==================================================================
     // PARTE 3: LÓGICA PARA APAGAR PROBLEMAS SELECIONADOS
     // ==================================================================
-
     const selectAllCheckbox = document.getElementById('selectAllCheckboxes');
     let problemaCheckboxes = document.querySelectorAll('input[name="selected_problemas"]');
-    const botaoApagar = document.querySelector('.btnAcao');
+    const botaoApagar = document.querySelector('.btnAcao.btn-danger');
     const problemasCount = document.getElementById('problemas-count');
 
-    // Função para atualizar o estado do botão de apagar
     function atualizarBotaoApagar() {
-        // Verifica se o botão de apagar existe
+        if (!botaoApagar) return;
         problemaCheckboxes = document.querySelectorAll('input[name="selected_problemas"]');
-
         const anyCheckboxSelected = Array.from(problemaCheckboxes).some(checkbox => checkbox.checked);
         botaoApagar.disabled = !anyCheckboxSelected;
     }
 
-    // Inicializa o estado do botão
     atualizarBotaoApagar();
 
-    // Evento para selecionar/deselecionar todos os checkboxes
-    if (selectAllCheckboxes){
-        selectAllCheckboxes.addEventListener('change', () => {
+    if (selectAllCheckbox){
+        selectAllCheckbox.addEventListener('change', () => {
             problemaCheckboxes.forEach(checkbox => {
-                checkbox.checked = selectAllCheckboxes.checked;
+                checkbox.checked = selectAllCheckbox.checked;
             });
             atualizarBotaoApagar();
-        });    
+        });     
     }
 
-    // Evento para atualizar o estado do botão ao alterar qualquer checkbox
     problemaCheckboxes.forEach(checkbox => {
         checkbox.addEventListener('change',() => {
-
-            // Se algum checkbox for desmarcado, desmarca o "selecionar todos"
-            if (!checkbox.checked) {
-                if (selectAllCheckboxes){
-                    selectAllCheckboxes.checked = false;
+            if (selectAllCheckbox) {
+                if (!checkbox.checked) {
+                    selectAllCheckbox.checked = false;
                 }
+                const allChecked = Array.from(problemaCheckboxes).every(cb => cb.checked);
+                selectAllCheckbox.checked = allChecked;
             }
-
-            // Se algum checkbox individuais forem marcados, marca o "selecionar todos"
-            const allChecked = Array.from(problemaCheckboxes).every(checkbox => checkbox.checked);
-            if (selectAllCheckboxes) {
-                selectAllCheckboxes.checked = allChecked;
-            }
-
             atualizarBotaoApagar();
         });
     });
-
-    // Evento para apagar problemas selecionadas
 
     if( botaoApagar ) {
         botaoApagar.addEventListener('click', async () => {
@@ -286,27 +618,19 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
 
                 const data = await response.json();
-                console.log('Problemas apagados com sucesso:', data);
                 alert(data.message);
-
-                // Remover as linhas da tabela para os problemas apagados
 
                 selectedProblemas.forEach(id => {
                     const row = document.getElementById(`problema-row-${id}`);
-                    if (row) {
-                        row.remove();
-                    }
+                    if (row) row.remove();
                 });
 
-                // Atualizar a contagem de problemas
                 const currentCount = parseInt(problemasCount.textContent);
                 problemasCount.textContent = currentCount - selectedProblemas.length;
 
-                //Limpar seleção e desabilitar botão
-                if (selectAllCheckboxes) {
-                    selectAllCheckboxes.checked = false;
+                if (selectAllCheckbox) {
+                    selectAllCheckbox.checked = false;
                 }
-
                 atualizarBotaoApagar();
 
             } catch (error) {
@@ -315,8 +639,6 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     }
-    
 });
 </script>
-
 {% endblock %}

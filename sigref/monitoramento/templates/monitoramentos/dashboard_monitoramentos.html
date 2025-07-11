@@ -11,7 +11,7 @@
         border-radius: 10px;
         overflow: hidden;
     }
-
+    
     .card-stat:hover {
         transform: translateY(-5px);
         box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
@@ -31,7 +31,7 @@
         box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
         transform: translateY(-3px);
     }
-
+    
     .questionario-item {
         border-bottom: 1px solid #eee;
         padding: 15px 0;
@@ -93,7 +93,7 @@
 {% endblock %}
 
 {% block content %}
-<div class="container-fluid px-4">
+<div class="container-fluid px-4 mt-4">
     <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-2">
         <h2 class="mb-0"><i class="fas fa-chart-bar me-2"></i>Painel de Monitoramentos</h2>
         <div class="d-flex flex-wrap align-items-center gap-2">
@@ -208,7 +208,7 @@
     </div>
     
     <!-- Problemas Reportados -->
-   <div class="col-lg-2 col-md-4 ">
+    <div class="col-lg-2 col-md-4 ">
         <div class="card card-stat shadow border-danger h-100">
             <div class="card-body position-relative">
                 <h5 class="card-title text-danger mb-3">
@@ -347,7 +347,7 @@
                                                     </small>
                                                 </div>
                                                 <a href="{% url 'detalhe_monitoramento' monitoramento.id %}"
-                                                   class="btn btn-sm btn-outline-{% if monitoramento.respostas.exists %}primary{% else %}secondary{% endif %}">
+                                                    class="btn btn-sm btn-outline-{% if monitoramento.respostas.exists %}primary{% else %}secondary{% endif %}">
                                                     <i class="fas fa-{% if monitoramento.respostas.exists %}eye{% else %}edit{% endif %}"></i>
                                                 </a>
                                             </div>
@@ -389,7 +389,7 @@
                                                     </small>
                                                 </div>
                                                 <a href="{% url 'detalhe_monitoramento' monitoramento.id %}"
-                                                   class="btn btn-sm btn-outline-{% if monitoramento.respostas.exists %}primary{% else %}secondary{% endif %}">
+                                                    class="btn btn-sm btn-outline-{% if monitoramento.respostas.exists %}primary{% else %}secondary{% endif %}">
                                                     <i class="fas fa-{% if monitoramento.respostas.exists %}eye{% else %}edit{% endif %}"></i>
                                                 </a>
                                             </div>

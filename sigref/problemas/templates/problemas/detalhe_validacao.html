@@ -1,0 +1,110 @@
+{% extends "cedepe/base.html" %}
+
+{% block title %}Detalhe da Validação{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2 class="mb-4">Analisar Solicitação de Atualização</h2>
+    
+    <div class="card">
+        <div class="card-header">
+            <h4>Escola: {{ escola.nome }}</h4>
+            <p class="mb-0 text-muted">Solicitado em: {{ solicitacao.data_solicitacao|date:"d/m/Y H:i" }} por {{ solicitacao.solicitado_por.username }}</p>
+        </div>
+        <div class="card-body">
+            <h5 class="card-title">Comparação de Dados</h5>
+            <p>Revise as alterações propostas. Os campos em branco na coluna "Dado Proposto" não foram alterados.</p>
+
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover">
+                    <thead class="table-light">
+                        <tr>
+                            <th style="width: 20%;">Campo</th>
+                            <th>Dado Atual</th>
+                            <th>Dado Proposto</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Endereço</strong></td>
+                            <td>{{ escola.endereco|default:"-" }}</td>
+                            <td class="{% if solicitacao.endereco %}table-warning{% endif %}">{{ solicitacao.endereco|default:"-" }}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Telefone</strong></td>
+                            <td>{{ escola.telefone|default:"-" }}</td>
+                            <td class="{% if solicitacao.telefone %}table-warning{% endif %}">{{ solicitacao.telefone|default:"-" }}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>E-mail da Escola</strong></td>
+                            <td>{{ escola.email_escola|default:"-" }}</td>
+                            <td class="{% if solicitacao.email_escola %}table-warning{% endif %}">{{ solicitacao.email_escola|default:"-" }}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Nome do Gestor</strong></td>
+                            <td>{{ escola.nome_gestor|default:"-" }}</td>
+                            <td class="{% if solicitacao.nome_gestor %}table-warning{% endif %}">{{ solicitacao.nome_gestor|default:"-" }}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Telefone do Gestor</strong></td>
+                            <td>{{ escola.telefone_gestor|default:"-" }}</td>
+                            <td class="{% if solicitacao.telefone_gestor %}table-warning{% endif %}">{{ solicitacao.telefone_gestor|default:"-" }}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>E-mail do Gestor</strong></td>
+                            <td>{{ escola.email_gestor|default:"-" }}</td>
+                            <td class="{% if solicitacao.email_gestor %}table-warning{% endif %}">{{ solicitacao.email_gestor|default:"-" }}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Foto da Fachada</strong></td>
+                            <td>
+                                {% if escola.foto_fachada %}
+                                    <img src="{{ escola.foto_fachada.url }}" alt="Foto Atual" class="img-fluid rounded" style="max-height: 150px;">
+                                {% else %}
+                                    <span>Sem imagem</span>
+                                {% endif %}
+                            </td>
+                            <td class="{% if solicitacao.foto_fachada %}table-warning{% endif %}">
+                                {% if solicitacao.foto_fachada %}
+                                    <img src="{{ solicitacao.foto_fachada.url }}" alt="Foto Proposta" class="img-fluid rounded" style="max-height: 150px;">
+                                {% else %}
+                                    <span>Sem nova imagem</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <hr class="my-4">
+
+            <div class="row">
+                <div class="col-md-6">
+                    <h5 class="text-success">Aprovar Solicitação</h5>
+                    <p>Ao aprovar, os dados da escola serão permanentemente substituídos pelos dados propostos.</p>
+                    <form method="post" onsubmit="return confirm('Tem certeza que deseja APROVAR esta atualização?');">
+                        {% csrf_token %}
+                        <button type="submit" name="aprovar" class="btn btn-success w-100">
+                            <i class="fas fa-check-circle me-2"></i>Aprovar
+                        </button>
+                    </form>
+                </div>
+                <div class="col-md-6 mt-4 mt-md-0">
+                     <h5 class="text-danger">Recusar Solicitação</h5>
+                    <p>A solicitação será marcada como recusada e nenhuma alteração será feita.</p>
+                     <form method="post" onsubmit="return confirm('Tem certeza que deseja RECUSAR esta atualização?');">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label for="observacao" class="form-label">Justificativa (Opcional):</label>
+                            <textarea name="observacao" id="observacao" class="form-control" rows="2"></textarea>
+                        </div>
+                        <button type="submit" name="recusar" class="btn btn-danger w-100">
+                            <i class="fas fa-times-circle me-2"></i>Recusar
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

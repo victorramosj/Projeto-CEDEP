@@ -1,29 +1,52 @@
-# REST Framework
-from rest_framework import viewsets, permissions, filters, status, generics
-from rest_framework.response import Response
-from rest_framework.decorators import action
-from rest_framework.permissions import IsAuthenticated
-from rest_framework.views import APIView
-from rest_framework.pagination import PageNumberPagination
-from rest_framework.renderers import JSONRenderer  # Importação do JSONRenderer
+# -----------------------------------------------------------------------------
+# Imports do Python
+# -----------------------------------------------------------------------------
+import datetime
+import json
+from collections import Counter
+from datetime import timedelta
 
-
-# Django
-from django.contrib.auth.models import User
+# -----------------------------------------------------------------------------
+# Imports de libs de terceiros (Numpy, Django, DRF)
+# -----------------------------------------------------------------------------
+import numpy as np
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.views.generic import TemplateView, DetailView, View, CreateView
-from django.shortcuts import render, get_object_or_404, redirect
+from django.contrib.auth.models import User
 from django.core.exceptions import PermissionDenied
-from django.utils.decorators import method_decorator
+from django.db.models import Q, Avg, Count, Max, Min, Prefetch
+from django.http import JsonResponse
+from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse
 from django.utils import timezone
-from django.db.models import Count
+from django.utils.decorators import method_decorator
+from django.views.generic import (CreateView, DetailView, ListView, TemplateView,  View)
+from rest_framework import filters, generics, permissions, status, viewsets
+from rest_framework.decorators import action
+from rest_framework.pagination import PageNumberPagination
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.renderers import JSONRenderer
+from rest_framework.response import Response
+from rest_framework.views import APIView
+
+# -----------------------------------------------------------------------------
+# Imports da aplicação local
+# -----------------------------------------------------------------------------
+from .forms import RespostaFormSet
+from .models import (Escola, GREUser, Monitoramento, Pergunta, Questionario, Resposta, Setor)
+from .serializers import QuestionarioSerializer, PerguntaSerializer, EscolaSerializer, SetorSerializer, GREUserSerializer, MonitoramentoSerializer, RespostaSerializer
+
+# -----------------------------------------------------------------------------
+# Imports de outros apps do projeto
+# -----------------------------------------------------------------------------
+from problemas.models import AvisoImportante, Lacuna, ProblemaUsuario
 
 
-# App interno
-from .models import *
-from .serializers import *
 
+
+# -----------------------------------------------------------------------------
+# View Questionário Escolas
+# -----------------------------------------------------------------------------
 # View auxiliar que retorna as escolas relacionadas a um questionário específico
 class QuestionarioEscolasView(APIView):
     def get(self, request, pk):
@@ -31,7 +54,10 @@ class QuestionarioEscolasView(APIView):
         escolas = questionario.escolas_destino.all()
         serializer = EscolaSerializer(escolas, many=True)
         return Response(serializer.data)
-    
+
+# -----------------------------------------------------------------------------
+# View Questionário 
+# -----------------------------------------------------------------------------
 # View auxiliar que retorna os questionários e perguntas
 class QuestionarioViewSet(viewsets.ModelViewSet):
     queryset = Questionario.objects.all()
@@ -41,7 +67,9 @@ class QuestionarioViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         serializer.save(setor=self.request.user.greuser.setor)
 
-
+# -----------------------------------------------------------------------------
+# View Perguntas
+# -----------------------------------------------------------------------------
 class PerguntaViewSet(viewsets.ModelViewSet):
     serializer_class = PerguntaSerializer
     filter_backends = [filters.OrderingFilter]  # Adicione esta linha
@@ -56,15 +84,20 @@ class PerguntaViewSet(viewsets.ModelViewSet):
         serializer.save(
             questionario_id=self.kwargs['questionario_pk']
         )
-from rest_framework.decorators import action
-from rest_framework.response import Response     
 
+
+# -----------------------------------------------------------------------------
+# View Escola
+# -----------------------------------------------------------------------------
 # Paginação personalizada para escolas
 class EscolaPagination(PageNumberPagination):
     page_size = 10
     page_size_query_param = 'page_size'
     max_page_size = 100
 
+# -----------------------------------------------------------------------------
+# ViewSets para Escolas, Setores e Usuários GRE
+# -----------------------------------------------------------------------------
 #Escolas, Setores e Usuários GRE
 class EscolaViewSet(viewsets.ModelViewSet):
     queryset = Escola.objects.all().order_by('nome')
@@ -94,6 +127,9 @@ class GREUserViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAdminUser]
 
 
+# -----------------------------------------------------------------------------
+# ViewSets para Monitoramentos e Respostas
+# -----------------------------------------------------------------------------
 #Monitoramentos e respostas
 class MonitoramentoViewSet(viewsets.ModelViewSet):
     queryset = Monitoramento.objects.all()
@@ -132,7 +168,9 @@ class RespostaViewSet(viewsets.ModelViewSet):
 
 
 
-
+# -----------------------------------------------------------------------------
+# View para Detalhe do Monitoramento
+# -----------------------------------------------------------------------------
 class DetalheMonitoramentoView(DetailView):
     model = Monitoramento
     template_name = 'monitoramentos/detalhe_monitoramento.html'
@@ -170,9 +208,8 @@ class DetalheMonitoramentoView(DetailView):
             raise PermissionDenied
             
         return super().dispatch(request, *args, **kwargs)
-import datetime
-from datetime import timedelta
-from problemas.models import ProblemaUsuario, Lacuna, AvisoImportante
+
+
 def dashboard_monitoramentos(request):
     user = request.user.greuser
 
@@ -323,7 +360,9 @@ def dashboard_monitoramentos(request):
 
     return render(request, 'monitoramentos/dashboard_monitoramentos.html', context)
     
-
+# -----------------------------------------------------------------------------
+# Fluxo de Monitoramento
+# -----------------------------------------------------------------------------
 @login_required
 def fluxo_monitoramento(request):
     # passo 1: puxar os setores que o usuário realmente tem permissão
@@ -357,7 +396,9 @@ def fluxo_monitoramento(request):
         'monitoramentos': monitoramentos,
     })
 
-
+# -----------------------------------------------------------------------------
+# View para adicionar um novo questionário e seus monitoramentos
+# -----------------------------------------------------------------------------
 class AdicionarQuestionarioView(APIView):
     permission_classes = [IsAuthenticated]
     renderer_classes = [JSONRenderer]
@@ -386,9 +427,9 @@ class AdicionarQuestionarioView(APIView):
             status=status.HTTP_400_BAD_REQUEST
         ) 
 
-
-from django.views.generic import DetailView
-from django.urls import reverse
+# -----------------------------------------------------------------------------
+# View para gerenciar perguntas de um questionário específico
+# -----------------------------------------------------------------------------
 
 class GerenciarPerguntasView(DetailView):
     model = Questionario
@@ -402,16 +443,18 @@ class GerenciarPerguntasView(DetailView):
         )
         return context
 
-
-from .serializers import QuestionarioSerializer
+# -----------------------------------------------------------------------------
+# View para criar um novo questionário
+# -----------------------------------------------------------------------------
 
 class QuestionarioCreateAPI(generics.CreateAPIView):
     permission_classes = [permissions.IsAuthenticated]
     serializer_class = QuestionarioSerializer
 
-from django.views.generic import ListView
-from django.db.models import Q
-from django.contrib.auth.mixins import LoginRequiredMixin
+
+# -----------------------------------------------------------------------------
+# View para selecionar escola
+# -----------------------------------------------------------------------------
 
 class SelecionarEscolaView(LoginRequiredMixin, ListView):
     model = Escola
@@ -436,8 +479,9 @@ class SelecionarEscolaView(LoginRequiredMixin, ListView):
         ctx['setores'] = Setor.objects.all().order_by('nome')
         return ctx
 
-
-from django.shortcuts import render, get_object_or_404
+# -----------------------------------------------------------------------------
+# View para criar um questionário
+# -----------------------------------------------------------------------------
 
 def criar_questionario_view(request, setor_id=None):
     user = request.user.greuser
@@ -494,16 +538,11 @@ class GerenciarQuestionariosView(LoginRequiredMixin, TemplateView):
             setor__in=user.setores_permitidos()
         ).order_by('-data_criacao')
         return context
-    
-from django.db.models import Count, Prefetch
-from django.shortcuts import render, get_object_or_404
-from django.views import View
-from django.contrib.auth.mixins import LoginRequiredMixin
-from django.db.models import Count, Q
-from django.utils import timezone
-from django.core.exceptions import PermissionDenied
-from .models import Escola, Questionario, Monitoramento, Setor
 
+
+# -----------------------------------------------------------------------------
+# View para listar questionários de uma escola específica
+# -----------------------------------------------------------------------------
 class QuestionariosEscolaView(LoginRequiredMixin, View):
     def get(self, request, escola_id):
         escola = get_object_or_404(Escola, id=escola_id)
@@ -572,11 +611,11 @@ class QuestionariosEscolaView(LoginRequiredMixin, View):
             'setores_respondidos': setores_respondidos_hoje,
             'questionarios_respondidos': questionarios_respondidos_hoje
         })
-from django.shortcuts      import render, get_object_or_404
-from django.views          import View
-from django.contrib.auth.mixins import LoginRequiredMixin
-from .models               import Escola, Questionario, Pergunta, Monitoramento
-from .forms                import RespostaFormSet
+    
+
+# -----------------------------------------------------------------------------
+# View para responder questionário
+# -----------------------------------------------------------------------------
 
 class ResponderQuestionarioView(LoginRequiredMixin, View):
     template_name = 'monitoramentos/responder_questionario.html'
@@ -631,14 +670,11 @@ class ResponderQuestionarioView(LoginRequiredMixin, View):
             'hoje': timezone.now().date(),  # Adicione esta linha
             'erro': 'Verifique os campos destacados'
         })
-    
-import json
-import numpy as np
-from django.db.models import Avg, Min, Max, Count
-from django.shortcuts import render, get_object_or_404
-from .models import Questionario, Pergunta, Resposta, Escola, Monitoramento
-from collections import Counter
 
+
+# -----------------------------------------------------------------------------
+# View para visualizar gráficos de um questionário
+# -----------------------------------------------------------------------------   
 def visualizar_graficos_questionario(request, questionario_id):
     questionario = get_object_or_404(Questionario, pk=questionario_id)
     # Ordenar perguntas para exibição consistente
@@ -739,13 +775,9 @@ def visualizar_graficos_questionario(request, questionario_id):
 #Relatórios
 
 
-
-from django.shortcuts import render, get_object_or_404
-from django.views import View
-from django.utils import timezone
-from django.db.models import Prefetch
-from .models import Escola, Questionario, Monitoramento, Resposta
-
+# -----------------------------------------------------------------------------
+# View para relatório diário de monitoramentos
+# -----------------------------------------------------------------------------
 class RelatorioDiarioView(View):
     def get(self, request, escola_id):
         escola = get_object_or_404(Escola, id=escola_id)
@@ -808,9 +840,10 @@ class RelatorioDiarioView(View):
         }
         
         return render(request, 'monitoramentos/relatorio.html', context)
-from .models import Escola, Questionario, Monitoramento, Resposta, Setor
-
-
+    
+# -----------------------------------------------------------------------------
+# View para relatório de monitoramentos
+# -----------------------------------------------------------------------------
 # Relatório de monitoramentos/ ADICIONAR PROBLEMAS E LACUNAS 
 class RelatorioMonitoramentosView(View):
     def get(self, request):
@@ -889,9 +922,10 @@ class RelatorioMonitoramentosView(View):
             'quantidade': quantidade,
         }
         return render(request, 'monitoramentos/relatorio.html', context)
-from django.http import JsonResponse
-from .models import GREUser
-
+    
+# -----------------------------------------------------------------------------
+# View para buscar usuários GRE
+# -----------------------------------------------------------------------------
 def greuser_search(request):
     q = request.GET.get('q', '')
     users = GREUser.objects.filter(nome_completo__icontains=q).order_by('nome_completo')[:20]

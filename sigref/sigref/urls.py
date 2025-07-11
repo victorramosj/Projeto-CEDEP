@@ -25,6 +25,14 @@ urlpatterns = [
 
     path('problemas/', include('problemas.urls')),
     
+    # Página Sobre
+    path('sobre/', views.sobre, name='sobre'),  
+
+    # Página de manual de uso
+    path('manual/', views.manual_usuario, name='manual_usuario'),
+
+    # Página de links úteis
+    path('links-uteis/', views.links_uteis_view, name='linksuteis'),
 ]
 # Servir arquivos de mídia em DEBUG
 if settings.DEBUG:

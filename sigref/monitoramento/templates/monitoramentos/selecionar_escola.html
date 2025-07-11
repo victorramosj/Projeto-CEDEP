@@ -2,7 +2,7 @@
 {% load static humanize %}
 
 {% block content %}
-<div class="container-fluid px-4">
+<div class="container-fluid px-4 mt-4">
     <div class="row align-items-center mb-4">
         <div class="col-12 col-md-6 mb-3 mb-md-0">
             <h2 class="mb-0">
@@ -10,14 +10,18 @@
             </h2>
         </div>
         <div class="col-12 col-md-6">
-            <form method="get" class="d-flex align-items-center gap-2">
-                <input type="text" name="q" value="{{ q }}" class="form-control py-1" placeholder="Buscar por nome, INEP ou gestor...">
-                <button class="btn btn-primary btn-sm" type="submit">
-                    <i class="fas fa-search "></i>
+            <form method="get" class="d-flex gap-2 form-pesquisa">
+                <div class="input-group">
+                    <input type="text" name="q" value="{{ q }}" class="form-control" placeholder="Buscar por nome, INEP ou gestor..." aria-label="Campo de busca">
+                    <button class="btn btn-outline-secondary btn-pesquisa-custom" type="submit" aria-label="Pesquisar">
+                        <i class="fas fa-search"></i>
+                    </button> 
+                </div>
+                    
+                <button type="button" class="btn btn-outline-secondary rounded-2 btn-custom" onclick="history.back()" >
+                            <i class="fas fa-arrow-left me-2"></i> Voltar
                 </button>
-                <button type="button" class="btn btn-secondary btn-sm" onclick="history.back()" style="white-space: nowrap;">
-                    <i class="fas fa-arrow-left me-1"></i> Voltar
-                </button>
+                    
             </form>
         </div>
     </div>
@@ -173,5 +177,39 @@
         transform: translateY(-5px);
         box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
     }
+
+    .btn-custom{
+        width: 120px;
+    }
+
+    /*=== ESTILO DE BARRA DE BUSCA ===*/
+.form-pesquisa.input-group {
+    border-radius: 8px;
+    overflow: hidden; 
+}
+
+.form-pesquisa.input-group button{
+    border-color: #003366;
+    border-radius: 8px;
+}
+
+.btn-pesquisa-custom {
+    padding: 0 !important;
+    width: 42px;
+    background-color: white;
+}
+
+.btn-pesquisa-custom .bi-search {
+    color: #003366;
+    transition: color 0.15s ease-in-out;
+    margin-bottom: 5.1px;
+}
+
+/* Quando o usuário interage com o botão (hover, active, focus) */
+.btn-pesquisa-custom:hover, .btn-pesquisa-custom:active, .btn-pesquisa-custom:focus {
+    background-color: #003366;
+    color: #ffffff;
+    border-color: #003366;
+}
 </style>
 {% endblock %}

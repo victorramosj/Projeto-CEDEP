@@ -31,12 +31,11 @@ urlpatterns = [
     # -----------------------------------------
     # Views baseadas em templates (front-end)
     # -----------------------------------------
-   
+    
     path('dashboard/', views.dashboard_monitoramentos, name='dashboard_monitoramentos'),
     
     #relatórios
-    path('escola/<int:escola_id>/relatorio-diario/', RelatorioDiarioView.as_view(), 
-         name='relatorio_diario'),
+    path('escola/<int:escola_id>/relatorio-diario/', RelatorioDiarioView.as_view(), name='relatorio_diario'),
     path('detalhes/<int:pk>/', views.DetalheMonitoramentoView.as_view(), name='detalhe_monitoramento'),
     path('relatorio-monitoramentos/', views.RelatorioMonitoramentosView.as_view(), name='relatorio_monitoramentos'),
     
