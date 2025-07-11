@@ -336,7 +336,7 @@
                 <div class="text-center text-md-start">
                      <h5 class="mb-1 text-primary"><i class="fas fa-info-circle me-2"></i>Mantenha seus dados atualizados</h5>
                     <p class="mb-0 text-muted small">
-                        Clique no botão ao lado para corrigir ou atualizar as informações da escola e a foto da fachada.
+                        Clique no botão ao lado para corrigir ou atualizar as informações da escola.
                     </p>
                 </div>
                 <button class="btn btn-primary mt-2 mt-md-0" data-bs-toggle="modal" data-bs-target="#modalAtualizarDados">
@@ -450,15 +450,6 @@
                             <input type="text" name="telefone" id="id_telefone" class="form-control" value="{{ escola.telefone }}">
                         </div>
                         <div class="col-md-6">
-                            <label for="id_email_escola" class="form-label">E-mail da Escola</label>
-                            <input type="email" name="email_escola" id="id_email_escola" class="form-control" value="{{ escola.email_escola }}">
-                        </div>
-                        <hr class="my-3">
-                        <div class="col-md-6">
-                            <label for="id_nome_gestor" class="form-label">Nome do Gestor</label>
-                            <input type="text" name="nome_gestor" id="id_nome_gestor" class="form-control" value="{{ escola.nome_gestor }}">
-                        </div>
-                        <div class="col-md-6">
                             <label for="id_telefone_gestor" class="form-label">Telefone do Gestor</label>
                             <input type="text" name="telefone_gestor" id="id_telefone_gestor" class="form-control" value="{{ escola.telefone_gestor }}">
                         </div>
@@ -470,7 +461,11 @@
                         <div class="col-12">
                             <label for="id_foto_fachada" class="form-label">Nova Foto da Fachada</label>
                             <input type="file" name="foto_fachada" class="form-control" id="id_foto_fachada" accept="image/*">
-                            <small class="form-text text-muted">Envie uma nova imagem para substituir a atual. A imagem antiga será mantida até a aprovação.</small>
+                            <small class="form-text text-muted">
+                                Envie uma nova imagem para substituir a atual. 
+                                A imagem anterior será mantida até a aprovação da nova. 
+                                A foto da fachada deve seguir algumas regras, como mostrar a placa com o nome da escola, caso ela possua uma.
+                            </small>
                         </div>
                     </div>
                 </div>
