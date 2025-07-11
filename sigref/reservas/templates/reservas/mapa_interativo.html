@@ -141,8 +141,7 @@ document.addEventListener("DOMContentLoaded", function() {
     // Atualiza o link para criar nova ocupação: utiliza a rota de ocupações
     newOccupancyBtn.href = `/reservas/ocupacoes/form/?quarto=${cama.quarto}&cama=${cama.id}`;
 
-    let occupancyInfo = '';
-    // Corrija aqui: Use cama.ocupacao_ativa em vez de cama.reserva_atual
+    let occupancyInfo = '';    
     if (cama.status === 'OCUPADA' && cama.ocupacao_ativa) {
         occupancyInfo = `
             <div class="alert alert-info">
