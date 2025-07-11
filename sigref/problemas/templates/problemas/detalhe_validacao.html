@@ -4,16 +4,46 @@
 
 {% block content %}
 <div class="container mt-4">
-    <h2 class="mb-4">Analisar Solicitação de Atualização</h2>
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Analisar Solicitação de Atualização</h2>
+        {# NOVO: Botão para voltar para a lista de validações pendentes #}
+        <a href="{% url 'lista_validacoes_pendentes' %}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left me-2"></i>Voltar para a Lista
+        </a>
+    </div>
     
     <div class="card">
         <div class="card-header">
             <h4>Escola: {{ escola.nome }}</h4>
-            <p class="mb-0 text-muted">Solicitado em: {{ solicitacao.data_solicitacao|date:"d/m/Y H:i" }} por {{ solicitacao.solicitado_por.username }}</p>
+            <div class="d-flex justify-content-between">
+                <p class="mb-0 text-muted">
+                    Solicitado em: {{ solicitacao.data_solicitacao|date:"d/m/Y H:i" }} por <strong>{{ solicitacao.solicitado_por.username }}</strong>
+                </p>
+                {# NOVO: Exibe o status da solicitação #}
+                <p class="mb-0 text-muted">
+                    Status: <span class="badge bg-warning text-dark">{{ solicitacao.get_status_display }}</span>
+                </p>
+            </div>
         </div>
         <div class="card-body">
+            {# NOVO: Bloco para exibir informações se a solicitação já foi processada #}
+            {% if solicitacao.status != 'pendente' %}
+            <div class="alert alert-{% if solicitacao.status == 'aprovado' %}success{% else %}danger{% endif %}" role="alert">
+                <h5 class="alert-heading">Esta solicitação já foi processada!</h5>
+                <p>
+                    A solicitação foi <strong>{{ solicitacao.get_status_display|lower }}</strong> por 
+                    <strong>{{ solicitacao.validado_por.user.username }}</strong> em 
+                    <strong>{{ solicitacao.data_validacao|date:"d/m/Y à\s H:i" }}</strong>.
+                </p>
+                {% if solicitacao.status == 'recusado' and solicitacao.observacao_validacao %}
+                <hr>
+                <p class="mb-0"><strong>Justificativa fornecida:</strong> {{ solicitacao.observacao_validacao }}</p>
+                {% endif %}
+            </div>
+            {% endif %}
+
             <h5 class="card-title">Comparação de Dados</h5>
-            <p>Revise as alterações propostas. Os campos em branco na coluna "Dado Proposto" não foram alterados.</p>
+            <p>Revise as alterações propostas. Os campos em amarelo indicam dados que foram alterados.</p>
 
             <div class="table-responsive">
                 <table class="table table-bordered table-hover">
@@ -25,48 +55,50 @@
                         </tr>
                     </thead>
                     <tbody>
+                        {# LÓGICA ALTERADA: A classe 'table-warning' só é aplicada se o dado proposto existir E for diferente do atual #}
                         <tr>
                             <td><strong>Endereço</strong></td>
                             <td>{{ escola.endereco|default:"-" }}</td>
-                            <td class="{% if solicitacao.endereco %}table-warning{% endif %}">{{ solicitacao.endereco|default:"-" }}</td>
+                            <td class="{% if solicitacao.endereco and solicitacao.endereco != escola.endereco %}table-warning{% endif %}">{{ solicitacao.endereco|default:"-" }}</td>
                         </tr>
                         <tr>
                             <td><strong>Telefone</strong></td>
                             <td>{{ escola.telefone|default:"-" }}</td>
-                            <td class="{% if solicitacao.telefone %}table-warning{% endif %}">{{ solicitacao.telefone|default:"-" }}</td>
+                            <td class="{% if solicitacao.telefone and solicitacao.telefone != escola.telefone %}table-warning{% endif %}">{{ solicitacao.telefone|default:"-" }}</td>
                         </tr>
                         <tr>
                             <td><strong>E-mail da Escola</strong></td>
                             <td>{{ escola.email_escola|default:"-" }}</td>
-                            <td class="{% if solicitacao.email_escola %}table-warning{% endif %}">{{ solicitacao.email_escola|default:"-" }}</td>
+                            <td class="{% if solicitacao.email_escola and solicitacao.email_escola != escola.email_escola %}table-warning{% endif %}">{{ solicitacao.email_escola|default:"-" }}</td>
                         </tr>
                         <tr>
                             <td><strong>Nome do Gestor</strong></td>
                             <td>{{ escola.nome_gestor|default:"-" }}</td>
-                            <td class="{% if solicitacao.nome_gestor %}table-warning{% endif %}">{{ solicitacao.nome_gestor|default:"-" }}</td>
+                            <td class="{% if solicitacao.nome_gestor and solicitacao.nome_gestor != escola.nome_gestor %}table-warning{% endif %}">{{ solicitacao.nome_gestor|default:"-" }}</td>
                         </tr>
                         <tr>
                             <td><strong>Telefone do Gestor</strong></td>
                             <td>{{ escola.telefone_gestor|default:"-" }}</td>
-                            <td class="{% if solicitacao.telefone_gestor %}table-warning{% endif %}">{{ solicitacao.telefone_gestor|default:"-" }}</td>
+                            <td class="{% if solicitacao.telefone_gestor and solicitacao.telefone_gestor != escola.telefone_gestor %}table-warning{% endif %}">{{ solicitacao.telefone_gestor|default:"-" }}</td>
                         </tr>
                         <tr>
                             <td><strong>E-mail do Gestor</strong></td>
                             <td>{{ escola.email_gestor|default:"-" }}</td>
-                            <td class="{% if solicitacao.email_gestor %}table-warning{% endif %}">{{ solicitacao.email_gestor|default:"-" }}</td>
+                            <td class="{% if solicitacao.email_gestor and solicitacao.email_gestor != escola.email_gestor %}table-warning{% endif %}">{{ solicitacao.email_gestor|default:"-" }}</td>
                         </tr>
                         <tr>
                             <td><strong>Foto da Fachada</strong></td>
                             <td>
                                 {% if escola.foto_fachada %}
-                                    <img src="{{ escola.foto_fachada.url }}" alt="Foto Atual" class="img-fluid rounded" style="max-height: 150px;">
+                                    <a href="{{ escola.foto_fachada.url }}" target="_blank"><img src="{{ escola.foto_fachada.url }}" alt="Foto Atual" class="img-fluid rounded" style="max-height: 150px;"></a>
                                 {% else %}
                                     <span>Sem imagem</span>
                                 {% endif %}
                             </td>
+                            {# Para a imagem, a simples existência de uma nova proposta já justifica o destaque #}
                             <td class="{% if solicitacao.foto_fachada %}table-warning{% endif %}">
                                 {% if solicitacao.foto_fachada %}
-                                    <img src="{{ solicitacao.foto_fachada.url }}" alt="Foto Proposta" class="img-fluid rounded" style="max-height: 150px;">
+                                    <a href="{{ solicitacao.foto_fachada.url }}" target="_blank"><img src="{{ solicitacao.foto_fachada.url }}" alt="Foto Proposta" class="img-fluid rounded" style="max-height: 150px;"></a>
                                 {% else %}
                                     <span>Sem nova imagem</span>
                                 {% endif %}
@@ -78,6 +110,8 @@
 
             <hr class="my-4">
 
+            {# Os botões só aparecem se a solicitação estiver pendente #}
+            {% if solicitacao.status == 'pendente' %}
             <div class="row">
                 <div class="col-md-6">
                     <h5 class="text-success">Aprovar Solicitação</h5>
@@ -95,8 +129,9 @@
                      <form method="post" onsubmit="return confirm('Tem certeza que deseja RECUSAR esta atualização?');">
                         {% csrf_token %}
                         <div class="mb-3">
-                            <label for="observacao" class="form-label">Justificativa (Opcional):</label>
-                            <textarea name="observacao" id="observacao" class="form-control" rows="2"></textarea>
+                            <label for="observacao" class="form-label">Justificativa da Recusa (Obrigatório):</label>
+                            {# Adicionado 'required' para garantir que uma justificativa seja enviada #}
+                            <textarea name="observacao" id="observacao" class="form-control" rows="2" required></textarea>
                         </div>
                         <button type="submit" name="recusar" class="btn btn-danger w-100">
                             <i class="fas fa-times-circle me-2"></i>Recusar
@@ -104,7 +139,8 @@
                     </form>
                 </div>
             </div>
+            {% endif %}
         </div>
     </div>
 </div>
-{% endblock %}
+{% endblock %}  
