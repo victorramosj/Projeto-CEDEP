@@ -6,17 +6,18 @@
 {% block content %}
 <div class="container-fluid px-4">
   <div class="d-flex justify-content-between align-items-center mb-4">
-    <h1 class="mb-2 fw-bold" style="color: #10295d; letter-spacing: 0.5px;">Gerenciar Questionários</h1>
+    <h1 class="mb-2 fw-bold mt-4" style="color: #10295d; letter-spacing: 0.5px;"> Gerenciar Questionários</h1>
     <a href="{% url 'fluxo_monitoramento_setores' %}" class="btn btn-success btn-sm shadow-sm">
       <i class="bi bi-plus-circle"></i> Novo Questionário
     </a>
   </div>
 
-  <div class="card shadow border-0">
+  <!-- A MUDANÇA ESTÁ AQUI: Adicionei a classe mb-5 para criar uma margem inferior -->
+  <div class="card shadow border-0 mb-5">
     <div class="card-body">
       <div class="table-responsive">
         <table class="table table-hover table-bordered align-middle mb-0">
-          <thead class="tab</table>le-primary">
+          <thead class="table-primary">
             <tr>
               <th style="width: 5%;">#</th>
               <th style="width: 30%;">Título</th>

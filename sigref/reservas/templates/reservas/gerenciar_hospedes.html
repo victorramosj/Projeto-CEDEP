@@ -6,7 +6,7 @@
 {% block content %}
 <div class="container-fluid px-4">
   <div class="d-flex justify-content-between align-items-center mb-4">
-    <h1 class=" mb-2" style="color: #10295d">Gerenciar Hóspedes</h1>
+    <h1 class=" mb-2 mt-4" style="color: #10295d">Gerenciar Hóspedes</h1>
     <div>
       <a href="{% url 'hospede_form' %}" class="btn btn-success btn-sm me-2">
         <i class="bi bi-plus-circle"></i> Adicionar Novo Hóspede
@@ -82,7 +82,7 @@
       </div>
 
       <!-- Paginação -->
-      <nav>
+      <nav calss="mb-4">
         <ul class="pagination justify-content-center">
           {% if hospedes.has_previous %}
           <li class="page-item">

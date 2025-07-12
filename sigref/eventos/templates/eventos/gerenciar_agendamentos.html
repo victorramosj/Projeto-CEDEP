@@ -6,7 +6,7 @@
 {% block content %}
 <div class="container-fluid px-4 ">
   <div class="d-flex justify-content-between align-items-center mb-4">
-    <h1 class=" mb-2" style="color: #10295d">Gerenciar Agendamentos</h1>
+    <h1 class=" mb-2 mt-4" style="color: #10295d">Gerenciar Agendamentos</h1>
     <a href="{% url 'agendamento_form' %}" class="btn btn-success">
       <i class="bi bi-plus-circle"></i> Novo Agendamento
     </a>
@@ -66,7 +66,7 @@
       </div>
 
       <!-- Paginação -->
-      <nav>
+      <nav class="mb-4">
         <ul class="pagination justify-content-center">
           {% if agendamentos.has_previous %}
           <li class="page-item">
